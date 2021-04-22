@@ -42,11 +42,11 @@ optional arguments:
 ### Examples:
 Download all new music and most up-to-date `rekordbox.xml`:
 
-`python3 clone_library.py --path /Volumnes/DJ/ --download music xml`
+`python3 clone_library.py --path /Volumes/DJ/ --download music xml`
 
 Upload all new music:
 
-`python3 clone_library.py --path /Volumnes/DJ/ --upload`
+`python3 clone_library.py --path /Volumes/DJ/ --upload`
 
 ### Importing Music From `rekordbox.xml`:
 Ensure you have the proper `rekordbox.xml` file selected under Preferences > Advanced > Database > rekordbox xml:
