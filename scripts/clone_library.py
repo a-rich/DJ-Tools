@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 from datetime import datetime
 from glob import glob
+import sys
 import os
 
 
@@ -17,6 +18,10 @@ if __name__ == '__main__':
     args = p.parse_args()
 
     os.environ['AWS_PROFILE'] = 'DJ'
+
+    if not args.download and not args.upload:
+        sys.exit("WARNING: run with either/both '--download' or/and '--upload' options")
+
 
     for task in args.download:
         if task == 'music':
