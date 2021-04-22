@@ -22,7 +22,6 @@ if __name__ == '__main__':
     if not args.download and not args.upload:
         sys.exit("WARNING: run with either/both '--download' or/and '--upload' options")
 
-
     for task in args.download:
         if task == 'music':
             print(f"Indexing local track collection for comparison...")
