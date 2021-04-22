@@ -60,4 +60,4 @@ Then select the track(s) or playlist(s) and select "Import To Collection" (this 
 ![alt text](images/Pioneer_Importing.png "Import XML data into collection")
 
 ### Future Work:
-* convert `rekordbox.xml` into Serato compatible beatgrid and cue data
+* convert `rekordbox.xml` into Serato compatible beatgrid and cue data -- for the time being, you might have success with [this tool](https://github.com/digital-dj-tools/dj-data-converter); I've used this in the past to convert from Traktor to Rekordbox, though I did have to use search & replace to fix broken file paths
