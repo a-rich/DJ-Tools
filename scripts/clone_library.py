@@ -7,7 +7,7 @@ import os
 
 if __name__ == '__main__':
     p = ArgumentParser()
-    p.add_argument('--path', '-p', 
+    p.add_argument('--path', '-p', required=True,
             help='path to root of DJ USB')
     p.add_argument('--download', '-d', nargs='+', type=str,
             choices=['music', 'xml'], default=[],
