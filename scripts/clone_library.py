@@ -52,4 +52,9 @@ if __name__ == '__main__':
         cmd = f"aws s3 sync '{os.path.join(args.path, 'DJ Music')}' s3://dj.alexrichards.com/dj/music/"
         os.system(cmd)
 
+        if os.environ.get('USER') == 'aweeeezy':
+            print(f"Syncing local rekordbox.xml...")
+            cmd = f"aws s3 cp '{os.path.join(args.path, 'PIONEER', 'rekordbox.xml')}' s3://dj.alexrichards.com/dj/xml/rekordbox.xml"
+            os.system(cmd)
+
     print(f"Done!")
