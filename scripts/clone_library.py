@@ -56,18 +56,22 @@ if __name__ == '__main__':
                 """ # TODO: write XML with same whitespace formatting so Rekordbox can read it
                 data = xmltodict.parse(open(os.path.join(args.path, 'PIONEER', 'rekordbox.xml'), 'r').read())
                 for track in data['DJ_PLAYLISTS']['COLLECTION']['TRACK'][-1::-1]:
-                    track['@Location'] = track['@Location'].replace('/Volumes/DJ/', os.path.join(args.path, ''))
+                    track['@Location'] = track['@Location'].replace('/Volumes/DJ/', os.path.join(args.path if os.name == 'posix' else os.path.splitdrive(args.path)[0], ''))
                 json.dump(data, open(os.path.join(args.path, 'PIONEER', 'rekordbox.xml'), 'w'))
                 """
                 lines = open(os.path.join(args.path, 'PIONEER', 'rekordbox.xml'), 'r').readlines()
-                for l, line in enumerate(lines):
-                    if 'file://localhost' in line:
-                        lines[l] = line.replace('/Volumes/DJ/', os.path.join(args.path, ''))
                 with open(os.path.join(args.path, 'PIONEER', 'rekordbox.xml'), 'w') as f:
                     for line in lines:
+                        if 'file://localhost' in line:
+                            line = line.replace('/Volumes/DJ/', os.path.join(args.path if os.name == 'posix' else os.path.splitdrive(args.path)[0], ''))
                         f.write(f"{line.strip()}\n")
             else:
                 print(f"Rewritting rekordbox.xml track locations for your system ({os.name}) is not yet supported")
+                # example rekordbox.xml location formatted on Windows 10
+                # Location="file://localhost/D:/DJ%20Music/Bass/Architek%20%26%20Visceral%20-%20Broken.mp3"
+
+                # example rekordbox.xml location formatted on Mac
+                # Location="file://localhost/Volumes/DJ_BACKUP/DJ%20Music/Bass/Architek%20%26%20Visceral%20-%20Broken.mp3"
 
     if args.upload:
         hidden = set(glob(f"{os.path.join(args.path, 'DJ Music', '**', '.*.*')}", recursive=True))
