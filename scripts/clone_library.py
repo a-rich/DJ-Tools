@@ -15,6 +15,8 @@ if __name__ == '__main__':
             help='download MP3s and/or rekordbox.xml')
     p.add_argument('--upload', '-u', action='store_true',
             help='upload MP3s')
+    p.add_argument('--delete', action='store_true',
+            help='adds --delete flag to "aws s3 sync" command (only for me)')
     args = p.parse_args()
 
     os.environ['AWS_PROFILE'] = 'DJ'
@@ -48,8 +50,18 @@ if __name__ == '__main__':
             os.system(cmd)
 
     if args.upload:
+        hidden = set(glob(f"{os.path.join(args.path, 'DJ Music/**/.*.*')}", recursive=True))
+        if hidden:
+            print(f"Removed {len(hidden)} hidden files...")
+            for x in hidden:
+                print(f"\t{x}")
+                os.remove(x)
+            print()
+
         print(f"Syncing local track collection...")
         cmd = f"aws s3 sync '{os.path.join(args.path, 'DJ Music')}' s3://dj.alexrichards.com/dj/music/"
+        if os.environ.get('USER') == 'aweeeezy' and args.delete:
+            cmd += ' --delete'
         os.system(cmd)
 
         if os.environ.get('USER') == 'aweeeezy':
