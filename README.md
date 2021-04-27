@@ -52,12 +52,14 @@ Upload all new music:
 Ensure you have the proper `rekordbox.xml` file selected under Preferences > Advanced > Database > rekordbox xml:
 ![alt text](images/Pioneer_Preferences_Database.png "Select XML database")
 
-
 Also make sure you have made the `rekordbox.xml` database visible under Preferences > View > Layout > rekordbox xml:
 ![alt text](images/Pioneer_Preferences_View.png "Show XML database in side panel")
 
 Then select the track(s) or playlist(s) and select "Import To Collection" (this will overwrite beatgrid and cue information for files with the same name!):
 ![alt text](images/Pioneer_Importing.png "Import XML data into collection")
+
+For convenience, there's a playlist called `New Tracks` which can be referenced to find the most recent additions to the collection; don't forget to include the `Date Added` column by right-clicking the column headers area:
+![alt text](images/Pioneer_New-Tracks_Playlist.png "New Tracks Playlist")
 
 ### Future Work:
 * convert `rekordbox.xml` into Serato compatible beatgrid and cue data -- for the time being, you might have success with [this tool](https://github.com/digital-dj-tools/dj-data-converter); I've used this in the past to convert from Traktor to Rekordbox, though I did have to use search & replace to fix broken file paths
