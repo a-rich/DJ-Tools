@@ -49,7 +49,7 @@ if __name__ == '__main__':
         elif task == 'xml':
             def rewrite_xml(file_):
                 print(f"Syncing remote rekordbox.xml...")
-                os.system(f"aws s3 cp s3://dj.beatcloud.com/dj/xml/rekordbox.xml '{file_}'")
+                os.system(f"aws s3 cp s3://dj.beatcloud.com/dj/xml/rekordbox.xml {file_}")
 
                 lines = open(file_, 'r', encoding='utf-8').readlines()
                 with open(file_, 'w', encoding='utf-8') as f:
