@@ -46,33 +46,28 @@ if __name__ == '__main__':
                     print(f"\t{x}")
                     f.write(f"{x}\n")
         elif task == 'xml':
+            def rewrite_xml(file_):
+                lines = open(file_, 'r', encoding='utf-8').readlines()
+                with open(file_, 'w', encoding='utf-8') as f:
+                    for line in lines:
+                        if 'file://localhost' in line:
+                            line = line.replace('/Volumes/DJ/', os.path.join(args.path if os.name == 'posix' else os.path.splitdrive(args.path)[0], ''))
+                        f.write(f"{line.strip()}\n")
+
             if os.name == 'nt':
                 pwd = os.getcwd()
-                print(f'changing from dir {pwd} to', end=' ')
                 os.chdir(args.path)
-                print(f"{os.getcwd()}\nmaking dir {os.path.join(args.path, 'PIONEER')}")
                 os.makedirs('PIONEER', exist_ok=True)
                 os.chdir(os.path.join(args.path, 'PIONEER'))
-                print(f"running aws cp in {os.getcwd()}")
                 print(f"Syncing remote rekordbox.xml...")
-                cmd = "aws s3 cp s3://dj.beatcloud.com/dj/xml/rekordbox.xml ."
-                os.system(cmd)
+                os.system("aws s3 cp s3://dj.beatcloud.com/dj/xml/rekordbox.xml .")
+                rewrite_xml('rekordbox.xml')
                 os.chdir(pwd)
             else:
-                print(f"not windows ({os.name}) so no changing dir")
                 os.makedirs(os.path.join(args.path, 'PIONEER'), exist_ok=True)
-
                 print(f"Syncing remote rekordbox.xml...")
-                cmd = f"aws s3 cp s3://dj.beatcloud.com/dj/xml/rekordbox.xml '{os.path.join(args.path, 'PIONEER', 'rekordbox.xml')}'"
-                os.system(cmd)
-
-
-            lines = open(os.path.join(args.path, 'PIONEER', 'rekordbox.xml'), 'r', encoding='utf-8').readlines()
-            with open(os.path.join(args.path, 'PIONEER', 'rekordbox.xml'), 'w', encoding='utf-8') as f:
-                for line in lines:
-                    if 'file://localhost' in line:
-                        line = line.replace('/Volumes/DJ/', os.path.join(args.path if os.name == 'posix' else os.path.splitdrive(args.path)[0], ''))
-                    f.write(f"{line.strip()}\n")
+                os.system(f"aws s3 cp s3://dj.beatcloud.com/dj/xml/rekordbox.xml '{os.path.join(args.path, 'PIONEER', 'rekordbox.xml')}'")
+                rewrite_xml(os.path.join(args.path, 'PIONEER', 'rekordbox.xml'))
 
     if args.upload:
         hidden = set(glob(f"{os.path.join(args.path, 'DJ Music', '**', '.*.*')}", recursive=True))
