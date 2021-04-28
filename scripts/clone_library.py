@@ -50,8 +50,11 @@ if __name__ == '__main__':
                 pwd = os.getcwd()
                 print(f'changing from dir {pwd} to', end=' ')
                 os.chdir(args.path)
-                print(f"{os.getcwd()}\nmakding dir {os.path.join(args.path, 'PIONEER')}")
-                os.makedirs(os.path.join(args.path, 'PIONEER'), exist_ok=True)
+                print(f"{os.getcwd()}\nmaking dir {os.path.join(args.path, 'PIONEER')}")
+                path = os.path.join(args.path, 'PIONEER')
+                path = path.replace("\", "\\")
+                print(f"trying to make path |{path}| in dir |{os.getcwd()}|")
+                os.makedirs(path, exist_ok=True)
                 os.chdir(pwd)
                 print(f"finished in dir {os.getcwd()}")
             else:
