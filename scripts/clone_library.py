@@ -51,19 +51,21 @@ if __name__ == '__main__':
                 print(f'changing from dir {pwd} to', end=' ')
                 os.chdir(args.path)
                 print(f"{os.getcwd()}\nmaking dir {os.path.join(args.path, 'PIONEER')}")
-                os.makedirs(os.path.join(args.path, 'PIONEER'), exist_ok=True)
+                os.makedirs('PIONEER', exist_ok=True)
                 os.chdir(os.path.join(args.path, 'PIONEER'))
                 print(f"running aws cp in {os.getcwd()}")
+                print(f"Syncing remote rekordbox.xml...")
+                cmd = "aws s3 cp s3://dj.beatcloud.com/dj/xml/rekordbox.xml ."
+                os.system(cmd)
+                os.chdir(pwd)
             else:
                 print(f"not windows ({os.name}) so no changing dir")
                 os.makedirs(os.path.join(args.path, 'PIONEER'), exist_ok=True)
 
-            print(f"Syncing remote rekordbox.xml...")
-            cmd = f"aws s3 cp s3://dj.beatcloud.com/dj/xml/rekordbox.xml '{os.path.join(args.path, 'PIONEER', 'rekordbox.xml')}'"
-            os.system(cmd)
+                print(f"Syncing remote rekordbox.xml...")
+                cmd = f"aws s3 cp s3://dj.beatcloud.com/dj/xml/rekordbox.xml '{os.path.join(args.path, 'PIONEER', 'rekordbox.xml')}'"
+                os.system(cmd)
 
-            if os.name == 'nt':
-                os.chdir(pwd)
 
             lines = open(os.path.join(args.path, 'PIONEER', 'rekordbox.xml'), 'r', encoding='utf-8').readlines()
             with open(os.path.join(args.path, 'PIONEER', 'rekordbox.xml'), 'w', encoding='utf-8') as f:
