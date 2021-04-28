@@ -52,7 +52,6 @@ if __name__ == '__main__':
                 os.chdir(args.path)
                 print(f"{os.getcwd()}\nmaking dir {os.path.join(args.path, 'PIONEER')}")
                 path = os.path.join(args.path, 'PIONEER')
-                path = path.replace("\", "\\")
                 print(f"trying to make path |{path}| in dir |{os.getcwd()}|")
                 os.makedirs(path, exist_ok=True)
                 os.chdir(pwd)
