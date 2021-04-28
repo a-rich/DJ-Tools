@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from datetime import datetime
+from pathlib import Path
 from glob import glob
-# import xmltodict
 import json
 import sys
 import os
@@ -29,7 +29,8 @@ if __name__ == '__main__':
     for task in args.download:
         if task == 'music':
             print(f"Indexing local track collection for comparison...")
-            old = set(glob(f"\"{os.path.join(args.path, 'DJ Music', '**', '*.*')}\"", recursive=True))
+            glob_path = Path('/'.join(args.path, 'DJ Music'))
+            old = set([str(p) for p in glob_path.rglob('**/*.*')])
 
             print(f"Syncing remote track collection...")
             os.makedirs(os.path.join(args.path, 'DJ Music'), exist_ok=True)
@@ -37,7 +38,7 @@ if __name__ == '__main__':
             os.system(cmd)
 
             print(f"Comparing new tracks with indexed collection...")
-            new = set(glob(f"\"{os.path.join(args.path, 'DJ Music', '**', '*.*')}\"", recursive=True))
+            new = set([str(p) for p in glob_path.rglob('**/*.*')])
             difference = sorted(list(new.difference(old)), key=lambda x: os.path.getmtime(x))
 
             print(f"Added {len(difference)} new tracks:")
