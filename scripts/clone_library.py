@@ -28,27 +28,24 @@ if __name__ == '__main__':
 
     for task in args.download:
         if task == 'music':
-            print(f"Indexing local track collection for comparison...")
             glob_path = Path('/'.join([args.path, 'DJ Music']))
             old = set([str(p) for p in glob_path.rglob('**/*.*')])
-            print(f"found {len(old)} old files")
+            print(f"found {len(old)} files")
 
             print(f"Syncing remote track collection...")
             os.makedirs(os.path.join(args.path, 'DJ Music'), exist_ok=True)
             cmd = f"aws s3 sync s3://dj.beatcloud.com/dj/music/ \"{os.path.join(args.path, 'DJ Music')}\""
             os.system(cmd)
 
-            print(f"Comparing new tracks with indexed collection...")
             new = set([str(p) for p in glob_path.rglob('**/*.*')])
-            print(f"found {len(new)} new files")
             difference = sorted(list(new.difference(old)), key=lambda x: os.path.getmtime(x))
-
-            print(f"Added {len(difference)} new tracks:")
-            # with open(f"new_music_{datetime.now().strftime('%Y-%M-%dT%H:%m:%S')}.txt", 'w', encoding='utf-8') as f:
-            with open("test.txt", 'w', encoding='utf-8') as f:
-                for x in difference:
-                    print(f"\t{x}")
-                    f.write(f"{x}\n")
+            if difference:
+                print(f"found {len(difference)} new files")
+                # with open("test.txt", 'w', encoding='utf-8') as f:
+                with open(f"new_music_{datetime.now().strftime('%Y-%M-%dT%H.%m.%S')}.txt", 'w', encoding='utf-8') as f:
+                    for x in difference:
+                        print(f"\t{x}")
+                        f.write(f"{x}\n")
         elif task == 'xml':
             def rewrite_xml(file_):
                 print(f"Syncing remote rekordbox.xml...")
