@@ -48,10 +48,14 @@ if __name__ == '__main__':
         elif task == 'xml':
             if os.name == 'nt':
                 pwd = os.getcwd()
+                print(f'changing from dir {pwd} to', end=' ')
                 os.chdir(args.path)
+                print(f"{os.getcwd()}\nmakding dir {os.path.join(args.path, 'PIONEER')}")
                 os.makedirs(os.path.join(args.path, 'PIONEER'), exist_ok=True)
                 os.chdir(pwd)
+                print(f"finished in dir {os.getcwd()}")
             else:
+                print(f"not windows ({os.name}) so no changing dir")
                 os.makedirs(os.path.join(args.path, 'PIONEER'), exist_ok=True)
 
             print(f"Syncing remote rekordbox.xml...")
