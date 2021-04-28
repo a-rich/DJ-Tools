@@ -29,15 +29,15 @@ if __name__ == '__main__':
     for task in args.download:
         if task == 'music':
             print(f"Indexing local track collection for comparison...")
-            old = set(glob(f"{os.path.join(args.path, 'DJ Music', '**', '*.*')}", recursive=True))
+            old = set(glob(f"\"{os.path.join(args.path, 'DJ Music', '**', '*.*')}\"", recursive=True))
 
             print(f"Syncing remote track collection...")
             os.makedirs(os.path.join(args.path, 'DJ Music'), exist_ok=True)
-            cmd = f"aws s3 sync s3://dj.beatcloud.com/dj/music/ '{os.path.join(args.path, 'DJ Music')}'"
+            cmd = f"aws s3 sync s3://dj.beatcloud.com/dj/music/ \"{os.path.join(args.path, 'DJ Music')}\""
             os.system(cmd)
 
             print(f"Comparing new tracks with indexed collection...")
-            new = set(glob(f"{os.path.join(args.path, 'DJ Music', '**', '*.*')}", recursive=True))
+            new = set(glob(f"\"{os.path.join(args.path, 'DJ Music', '**', '*.*')}\"", recursive=True))
             difference = sorted(list(new.difference(old)), key=lambda x: os.path.getmtime(x))
 
             print(f"Added {len(difference)} new tracks:")
@@ -47,6 +47,9 @@ if __name__ == '__main__':
                     f.write(f"{x}\n")
         elif task == 'xml':
             def rewrite_xml(file_):
+                print(f"Syncing remote rekordbox.xml...")
+                os.system(f"aws s3 cp s3://dj.beatcloud.com/dj/xml/rekordbox.xml '{file_}'")
+
                 lines = open(file_, 'r', encoding='utf-8').readlines()
                 with open(file_, 'w', encoding='utf-8') as f:
                     for l in lines:
@@ -60,14 +63,10 @@ if __name__ == '__main__':
                 os.chdir(args.path)
                 os.makedirs('PIONEER', exist_ok=True)
                 os.chdir(os.path.join(args.path, 'PIONEER'))
-                print(f"Syncing remote rekordbox.xml...")
-                os.system("aws s3 cp s3://dj.beatcloud.com/dj/xml/rekordbox.xml .")
                 rewrite_xml('rekordbox.xml')
                 os.chdir(pwd)
             else:
                 os.makedirs(os.path.join(args.path, 'PIONEER'), exist_ok=True)
-                print(f"Syncing remote rekordbox.xml...")
-                os.system(f"aws s3 cp s3://dj.beatcloud.com/dj/xml/rekordbox.xml '{os.path.join(args.path, 'PIONEER', 'rekordbox.xml')}'")
                 rewrite_xml(os.path.join(args.path, 'PIONEER', 'rekordbox.xml'))
 
     if args.upload:
