@@ -13,11 +13,14 @@
 ### Description:
 This script can download from / upload to an AWS S3 instance which stores all the MP3s of the track collection. In addition, it can download a `rekordbox.xml` file which can be used to selectively import Rekordbox data (beatgrid and cue information) for tracks and/or playlists.
 ### Prerequisites:
+* `python3`
+    - Mac installation: `brew install python`
+    - Linux installation: `sudo apt install python3.8`
+    - Windows installation: [Windows releases](https://www.python.org/downloads/windows/) or [3.9.4 installer](https://www.python.org/ftp/python/3.9.4/python-3.9.4-amd64.exe)
 * `awscli`
     - Mac installation: `brew install awscli`
     - Linux installation: `sudo apt-get install awscli`
-    - Windows installation: [you're on your own](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html#cliv2-windows-install)
-* `python3`
+    - Windows installation [[official instructions](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)]: [download installer](https://awscli.amazonaws.com/AWSCLIV2.msi) OR run `msiexec.exe /i https://awscli.amazonaws.com/AWSCLIV2.msi`
 
 ### Configuring `awscli`:
 In your terminal run the following command to configure `awscli` for access to the AWS S3 instance:
@@ -42,9 +45,11 @@ optional arguments:
 ### Examples:
 Download all new music and most up-to-date `rekordbox.xml`:
 
-`python3 clone_library.py --path /Volumes/DJ/ --download music xml`
+[Unix] `python3 clone_library.py --path /Volumes/DJ/ --download music xml`
 
-Upload all new music:
+[Windows] `python3 clone_library.py --path DJ: --download music xml`
+
+Upload all new music (not tested with Windows):
 
 `python3 clone_library.py --path /Volumes/DJ/ --upload`
 
