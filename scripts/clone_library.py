@@ -31,6 +31,7 @@ if __name__ == '__main__':
             print(f"Indexing local track collection for comparison...")
             glob_path = Path('/'.join([args.path, 'DJ Music']))
             old = set([str(p) for p in glob_path.rglob('**/*.*')])
+            print(f"found {len(old)} old files")
 
             print(f"Syncing remote track collection...")
             os.makedirs(os.path.join(args.path, 'DJ Music'), exist_ok=True)
@@ -39,6 +40,7 @@ if __name__ == '__main__':
 
             print(f"Comparing new tracks with indexed collection...")
             new = set([str(p) for p in glob_path.rglob('**/*.*')])
+            print(f"found {len(new)} new files")
             difference = sorted(list(new.difference(old)), key=lambda x: os.path.getmtime(x))
 
             print(f"Added {len(difference)} new tracks:")
