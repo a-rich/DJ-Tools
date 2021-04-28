@@ -29,7 +29,7 @@ if __name__ == '__main__':
     for task in args.download:
         if task == 'music':
             print(f"Indexing local track collection for comparison...")
-            glob_path = Path('/'.join(args.path, 'DJ Music'))
+            glob_path = Path('/'.join([args.path, 'DJ Music']))
             old = set([str(p) for p in glob_path.rglob('**/*.*')])
 
             print(f"Syncing remote track collection...")
