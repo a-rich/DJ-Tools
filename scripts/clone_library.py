@@ -44,7 +44,8 @@ if __name__ == '__main__':
             difference = sorted(list(new.difference(old)), key=lambda x: os.path.getmtime(x))
 
             print(f"Added {len(difference)} new tracks:")
-            with open(f"new_music_{datetime.now().strftime('%Y-%M-%dT%H:%m:%S')}.txt", 'w', encoding='utf-8') as f:
+            # with open(f"new_music_{datetime.now().strftime('%Y-%M-%dT%H:%m:%S')}.txt", 'w', encoding='utf-8') as f:
+            with open("test.txt", 'w', encoding='utf-8') as f:
                 for x in difference:
                     print(f"\t{x}")
                     f.write(f"{x}\n")
