@@ -30,7 +30,7 @@ if __name__ == '__main__':
         if task == 'music':
             glob_path = Path('/'.join([args.path, 'DJ Music']))
             old = set([str(p) for p in glob_path.rglob('**/*.*')])
-            print(f"found {len(old)} files")
+            print(f"Found {len(old)} files")
 
             print(f"Syncing remote track collection...")
             os.makedirs(os.path.join(args.path, 'DJ Music'), exist_ok=True)
@@ -40,7 +40,7 @@ if __name__ == '__main__':
             new = set([str(p) for p in glob_path.rglob('**/*.*')])
             difference = sorted(list(new.difference(old)), key=lambda x: os.path.getmtime(x))
             if difference:
-                print(f"found {len(difference)} new files")
+                print(f"Found {len(difference)} new files")
                 # with open("test.txt", 'w', encoding='utf-8') as f:
                 with open(f"new_music_{datetime.now().strftime('%Y-%M-%dT%H.%m.%S')}.txt", 'w', encoding='utf-8') as f:
                     for x in difference:
