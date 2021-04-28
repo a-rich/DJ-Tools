@@ -52,7 +52,7 @@ if __name__ == '__main__':
                     for line in lines:
                         if 'file://localhost' in line:
                             print(f"old line {line}")
-                            line = line.replace('/Volumes/DJ/', os.path.join(args.path if os.name == 'posix' else os.path.splitdrive(args.path)[0], ''))
+                            line = line.replace('/Volumes/DJ/', os.path.join(args.path if os.name == 'posix' else '/' + os.path.splitdrive(args.path)[0] + '/', ''))
                             print(f"new line is {line}")
                         f.write(f"{line.strip()}\n")
 
