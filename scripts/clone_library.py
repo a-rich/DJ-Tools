@@ -49,12 +49,11 @@ if __name__ == '__main__':
             def rewrite_xml(file_):
                 lines = open(file_, 'r', encoding='utf-8').readlines()
                 with open(file_, 'w', encoding='utf-8') as f:
-                    for line in lines:
-                        if 'file://localhost' in line:
-                            print(f"old line {line}")
-                            line = line.replace('/Volumes/DJ/', os.path.join(args.path if os.name == 'posix' else '/' + os.path.splitdrive(args.path)[0] + '/', ''))
-                            print(f"new line is {line}")
-                        f.write(f"{line.strip()}\n")
+                    for l in lines:
+                        if 'file://localhost' in l:
+                            l = l.replace('/Volumes/DJ/', os.path.join(args.path
+                                    if os.name == 'posix' else '/' + os.path.splitdrive(args.path)[0] + '/', ''))
+                        f.write(f"{l.strip()}\n")
 
             if os.name == 'nt':
                 pwd = os.getcwd()
