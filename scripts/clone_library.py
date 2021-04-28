@@ -41,7 +41,6 @@ if __name__ == '__main__':
             difference = sorted(list(new.difference(old)), key=lambda x: os.path.getmtime(x))
             if difference:
                 print(f"Found {len(difference)} new files")
-                # with open("test.txt", 'w', encoding='utf-8') as f:
                 with open(f"new_music_{datetime.now().strftime('%Y-%M-%dT%H.%m.%S')}.txt", 'w', encoding='utf-8') as f:
                     for x in difference:
                         print(f"\t{x}")
@@ -71,7 +70,8 @@ if __name__ == '__main__':
                 rewrite_xml(os.path.join(args.path, 'PIONEER', 'rekordbox.xml'))
 
     if args.upload:
-        hidden = set(glob(f"{os.path.join(args.path, 'DJ Music', '**', '.*.*')}", recursive=True))
+        glob_path = Path('/'.join([args.path, 'DJ Music']))
+        hidden = set([str(p) for p in glob_path.rglob('**/.*.*')])
         if hidden:
             print(f"Removed {len(hidden)} hidden files...")
             for x in hidden:
@@ -80,7 +80,7 @@ if __name__ == '__main__':
             print()
 
         print(f"Syncing local track collection...")
-        cmd = f"aws s3 sync '{os.path.join(args.path, 'DJ Music')}' s3://dj.beatcloud.com/dj/music/"
+        cmd = f"aws s3 sync \"{os.path.join(args.path, 'DJ Music')}\" s3://dj.beatcloud.com/dj/music/"
         if os.environ.get('USER') == 'aweeeezy' and args.delete:
             cmd += ' --delete'
         os.system(cmd)
