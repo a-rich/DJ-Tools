@@ -41,7 +41,7 @@ if __name__ == '__main__':
             difference = sorted(list(new.difference(old)), key=lambda x: os.path.getmtime(x))
 
             print(f"Added {len(difference)} new tracks:")
-            with open(f"new_music_{datetime.now().strftime('%Y-%M-%dT%H:%m:%S')}.txt", 'w') as f:
+            with open(f"new_music_{datetime.now().strftime('%Y-%M-%dT%H:%m:%S')}.txt", 'w', encoding='utf-8') as f:
                 for x in difference:
                     print(f"\t{x}")
                     f.write(f"{x}\n")
@@ -54,14 +54,14 @@ if __name__ == '__main__':
             # if os.name == 'posix':
             #     print(f"Rewritting rekordbox.xml track locations for {args.path}...")
             #     """ # TODO: write XML with same whitespace formatting so Rekordbox can read it
-            #     data = xmltodict.parse(open(os.path.join(args.path, 'PIONEER', 'rekordbox.xml'), 'r').read())
+            #     data = xmltodict.parse(open(os.path.join(args.path, 'PIONEER', 'rekordbox.xml'), 'r', encoding='utf-8').read())
             #     for track in data['DJ_PLAYLISTS']['COLLECTION']['TRACK'][-1::-1]:
             #         track['@Location'] = track['@Location'].replace('/Volumes/DJ/', os.path.join(args.path if os.name == 'posix' else os.path.splitdrive(args.path)[0], ''))
-            #     json.dump(data, open(os.path.join(args.path, 'PIONEER', 'rekordbox.xml'), 'w'))
+            #     json.dump(data, open(os.path.join(args.path, 'PIONEER', 'rekordbox.xml'), 'w', encoding='utf-8'))
             #     """
             print(f"os.name: {os.name}\nsplitting {args.path}: {os.path.splitdrive(args.path)}")
-            lines = open(os.path.join(args.path, 'PIONEER', 'rekordbox.xml'), 'r').readlines()
-            with open(os.path.join(args.path, 'PIONEER', 'rekordbox.xml'), 'w') as f:
+            lines = open(os.path.join(args.path, 'PIONEER', 'rekordbox.xml'), 'r', encoding='utf-8').readlines()
+            with open(os.path.join(args.path, 'PIONEER', 'rekordbox.xml'), 'w', encoding='utf-8') as f:
                 for line in lines:
                     if 'file://localhost' in line:
                         line = line.replace('/Volumes/DJ/', os.path.join(args.path if os.name == 'posix' else os.path.splitdrive(args.path)[0], ''))
