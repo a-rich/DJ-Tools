@@ -25,6 +25,8 @@ p.add_argument('--playlist_data', type=str, default='playlist_data.json',
         help='path to playlist JSON')
 p.add_argument('--compare_playlists', nargs='+',
         help='list of Spotify Playlist IDs to compare for track overlap')
+p.add_argument('--include_dirs', nargs='+',
+        help='list of parent folder names to ignore in --path')
 p.add_argument('--path', type=str,
         help='path to root of DJ USB')
 p.add_argument('--compare_matches', action='store_true',
@@ -36,6 +38,8 @@ p.add_argument('--new', type=parser.parse,
 p.add_argument('--verbose', action='store_true',
         help='verbosity level')
 args = p.parse_args()
+
+args.include_dirs = set([x.lower() for x in args.include_dirs]) if args.include_dirs else []
 
 
 def get_tracks(playlist_id):
@@ -62,6 +66,8 @@ compare = set([x.lower() for x in args.compare_playlists])
 all_ = 'all' in compare 
 print(f"Getting track data from Spotify...")
 tracks_by_playlist = {k: get_tracks(v) for k,v in playlists.items() if all_ or k in compare}
+for k,v in tracks_by_playlist.items():
+    print(f"\t{k.title()}: {len(v)}")
 
 if len(tracks_by_playlist) > 1:
     print(f"\nComparing Spotify playlists with each other...")
@@ -78,16 +84,29 @@ for a,b in combinations(tracks_by_playlist, 2):
 
 print(f"\nComparing Spotify playlists with local track collection...")
 if args.path:
+    tracks, folders = [], set()
     glob_path = Path('/'.join([args.path, 'DJ Music']))
-    tracks = [os.path.splitext(str(p))[0] for p in glob_path.rglob('**/*.*')]
+
+    for x in [os.path.splitext(str(p))[0] for p in glob_path.rglob('**/*.*')]:
+        folder = os.path.basename(os.path.split(x)[0]).lower()
+        if args.include_dirs and folder in args.include_dirs:
+            tracks.append(x)
+            folders.add(folder)
+        if not args.include_dirs:
+            folders.add(folder)
+
+    for folder in folders:
+        print(f"\t{folder.title()}")
+
     tracks_by_folder = {g: set([os.path.basename(x) for x in group])
-        for g, group in groupby(tracks, key=lambda x: os.path.basename(os.path.split(x)[0]))}
+            for g, group in groupby(tracks, key=lambda x: os.path.basename(os.path.split(x)[0]))}
     all_files = [(x, ' - '.join(x.split(' - ')[-1::-1])) for x in
             set(reduce(lambda a,b: a.union(b), tracks_by_folder.values()))
             if len(x.split(' - ')) > 1]
     all_tracks = set(reduce(lambda a,b: a.union(b), tracks_by_playlist.values()))
     matches, non_matches = set(), dict()
     product = list(product(all_tracks, all_files))
+
     for x,y in tqdm(product):
         for z in y:
             fuzz_ratio = fuzz.ratio(x.lower(), z.lower())
@@ -100,12 +119,12 @@ if args.path:
 
         if x in matches and x in non_matches:
             del non_matches[x]
-    print(f"matches: {len(list(matches))}\nnon_matches: {len(list(non_matches))}")
 
+    print(f"Matches: {len(list(matches))}\nNon-matches: {len(list(non_matches))}")
     if args.compare_matches:
         for x in sorted(list(matches)):
             print(f"\t{x}")
     else:
         for x,r in non_matches.items():
-            print(f"\t{x}: {r[0]}% similar to {r[1:]}")
+            print(f"{r[0]}% similarity\n\tSpotify track: [{x}]\n\tLocal track:   [{r[1]}]")
     
