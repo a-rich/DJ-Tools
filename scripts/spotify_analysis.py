@@ -3,6 +3,7 @@ from itertools import combinations, product
 from argparse import ArgumentParser
 from datetime import datetime
 from itertools import groupby
+from functools import reduce
 from fuzzywuzzy import fuzz
 from dateutil import parser
 from pathlib import Path
@@ -24,12 +25,14 @@ p.add_argument('--playlist_data', type=str, default='playlist_data.json',
         help='path to playlist JSON')
 p.add_argument('--compare_playlists', nargs='+',
         help='list of Spotify Playlist IDs to compare for track overlap')
-p.add_argument('--compare_local', type=str,
+p.add_argument('--path', type=str,
         help='path to root of DJ USB')
+p.add_argument('--compare_matches', action='store_true',
+        help='display matches or misses of fuzzy matching')
+p.add_argument('--fuzz_ratio', type=int, default=72,
+        help='lower-bound similarity between Spotify and local tracks to consider a match')
 p.add_argument('--new', type=parser.parse,
         help='datetime after which songs are considered new')
-p.add_argument('--fuzz_ratio', type=int, default=87,
-        help='lower-bound similarity between Spotify and local tracks to consider a match')
 p.add_argument('--verbose', action='store_true',
         help='verbosity level')
 args = p.parse_args()
@@ -42,76 +45,67 @@ def get_tracks(playlist_id):
         raise Exception(f"failed to get playlist with ID {playlist_id}")
     
     tracks = playlist['tracks']
-    result = []
+    result = [f"{x['track']['name']} - {', '.join([y['name'] for y in x['track']['artists']])}"
+            for x in tracks['items']]
 
     while tracks['next']:
-        result.extend([f"{x['track']['name']} - {', '.join([y['name'] for y in x['track']['artists']])}.mp3"
-                for x in tracks['items']])
         tracks = spotify.next(tracks)
-
-    result.extend([f"{x['track']['name']} - {', '.join([y['name'] for y in x['track']['artists']])}.mp3"
+        result.extend([f"{x['track']['name']} - {', '.join([y['name'] for y in x['track']['artists']])}"
                 for x in tracks['items']])
 
-    return result
+    return set(result)
 
 
 spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
-playlists = json.load(open(args.playlist_data, 'r'))
-tracks_by_playlist = {}
-
+playlists = {k.lower(): v for k,v in json.load(open(args.playlist_data, 'r')).items()}
+compare = set([x.lower() for x in args.compare_playlists])
+all_ = 'all' in compare 
 print(f"Getting track data from Spotify...")
-for playlist in args.compare_playlists:
-    if playlist.lower() == 'all':
-        for playlist in playlists:
-            try:
-                tracks_by_playlist[playlist] = get_tracks(playlists.get(playlist.lower(), playlist))
-            except Exception as e:
-                print(f"failed to get playlist {playlist}: {e}")
-        break
-    else:
-        try:
-            tracks_by_playlist[playlist] = get_tracks(playlists.get(playlist.lower(), playlist))
-        except Exception as e:
-            print(f"failed to get playlist {playlist}: {e}")
-            continue
+tracks_by_playlist = {k: get_tracks(v) for k,v in playlists.items() if all_ or k in compare}
 
-print(f"\nComparing Spotify playlists with each other...")
+if len(tracks_by_playlist) > 1:
+    print(f"\nComparing Spotify playlists with each other...")
+
 for a,b in combinations(tracks_by_playlist, 2):
     intersection = set(tracks_by_playlist[a]).intersection(set(tracks_by_playlist[b]))
     if intersection:
         left = f"{a.title()} ({len(tracks_by_playlist[a])})"
         right = f"{b.title()} ({len(tracks_by_playlist[b])})"
         print(f"{left : >35}  ∩  {right : <35} {len(intersection)}")
-    if args.verbose:
         offset = 35 - len(left)
         for x in intersection:
             print(f"{' ' * offset}\t{x}")
 
 print(f"\nComparing Spotify playlists with local track collection...")
-if args.compare_local:
-    glob_path = Path('/'.join([args.compare_local, 'DJ Music']))
-    tracks = [str(p) for p in glob_path.rglob('**/*.*')]
-    tracks_by_folder = {}
+if args.path:
+    glob_path = Path('/'.join([args.path, 'DJ Music']))
+    tracks = [os.path.splitext(str(p))[0] for p in glob_path.rglob('**/*.*')]
+    tracks_by_folder = {g: set([os.path.basename(x) for x in group])
+        for g, group in groupby(tracks, key=lambda x: os.path.basename(os.path.split(x)[0]))}
+    all_files = [(x, ' - '.join(x.split(' - ')[-1::-1])) for x in
+            set(reduce(lambda a,b: a.union(b), tracks_by_folder.values()))
+            if len(x.split(' - ')) > 1]
+    all_tracks = set(reduce(lambda a,b: a.union(b), tracks_by_playlist.values()))
+    matches, non_matches = set(), dict()
+    product = list(product(all_tracks, all_files))
+    for x,y in tqdm(product):
+        for z in y:
+            fuzz_ratio = fuzz.ratio(x.lower(), z.lower())
+            if fuzz_ratio >= args.fuzz_ratio:
+                matches.add(x)
+            else:
+                non_matches[x] = max([
+                        non_matches.get(x, (-1, None)), 
+                        (fuzz_ratio, z)], key=lambda x: x[0])
 
-    for g, group in groupby(tracks, key=lambda x: os.path.basename(os.path.split(x)[0])):
-        tracks_by_folder[g] = set([os.path.basename(x) for x in group])
+        if x in matches and x in non_matches:
+            del non_matches[x]
+    print(f"matches: {len(list(matches))}\nnon_matches: {len(list(non_matches))}")
+
+    if args.compare_matches:
+        for x in sorted(list(matches)):
+            print(f"\t{x}")
+    else:
+        for x,r in non_matches.items():
+            print(f"\t{x}: {r[0]}% similar to {r[1:]}")
     
-    total = sum([len(x) for x in tracks_by_folder.values()]) * sum([len(x) for x in tracks_by_playlist.values()])
-    pbar = tqdm(total=total)
-    for a,b in product(tracks_by_folder, tracks_by_playlist):
-        files = []
-        for x,y in product(tracks_by_folder[a], tracks_by_playlist[b]):
-            if fuzz.ratio(x.lower(), y.lower()) >= args.fuzz_ratio:
-                files.append((x,y))
-            pbar.update(1)
-
-        if files:
-            files.sort()
-            left = f"[FOLDER] {a.title()} ({len(tracks_by_folder[a])})"
-            right = f"[PLAYLIST] {b.title()} ({len(tracks_by_playlist[b])})"
-            print(f"{left : >42}  ∩  {right : <45} {len(files)}")
-        if args.verbose:
-            offset = 42 - len(left)
-            for x,y in files:
-                print(f"{' ' * offset}\t[{x}]  -->  [{y}]")
-    pbar.close()
