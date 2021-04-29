@@ -82,21 +82,21 @@ for a,b in combinations(tracks_by_playlist, 2):
         for x in intersection:
             print(f"{' ' * offset}\t{x}")
 
-print(f"\nComparing Spotify playlists with local track collection...")
 if args.path:
-    tracks, folders = [], set()
+    print(f"\nComparing Spotify playlists with local track collection...")
+    tracks, folders = [], {}
     glob_path = Path('/'.join([args.path, 'DJ Music']))
 
     for x in [os.path.splitext(str(p))[0] for p in glob_path.rglob('**/*.*')]:
         folder = os.path.basename(os.path.split(x)[0]).lower()
         if args.include_dirs and folder in args.include_dirs:
             tracks.append(x)
-            folders.add(folder)
+            folders[folder] = folders.get(folder, 0) + 1
         if not args.include_dirs:
-            folders.add(folder)
+            folders[folder] = folders.get(folder, 0) + 1
 
-    for folder in folders:
-        print(f"\t{folder.title()}")
+    for k,v in folders.items():
+        print(f"\t{k.title()}: {v}")
 
     tracks_by_folder = {g: set([os.path.basename(x) for x in group])
             for g, group in groupby(tracks, key=lambda x: os.path.basename(os.path.split(x)[0]))}
