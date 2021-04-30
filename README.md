@@ -22,12 +22,15 @@ This script can download from / upload to an AWS S3 instance which stores all th
     - Linux installation: `sudo apt-get install awscli`
     - Windows installation [[official instructions](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)]: [download installer](https://awscli.amazonaws.com/AWSCLIV2.msi) OR run `msiexec.exe /i https://awscli.amazonaws.com/AWSCLIV2.msi`
 
+-------------
 ### Configuring `awscli`:
 In your terminal run the following command to configure `awscli` for access to the AWS S3 instance:
 
 `aws configure --profile DJ`
 
 Enter the provided `access_key` and `secret_key`. Default values for the rest of the configuration is fine.
+
+-------------
 
 ### Usage:
 ```
@@ -53,6 +56,8 @@ Upload all new music (not tested with Windows):
 
 `python3 clone_library.py --path /Volumes/DJ/ --upload`
 
+-------------
+
 ### Importing Music From `rekordbox.xml`:
 Ensure you have the proper `rekordbox.xml` file selected under Preferences > Advanced > Database > rekordbox xml:
 ![alt text](images/Pioneer_Preferences_Database.png "Select XML database")
@@ -63,8 +68,26 @@ Also make sure you have made the `rekordbox.xml` database visible under Preferen
 Then select the track(s) or playlist(s) and select "Import To Collection" (this will overwrite beatgrid and cue information for files with the same name!):
 ![alt text](images/Pioneer_Importing.png "Import XML data into collection")
 
-For convenience, there's a playlist called `New Tracks` which can be referenced to find the most recent additions to the collection; don't forget to include the `Date Added` column by right-clicking the column headers area:
-![alt text](images/Pioneer_New-Tracks_Playlist.png "New Tracks Playlist")
+For convenience, there's a playlist called `New Tracks` which can be referenced to find the most recent additions to the collection.
 
+Don't forget to include the `Date Added` and `Color` columns by right-clicking the column headers area; sort by `Date Added` and import the most recent tracks you haven't imported yourself yet. When I process a track (adjust beatgrid & tempo and set cue points), I set the `Color` to `green (Closing)`.
+
+As I mix (or if it's immediately apparent while importing) I may set `Color` to `red (Headline)` if it's a track with a bit too much energy to play with more than one other `red` track in a row.
+
+I may also set `Color` to `blue (Opening)` if a track has too little energy to sustain a groove.
+
+-------------
+
+**NOTE:** This color scheme is largely neglected; basically you should use color as an indicator of whether or not a track has been processed.
+
+-------------
+
+**NOTE:** There may be an mp3 available for a track that I haven't processed; meaning you can import the track (assign BPM, beat grid) and begin storing custom cue points in addition to making potentially necessary beatgrid adjustement(s). You may want to consider re-importing these tracks again after I've processed them so you can persist consistency with my library. Otherwise, if you want to retain your own custom adaptations to the tracks, as far as Rekordbox is concerned, then ensure you **do not** re-import my `rekordbox.xml` representation of a track ontop of your own...always keep an up-to-date `my_rekordbox.xml` that you can restore / import from in case you overwrite tracks with my Rekordbox info
+
+-------------
+
+![alt text](images/Pioneer_New-Tracks_Playlist_2.png "New Tracks Playlist")
+
+-------------
 ### Future Work:
 * convert `rekordbox.xml` into Serato compatible beatgrid and cue data -- for the time being, you might have success with [this tool](https://github.com/digital-dj-tools/dj-data-converter); I've used this in the past to convert from Traktor to Rekordbox, though I did have to use search & replace to fix broken file paths
