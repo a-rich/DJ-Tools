@@ -6,6 +6,7 @@
 * `rename.py`: rename ugly files downloaded with the `download.sh` script
 * `randomize_tracks.py`: randomize track number (and other select ID3 tag fields) to 'shuffle' library
 * `key_analysis.py`: analyze / visualize melodic key information in library
+* `spotify_analysis.py`: compare Spotify playlists with each other and local folders to identify overlapping or missing tracks 
 
 ## Cloning Library
 ----------
@@ -50,7 +51,7 @@ Download all new music and most up-to-date `rekordbox.xml`:
 
 [Unix] `python3 clone_library.py --path /Volumes/DJ/ --download music xml`
 
-[Windows] `python3 clone_library.py --path DJ: --download music xml`
+[Windows] `python3 clone_library.py --path D: --download music xml`
 
 Upload all new music (not tested with Windows):
 
