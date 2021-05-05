@@ -99,10 +99,8 @@ def get_tracks_local():
         x = os.path.splitext(str(p))[0]
         _most_recent = [max(_most_recent[0], p.stat().st_mtime), x]
         folder = os.path.basename(os.path.split(x)[0]).lower()
-        if args.include_dirs and folder in args.include_dirs:
+        if (args.include_dirs and folder in args.include_dirs) or not args.include_dirs:
             tracks.append(x)
-            folders[folder] = folders.get(folder, 0) + 1
-        if not args.include_dirs:
             folders[folder] = folders.get(folder, 0) + 1
     _most_recent[0] = datetime.fromtimestamp(_most_recent[0])
 
@@ -125,17 +123,23 @@ def find_new_tracks(_tracks_by_playlist, _most_recent):
     Args:
         _tracks_by_playlist (dict): playlist name mapped to set of (track name, date added)
         _most_recent (list): datetime and track name for most recently added track
+    Return:
+        (list): list of tracks that might be new
     """
     print("Finding newer tracks in each playlist...")
+    _new_tracks = []
     for k,v in _tracks_by_playlist.items():
         v = list(filter(lambda x: x[1] > _most_recent[0], sorted(v, key=lambda x: x[1], reverse=True)))
         if v:
             print(k.title())
         for track, date in v:
             print(f"\t{date}: {track}")
+            _new_tracks.append(track)
+
+    return _new_tracks
 
 
-def compare_local_tracks(_tracks_by_playlist, _tracks_by_folder):
+def compare_local_tracks(_tracks_by_playlist, _tracks_by_folder, _new_tracks):
     """Display tracks across all Spotify playlists that do not match
        (within --fuzz_ratio) any local tracks.
     Args:
@@ -147,9 +151,12 @@ def compare_local_tracks(_tracks_by_playlist, _tracks_by_folder):
             set(reduce(lambda a,b: a.union(b), _tracks_by_folder.values()))
             if len(x.split(' - ')) > 1]
 
-    _all_tracks = set()
-    for playlist, tracks in _tracks_by_playlist.items():
-        _all_tracks.update(list(zip(*tracks))[0])
+    if type(_new_tracks) is list:
+        _all_tracks = set(_new_tracks)
+    else:
+        _all_tracks = set()
+        for playlist, tracks in _tracks_by_playlist.items():
+            _all_tracks.update(list(zip(*tracks))[0])
 
     # why no workie?!
     # _all_tracks = set(reduce(lambda a,b: set(list(zip(*a))[0]).union(b), _tracks_by_playlist.values()))
@@ -169,7 +176,7 @@ def compare_local_tracks(_tracks_by_playlist, _tracks_by_folder):
             del non_matches[x]
 
     print(f"Matches: {len(list(matches))}\nNon-matches: {len(list(non_matches))}")
-    if args.compare_matches:
+    if args.compare_matches or _new_tracks:
         for x in sorted(list(matches)):
             print(f"\t{x}")
     else:
@@ -215,8 +222,9 @@ if __name__ == '__main__':
             sys.exit("you must provide the --path to the root of your DJ USB in order to find the newest playlist tracks or compare playlists tracks with local tracks")
         tracks_by_folder, most_recent = get_tracks_local()
 
+    new_tracks = None
     if args.find_new:
-        find_new_tracks(tracks_by_playlist, most_recent)
+        new_tracks = find_new_tracks(tracks_by_playlist, most_recent)
 
     if args.compare_local:
         try:
@@ -224,4 +232,4 @@ if __name__ == '__main__':
         except:
             print(f"[WARNING]: you can get a huge speed boost fuzzy matching local files if you run `pip install python-Levenshtein`")
 
-        compare_local_tracks(tracks_by_playlist, tracks_by_folder)
+        compare_local_tracks(tracks_by_playlist, tracks_by_folder, new_tracks)
