@@ -141,6 +141,7 @@ def compare_local_tracks(_tracks_by_playlist, _tracks_by_folder):
         _tracks_by_playlist (dict): playlist name mapped to set of (track name, date added)
         _tracks_by_folder (dict): folder name mapped to set of track names
     """
+    print(f"\nComparing Spotify playlists with local track collection...")
     _all_files = [(x, ' - '.join(x.split(' - ')[-1::-1])) for x in
             set(reduce(lambda a,b: a.union(b), _tracks_by_folder.values()))
             if len(x.split(' - ')) > 1]
@@ -220,7 +221,4 @@ if __name__ == '__main__':
         except:
             print(f"[WARNING]: you can get a huge speed boost fuzzy matching local files if you run `pip install python-Levenshtein`")
 
-        print(f"\nComparing Spotify playlists with local track collection...")
         compare_local_tracks(tracks_by_playlist, tracks_by_folder)
-
-
