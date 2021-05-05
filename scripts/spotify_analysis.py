@@ -9,6 +9,7 @@ from pathlib import Path
 from tqdm import tqdm
 import spotipy
 import json
+import sys
 import os
 
 
@@ -210,6 +211,8 @@ if __name__ == '__main__':
         compare_playlists(tracks_by_playlist)
 
     if args.find_new or args.compare_local:
+        if not args.path:
+            sys.exit("you must provide the --path to the root of your DJ USB in order to find the newest playlist tracks or compare playlists tracks with local tracks")
         tracks_by_folder, most_recent = get_tracks_local()
 
     if args.find_new:
