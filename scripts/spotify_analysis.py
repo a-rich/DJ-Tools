@@ -97,7 +97,8 @@ def get_tracks_local():
     print(f"Globbing local tracks...")
     for p in glob_path.rglob('**/*.*'):
         x = os.path.splitext(str(p))[0]
-        _most_recent = [max(_most_recent[0], p.stat().st_mtime), x]
+        _ = [p.stat().st_mtime, x]
+        _most_recent = max([_most_recent, _], key=lambda y: y[0])
         folder = os.path.basename(os.path.split(x)[0]).lower()
         if (args.include_dirs and folder in args.include_dirs) or not args.include_dirs:
             tracks.append(x)
@@ -109,8 +110,8 @@ def get_tracks_local():
             print(f"\t{k.title()}: {v}")
         print()
 
-        newest_date, newest_track = _most_recent
-        print(f"Newest track is [{os.path.basename(os.path.split(newest_track)[0])}] {os.path.basename(newest_track)}: {newest_date}")
+    newest_date, newest_track = _most_recent
+    print(f"Newest track is [{os.path.basename(os.path.split(newest_track)[0])}] {os.path.basename(newest_track)}: {newest_date}")
         
     _tracks_by_folder = {g: set([os.path.basename(x) for x in group])
             for g, group in groupby(tracks, key=lambda x: os.path.basename(os.path.split(x)[0]))}
@@ -158,15 +159,17 @@ def compare_local_tracks(_tracks_by_playlist, _tracks_by_folder, _new_tracks):
         for playlist, tracks in _tracks_by_playlist.items():
             _all_tracks.update(list(zip(*tracks))[0])
 
-    # why no workie?!
-    # _all_tracks = set(reduce(lambda a,b: set(list(zip(*a))[0]).union(b), _tracks_by_playlist.values()))
+        # why no workie?!
+        # _all_tracks = set(reduce(lambda a,b: set(list(zip(*a))[0]).union(b), _tracks_by_playlist.values()))
 
-    matches, non_matches = set(), dict()
+    matches, non_matches = dict(), dict()
     for x,y in tqdm(list(product(_all_tracks, _all_files))):
         for z in y:
             fuzz_ratio = fuzz.ratio(x.lower(), z.lower())
             if fuzz_ratio >= args.fuzz_ratio:
-                matches.add(x)
+                matches[x] = max([
+                        matches.get(x, (-1, None)), 
+                        (fuzz_ratio, z)], key=lambda x: x[0])
             else:
                 non_matches[x] = max([
                         non_matches.get(x, (-1, None)), 
@@ -175,13 +178,16 @@ def compare_local_tracks(_tracks_by_playlist, _tracks_by_folder, _new_tracks):
         if x in matches and x in non_matches:
             del non_matches[x]
 
-    print(f"Matches: {len(list(matches))}\nNon-matches: {len(list(non_matches))}")
     if args.compare_matches or _new_tracks:
-        for x in sorted(list(matches)):
-            print(f"\t{x}")
+        print(f"Matches: {len(list(matches))}")
+        for x,r in matches.items():
+            print(f"\t{r[0]}% similarity\n\tSpotify track: [{x}]\n\tLocal track:   [{r[1]}]")
+        print(f"Non-matches: {len(list(non_matches))}")
     else:
+        print(f"Non-matches: {len(list(non_matches))}")
         for x,r in non_matches.items():
-            print(f"{r[0]}% similarity\n\tSpotify track: [{x}]\n\tLocal track:   [{r[1]}]")
+            print(f"\t{r[0]}% similarity\n\tSpotify track: [{x}]\n\tLocal track:   [{r[1]}]")
+        print(f"Matches: {len(list(matches))}")
 
 
 
