@@ -95,7 +95,7 @@ def get_tracks_local():
     _most_recent = [0, None]
 
     print(f"Globbing local tracks...")
-    for p in glob_path.rglob('**/*.*'):
+    for p in glob_path.rglob('**/[!.]*.*'):
         x = os.path.splitext(str(p))[0]
         _ = [p.stat().st_mtime, x]
         _most_recent = max([_most_recent, _], key=lambda y: y[0])
@@ -207,7 +207,7 @@ if __name__ == '__main__':
     p.add_argument('--path', type=str,
             help='path to root of DJ USB')
     p.add_argument('--include_dirs', nargs='+',
-            help='list of parent folder names to ignore in --path')
+            help='list of parent folder names to search in --path')
     p.add_argument('--compare_matches', action='store_true',
             help='display matches or misses of fuzzy matching')
     p.add_argument('--fuzz_ratio', type=int, default=72,
