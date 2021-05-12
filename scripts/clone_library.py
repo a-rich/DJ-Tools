@@ -15,7 +15,8 @@ if __name__ == '__main__':
     p.add_argument('--download', '-d', nargs='+', type=str,
             choices=['music', 'xml'], default=[],
             help='download MP3s and/or rekordbox.xml')
-    p.add_argument('--upload', '-u', action='store_true',
+    p.add_argument('--upload', '-u', nargs='+', type=str,
+            choices=['music', 'xml'], default=[],
             help='upload MP3s')
     p.add_argument('--delete', action='store_true',
             help='adds --delete flag to "aws s3 sync" command (only for me)')
@@ -69,23 +70,24 @@ if __name__ == '__main__':
                 os.makedirs(os.path.join(args.path, 'PIONEER'), exist_ok=True)
                 rewrite_xml(os.path.join(args.path, 'PIONEER', 'rekordbox.xml'))
 
-    if args.upload:
-        glob_path = Path('/'.join([args.path, 'DJ Music']))
-        hidden = set([str(p) for p in glob_path.rglob('**/.*.*')])
-        if hidden:
-            print(f"Removed {len(hidden)} hidden files...")
-            for x in hidden:
-                print(f"\t{x}")
-                os.remove(x)
-            print()
+    for task in args.upload:
+        if task == 'music':
+            glob_path = Path('/'.join([args.path, 'DJ Music']))
+            hidden = set([str(p) for p in glob_path.rglob('**/.*.*')])
+            if hidden:
+                print(f"Removed {len(hidden)} hidden files...")
+                for x in hidden:
+                    print(f"\t{x}")
+                    os.remove(x)
+                print()
 
-        print(f"Syncing local track collection...")
-        cmd = f"aws s3 sync \"{os.path.join(args.path, 'DJ Music')}\" s3://dj.beatcloud.com/dj/music/"
-        if os.environ.get('USER') == 'aweeeezy' and args.delete:
-            cmd += ' --delete'
-        os.system(cmd)
+            print(f"Syncing local track collection...")
+            cmd = f"aws s3 sync \"{os.path.join(args.path, 'DJ Music')}\" s3://dj.beatcloud.com/dj/music/"
+            if os.environ.get('USER') == 'aweeeezy' and args.delete:
+                cmd += ' --delete'
+            os.system(cmd)
 
-        if os.environ.get('USER') == 'aweeeezy':
+        elif task == 'xml' and os.environ.get('USER') == 'aweeeezy':
             print(f"Syncing local rekordbox.xml...")
             cmd = f"aws s3 cp '{os.path.join(args.path, 'PIONEER', 'rekordbox.xml')}' s3://dj.beatcloud.com/dj/xml/rekordbox.xml"
             os.system(cmd)
