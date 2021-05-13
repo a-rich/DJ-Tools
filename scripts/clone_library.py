@@ -17,7 +17,7 @@ if __name__ == '__main__':
             help='download MP3s and/or rekordbox.xml')
     p.add_argument('--upload', '-u', nargs='+', type=str,
             choices=['music', 'xml'], default=[],
-            help='upload MP3s')
+            help='upload MP3s and/or rekordbox.xml')
     p.add_argument('--delete', action='store_true',
             help='adds --delete flag to "aws s3 sync" command (only for me)')
     args = p.parse_args()
