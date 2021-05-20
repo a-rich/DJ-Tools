@@ -1,17 +1,159 @@
-from spotipy.oauth2 import SpotifyClientCredentials
 from itertools import combinations, product
+from spotipy.oauth2 import SpotifyOAuth
 from datetime import datetime, timezone
 from argparse import ArgumentParser
 from itertools import groupby
+from bs4 import BeautifulSoup
 from functools import reduce
 from fuzzywuzzy import fuzz
 from pathlib import Path
 from tqdm import tqdm
+import requests
 import spotipy
 import json
 import sys
 import os
 
+
+
+def get_playlist_label(_spotify, q): 
+    """Get artists from URL, file, or CLI arg and fetches all albums by artists
+       from Spotify. If album has a label ~= --label, then those tracks are
+       added to a new playlist with the same name as --label.
+    Args:
+        _spotify (spotipy.Spotify): spotify object
+        q (str): either URL to Beatport record label page, URL to Bandcamp
+                artist page, path to file with artists separated by newline,
+                or space-delimited list of artists
+    """
+
+    def get_artist_tracks(q): 
+        """Search Spotify for artist name, filter for names matching closely
+           enough, and get their tracks which belong to --label.
+        Args:
+            q (str): name of an artist
+        Returns:
+            data (dict): mapping album ID to list of tracks
+        """
+
+        def filter_artists(_artists):
+            """If Spotify artist name fuzzy matches _artist closely enough, get
+               their albums.
+            Args:
+                _artists (str): name of an artist
+            Returns:
+                artist_album_tracks (dict): mapping album ID to list of tracks
+            """
+
+            def get_artist_albums(_artist):
+                """Gets the albums of _artist and filters for label fuzzy
+                   matching --label closely enough.
+                Args:
+                    _artists (str): name of an artist
+                Returns:
+                    albums (list): list of tracks
+                """
+
+                def filter_albums(_albums):
+                    """Gets the albums of _artist and filters for label fuzzy
+                    matching --label closely enough.
+                    Args:
+                        _albums (list): Spotify album objects
+                    Returns:
+                        album_matches (list): list of track (id, name)
+                    """
+                    album_matches = []
+                    for x in _albums:
+                        x = _spotify.album(x['id'])
+                        fuzz_ratio = fuzz.ratio(x['label'].lower(), args.label)
+                        if fuzz_ratio > args.fuzz_ratio:
+                            album_matches.append([x['id'], x['name']])
+                    
+                    return album_matches
+
+                albums_ = _spotify.artist_albums(_artist)
+                albums = filter_albums(albums_['items'])
+                while albums_['next']:
+                    albums_ = _spotify.next(albums_)
+                    albums.extend(filter_albums(albums_['items']))
+
+                return albums
+
+            artist_album_tracks = {}
+            for x in _artists:
+                fuzz_ratio = fuzz.ratio(x['name'].lower(), q.lower())
+                if fuzz_ratio > args.get_artists_fuzz_ratio:
+                    albums = get_artist_albums(x['id'])
+                    if albums:
+                        artist_album_tracks[x['id']] = {'name': x['name'], 'albums': []}
+                        print(f"\t{fuzz_ratio}% match: {x['name']}, {x['id']}, {len(albums)} matching albums")
+                    for album, name in albums:
+                        if name in seen:
+                            continue
+                        album_tracks_ = _spotify.album_tracks(album)
+                        album_tracks = album_tracks_['items']
+                        while album_tracks_['next']:
+                            album_tracks_ = _spotify.next(album_tracks_)
+                            album_tracks.extend(album_tracks_['items'])
+                        artist_album_tracks[x['id']]['albums'].append({'id': album, 'name': name, 'tracks': album_tracks})
+
+            return artist_album_tracks
+
+        artists_ = spotify.search(q='artist:' + q, type='artist') 
+        data = filter_artists(artists_['artists']['items'])
+        while artists_['artists']['next']: 
+            try:
+                artists_ = spotify.next(artists_['artists']) 
+                data.update(filter_artists(artists_['artists']['items'])) 
+            except Exception as e:
+                print(f"Exception while getting artists...")
+                break
+        
+        return data 
+        
+    # Get list of artists belonging to --label
+    soup = BeautifulSoup(requests.get(q).text, 'html.parser')
+    if 'beatport' in q:
+        artist_tab = soup.find_all("div", {"class":"filter-drop filter-artists-drop"})[0]
+        artists = [x.text[:-2] for x in artist_tab.find_all("label", {"class":"filter-drop-checkbox-label"})]
+    elif 'http' in q:
+        artists = [x.text for x in soup.find_all("div", {"class":"artists-grid-name"})]
+    else:
+        if os.path.exists(q):
+            artists = [x.strip() for x in open(q, 'r').readlines()]
+        elif len(q.split(' ')):
+            artists = a.split(' ')
+    artists = set(artists)
+    data = {}
+    seen = set()
+    tracks = set()
+
+    # Get the tracks of artists' albums belonging to --label
+    print(f"Getting tracks for record label {args.label.title()}...")
+    for a in tqdm(artists, desc="Getting artists' tracks"):
+        data.update(get_artist_tracks(a))
+    
+    if data:
+        playlist = spotify.user_playlist_create(args.spotify_user_name, name=args.label.title())  
+
+    # Ensure uniqueness of tracks / albums before adding to a new Spotify playlist
+    print(f"Adding tracks to {playlist['name']}...")
+    albums = sorted([x for v in data.values() for x in v['albums'] if x['tracks']], key=lambda x : x['name'])
+    for album in albums:
+        if album['name'] in seen:
+            continue
+        seen.add(album['name'])
+        _new_tracks = []
+        for x in album['tracks']:
+            if x['name'] not in tracks:
+                tracks.add(x['name'])
+                _new_tracks.append(x['id'])
+
+        print(f"\t{album['name']}: {len(_new_tracks)}")
+        if _new_tracks:
+            spotify.playlist_add_items(playlist['id'], _new_tracks, position=None)
+
+    print(f"Playlist '{playlist['name']}' URL: {playlist['external_urls'].get('spotify')}")
 
 
 def get_tracks_spotify(_spotify):
@@ -124,7 +266,7 @@ def find_new_tracks(_tracks_by_playlist, _most_recent):
     Args:
         _tracks_by_playlist (dict): playlist name mapped to set of (track name, date added)
         _most_recent (list): datetime and track name for most recently added track
-    Return:
+    Returns:
         (list): list of tracks that might be new
     """
     print("Finding newer tracks in each playlist...")
@@ -194,6 +336,12 @@ def compare_local_tracks(_tracks_by_playlist, _tracks_by_folder, _new_tracks):
 
 if __name__ == '__main__':
     p = ArgumentParser()
+    p.add_argument('--get_tracks_by_label', type=str,
+            help="given a record label's artists page URL (only Beatport and Bandcamp are supported), find all Spotify tracks")
+    p.add_argument('--label', type=str,
+            help='name of record label')
+    p.add_argument('--spotify_user_name', type=str, default='alex.richards006',
+            help='Spotify user to create new playlists under')
     p.add_argument('--playlist_data', type=str, default='playlist_data.json',
             help='path to playlist JSON; mapping of playlist_name to playlist_id')
     p.add_argument('--playlists', nargs='+',
@@ -212,12 +360,21 @@ if __name__ == '__main__':
             help='display matches or misses of fuzzy matching')
     p.add_argument('--fuzz_ratio', type=int, default=72,
             help='lower-bound similarity between Spotify and local tracks to consider a match')
+    p.add_argument('--get_artists_fuzz_ratio', type=int, default=95,
+            help='lower-bound similarity between artist names when finding tracks by label')
     p.add_argument('--verbose', action='store_true',
             help='verbosity level')
     args = p.parse_args()
     args.include_dirs = set([x.lower() for x in args.include_dirs]) if args.include_dirs else []
 
-    spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
+    spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(scope='playlist-modify-public'))
+
+    if args.get_tracks_by_label:
+        if not args.label:
+            sys.exit('must provide label name if get tracks by label')
+        get_playlist_label(spotify, args.get_tracks_by_label)
+        sys.exit()
+
     tracks_by_playlist = get_tracks_spotify(spotify)
 
     if args.compare_playlists and len(tracks_by_playlist) > 1:
