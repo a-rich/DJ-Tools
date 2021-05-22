@@ -29,7 +29,7 @@ def run_sync(_cmd):
     except AttributeError:
         print(f"No new track")
     except Exception as e:
-        print(f"failure while syncing: {e}")
+        print(f"Failure while syncing: {e}")
 
     return tracks
 
