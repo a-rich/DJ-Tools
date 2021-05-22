@@ -46,16 +46,26 @@ optional arguments:
   --upload, -u          upload MP3s
 ```
 
-### Examples:
+### Examples (`NOTE:` Windows users should use a `--path` like `D:`):
+
 Download all new music and most up-to-date `rekordbox.xml`:
 
-[Unix] `python3 clone_library.py --path /Volumes/DJ/ --download music xml`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`python3 clone_library.py --path /Volumes/DJ/ --download music xml`
 
-[Windows] `python3 clone_library.py --path D: --download music xml`
+
+Download all new music but only in the `Bass` and `Techno` folders:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`python3 clone_library.py --path /Volumes/DJ/ --download music --include Bass Techno`
+
+-----
 
 Upload all new music (not tested with Windows):
 
-`python3 clone_library.py --path /Volumes/DJ/ --upload`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`python3 clone_library.py --path /Volumes/DJ/ --upload`
+
+Upload all new music except for tracks in the `Other` folder:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`python3 clone_library.py --path /Volumes/DJ/ --upload music --exclude Other`
 
 -------------
 
