@@ -17,6 +17,8 @@ def parse_include_exclude(_cmd):
         _cmd.extend(['--include', '*'])
         for x in args.exclude:
             _cmd.extend(['--exclude', f'{x}/*'])
+    if not args.use_date_modified:
+        _cmd.append('--size-only')
 
     return _cmd
 
@@ -50,6 +52,8 @@ if __name__ == '__main__':
             help='--include flag for each top-level folder in "DJ Music"')
     p.add_argument('--exclude', type=str, nargs='+',
             help='--exclude flag for each top-level folder in "DJ Music"')
+    p.add_argument('--use_date_modified', action='store_true',
+            help='drop --size-only flag for `aws s3 sync` command')
     args = p.parse_args()
 
     os.environ['AWS_PROFILE'] = 'DJ'
