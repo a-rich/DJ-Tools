@@ -1,18 +1,20 @@
-from itertools import combinations, product
-from spotipy.oauth2 import SpotifyOAuth
-from datetime import datetime, timezone
 from argparse import ArgumentParser
-from itertools import groupby
-from bs4 import BeautifulSoup
+from datetime import datetime, timezone
 from functools import reduce
-from fuzzywuzzy import fuzz
+from itertools import combinations, product, groupby
+import json
+import os
 from pathlib import Path
-from tqdm import tqdm
+import sys
+from typing import Union
+
+from bs4 import BeautifulSoup
+from dateutil.parser import parse
+from fuzzywuzzy import fuzz
 import requests
 import spotipy
-import json
-import sys
-import os
+from spotipy.oauth2 import SpotifyOAuth
+from tqdm import tqdm
 
 
 
@@ -257,6 +259,9 @@ def get_tracks_local():
         
     _tracks_by_folder = {g: set([os.path.basename(x) for x in group])
             for g, group in groupby(tracks, key=lambda x: os.path.basename(os.path.split(x)[0]))}
+    
+    if args.find_new and args.date:
+        _most_recent = [args.date, '']
 
     return _tracks_by_folder, _most_recent
 
@@ -335,6 +340,12 @@ def compare_local_tracks(_tracks_by_playlist, _tracks_by_folder, _new_tracks):
 
 
 if __name__ == '__main__':
+    def date_checker(x):
+        try:
+            return parse(x)
+        except Exception:
+            return None
+
     p = ArgumentParser()
     p.add_argument('--get_tracks_by_label', type=str,
             help="given a record label's artists page URL (only Beatport and Bandcamp are supported), find all Spotify tracks")
@@ -348,8 +359,10 @@ if __name__ == '__main__':
             help='list of Spotify Playlist names to compare for track overlap')
     p.add_argument('--compare_playlists', action='store_true',
             help='find overlap between Spotify playlists')
-    p.add_argument('--find_new', action='store_true',
-            help='find new tracks in provided Spotify playlists')
+    subparsers = p.add_subparsers(dest='find_new', help='find_new option subparser')
+    find_new_subparser = subparsers.add_parser(name='find_new',
+            help="provide `find_new` alone to use local track's date modified field; otherwise provide `--date` datetime string")
+    find_new_subparser.add_argument('--date', type=date_checker)
     p.add_argument('--compare_local', action='store_true',
             help='find overlaping (or missing) files between Spotify and local')
     p.add_argument('--path', type=str,
