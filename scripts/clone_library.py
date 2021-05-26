@@ -1,10 +1,10 @@
 from argparse import ArgumentParser
 from datetime import datetime
 from glob import glob
-import json
+from itertools import groupby
 import os
 from pathlib import Path
-from subprocess import run
+from subprocess import Popen, PIPE, CalledProcessError
 import sys
 
 
@@ -26,14 +26,36 @@ def parse_include_exclude(_cmd):
 def run_sync(_cmd):
     tracks = []
     try:
-        output = run(_cmd, capture_output=True).stdout.decode('utf-8')
-        tracks = [x.split(' to ')[-1] for x in output.split('\n') if 'upload: ' in x]
+        p = Popen(_cmd, stdout=PIPE, universal_newlines=True)
+
+        while True:
+            line = p.stdout.readline()
+            if line == '' and p.poll() is not None:
+                break
+            if 'upload: ' in line:
+                print(line.strip(), flush=True)
+                tracks.append(line.strip().split(' to s3://dj.beatcloud.com/dj/music/')[-1])
+            else:
+                print(f'{line.strip()}                                                          ',
+                        end='\r', flush=True)
+
+        p.stdout.close()
+        return_code = p.wait()
+        if return_code:
+            raise CalledProcessError(return_code, _cmd)
     except AttributeError:
         print(f"No new track")
     except Exception as e:
         print(f"Failure while syncing: {e}")
 
-    return tracks
+    print(f"\nSuccessfully {'down' if 's3://' in _cmd[3] else 'up'}loaded the following tracks:")
+    for g, group in groupby(sorted(tracks, 
+            key=lambda x: '/'.join(x.split('/')[:-1])),
+            key=lambda x: '/'.join(x.split('/')[:-1])):
+        group = sorted(group)
+        print(f"{g}: {len(group)}")
+        for track in group:
+            print(f"\t{track.split('/')[-1]}")
 
 
 if __name__ == '__main__':
@@ -74,8 +96,7 @@ if __name__ == '__main__':
             os.makedirs(os.path.join(args.path, 'DJ Music'), exist_ok=True)
             cmd = ['aws', 's3', 'sync', 's3://dj.beatcloud.com/dj/music/', f"{os.path.join(args.path, 'DJ Music')}"]
             cmd = parse_include_exclude(cmd)
-            for new_track in run_sync(cmd):
-                print(new_track)
+            run_sync(cmd)
 
             new = set([str(p) for p in glob_path.rglob('**/*.*')])
             difference = sorted(list(new.difference(old)), key=lambda x: os.path.getmtime(x))
@@ -126,8 +147,7 @@ if __name__ == '__main__':
             cmd = parse_include_exclude(cmd)
             if os.environ.get('USER') == 'aweeeezy' and args.delete:
                 cmd.append(' --delete')
-            for new_track in run_sync(cmd):
-                print(new_track)
+            run_sync(cmd)
 
         elif task == 'xml' and os.environ.get('USER') == 'aweeeezy':
             print(f"Syncing local rekordbox.xml...")
