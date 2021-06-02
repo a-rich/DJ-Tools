@@ -88,18 +88,18 @@ Also make sure you have made the `rekordbox.xml` database visible under Preferen
 ![alt text](images/Pioneer_Preferences_View.png "Show XML database in side panel")
 
 Then select the track(s) or playlist(s) and select "Import To Collection" (this will overwrite beatgrid and cue information for files with the same name!):
-![alt text](images/Pioneer_Importing.png "Import XML data into collection")
 
-For convenience, there's a playlist called `New Tracks` which can be referenced to find the most recent additions to the collection.
+For convenience, there's a folder called `New Tracks` which can be referenced to find the most recent additions to the collection. Playlists are organized both anually and by the date of the upload session.
+![alt text](images/Pioneer_New-Tracks_Playlist_3.png "Import XML data into collection")
 
 Don't forget to include the `Date Added` and `Color` columns by right-clicking the column headers area; sort by `Date Added` and import the most recent tracks you haven't imported yourself yet.
+
+This is my column header arrangement. The ID3 and rekordbox tag filters are circled in red; try them out for quick playlist building.
+![alt text](images/Pioneer_Columns.png "Columns")
 
 When I process a track, I set the `Color` to `green (Closing)` as a default. As I mix (or if it's immediately apparent while importing) I may set `Color` to `red (Headline)` or `blue (Opening)` if a track has too much or too little energy, respectively, to sustain a groove. Additionally I may set `Color` to `yellow (WARNING)` if the track was not able to be processed or is otherwise deemds unmixable or at least a risky mix.
 
 **NOTE:** The usage of `red` and `blue` in this color scheme is largely neglected; basically you should use color as an indicator of whether or not a track has been processed.
-
-This is my column header arrangement. The ID3 and rekordbox tag filters are circled in red; try them out for quick playlist building.
-![alt text](images/Pioneer_Columns.png "Columns")
 
 **NOTE ABOUT BACKING UP YOUR DATA:**
 
