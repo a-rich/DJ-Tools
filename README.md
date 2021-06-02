@@ -1,17 +1,33 @@
 # DJ Tools
 ## Overview of Tools:
 * `clone_library.py`: download / upload MP3s, download `rekordbox.xml`
+* `spotify_analysis.py`: compare Spotify playlists with each other and local folders to identify overlapping or missing tracks 
 * `download.sh`: download track(s) by URL via youtube-dl (Soundcloud)
 * `rename.py`: rename ugly files downloaded with the `download.sh` script
 * `randomize_tracks.py`: randomize track number (and other select ID3 tag fields) to 'shuffle' library
 * `key_analysis.py`: analyze / visualize melodic key information in library
-* `spotify_analysis.py`: compare Spotify playlists with each other and local folders to identify overlapping or missing tracks 
 ----------
 ## Cloning Library
 ### Description:
-This script can download from / upload to an AWS S3 instance which stores all the MP3s of the track collection. In addition, it can download a `rekordbox.xml` file which can be used to selectively import Rekordbox data (beatgrid and cue information) for tracks and/or playlists.
+This script can download from / upload to an AWS S3 instance which stores all the MP3s of the track collection. In addition, it can download a `rekordbox.xml` file which can be used to selectively import Rekordbox data (BPM, beatgrid, hot cues, and My Tag information) for tracks and/or playlists.
+### Roadmap:
+
+- Update ID3 tag field for `Genre`
+    * [x] `Bass > Favorites`
+    * [ ] `House > Favorites`
+    * [ ] `Bass > All` 
+    * [ ] `House > All` 
+    * [x] `Techno > All` 
+    * [x] `New Tracks` after `2021-04-28`
+    * [ ] `New Tracks` after `2020`
+    * [ ] `Collection`
+- Update hot cue schema
+    * [x] `Bass > Favorites` 
+    * [ ] `Bass > All`
+    * [x] `House > All`
+    * [x] `Techno > All`
 ### Prerequisites:
-* `python3`
+* `python >= 3.6`
     - Mac installation: `brew install python`
     - Linux installation: `sudo apt install python3.8`
     - Windows installation: [Windows releases](https://www.python.org/downloads/windows/) or [3.9.4 installer](https://www.python.org/ftp/python/3.9.4/python-3.9.4-amd64.exe)
@@ -48,7 +64,9 @@ optional arguments:
                         --include flag for each top-level folder in "DJ Music"
   --exclude EXCLUDE [EXCLUDE ...]
                         --exclude flag for each top-level folder in "DJ Music"
-  --use_date_modified   drop --size-only flag for `aws s3 sync` command
+  --use_date_modified   drop --size-only flag for `aws s3 sync` command;
+                        --use_date_modified will permit re-downloading/re-
+                        uploading files if their ID3 tags change
 ```
 
 ### Usage Flow Chart:
@@ -71,7 +89,7 @@ optional arguments:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; `python clone_library.py --path /path/to/USB --download music --use_date_modified`
 
-🔴 Download mp3 files and my `rekordbox.xml` which can be imported from:
+🔴 Download mp3 files and my `rekordbox.xml` which tracks can be imported from to use my BMP, beatgrid, hot cues, and My Tags:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; `python clone_library.py --path /path/to/USB --download music xml`
 
@@ -87,41 +105,23 @@ Ensure you have the proper `rekordbox.xml` file selected under Preferences > Adv
 Also make sure you have made the `rekordbox.xml` database visible under Preferences > View > Layout > rekordbox xml:
 ![alt text](images/Pioneer_Preferences_View.png "Show XML database in side panel")
 
-Then select the track(s) or playlist(s) and select "Import To Collection" (this will overwrite beatgrid and cue information for files with the same name!):
+Then select the track(s) or playlist(s) and select "Import To Collection"; this will overwrite BPM, beatgrid, hot cue, and My Tags information for files with the same name!
 
-For convenience, there's a folder called `New Tracks` which can be referenced to find the most recent additions to the collection. Playlists are organized both anually and by the date of the upload session.
+For convenience, there's a folder called `New Tracks` which can be referenced to find the most recent additions to the collection. Playlists in this folder are organized both anually and by the date of the upload session.
 
-Note the playlist palette and two filtering options for ID3 tags and rekordbox tag, respectively, circled in red; you can use these for quick playlist building:
+Alternatively, you may import tracks from different playlists (or just import the entire playlist) but there are no guarantees that those playlists are perfectly maintained. However, in the case of the `Genre` playlists, these can be objectively recreated by searching your collection for that genre...i.e. ensuring you're up-to-date with `New Tracks` means you can recreate a perfectly maintained set of subgenre folders as I am actively trying to do.
 
-Reference the column layout in the image below; don't forget to include the `Date Added` and `Color` columns in your own layout by right-clicking the column headers area. Sort by `Date Added` and import the most recent tracks you haven't imported yourself yet.
+In the image below, note the playlist palette and two filtering options for ID3 tags and My Tags, respectively, circled in red; you can use these for quick playlist building.
+
+Also reference the column layout; don't forget to include the `Date Added`, `Color`, and `Genre` columns in your own layout by right-clicking the column headers area. Sort by `Date Added` and import the most recent tracks you haven't imported yourself yet. Or sort by `Genre` and import just the styles of music you want.
 ![alt text](images/Pioneer_New-Tracks_Playlist_3.png "Import XML data into collection")
 
-When I process a track, I set the `Color` to `green (Closing)` as a default. As I mix (or if it's immediately apparent while importing) I may set `Color` to `red (Headline)` or `blue (Opening)` if a track has too much or too little energy, respectively, to sustain a groove. Additionally I may set `Color` to `yellow (WARNING)` if the track was not able to be processed or is otherwise deemds unmixable or at least a risky mix. The usage of `red` and `blue` in this color scheme is largely neglected; basically you should use color as an indicator of whether or not a track has been processed.
+When I process a track, I set the `Color` to `green (Closing)` as a default. As I mix (or if it's immediately apparent while importing) I may set `Color` to `red (Headline)` or `blue (Opening)` if a track has too much or too little energy, respectively, to sustain a groove. Additionally I may set `Color` to `yellow (WARNING)` if the track was not able to be processed or is otherwise deemed unmixable or at least a risky mix. The usage of `red` and `blue` in this color scheme is largely neglected; basically you should use color as an indicator of whether or not a track has been processed.
 
 **NOTE ABOUT BACKING UP YOUR DATA:**
 
-There may be mp3 files available for tracks that I haven't processed yet; this means importing from the `rekordbox.xml` is will effectively be the same as importing from the `Explorer`. You may either import and process the tracks yourself (set BPM, beat grid, hot cues) or wait until I push a more up-to-date `rekordbox.xml` and import the tracks at that time.
+There may be mp3 files available for tracks that I haven't processed yet; this means importing from the `rekordbox.xml` will effectively be the same as importing from the `Explorer`; in otherwords, the BPM and beatgrid will be whatever is default according to Rekordbox and the hot cues and My Tags will not exist yet. You may either import and process the tracks yourself or wait until I push a more up-to-date `rekordbox.xml`.
 
-If you want to retain your custom bpm, beatgrid, and hot cue data, you **must not** reimport that track, or any playlist containing that track, from my `rekordbox.xml` once you've made the changes on your local file system.
+If you want to retain your custom BPM, beatgrid, hot cue, and My Tags data, you **must not** reimport that track, or any playlist containing that track, from my `rekordbox.xml` once you've made the changes on your local file system. I suggest keeping a regular backup of your rekordbox library data (`File > Export Collection in xml format`) in a file called `my_rekordbox.xml` so you can restore data for tracks and playlists in the event they are overwritten or lost.
 
 If you want to retain your custom ID3 tag field modifications (artist(s), track name, genre(s), comments), you **must not** run `clone_library.py` with the `--use_date_modified` flag. Alternatively, you may run with the `--use_date_modified` flag and additionally use either the `--include` or the `--exclude` option to prevent redownloading contents of folders containing the tracks you want to preserve.
-
-You may want to consider keeping a regular backup of your rekordbox library data in a file called `my_rekordbox.xml` so you can restore data for tracks and playlists in the event they are overwritten or otherwise lost.
-
--------------
-### Roadmap:
-
-- Update ID3 tag field for `Genre`
-    * [x] Bass > Favorites
-    * [ ] House > Favorites
-    * [ ] Bass > All 
-    * [ ] House > All 
-    * [x] Techno > All 
-    * [x] `New Tracks` after `2021-04-28`
-    * [ ] `New Tracks` after `2020`
-    * [ ] `Collection`
-- Update hot cue scheme
-    * [x] Bass > Favorites 
-    * [ ] Bass > All
-    * [x] House > All
-    * [x] Techno > All
