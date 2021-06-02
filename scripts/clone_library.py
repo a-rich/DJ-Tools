@@ -75,7 +75,7 @@ if __name__ == '__main__':
     p.add_argument('--exclude', type=str, nargs='+',
             help='--exclude flag for each top-level folder in "DJ Music"')
     p.add_argument('--use_date_modified', action='store_true',
-            help='drop --size-only flag for `aws s3 sync` command')
+            help='drop --size-only flag for `aws s3 sync` command; --use_date_modified will permit re-downloading/re-uploading files if their ID3 tags change')
     args = p.parse_args()
 
     os.environ['AWS_PROFILE'] = 'DJ'
@@ -151,7 +151,8 @@ if __name__ == '__main__':
 
         elif task == 'xml' and os.environ.get('USER') == 'aweeeezy':
             print(f"Syncing local rekordbox.xml...")
-            cmd = f"aws s3 cp '{os.path.join(args.path, 'PIONEER', 'rekordbox.xml')}' s3://dj.beatcloud.com/dj/xml/rekordbox.xml"
+            cmd = f"aws s3 sync '{os.path.join(args.path, 'PIONEER', 'rekordbox.xml')}' s3://dj.beatcloud.com/dj/xml --exclude='*' --include='*/rekordbox.xml'"
+            # cmd = f"aws s3 cp '{os.path.join(args.path, 'PIONEER', 'rekordbox.xml')}' s3://dj.beatcloud.com/dj/xml/rekordbox.xml"
             os.system(cmd)
 
     print(f"Done!")
