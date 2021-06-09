@@ -151,8 +151,7 @@ if __name__ == '__main__':
 
         elif task == 'xml' and os.environ.get('USER') == 'aweeeezy':
             print(f"Syncing local rekordbox.xml...")
-            cmd = f"aws s3 sync '{os.path.join(args.path, 'PIONEER', 'rekordbox.xml')}' s3://dj.beatcloud.com/dj/xml --exclude='*' --include='*/rekordbox.xml'"
-            # cmd = f"aws s3 cp '{os.path.join(args.path, 'PIONEER', 'rekordbox.xml')}' s3://dj.beatcloud.com/dj/xml/rekordbox.xml"
+            cmd = f'''aws s3 sync '{os.path.join(args.path, 'PIONEER')}' s3://dj.beatcloud.com/dj/xml/ --exclude="*" --include="rekordbox.xml"'''
             os.system(cmd)
 
     print(f"Done!")
