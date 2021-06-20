@@ -18,8 +18,7 @@ This script can download from / upload to an AWS S3 instance which stores all th
     * [ ] `Bass > All` 
     * [ ] `House > All` 
     * [x] `Techno > All` 
-    * [x] `New Tracks` after `2021-04-28`
-    * [ ] `New Tracks` after `2020`
+    * [x] `New Tracks` after `2020`
     * [ ] `Collection`
 - Update hot cue schema
     * [x] `Bass > Favorites` 
