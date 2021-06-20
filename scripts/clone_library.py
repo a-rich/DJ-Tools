@@ -49,7 +49,7 @@ def run_sync(_cmd):
         print(f"Failure while syncing: {e}")
 
     print(f"\nSuccessfully {'down' if 's3://' in _cmd[3] else 'up'}loaded the following tracks:")
-    for g, group in groupby(sorted(tracks, 
+    for g, group in groupby(sorted(tracks,
             key=lambda x: '/'.join(x.split('/')[:-1])),
             key=lambda x: '/'.join(x.split('/')[:-1])):
         group = sorted(group)
@@ -102,7 +102,7 @@ if __name__ == '__main__':
             difference = sorted(list(new.difference(old)), key=lambda x: os.path.getmtime(x))
             if difference:
                 print(f"Found {len(difference)} new files")
-                with open(f"new_music_{datetime.now().strftime('%Y-%M-%dT%H.%m.%S')}.txt", 'w', encoding='utf-8') as f:
+                with open(f"new_music_{datetime.now().strftime('%Y-%m-%dT%H.%M.%S')}.txt", 'w', encoding='utf-8') as f:
                     for x in difference:
                         print(f"\t{x}")
                         f.write(f"{x}\n")
