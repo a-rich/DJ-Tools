@@ -62,8 +62,7 @@ def run_sync(_cmd):
             webhook_content += f'\t{x}\n'
     print(f'New Music\n{webhook_content}')
 
-    if args.use_webhooks and webhook_content:
-        webhooks(args.webhook_url, webhook_content)
+    return webhook_content
 
 
 def webhooks(url, content=None):
@@ -127,7 +126,7 @@ if __name__ == '__main__':
             os.makedirs(os.path.join(args.path, 'DJ Music'), exist_ok=True)
             cmd = ['aws', 's3', 'sync', 's3://dj.beatcloud.com/dj/music/', f"{os.path.join(args.path, 'DJ Music')}"]
             cmd = parse_include_exclude(cmd)
-            run_sync(cmd)
+            _ = run_sync(cmd)
 
             new = set([str(p) for p in glob_path.rglob('**/*.*')])
             difference = sorted(list(new.difference(old)), key=lambda x: os.path.getmtime(x))
@@ -178,7 +177,11 @@ if __name__ == '__main__':
             cmd = parse_include_exclude(cmd)
             if os.environ.get('USER') == 'aweeeezy' and args.delete:
                 cmd.append(' --delete')
-            run_sync(cmd)
+
+            if args.use_webhooks:
+                webhooks(args.webhook_url, run_sync(cmd))
+            else:
+                _ = run_sync(cmd)
 
         elif task == 'xml' and os.environ.get('USER') == 'aweeeezy':
             print(f"Syncing local rekordbox.xml...")
