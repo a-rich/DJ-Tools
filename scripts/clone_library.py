@@ -4,8 +4,10 @@ from glob import glob
 from itertools import groupby
 import os
 from pathlib import Path
+import requests
 from subprocess import Popen, PIPE, CalledProcessError
 import sys
+import traceback
 
 
 def parse_include_exclude(_cmd):
@@ -48,15 +50,35 @@ def run_sync(_cmd):
     except Exception as e:
         print(f"Failure while syncing: {e}")
 
+    webhook_content = ''
     print(f"\nSuccessfully {'down' if 's3://' in _cmd[3] else 'up'}loaded the following tracks:")
     for g, group in groupby(sorted(tracks,
             key=lambda x: '/'.join(x.split('/')[:-1])),
             key=lambda x: '/'.join(x.split('/')[:-1])):
         group = sorted(group)
-        print(f"{g}: {len(group)}")
+        webhook_content += f'{g}: {len(group)}\n'
         for track in group:
-            print(f"\t{track.split('/')[-1]}")
+            x = track.split('/')[-1]
+            webhook_content += f'\t{x}\n'
+    print(f'New Music\n{webhook_content}')
 
+    if args.use_webhooks and webhook_content:
+        webhooks(args.webhook_url, webhook_content)
+
+
+def webhooks(url, content=None):
+    if not content:
+        print("There's no content")
+        return
+
+    data = {
+        "content": content
+    }    
+
+    try:
+        resp = requests.post(url, json=data)
+    except Exception:
+        traceback.format_exc()
 
 if __name__ == '__main__':
     p = ArgumentParser()
@@ -76,6 +98,15 @@ if __name__ == '__main__':
             help='--exclude flag for each top-level folder in "DJ Music"')
     p.add_argument('--use_date_modified', action='store_true',
             help='drop --size-only flag for `aws s3 sync` command; --use_date_modified will permit re-downloading/re-uploading files if their ID3 tags change')
+    subparsers = p.add_subparsers(dest='use_webhooks', help="use_webhook's option subparser")
+    use_webhooks_subparser = subparsers.add_parser(name='use_webhooks',
+            help="use_webhooks")
+    use_webhooks_subparser.add_argument('--webhook_url', type=str,
+            default=os.environ.get('BEATS_R_US_DISCORD'),
+            help='discord webhook URL')
+    use_webhooks_subparser.add_argument('--webhooks', type=list,
+            choices=['discord'], default=['discord'],
+            help='types of webhooks to use')
     args = p.parse_args()
 
     os.environ['AWS_PROFILE'] = 'DJ'
