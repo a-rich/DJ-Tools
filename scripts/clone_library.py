@@ -50,19 +50,19 @@ def run_sync(_cmd):
     except Exception as e:
         print(f"Failure while syncing: {e}")
 
-    webhook_content = ''
+    new_music = ''
     print(f"\nSuccessfully {'down' if 's3://' in _cmd[3] else 'up'}loaded the following tracks:")
     for g, group in groupby(sorted(tracks,
             key=lambda x: '/'.join(x.split('/')[:-1])),
             key=lambda x: '/'.join(x.split('/')[:-1])):
         group = sorted(group)
-        webhook_content += f'{g}: {len(group)}\n'
+        new_music += f'{g}: {len(group)}\n'
         for track in group:
             x = track.split('/')[-1]
-            webhook_content += f'\t{x}\n'
-    print(f'New Music\n{webhook_content}')
+            new_music += f'\t{x}\n'
+    print(f'New Music\n{new_music}')
 
-    return webhook_content
+    return new_music
 
 
 def webhooks(url, content=None):
@@ -103,9 +103,6 @@ if __name__ == '__main__':
     use_webhooks_subparser.add_argument('--webhook_url', type=str,
             default=os.environ.get('BEATS_R_US_DISCORD'),
             help='discord webhook URL')
-    use_webhooks_subparser.add_argument('--webhooks', type=list,
-            choices=['discord'], default=['discord'],
-            help='types of webhooks to use')
     args = p.parse_args()
 
     os.environ['AWS_PROFILE'] = 'DJ'
@@ -115,6 +112,10 @@ if __name__ == '__main__':
 
     if args.exclude and args.include:
         sys.exit("WARNING: can't run with both '--include' and '--exclude' options")
+    
+    if args.use_webhooks and not args.webhook_url:
+        sys.exit("WARNING: can't run with 'use_webhooks' command unless you also set either '--webhook_url' or the environment variable 'BEATS_R_US_DISCORD'")
+
 
     for task in args.download:
         if task == 'music':
