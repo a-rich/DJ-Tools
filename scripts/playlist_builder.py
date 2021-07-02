@@ -208,9 +208,6 @@ def update_existing_playlist(spotify, playlist, new_tracks, limit):
 
 
 if __name__ == '__main__':
-    if os.path.exists('subreddit_playlist-ids.json'):
-        subreddit_playlist_ids = json.load(open('subreddit_playlist-ids.json', 'r'))
-
     p = ArgumentParser()
     p.add_argument('--subreddit', type=str,
             required=True, help='subreddit to create Spotify playlist from')
@@ -224,6 +221,11 @@ if __name__ == '__main__':
     p.add_argument('--spotify_user_name', type=str, default='alex.richards006',
             help='Spotify user to create new playlists under')
     args = p.parse_args()
+
+    if os.path.exists('subreddit_playlist-ids.json'):
+        subreddit_playlist_ids = json.load(open('subreddit_playlist-ids.json', 'r'))
+    else:
+        subreddit_playlist_ids = {}
 
     playlist_id = subreddit_playlist_ids.get(args.subreddit)
     if not playlist_id:
