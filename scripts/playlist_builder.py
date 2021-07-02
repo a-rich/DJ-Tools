@@ -2,8 +2,6 @@ from argparse import ArgumentParser
 from concurrent.futures import ThreadPoolExecutor
 import json
 import os
-import sys
-import time
 
 from dateutil import parser
 from fuzzywuzzy import fuzz
