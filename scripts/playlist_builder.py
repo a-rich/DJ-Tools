@@ -217,7 +217,7 @@ if __name__ == '__main__':
             choices=['all', 'day', 'hour', 'month', 'week', 'year'],
             help='time period to search top for')
     p.add_argument('--fuzz_ratio', type=int, default=50,
-            help='minimium Levenshtein distance between post title componenet and spotify artist search result')
+            help='minimium Levenshtein similarity between post title componenet and spotify artist search result')
     p.add_argument('--spotify_user_name', type=str, default='alex.richards006',
             help='Spotify user to create new playlists under')
     args = p.parse_args()
