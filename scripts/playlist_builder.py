@@ -22,7 +22,7 @@ def get_top_subreddit_posts(spotify, subreddit, limit):
         spotify (spotipy.Spotify): spotify client
         subreddit (str): subreddit name to filter
         limit (int): maximum number of Spotify tracks to extract
-    
+
     Returns:
         ([(str, str), ...]): list of Spotify track ('id', 'name') tuples
     """
@@ -37,7 +37,7 @@ def get_top_subreddit_posts(spotify, subreddit, limit):
             spotify (spotipy.Spotify): spotify client
             title (str): submission title
             limit (int): maximum number of Spotify tracks to extract
-        
+
         Returns:
             ([(str, str), ...]): list of Spotify track ('id', 'name') tuples
         """
@@ -57,7 +57,7 @@ def get_top_subreddit_posts(spotify, subreddit, limit):
                 tracks.append(filter_tracks(results['tracks']['items']))
 
             return filter(None, tracks)
-            
+
         def filter_tracks(tracks):
             """Applies Levenshtein distance filtering on both the resulting
             tracks' 'artist' and 'name' fields to qualify a match for the
@@ -75,7 +75,7 @@ def get_top_subreddit_posts(spotify, subreddit, limit):
                         or fuzz.ratio(t['name'].lower(), y.lower()) >= args.fuzz_ratio:
                     if any([fuzz.ratio(a, z) >= args.fuzz_ratio for z in [x.lower(), y.lower()] for a in artists]):
                         return t
-        
+
         def parse_title(title):
             """Attempts to split submission title into two parts
             (track name, artist(s)).
@@ -96,7 +96,7 @@ def get_top_subreddit_posts(spotify, subreddit, limit):
 
             x, y = x.split('(')[0], y.split('(')[0]
             x, y = x.split('[')[0], y.split('[')[0]
-        
+
             return x, y
 
         x, y = parse_title(title)
@@ -106,7 +106,7 @@ def get_top_subreddit_posts(spotify, subreddit, limit):
         results = spotify.search(q=f"{x.replace(' ', '+')}+{y.replace(' ', '+')}", type='track', limit=limit)
 
         return [(x['id'], x['name']) for x in filter_results(results)]
-    
+
     def process(submission):
         """Worker thread process.
 
@@ -135,7 +135,7 @@ def get_top_subreddit_posts(spotify, subreddit, limit):
     new_tracks = [track for x in new_tracks for track in x]
     new_tracks = new_tracks[:limit]
 
-    return new_tracks 
+    return new_tracks
 
 
 def build_new_playlist(spotify, subreddit, new_tracks):
@@ -145,19 +145,19 @@ def build_new_playlist(spotify, subreddit, new_tracks):
         spotify (spotipy.Spotify): spotify client
         subreddit (str): subreddit name to filter
         new_tracks ([(str, str), ...]): list of Spotify track ('id', 'name') tuples
-    
+
     Returns:
         (spotipy.Playlist): Playlist object for the newly constructed playlist.
     """
     ids = list(zip(*new_tracks))[0]
-    playlist = spotify.user_playlist_create(args.spotify_user_name, name=f"r/{subreddit.title()}")  
+    playlist = spotify.user_playlist_create(args.spotify_user_name, name=f"r/{subreddit.title()}")
     spotify.playlist_add_items(playlist['id'], ids, position=None)
 
     return playlist
 
 
 def update_existing_playlist(spotify, playlist, new_tracks, limit):
-    """Adds new tracks to an existing playlist; removes old tracks if the 
+    """Adds new tracks to an existing playlist; removes old tracks if the
 
     Args:
         spotify ([type]): [description]
@@ -172,7 +172,7 @@ def update_existing_playlist(spotify, playlist, new_tracks, limit):
     while _playlist['tracks']['next']:
         _playlist = spotify.next(_playlist['tracks'])
         tracks.extend(_playlist['tracks']['items'])
-    
+
     tracks = sorted(tracks, key=lambda x: parser.parse(x['added_at']), reverse=True)
     ids = set([x['track']['id'] for x in tracks])
 
@@ -189,7 +189,7 @@ def update_existing_playlist(spotify, playlist, new_tracks, limit):
             spotify.playlist_remove_specific_occurrences_of_items(playlist, [ids.pop()])
         absent.append(track)
         spotify.playlist_add_items(playlist, [id_])
-    
+
     if present:
         print(f"Tracks already present in the playlist:")
         for x in sorted(present):
@@ -201,7 +201,7 @@ def update_existing_playlist(spotify, playlist, new_tracks, limit):
         for x in sorted(absent):
             print(f"\t{x}")
         print()
-    
+
     return _playlist
 
 
