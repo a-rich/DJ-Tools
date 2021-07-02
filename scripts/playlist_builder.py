@@ -174,6 +174,7 @@ def update_existing_playlist(spotify, playlist, new_tracks, limit):
         tracks.extend(_playlist['tracks']['items'])
 
     tracks = sorted(tracks, key=lambda x: parser.parse(x['added_at']), reverse=True)
+    track_count = len(tracks)
     ids = set([x['track']['id'] for x in tracks])
 
     present, absent = [], []
@@ -185,10 +186,12 @@ def update_existing_playlist(spotify, playlist, new_tracks, limit):
         if id_ in ids:
             present.append(track)
             continue
-        if len(tracks) >= limit:
+        if track_count >= limit:
             spotify.playlist_remove_specific_occurrences_of_items(playlist, [ids.pop()])
+            track_count -= 1
         absent.append(track)
         spotify.playlist_add_items(playlist, [id_])
+        track_count += 1
 
     if present:
         print(f"Tracks already present in the playlist:")
