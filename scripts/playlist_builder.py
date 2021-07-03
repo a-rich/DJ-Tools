@@ -26,6 +26,8 @@ def get_top_subreddit_posts(spotify, subreddit, limit):
     Returns:
         ([(str, str), ...]): list of Spotify track ('id', 'name') tuples
     """
+
+
     def fuzzy_match(spotify, title, limit):
         """Attempts to split submission title into two parts
         (track name, artist(s)), search Spotify for tracks that have an
@@ -41,6 +43,8 @@ def get_top_subreddit_posts(spotify, subreddit, limit):
         Returns:
             ([(str, str), ...]): list of Spotify track ('id', 'name') tuples
         """
+
+
         def filter_results(results):
             """Helper function for applying filtering logic to find tracks that
             match the submission title closely enough.
@@ -57,6 +61,7 @@ def get_top_subreddit_posts(spotify, subreddit, limit):
                 tracks.append(filter_tracks(results['tracks']['items']))
 
             return filter(None, tracks)
+
 
         def filter_tracks(tracks):
             """Applies Levenshtein distance filtering on both the resulting
@@ -75,6 +80,7 @@ def get_top_subreddit_posts(spotify, subreddit, limit):
                         or fuzz.ratio(t['name'].lower(), y.lower()) >= args.fuzz_ratio:
                     if any([fuzz.ratio(a, z) >= args.fuzz_ratio for z in [x.lower(), y.lower()] for a in artists]):
                         return t
+
 
         def parse_title(title):
             """Attempts to split submission title into two parts
@@ -106,6 +112,7 @@ def get_top_subreddit_posts(spotify, subreddit, limit):
         results = spotify.search(q=f"{x.replace(' ', '+')}+{y.replace(' ', '+')}", type='track', limit=limit)
 
         return [(x['id'], x['name']) for x in filter_results(results)]
+
 
     def process(submission):
         """Worker thread process.
@@ -208,6 +215,7 @@ def update_existing_playlist(spotify, playlist, new_tracks, limit):
     return _playlist
 
 
+
 if __name__ == '__main__':
     p = ArgumentParser()
     p.add_argument('--subreddit', type=str,
@@ -218,7 +226,7 @@ if __name__ == '__main__':
             choices=['all', 'day', 'hour', 'month', 'week', 'year'],
             help='time period to search top for')
     p.add_argument('--fuzz_ratio', type=int, default=50,
-            help='minimium Levenshtein similarity between post title componenet and spotify artist search result')
+            help='minimium Levenshtein similarity between post title componenets and spotify search results')
     p.add_argument('--spotify_user_name', type=str, default='alex.richards006',
             help='Spotify user to create new playlists under')
     args = p.parse_args()
@@ -242,4 +250,4 @@ if __name__ == '__main__':
         subreddit_playlist_ids[args.subreddit] = playlist['id']
         json.dump(subreddit_playlist_ids, open('subreddit_playlist-ids.json', 'w'))
 
-    print(f"Playlist '{playlist['name']}' URL: {playlist['external_urls'].get('spotify')}")
+    print(f"Playlist '{playlist['name']}' URL: {playlist['external_urls'].get('spotify')}\n")
