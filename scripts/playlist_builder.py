@@ -180,37 +180,38 @@ def update_existing_playlist(spotify, playlist, new_tracks, limit):
         _playlist = spotify.next(_playlist['tracks'])
         tracks.extend(_playlist['tracks']['items'])
 
-    tracks = sorted(tracks, key=lambda x: parser.parse(x['added_at']), reverse=True)
+    # tracks = sorted(tracks, key=lambda x: parser.parse(x['added_at']), reverse=True)
     track_count = len(tracks)
+    track_index = 0
     ids = set([x['track']['id'] for x in tracks])
+    remove_payload = []
+    add_payload = []
+    tracks_added = []
 
-    present, absent = [], []
     for id_, track in new_tracks:
         if 'spotify.com/track/' in id_:
             resp = spotify.track(id_)
             id_ = resp['id']
             track = resp['name']
         if id_ in ids:
-            present.append(track)
             continue
         if track_count >= limit:
-            spotify.playlist_remove_specific_occurrences_of_items(playlist, [ids.pop()])
-            track_count -= 1
-        absent.append(track)
-        spotify.playlist_add_items(playlist, [id_])
-        track_count += 1
+            t = tracks.pop(0)
+            remove_payload.append({"uri": t['track']['uri'], "positions": [track_index]})
+            track_index += 1
+        tracks_added.append(track)
+        add_payload.append(id_)
 
-    if present:
-        print(f"Tracks already present in the playlist:")
-        for x in sorted(present):
-            print(f"\t{x}")
-        print()
-
-    if absent:
+    if tracks_added:
         print(f"Tracks added:")
-        for x in sorted(absent):
+        for x in tracks_added:
             print(f"\t{x}")
         print()
+
+    if remove_payload:
+        spotify.playlist_remove_specific_occurrences_of_items(playlist, remove_payload)
+    if add_payload:
+        spotify.playlist_add_items(playlist, add_payload)
 
     return _playlist
 
