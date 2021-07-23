@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 from concurrent.futures import ThreadPoolExecutor
 import json
 import os
+import traceback
 
 from dateutil import parser
 from fuzzywuzzy import fuzz
@@ -57,7 +58,11 @@ def get_top_subreddit_posts(spotify, subreddit, limit):
             """
             tracks = [filter_tracks(results['tracks']['items'])]
             while results['tracks']['next']:
-                results = spotify.next(results['tracks'])
+                try:
+                    results = spotify.next(results['tracks'])
+                except Exception:
+                    print(f"[WARNING] failed to get next batch of tracks: {traceback.format_exc()}")
+                    break
                 tracks.append(filter_tracks(results['tracks']['items']))
 
             return filter(None, tracks)
