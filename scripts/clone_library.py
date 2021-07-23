@@ -70,14 +70,29 @@ def webhooks(url, content=None):
         print("There's no content")
         return
 
-    data = {
-        "content": content
-    }    
+    batch = content[:args.content_size_limit]
+    remainder = content[args.content_size_limit:]
+    while batch:
+        index = args.content_size_limit - 1
+        while True:
+            try:
+                if batch[index] == '\n':
+                    break
+            except IndexError:
+                break
+            index -= 1
+        remainder = batch[index+1:] + remainder
+        batch = batch[:index+1]
 
-    try:
-        resp = requests.post(url, json=data)
-    except Exception:
-        traceback.format_exc()
+        try:
+            requests.post(url, json={"content": batch})
+        except Exception:
+            print(traceback.format_exc())
+
+        batch = remainder[:args.content_size_limit]
+        remainder = remainder[args.content_size_limit:]
+
+
 
 if __name__ == '__main__':
     p = ArgumentParser()
@@ -103,6 +118,8 @@ if __name__ == '__main__':
     use_webhooks_subparser.add_argument('--webhook_url', type=str,
             default=os.environ.get('BEATS_R_US_DISCORD'),
             help='discord webhook URL')
+    use_webhooks_subparser.add_argument('--content_size_limit', type=int,
+            default=2000, help='webhook content size limit')
     args = p.parse_args()
 
     os.environ['AWS_PROFILE'] = 'DJ'
