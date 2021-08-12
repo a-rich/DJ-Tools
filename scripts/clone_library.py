@@ -51,7 +51,8 @@ def run_sync(_cmd):
         print(f"Failure while syncing: {e}")
 
     new_music = ''
-    print(f"\nSuccessfully {'down' if 's3://' in _cmd[3] else 'up'}loaded the following tracks:")
+    if tracks:
+        print(f"\nSuccessfully {'down' if 's3://' in _cmd[3] else 'up'}loaded the following tracks:")
     for g, group in groupby(sorted(tracks,
             key=lambda x: '/'.join(x.split('/')[:-1])),
             key=lambda x: '/'.join(x.split('/')[:-1])):
@@ -60,7 +61,8 @@ def run_sync(_cmd):
         for track in group:
             x = track.split('/')[-1]
             new_music += f'\t{x}\n'
-    print(f'New Music\n{new_music}')
+    if new_music:
+        print(new_music)
 
     return new_music
 
@@ -129,7 +131,7 @@ if __name__ == '__main__':
 
     if args.exclude and args.include:
         sys.exit("WARNING: can't run with both '--include' and '--exclude' options")
-    
+
     if args.use_webhooks and not args.webhook_url:
         sys.exit("WARNING: can't run with 'use_webhooks' command unless you also set either '--webhook_url' or the environment variable 'BEATS_R_US_DISCORD'")
 
