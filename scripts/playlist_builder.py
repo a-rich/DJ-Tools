@@ -248,12 +248,14 @@ if __name__ == '__main__':
 
     spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(scope='playlist-modify-public'))
     new_tracks = get_top_subreddit_posts(spotify, args.subreddit, args.limit)
+    if new_tracks:
+        if playlist_id:
+            playlist = update_existing_playlist(spotify, playlist_id, new_tracks, args.limit)
+        else:
+            playlist = build_new_playlist(spotify, args.subreddit, new_tracks)
+            subreddit_playlist_ids[args.subreddit] = playlist['id']
+            json.dump(subreddit_playlist_ids, open('subreddit_playlist-ids.json', 'w'))
 
-    if playlist_id:
-        playlist = update_existing_playlist(spotify, playlist_id, new_tracks, args.limit)
+        print(f"Playlist '{playlist['name']}' URL: {playlist['external_urls'].get('spotify')}\n")
     else:
-        playlist = build_new_playlist(spotify, args.subreddit, new_tracks)
-        subreddit_playlist_ids[args.subreddit] = playlist['id']
-        json.dump(subreddit_playlist_ids, open('subreddit_playlist-ids.json', 'w'))
-
-    print(f"Playlist '{playlist['name']}' URL: {playlist['external_urls'].get('spotify')}\n")
+        print(f"No top tracks for the {args.time_filter} in {args.subreddit}")
