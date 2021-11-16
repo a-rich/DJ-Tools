@@ -100,6 +100,8 @@ if __name__ == '__main__':
     p = ArgumentParser()
     p.add_argument('--path', '-p', required=True,
             help='path to root of DJ USB')
+    p.add_argument('--xml_path', '-x', default='/Volumes/AWEEEEZY/',
+            help='path to root of DJ USB')
     p.add_argument('--download', '-d', nargs='+', type=str,
             choices=['music', 'xml'], default=[],
             help='download MP3s and/or rekordbox.xml')
@@ -166,7 +168,7 @@ if __name__ == '__main__':
                 with open(file_, 'w', encoding='utf-8') as f:
                     for l in lines:
                         if 'file://localhost' in l:
-                            l = l.replace('/Volumes/DJ/', os.path.join(args.path
+                            l = l.replace(args.xml_path, os.path.join(args.path
                                     if os.name == 'posix' else '/' + os.path.splitdrive(args.path)[0] + '/', ''))
                         f.write(f"{l.strip()}\n")
 
