@@ -1,4 +1,6 @@
 **/*.mp3
 **/.cache*
 **/.DS_store
+**/*.pyc
+**/.python-version
 scripts/playlist_builder.log
