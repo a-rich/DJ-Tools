@@ -38,7 +38,7 @@ def get_tags(tag='genre'):
     files = set()
     for x in args.included:
         files.update(set(glob(os.path.join(args.path, 'DJ Music', x, '**/*.mp3'), recursive=True)))
-    
+
     if args.debug:
         tags = dict()
         for x in files:
@@ -70,10 +70,13 @@ if __name__ == '__main__':
     p = ArgumentParser()
     p.add_argument('--path')
     p.add_argument('--included', default=[
-            "Bass", "Tech-house", "Techno",
+            "Alonso's-Audio", "Bass", "Disco", "Funk", "Hip-Hop", "Other",
             "Rob's Records/Arhedee Dubstep Highlight",
             "Rob's Records/Arhedee Favorites",
-            "Rob's Records/ETHEREAL"])
+            "Rob's Records/ETHEREAL",
+            "Rob's Records/Lofi and Chillhop",
+            "Samples/Scratch Sentences",
+            "Tech-house", "Techno",])
     p.add_argument('--tag', default='genre')
     p.add_argument('--split', default='/')
     p.add_argument('--verbose', action='store_true')
