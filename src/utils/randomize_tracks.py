@@ -1,45 +1,57 @@
+from concurrent.futures import ThreadPoolExecutor
 import logging
+from os import cpu_count
 import random
+from threading import Thread
+from urllib.parse import unquote
 
 from bs4 import BeautifulSoup
 import eyed3
+from tqdm import tqdm
 
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s:%(lineno)s - %(levelname)s - %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S')
 logger = logging.getLogger('randomize_tracks')
+        
+
+def set_tag(track, config, index):
+    track = eyed3.load(track)
+    setattr(track.tag, config['RANDOMIZE_TRACKS_TAG'], index)
+    track.tag.save()
 
 
 def randomize_tracks(config):
     soup = BeautifulSoup(open(config['XML_PATH'], 'r').read(), 'lxml')
+    lookup = {x.get_attribute_list('trackid')[0]:
+              unquote(x.get_attribute_list('location')[0].replace(
+                    'file://localhost', ''))
+              for x in soup.find_all('track')
+              if x.get_attribute_list('location')[0]}
+
     for playlist in config['RANDOMIZE_TRACKS_PLAYLISTS']:
         try:
-            tracks = get_playlist_track_locations(soup, playlist)
+            tracks = get_playlist_track_locations(soup, playlist, lookup)
         except LookupError as e:
             logger.error(e)
             continue
 
         random.shuffle(tracks)
-        #TODO: parallelize
-        for index, track in enumerate(tracks):
-            track = eyed3.load(track)
-            setattr(track.tag, config['RANDOMIZE_TRACKS_TAG'], index)
-            track.tag.save()
+        payload = [tracks, [config] * len(tracks), list(range(len(tracks)))]
+        with ThreadPoolExecutor(max_workers=cpu_count() * 4) as executor: 
+            [x for x in tqdm(executor.map(set_tag, *payload),
+                             total=len(tracks),
+                             desc=f'Randomizing "{playlist}" tracks')]
 
 
-def get_playlist_track_locations(soup, _playlist):
+def get_playlist_track_locations(soup, _playlist,lookup):
     try:
-        playlist = next(iter(soup.find_all('node', {'name': _playlist})))
+        playlist = soup.find_all('node', {'name': _playlist})[0]
     except StopIteration:
         raise LookupError(f'{_playlist} not found')
     
-    tracks = [x for x in playlist.children if str(x).strip()]
-    tracks = [next(iter(x.get_attribute_list('key'))) for x in tracks]
-    tracks = [next(iter(soup.findAll('track', {"trackid": x})))
-              for x in tracks]
-    tracks = [next(iter(x.get_attribute_list('location'))) for x in tracks]
-    tracks = [x.replace('file://localhost', '').replace('%20', ' ')
-              for x in tracks]
-
+    tracks = [lookup[x.get_attribute_list('key')[0]] for x in playlist.children
+              if str(x).strip()]
+    
     return tracks 
