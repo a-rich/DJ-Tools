@@ -1,9 +1,11 @@
 from itertools import groupby
+import json
 import logging
 import os
 from subprocess import Popen, PIPE, CalledProcessError
 from traceback import format_exc
 
+from bs4 import BeautifulSoup
 import requests
 
 
@@ -100,23 +102,28 @@ def webhook(url, content_size_limit, content=None):
         remainder = remainder[content_size_limit:]
 
 
-def rewrite_xml(file_, config):
+def rewrite_xml(_file, config):
     logger.info('Syncing remote rekordbox.xml...')
-    cmd = f"aws s3 cp s3://dj.beatcloud.com/dj/xml/{config['XML_IMPORT_USER']}/rekordbox.xml {file_}"
+    cmd = f"aws s3 cp s3://dj.beatcloud.com/dj/xml/{config['XML_IMPORT_USER']}/rekordbox.xml {_file}"
     logger.info(cmd)
     os.system(cmd)
 
-    src = config['XML_IMPORT_USER']
+    registered_users = json.load(open('registered_users.json', 'r'))
+    src = registered_users[config['XML_IMPORT_USER']]
+    dst = registered_users[config['USER']]
 
-    if os.name == 'posix':
-        dst = config['USB_PATH']
-    else:
-        dst = '/' + os.path.splitdrive(config['USB_PATH'])[0] + '/'
+    if os.name == 'nt':
+        dst = '/' + os.path.splitdrive(dst)[0] + '/'
 
-    lines = open(file_, 'r', encoding='utf-8').readlines()
-    with open(file_, 'w', encoding='utf-8') as f:
-        for line in lines:
-            if 'file://localhost' in line:
-                line = line.replace(src,
-                                    os.path.join(dst, ''))
-            f.write(f"{line.strip()}\n")
+    xml_path = os.path.join(os.path.dirname(config['XML_PATH']),
+                            f'{config["XML_IMPORT_USER"]}_rekordbox.xml')
+    soup = BeautifulSoup(open(xml_path, 'r').read(), 'xml')
+    for track in soup.find_all('TRACK'):
+        if not track.get('Location'):
+            continue
+        track['Location'] = track['Location'].replace(src,
+                os.path.join(dst, ''))
+    
+    with open(config['XML_PATH'], mode='wb',
+              encoding=soup.orignal_encoding) as f:
+        f.write(soup.prettify('utf-8'))
