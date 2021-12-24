@@ -7,7 +7,8 @@ from src.sync.helpers import parse_include_exclude, rewrite_xml, run_sync, webho
 
 
 logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(name)s:%(lineno)s - %(levelname)s - %(message)s',
+                    format='%(asctime)s - %(name)s:%(lineno)s - ' \
+                           '%(levelname)s - %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S')
 logger = logging.getLogger('sync_operations')
 
@@ -22,7 +23,7 @@ def upload_music(config):
             logger.info(f'\t{_file}')
             os.remove(_file)
 
-    logger.info('Syncing local track collection...')
+    logger.info('Syncing track collection...')
     cmd = ['aws', 's3', 'sync',
            f"{os.path.join(config['USB_PATH'], 'DJ Music')}",
            's3://dj.beatcloud.com/dj/music/']
@@ -35,7 +36,7 @@ def upload_music(config):
 
 
 def upload_xml(config):
-    logger.info(f"Uploading {config['USER']}'s local rekordbox.xml...")
+    logger.info(f"Uploading {config['USER']}'s rekordbox.xml...")
     dst = f's3://dj.beatcloud.com/dj/xml/{config["USER"]}/'
     cmd = f'aws s3 cp {config["XML_PATH"]} {dst}'
     logger.info(cmd)

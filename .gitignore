@@ -4,5 +4,5 @@
 **/*.mp3
 **/*.pyc
 **/.python-version
-scripts/playlist_builder.log
-config.json
+**/config.json
+**/*.log

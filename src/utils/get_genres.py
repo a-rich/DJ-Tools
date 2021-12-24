@@ -12,7 +12,8 @@ from tqdm import tqdm
 
 
 logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(name)s:%(lineno)s - %(levelname)s - %(message)s',
+                    format='%(asctime)s - %(name)s:%(lineno)s - ' \
+                           '%(levelname)s - %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S')
 logger = logging.getLogger('get_genres')
 
@@ -44,6 +45,6 @@ def get_genres(config):
                                    key=itemgetter(0)):
         group = list(group)
         logger.info(f'{group_id}: {len(group)}')
-        if config.get('GENRE_VERBOSE'):
+        if config['VERBOSITY'] > 0:
             for track in group:
                 logger.info(f'\t{track}')

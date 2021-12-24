@@ -2,15 +2,17 @@ import logging
 import sys
 from traceback import format_exc
 
-from src.utils.config import arg_parse, update_config
+from config.config import arg_parse, update_config
+from src.spotify.playlist_analysis.spotify_analysis import check_playlists
+from src.sync.sync_operations import SYNC_OPERATIONS
 from src.utils.get_genres import get_genres
 from src.utils.randomize_tracks import randomize_tracks
 from src.utils.youtube_dl import youtube_dl
-from src.sync.sync_operations import SYNC_OPERATIONS
 
 
 logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(name)s:%(lineno)s - %(levelname)s - %(message)s',
+                    format='%(asctime)s - %(name)s:%(lineno)s - ' \
+                           '%(levelname)s - %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S')
 logger = logging.getLogger('dj_tools')
 
@@ -33,6 +35,9 @@ if __name__ == '__main__':
 
     if config.get('GET_GENRES'):
         get_genres(config)
+    
+    if config.get('SPOTIFY_PLAYLISTS_CHECK'):
+        check_playlists(config)
 
     for op in config['SYNC_OPERATIONS']:
         operation = SYNC_OPERATIONS.get(op)
