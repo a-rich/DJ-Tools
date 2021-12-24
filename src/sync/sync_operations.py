@@ -36,9 +36,8 @@ def upload_music(config):
 
 def upload_xml(config):
     logger.info(f"Uploading {config['USER']}'s local rekordbox.xml...")
-    src = os.path.join(config['USB_PATH'], 'PIONEER', 'rekordbox.xml')
     dst = f's3://dj.beatcloud.com/dj/xml/{config["USER"]}/'
-    cmd = f'aws s3 cp {src} {dst}'
+    cmd = f'aws s3 cp {config["XML_PATH"]} {dst}'
     logger.info(cmd)
     os.system(cmd)
 
@@ -71,16 +70,20 @@ def download_music(config):
 
 def download_xml(config):
     if os.name == 'nt':
-        pwd = os.getcwd()
-        os.chdir(config['USB_PATH'])
-        os.makedirs('PIONEER', exist_ok=True)
-        os.chdir('PIONEER')
+        cwd = os.getcwd()
+        path_parts = os.path.dirname(config['XML_PATH']).split(os.path.sep)
+        root = path_parts[0]
+        path_parts = path_parts[1:]
+        os.chdir(root)
+        for part in path_parts:
+            os.makedirs(part, exist_ok=True)
+            os.chdir(part)
         rewrite_xml(f'{config["XML_IMPORT_USER"]}_rekordbox.xml', config)
-        os.chdir(pwd)
+        os.chdir(cwd)
     else:
-        pioneer_dir = os.path.join(config['USB_PATH'], 'PIONEER')
-        os.makedirs(pioneer_dir, exist_ok=True)
-        rewrite_xml(os.path.join(pioneer_dir,
+        xml_dir = os.path.dirname(config['XML_PATH'])
+        os.makedirs(xml_dir, exist_ok=True)
+        rewrite_xml(os.path.join(xml_dir,
                                  f'{config["XML_IMPORT_USER"]}_rekordbox.xml'),
                     config)
 

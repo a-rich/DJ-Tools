@@ -24,11 +24,9 @@ def set_tag(track, config, index):
 
 def randomize_tracks(config):
     soup = BeautifulSoup(open(config['XML_PATH'], 'r').read(), 'lxml')
-    lookup = {x.get_attribute_list('trackid')[0]:
-              unquote(x.get_attribute_list('location')[0].replace(
-                    'file://localhost', ''))
-              for x in soup.find_all('track')
-              if x.get_attribute_list('location')[0]}
+    lookup = {x['trackid']: unquote(x['location'].replace(
+              'file://localhost', ''))
+              for x in soup.find_all('track') if x.get('location')}
 
     for playlist in config['RANDOMIZE_TRACKS_PLAYLISTS']:
         try:
@@ -45,13 +43,10 @@ def randomize_tracks(config):
                              desc=f'Randomizing "{playlist}" tracks')]
 
 
-def get_playlist_track_locations(soup, _playlist,lookup):
+def get_playlist_track_locations(soup, _playlist, lookup):
     try:
         playlist = soup.find_all('node', {'name': _playlist})[0]
     except StopIteration:
         raise LookupError(f'{_playlist} not found')
     
-    tracks = [lookup[x.get_attribute_list('key')[0]] for x in playlist.children
-              if str(x).strip()]
-    
-    return tracks 
+    return [lookup[x['key']] for x in playlist.children if str(x).strip()]
