@@ -14,6 +14,10 @@ logger = logging.getLogger('sync_operations')
 
 
 def upload_music(config):
+    if os.environ.get('USER') != 'aweeeezy':
+        logger.error('User "aweeeezy" has not yet authorized uploading music')
+        return
+
     glob_path = Path(os.path.join(config['USB_PATH'], 'DJ Music'))
     hidden_files = set([str(p) for p in glob_path.rglob(os.path.join('**',
                                                                      '.*.*'))])
