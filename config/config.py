@@ -98,6 +98,8 @@ def arg_parse():
             help='expected delimiter for "genre" tags')
     p.add_argument('--genre_exclude_dirs', type=str, nargs='+',
             help='paths to exclude from tracks during genre analysis')
+    p.add_argument('--spotify_check_playlists', action='store_true',
+            help='check Spotify playlists against beatcloud')
     p.add_argument('--spotify_playlists_check', type=str, nargs='+',
             help='playlist name(s) to check against beatcloud')
     p.add_argument('--spotify_playlists_check_fuzz_ratio', type=int,

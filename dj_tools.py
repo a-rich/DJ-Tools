@@ -36,7 +36,7 @@ if __name__ == '__main__':
     if config.get('GET_GENRES'):
         get_genres(config)
     
-    if config.get('SPOTIFY_PLAYLISTS_CHECK'):
+    if config.get('SPOTIFY_CHECK_PLAYLISTS'):
         check_playlists(config)
 
     for op in config['SYNC_OPERATIONS']:

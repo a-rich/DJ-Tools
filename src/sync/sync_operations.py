@@ -32,7 +32,7 @@ def upload_music(config):
         webhook(config['DISCORD_URL'], config['DISCORD_CONTENT_SIZE_LIMIT'],
                 content=run_sync(parse_include_exclude(cmd, config, upload=True)))
     else:
-        _ = run_sync(cmd)
+        run_sync(parse_include_exclude(cmd, config))
 
 
 def upload_xml(config):
@@ -52,7 +52,7 @@ def download_music(config):
     os.makedirs(os.path.join(config['USB_PATH'], 'DJ Music'), exist_ok=True)
     cmd = ['aws', 's3', 'sync', 's3://dj.beatcloud.com/dj/music/',
            f"{os.path.join(config['USB_PATH'], 'DJ Music')}"]
-    _ = run_sync(parse_include_exclude(cmd, config))
+    run_sync(parse_include_exclude(cmd, config))
 
     new = set([str(p) for p in glob_path.rglob(os.path.join('**', '*.*'))])
     difference = sorted(list(new.difference(old)),
