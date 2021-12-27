@@ -184,7 +184,7 @@ if __name__ == '__main__':
                 rewrite_xml(os.path.join(args.path, 'PIONEER', 'rekordbox.xml'))
 
     for task in args.upload:
-        if task == 'music':
+        if task == 'music' and os.environ.get('USER') == 'aweeeezy':
             glob_path = Path('/'.join([args.path, 'DJ Music']))
             hidden = set([str(p) for p in glob_path.rglob('**/.*.*')])
             if hidden:
