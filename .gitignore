@@ -6,3 +6,5 @@
 **/.python-version
 **/config.json
 **/*.log
+
+logs/*

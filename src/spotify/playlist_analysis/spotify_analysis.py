@@ -92,11 +92,6 @@ def compute_distance(spotify_playlist, spotify_track, beatcloud_track,
 
 
 def find_matches(spotify_tracks, beatcloud_tracks, config):
-    #TODO: fix tracks in beatcloud which are not <TRACK> - <ARTIST> format
-    for track in list(beatcloud_tracks):
-        reversed_track = ' - '.join(track.split(' - ')[-1::-1])
-        beatcloud_tracks.append(reversed_track)
-
     spotify_tracks = [(playlist, track)
                       for playlist, tracks in spotify_tracks.items()
                       for track in tracks]

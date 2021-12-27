@@ -2,7 +2,6 @@ from concurrent.futures import ThreadPoolExecutor
 import logging
 from os import cpu_count
 import random
-from threading import Thread
 from urllib.parse import unquote
 
 from bs4 import BeautifulSoup
