@@ -29,16 +29,26 @@ CONFIG_TEMPLATE = {
     "DISCORD_CONTENT_SIZE_LIMIT": 2000,
     "YOUTUBE_DL_URL": "",
     "RANDOMIZE_TRACKS_PLAYLISTS": "",
-    "RANDOMIZE_TRACKS_TAG": "track_num",
+    "RANDOMIZE_TRACKS_TAG": "",
     "SYNC_OPERATIONS": [],
     "GET_GENRES": False,
     "GENRE_TAG_DELIMITER": "",
     "GENRE_EXCLUDE_DIRS": [],
+    "SPOTIFY_CHECK_PLAYLISTS": False,
     "SPOTIFY_PLAYLISTS_CHECK": [],
-    "SPOTIFY_PLAYLISTS_CHECK_FUZZ_RATIO": 72,
+    "SPOTIFY_PLAYLISTS_CHECK_FUZZ_RATIO": 80,
     "SPOTIFY_CLIENT_ID": "",
     "SPOTIFY_CLIENT_SECRET": "",
     "SPOTIFY_REDIRECT_URI": "",
+    "SPOTIFY_USERNAME": "",
+    "AUTO_PLAYLIST_UPDATE": False,
+    "AUTO_PLAYLIST_SUBREDDITS": [],
+    "AUTO_PLAYLIST_TRACK_LIMIT": 50,
+    "AUTO_PLAYLIST_TOP_PERIOD": "",
+    "AUTO_PLAYLIST_LEVENSHTEIN_SIMILARITY": 80,
+    "REDDIT_CLIENT_ID": "",
+    "REDDIT_CLIENT_SECRET": "",
+    "REDDIT_USER_AGENT": "",
     "VERBOSITY": 0
 }
 
@@ -110,6 +120,25 @@ def arg_parse():
             help='Spotify API client secret')
     p.add_argument('--spotify_redirect_uri', type=str,
             help='Spotify API redirect URI')
+    p.add_argument('--spotify_username', type=str,
+            help='Spotify user to maintain auto-playlists for')
+    p.add_argument('--auto_playlist_update', action='store_true',
+            help='update auto-playlists')
+    p.add_argument('--auto_playlist_subreddits', type=str, nargs='+',
+            help='subreddits to generate playlists from')
+    p.add_argument('--auto_playlist_track_limit', type=int,
+            help='maximum number of tracks in a playlist')
+    p.add_argument('--auto_playlist_top_period', type=str,
+            choices=['all', 'day', 'hour', 'month', 'week', 'year'],
+            help='"top" period to consider when updating playlists')
+    p.add_argument('--auto_playlist_levenshtein_similarity', type=int,
+            help='minimum Levenshtein similarity to add track to playlist')
+    p.add_argument('--reddit_client_id', type=str,
+            help='Reddit API client ID')
+    p.add_argument('--reddit_client_secret', type=str,
+            help='Reddit API client secret')
+    p.add_argument('--reddit_user_agent', type=str,
+            help='Reddit API user agent')
     p.add_argument('--verbosity', '-v', action='count', default=0,
             help='logging verbosity')
     p.add_argument('--log_level',

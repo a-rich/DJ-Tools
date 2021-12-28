@@ -3,7 +3,8 @@ import sys
 from traceback import format_exc
 
 from config.config import arg_parse, update_config
-from src.spotify.playlist_analysis.spotify_analysis import check_playlists
+from spotify.playlist_checker import check_playlists
+from spotify.playlist_builder import update_auto_playlists
 from src.sync.sync_operations import SYNC_OPERATIONS
 from src.utils.get_genres import get_genres
 from src.utils.randomize_tracks import randomize_tracks
@@ -38,6 +39,9 @@ if __name__ == '__main__':
     
     if config.get('SPOTIFY_CHECK_PLAYLISTS'):
         check_playlists(config)
+    
+    if config.get('AUTO_PLAYLIST_UPDATE'):
+        update_auto_playlists(config)
 
     for op in config['SYNC_OPERATIONS']:
         operation = SYNC_OPERATIONS.get(op)
