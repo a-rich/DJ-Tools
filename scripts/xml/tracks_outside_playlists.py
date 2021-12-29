@@ -9,18 +9,22 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s:%(lineno)s - ' \
                            '%(levelname)s - %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S')
-logger = logging.getLogger('parser')
+logger = logging.getLogger('tracks_outside_playlists')
 
 
-def get_dangling_tracks(soup):
+def get_tracks(soup, name, folder):
     tracks = {x['TrackID']: x
               for x in soup.find_all('TRACK') if x.get('Location')}
-    genre_folder = soup.find_all('NODE', {'Name': 'Genres', 'Type': '0'})[0]
-    genre_playlists = genre_folder.find_all('NODE', {'Type': '1'}) 
-    logger.info(f'Tracks: {len(tracks)}')
-    logger.info(f'Genre playlists: {len(genre_playlists)}')
+    node = soup.find_all('NODE', {'Name': name, 'Type': '0' if folder else '1'})[0]
+    if folder:
+        playlists = node.find_all('NODE', {'Type': '1'}) 
+    else:
+        playlists = [node]
 
-    for playlist in genre_playlists:
+    logger.info(f'Tracks: {len(tracks)}')
+    logger.info(f'Playlists: {len(playlists)}')
+
+    for playlist in playlists:
         for track in playlist.children:
             if not (isinstance(track, Tag) and tracks.get(track['Key'])): 
                 continue
@@ -31,9 +35,9 @@ def get_dangling_tracks(soup):
     return tracks
 
 
-def create_dangling_tracks_playlist(soup, tracks, playlist_name):
+def create_playlist(soup, tracks, new_playlist):
     playlists_root = soup.find_all('NODE', {'Name': 'ROOT', 'Type': '0'})[0]
-    new_playlist = soup.new_tag('NODE', Name=playlist_name, Type="1",
+    new_playlist = soup.new_tag('NODE', Name=new_playlist, Type="1",
                                 KeyType="0", Entries=str(len(tracks)))
     playlists_root.insert(0, new_playlist)    
     for track_id, track in tracks.items():
@@ -42,17 +46,24 @@ def create_dangling_tracks_playlist(soup, tracks, playlist_name):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('--xml_path', type=str, help='path to "rekordbox.xml"')
-    parser.add_argument('--xml_write_path', type=str,
+    parser.add_argument('--xml_path', required=True, type=str,
+                        help='path to "rekordbox.xml"')
+    parser.add_argument('--name', type=str, required=True,
+                        help='playlist / folder used to find missing tracks')
+    parser.add_argument('--folder', action='store_true',
+                        help='set if "--name" is folder instead of playlist')
+    parser.add_argument('--new_xml_path', type=str,
+                        default='new_rekordbox.xml',
                         help='path to new "rekordbox.xml"')
-    parser.add_argument('--playlist_name', type=str, default='Dangling Tracks',
+    parser.add_argument('--new_playlist', type=str, default='Dangling Tracks',
                         help='name of playlist to create')
+    
     args = parser.parse_args()
 
     soup = BeautifulSoup(open(args.xml_path).read(), 'xml')
-    create_dangling_tracks_playlist(soup, get_dangling_tracks(soup),
-                                    args.playlist_name)
+    create_playlist(soup, get_tracks(soup, args.name, args.folder),
+                    args.new_playlist)
 
-    with open(args.xml_write_path, mode='wb',
+    with open(args.new_xml_path, mode='wb',
               encoding=soup.orignal_encoding) as f:
         f.write(soup.prettify('utf-8'))

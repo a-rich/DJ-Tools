@@ -13,6 +13,9 @@ logger = logging.getLogger('youtube_dl')
 
 
 def youtube_dl(config):
+    if not os.path.exists(config['USB_PATH']):
+        raise FileNotFoundError(f'{config["USB_PATH"]} does not exist!')
+
     DEST_PATH = os.path.join(config['USB_PATH'], 'DJ Music', 'New Music', '')
     ydl_opts = {
         'format': 'bestaudio/best',

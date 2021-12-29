@@ -3,7 +3,8 @@ import logging
 import os
 from pathlib import Path
 
-from src.sync.helpers import parse_include_exclude, rewrite_xml, run_sync, webhook
+from src.sync.helpers import parse_include_exclude, rewrite_xml, run_sync, \
+                             webhook
 
 
 logging.basicConfig(level=logging.INFO,
@@ -14,6 +15,9 @@ logger = logging.getLogger('sync_operations')
 
 
 def upload_music(config):
+    if not os.path.exists(config['USB_PATH']):
+        raise FileNotFoundError(f'{config["USB_PATH"]} does not exist!')
+
     if os.environ.get('USER') != 'aweeeezy':
         logger.error('User "aweeeezy" has not yet authorized uploading music')
         return
@@ -33,13 +37,17 @@ def upload_music(config):
            's3://dj.beatcloud.com/dj/music/']
 
     if config['DISCORD_URL']:
-        webhook(config['DISCORD_URL'], config['DISCORD_CONTENT_SIZE_LIMIT'],
-                content=run_sync(parse_include_exclude(cmd, config, upload=True)))
+        webhook(config['DISCORD_URL'],
+                content=run_sync(parse_include_exclude(cmd, config,
+                                                       upload=True)))
     else:
         run_sync(parse_include_exclude(cmd, config))
 
 
 def upload_xml(config):
+    if not os.path.exists(config['XML_PATH']):
+        raise FileNotFoundError(f'{config["XML_PATH"]} does not exist!')
+
     logger.info(f"Uploading {config['USER']}'s rekordbox.xml...")
     dst = f's3://dj.beatcloud.com/dj/xml/{config["USER"]}/'
     cmd = f'aws s3 cp {config["XML_PATH"]} {dst}'
@@ -48,6 +56,9 @@ def upload_xml(config):
 
 
 def download_music(config):
+    if not os.path.exists(config['USB_PATH']):
+        raise FileNotFoundError(f'{config["USB_PATH"]} does not exist!')
+
     glob_path = Path(os.path.join(config['USB_PATH'], 'DJ Music'))
     old = set([str(p) for p in glob_path.rglob(os.path.join('**', '*.*'))])
     logger.info(f"Found {len(old)} files")
@@ -74,6 +85,10 @@ def download_music(config):
 
 
 def download_xml(config):
+    xml_dir = os.path.dirname(config['XML_PATH'])
+    if not os.path.exists(xml_dir):
+        raise FileNotFoundError(f'{xml_dir} does not exist!')
+
     if os.name == 'nt':
         cwd = os.getcwd()
         path_parts = os.path.dirname(config['XML_PATH']).split(os.path.sep)
@@ -91,11 +106,3 @@ def download_xml(config):
         rewrite_xml(os.path.join(xml_dir,
                                  f'{config["XML_IMPORT_USER"]}_rekordbox.xml'),
                     config)
-
-
-SYNC_OPERATIONS = {
-    'upload_music': upload_music,
-    'upload_xml': upload_xml,
-    'download_music': download_music,
-    'download_xml': download_xml
-}

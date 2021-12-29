@@ -1,10 +1,14 @@
-**/.cache*
-**/.DS_store
+# ignore file types
 **/*.json
+**/*.log
 **/*.mp3
 **/*.pyc
-**/.python-version
-**/config.json
-**/*.log
+**/*.xml
 
+# ignore specific files
+**/.cache
+**/.DS_store
+**/.python-version
+
+# ignore directories
 logs/*

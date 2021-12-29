@@ -26,14 +26,17 @@ CONFIG_TEMPLATE = {
     "USER": "",
     "LOG_DIR": "",
     "DISCORD_URL": "",
-    "DISCORD_CONTENT_SIZE_LIMIT": 2000,
+    "YOUTUBE_DL": False,
     "YOUTUBE_DL_URL": "",
+    "RANDOMIZE_TRACKS": False,
     "RANDOMIZE_TRACKS_PLAYLISTS": "",
     "RANDOMIZE_TRACKS_TAG": "",
     "SYNC_OPERATIONS": [],
     "GET_GENRES": False,
     "GENRE_TAG_DELIMITER": "",
     "GENRE_EXCLUDE_DIRS": [],
+    "GENERATE_GENRE_PLAYLISTS": False,
+    "GENERATE_GENRE_PLAYLISTS_REMAINDER": "",
     "SPOTIFY_CHECK_PLAYLISTS": False,
     "SPOTIFY_PLAYLISTS_CHECK": [],
     "SPOTIFY_PLAYLISTS_CHECK_FUZZ_RATIO": 80,
@@ -49,15 +52,9 @@ CONFIG_TEMPLATE = {
     "REDDIT_CLIENT_ID": "",
     "REDDIT_CLIENT_SECRET": "",
     "REDDIT_USER_AGENT": "",
-    "VERBOSITY": 0
+    "VERBOSITY": 0,
+    "LOG_LEVEL": "INFO"
 }
-
-
-def date_checker(date):
-    try:
-        return parse(date)
-    except ValueError:
-        raise ValueError(f'{date} is not a valid datetime')
 
 
 def arg_parse():
@@ -89,10 +86,12 @@ def arg_parse():
             help='directory where log files are stored')
     p.add_argument('--discord_url', type=str,
             help='discord webhook URL')
-    p.add_argument('--discord_content_size_limit', type=int,
-            help='webhook content size limit')
+    p.add_argument('--youtube_dl', action='store_true',
+            help='perform track download')
     p.add_argument('--youtube_dl_url', type=str,
             help='youtube_dl URL (soundcloud / youtube downloads)')
+    p.add_argument('--randomize_tracks', action='store_true',
+            help='perform track randomization')
     p.add_argument('--randomize_tracks_playlists', type=str, nargs='+',
             help='playlist name(s) to randomize tracks in')
     p.add_argument('--randomize_tracks_tag', type=str,
@@ -108,6 +107,12 @@ def arg_parse():
             help='expected delimiter for "genre" tags')
     p.add_argument('--genre_exclude_dirs', type=str, nargs='+',
             help='paths to exclude from tracks during genre analysis')
+    p.add_argument('--generate_genre_playlists', action='store_true',
+            help='perform automatic genre playlist creation')
+    p.add_argument('--generate_genre_playlists_remainder', type=str,
+            choices=['folder', 'playlist'],
+            help='place remainder tracks in either a folder of genre ' \
+                 'playlists or a single "Other" playlist')
     p.add_argument('--spotify_check_playlists', action='store_true',
             help='check Spotify playlists against beatcloud')
     p.add_argument('--spotify_playlists_check', type=str, nargs='+',
@@ -181,7 +186,7 @@ def update_config(args):
         msg = f'Config does not contain required keys: {missing_config_keys}'
         logger.critical(msg)
         raise ValueError(msg)
-
+    
     if not config.get('AWS_PROFILE'):
         msg = 'config must include AWS_PROFILE'
         logger.critical(msg)

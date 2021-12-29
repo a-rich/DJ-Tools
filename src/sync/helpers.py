@@ -75,7 +75,7 @@ def parse_include_exclude(_cmd, config, upload=False):
     return _cmd
 
 
-def webhook(url, content_size_limit, content=None):
+def webhook(url, content=None, content_size_limit=2000):
     if not content:
         logger.info("There's no content")
         return

@@ -18,19 +18,10 @@ logging.basicConfig(level=logging.INFO,
 logger = logging.getLogger('get_genres')
 
 
-def clean_tag(tag):
-    return tag.strip().split(')')[-1].split('\x10')[-1]
-
-def get_tag(x, config):
-    genres = set(map(clean_tag, 
-                     str(getattr(eyed3.load(x).tag, 'genre')).split(
-                            config['GENRE_TAG_DELIMITER'])))
-    track = os.path.basename(x)
-
-    return list(zip(genres, [track] * len(genres)))
-
-
 def get_genres(config):
+    if not os.path.exists(config['USB_PATH']):
+        raise FileNotFoundError(f'{config["USB_PATH"]} does not exist!')
+
     files = set(glob(os.path.join(config['USB_PATH'], 'DJ Music', '**/*.mp3'),
                      recursive=True))
     exclude = set(config['GENRE_EXCLUDE_DIRS'])
@@ -48,3 +39,16 @@ def get_genres(config):
         if config['VERBOSITY'] > 0:
             for track in group:
                 logger.info(f'\t{track}')
+
+
+def get_tag(x, config):
+    genres = set(map(clean_tag, 
+                     str(getattr(eyed3.load(x).tag, 'genre')).split(
+                            config['GENRE_TAG_DELIMITER'])))
+    track = os.path.basename(x)
+
+    return list(zip(genres, [track] * len(genres)))
+
+
+def clean_tag(tag):
+    return tag.strip().split(')')[-1].split('\x10')[-1]

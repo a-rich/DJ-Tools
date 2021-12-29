@@ -31,7 +31,7 @@ def update_auto_playlists(config):
             client_secret=config['REDDIT_CLIENT_SECRET'],
             user_agent=config['REDDIT_USER_AGENT'])
 
-    ids_path = os.path.join('config', 'subreddit_playlist-ids.json')
+    ids_path = os.path.join('config', 'playlist_builder.json')
     if os.path.exists(ids_path):
         subreddit_playlist_ids = json.load(open(ids_path))
     else:
@@ -207,26 +207,6 @@ def filter_tracks(tracks, threshold, title, artist):
                 return track
 
 
-def build_new_playlist(spotify, username, subreddit, new_tracks):
-    """Creates a new playlist from a list of track IDs / URLs.
-
-    Args:
-        spotify (spotipy.Spotify): spotify client
-        subreddit (str): subreddit name to filter
-        new_tracks ([(str, str), ...]): list of Spotify track ('id', 'name')
-                                        tuples
-
-    Returns:
-        (spotipy.Playlist): Playlist object for the newly constructed playlist.
-    """
-    ids = list(zip(*new_tracks))[0]
-    playlist = spotify.user_playlist_create(username,
-                                            name=f"r/{subreddit.title()}")
-    spotify.playlist_add_items(playlist['id'], ids, position=None)
-
-    return playlist
-
-
 def update_existing_playlist(spotify, playlist, new_tracks, limit):
     """Adds new tracks to an existing playlist; removes old tracks if the
 
@@ -280,3 +260,23 @@ def update_existing_playlist(spotify, playlist, new_tracks, limit):
         spotify.playlist_add_items(playlist, add_payload)
 
     return _playlist
+
+
+def build_new_playlist(spotify, username, subreddit, new_tracks):
+    """Creates a new playlist from a list of track IDs / URLs.
+
+    Args:
+        spotify (spotipy.Spotify): spotify client
+        subreddit (str): subreddit name to filter
+        new_tracks ([(str, str), ...]): list of Spotify track ('id', 'name')
+                                        tuples
+
+    Returns:
+        (spotipy.Playlist): Playlist object for the newly constructed playlist.
+    """
+    ids = list(zip(*new_tracks))[0]
+    playlist = spotify.user_playlist_create(username,
+                                            name=f"r/{subreddit.title()}")
+    spotify.playlist_add_items(playlist['id'], ids, position=None)
+
+    return playlist
