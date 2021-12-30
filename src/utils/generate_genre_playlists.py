@@ -44,11 +44,20 @@ def get_track_genres(soup, delimiter):
         if not track.get('Location'):
             continue
         track_genres = [x.strip() for x in track['Genre'].split(delimiter)]
+
+        # NOTE: special logic to create 'Pure Techno' playlist despite there
+        # being no 'Pure Techno' genre tag
+        if all(['techno' in x.lower() for x in track_genres]):
+            if 'Pure Techno' in tracks:
+                tracks['Pure Techno'].append((track['TrackID'], track_genres))
+            else:
+                tracks['Pure Techno'] = [(track['TrackID'], track_genres)]
+
         for genre in track_genres:
             if genre in tracks:
-                tracks[genre].append(track['TrackID'])
+                tracks[genre].append((track['TrackID'], track_genres))
             else:
-                tracks[genre] = [track['TrackID']]
+                tracks[genre] = [(track['TrackID'], track_genres)]
 
     return tracks
 
@@ -56,14 +65,19 @@ def get_track_genres(soup, delimiter):
 def create_playlists(soup, content, genres):
     if isinstance(content, dict):
         content = {k.lower(): v for k, v in content.items()}
-        folder = soup.new_tag('NODE', Name=content['name'], Type="0")
-        if content['name'] != 'Genres':
-            _all = soup.new_tag('NODE', KeyType="0",
-                                Name=f'All {content["name"]}', Type="1")
-            folder.append(_all)
-        for playlist in content['playlists']:
-            folder.append(create_playlists(soup, playlist, genres))
-        return folder
+        if content['name'] != '_ignore':
+            folder = soup.new_tag('NODE', Name=content['name'], Type="0")
+            if content['name'] != 'Genres':
+                _all = soup.new_tag('NODE', KeyType="0",
+                                    Name=f'All {content["name"]}', Type="1")
+                folder.append(_all)
+            for playlist in content['playlists']:
+                _playlist = create_playlists(soup, playlist, genres)
+                if _playlist:
+                    folder.append(_playlist)
+            return folder
+        else:
+            genres.update(set(content['playlists']))
     elif isinstance(content, str):
         genres.add(content)
         playlist = soup.new_tag('NODE', KeyType="0", Name=content, Type="1")
@@ -76,7 +90,7 @@ def create_playlists(soup, content, genres):
 def add_other(soup, remainder_type, genres, tracks, playlists):
     if remainder_type == 'folder':
         folder = soup.new_tag('NODE', Name='Other', Type='0')
-        for other in set(tracks).difference(genres):
+        for other in sorted(set(tracks).difference(genres)):
             playlist = soup.new_tag('NODE', Name=other, Type="1", KeyType="0")
             folder.append(playlist)
         playlists.append(folder)
@@ -90,14 +104,39 @@ def add_other(soup, remainder_type, genres, tracks, playlists):
 def add_tracks(soup, playlists, tracks):
     seen = {}
     for playlist in playlists.find_all('NODE', {'Type': '1'}):
-        if playlist['Name'] not in seen:
-            seen[playlist['Name']] = set()
+        seen_index = f"{playlist.parent['Name']} -> {playlist['Name']}"
+        if seen_index not in seen:
+            seen[seen_index] = set()
+        
+        # NOTE: special logic to distinguish between the general 'Hip Hop'
+        # playlist (a.k.a. pure Hip Hop) and the 'Hip Hop' playlist under the
+        # 'Bass' folder (a.k.a. bass Hip Hop)
+        pure_hip_hop = bass_hip_hop = False
+        if playlist['Name'] == 'Hip Hop':
+            if playlist.parent['Name'] == 'Genres':
+                pure_hip_hop = True 
+            else:
+                bass_hip_hop = True
 
-        for track in tracks.get(playlist['Name'], []):
-            track_tag = soup.new_tag('TRACK', Key=track)
-            if track not in seen[playlist['Name']]:
-                playlist.append(track_tag)
-                seen[playlist['Name']].add(track)
+        for track_id, genres in tracks.get(playlist['Name'], []):
+            # NOTE: special logic to distinguish between the general 'Hip Hop'
+            # playlist (a.k.a. pure Hip Hop) and the 'Hip Hop' playlist under
+            # the 'Bass' folder (a.k.a. bass Hip Hop)
+            skip_add = False
+            if pure_hip_hop and \
+                    any(['r&b' not in x.lower() and 'hip hop' not in x.lower()
+                         for x in genres]):
+                skip_add = True
+            if bass_hip_hop and \
+                    all(['r&b' in x.lower() or 'hip hop' in x.lower()
+                         for x in genres]):
+                skip_add = True
+            if skip_add:
+                continue
+
+            if track_id not in seen[seen_index]:
+                playlist.append(soup.new_tag('TRACK', Key=track_id))
+                seen[seen_index].add(track_id)
 
             parent = playlist.parent
             while parent:
@@ -105,13 +144,13 @@ def add_tracks(soup, playlists, tracks):
                     _all = parent.find_all('NODE', 
                                            {'Name': f'All {parent["Name"]}'},
                                            recursive=False)[0]
-                    if _all['Name'] not in seen:
-                        seen[_all['Name']] = set()
+                    _seen_index = f"{_all.parent['Name']} -> {_all['Name']}"
+                    if _seen_index not in seen:
+                        seen[_seen_index] = set()
 
-                    track_tag = soup.new_tag('TRACK', Key=track)
-                    if track not in seen[_all['Name']]:
-                        _all.append(track_tag)
-                        seen[_all['Name']].add(track)
+                    if track_id not in seen[_seen_index]:
+                        _all.append(soup.new_tag('TRACK', Key=track_id))
+                        seen[_seen_index].add(track_id)
                 except IndexError:
                     break
                 parent = parent.parent
