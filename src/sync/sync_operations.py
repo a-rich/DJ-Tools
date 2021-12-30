@@ -145,7 +145,8 @@ def download_xml(config):
             os.chdir(part)
         _file = f'{config["XML_IMPORT_USER"]}_rekordbox.xml', 
     else:
-        _file = os.path.join(xml_dir, f'{config["XML_IMPORT_USER"]}_rekordbox.xml')
+        _file = os.path.join(xml_dir,
+                             f'{config["XML_IMPORT_USER"]}_rekordbox.xml')
 
     cmd = "aws s3 cp s3://dj.beatcloud.com/dj/xml/" \
           f"{config['XML_IMPORT_USER']}/rekordbox.xml {_file}"

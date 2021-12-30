@@ -1,3 +1,8 @@
+"""This module is used to emulate shuffling the track order of one or more playlists.
+This is done by setting the ID3 tag (e.g. 'track_num') of tracks in the
+playlists to sequential numbers. After setting track ID3 tags, those tracks
+must have their tags reloaded (Select > right-click > Reload Tags).
+"""
 from concurrent.futures import ThreadPoolExecutor
 import logging
 import os
@@ -6,6 +11,7 @@ from urllib.parse import unquote
 
 from bs4 import BeautifulSoup
 import eyed3
+eyed3.log.setLevel("ERROR")
 from tqdm import tqdm
 
 
@@ -17,6 +23,17 @@ logger = logging.getLogger('randomize_tracks')
 
 
 def randomize_tracks(config):
+    """For each playlist in 'RANDOMIZE_TRACKS_PLAYLISTS', shuffle the tracks
+    and sequentially set the 'RANDOMIZE_TRACKS_TAG' ID3 tag to number to
+    emulate track randomization.
+
+    Args:
+        config (dict): configuration object
+
+    Raises:
+        FileNotFoundError: 'USB_PATH' must exist
+        FileNotFoundError: 'XML_PATH' must exist
+    """
     if not os.path.exists(config['USB_PATH']):
         raise FileNotFoundError(f'{config["USB_PATH"]} does not exist!')
 
@@ -46,6 +63,20 @@ def randomize_tracks(config):
 
 
 def get_playlist_track_locations(soup, _playlist, lookup):
+    """Finds playlist in 'XML_PATH' that matches '_playlist' and returns a list
+    of track 'Location' fields.
+
+    Args:
+        soup (bs4.BeautifulSoup): parsed XML
+        _playlist (str): name of playlist to randomize
+        lookup (dict): map of TrackIDs to 'Location'
+
+    Raises:
+        LookupError: '_playlist' must exist
+
+    Returns:
+        list: track 'Location' fields
+    """
     try:
         playlist = soup.find_all('NODE', {'Name': _playlist})[0]
     except IndexError:
@@ -55,7 +86,7 @@ def get_playlist_track_locations(soup, _playlist, lookup):
         
 
 def set_tag(track, tag, index):
-    """Loads mp3 file with eyed3 package and sets it's 'tag' ID3 tag with
+    """Loads mp3 file with eyed3 package and sets its 'tag' ID3 tag with
     'index' to emulate randomization.
 
     Args:

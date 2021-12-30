@@ -93,9 +93,12 @@ def get_bad_tracks(args):
 
         file_title = os.path.basename(_file).split(' - ')[0]
         tag_title = getattr(eyed3.load(_file).tag, 'title')
-        fuzz_ratio = fuzz.ratio(file_title.lower().strip(), tag_title.lower().strip())
-        if fuzz_ratio < args.fuzz_ratio and tag_title not in file_title and file_title not in tag_title:
-            logger.info(f'{os.path.basename(_file)}: {file_title} vs. {tag_title} = {fuzz_ratio}')
+        fuzz_ratio = fuzz.ratio(file_title.lower().strip(),
+                                tag_title.lower().strip())
+        if fuzz_ratio < args.fuzz_ratio and tag_title not in file_title and \
+                file_title not in tag_title:
+            logger.info(f'{os.path.basename(_file)}: {file_title} vs. ' \
+                        f'{tag_title} = {fuzz_ratio}')
             bad_tracks.append(_file)
 
     logger.info(f'{len(bad_tracks)} bad tracks')
@@ -122,16 +125,18 @@ def replace_tracks(tracks):
         os.rename(track, new_name)
         rm_cmd = f'aws s3 rm "{os.path.join(s3_prefix, sub_dir, base_name)}"'
         os.system(rm_cmd)
-        # NOTE: no need to upload files one-by-one since `dj_tools.py --upload_music` does so in parallel
-        # cp_cmd = f'aws s3 cp "{new_name}" "{os.path.join(s3_prefix, sub_dir, new_base_name)}"'
+        # NOTE: no need to upload files one-by-one since
+        # `dj_tools.py --upload_music` does so in parallel
+        # cp_cmd = f'aws s3 cp "{new_name}" ' \
+        #          f'"{os.path.join(s3_prefix, sub_dir, new_base_name)}"'
         # os.system(cp_cmd)
 
 
 def fix_track_location(xml_path, playlist):
     """This function parses the XML, finds the playlist with missing files,
-    finds the tracks in the missing files playlist, and then performs the mirror
-    'artist - title' -> 'title - artist' swap on the 'Location' field before
-    writing the modified XML.
+    finds the tracks in the missing files playlist, and then performs the
+    mirror 'artist - title' -> 'title - artist' swap on the 'Location' field
+    before writing the modified XML.
 
     Args:
         xml_path (str): path to XML containing a playlist of missing files
@@ -157,7 +162,8 @@ def fix_track_location(xml_path, playlist):
         artist, title = base_name.split(' - ')
         new_base_name = quote(' - '.join([title, artist]) + ext)
         track['Location'] = os.path.join(dir_name, new_base_name)
-        logger.info(f'{unquote(loc)} -> {unquote(os.path.join(dir_name, new_base_name))}')
+        logger.info(f'{unquote(loc)} -> ' \
+                    f'{unquote(os.path.join(dir_name, new_base_name))}')
 
     with open(xml_path, mode='wb',
               encoding=soup.orignal_encoding) as f:
