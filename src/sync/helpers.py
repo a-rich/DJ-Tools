@@ -1,3 +1,8 @@
+"""This module contains helper functions used by the sync operations. Helper
+functions include formatting 'aws s3 sync' commands, formatting the output of
+'aws s3 sync' commands, posting uploaded tracks to Discord, and modifying other
+user's rekordbox.xml to point to tracks located at 'USB_PATH'.
+"""
 from itertools import groupby
 import json
 import logging
@@ -17,6 +22,18 @@ logger = logging.getLogger('sync helpers')
 
 
 def run_sync(_cmd):
+    """Runs subprocess for 'aws s3 sync' command. Output is collected and
+    formatted such that uploaded tracks are grouped by their directories.
+
+    Args:
+        _cmd (str): 'aws s3 sync' command
+
+    Raises:
+        CalledProcessError: raised if 'aws s3 sync' command fails
+
+    Returns:
+        str: formatted list of uploaded tracks; tracks are grouped by directory
+    """
     tracks = []
     try:
         p = Popen(_cmd, stdout=PIPE, universal_newlines=True)
@@ -27,10 +44,11 @@ def run_sync(_cmd):
                 break
             if 'upload: ' in line:
                 print(line.strip(), flush=True)
-                tracks.append(line.strip().split(' to s3://dj.beatcloud.com/dj/music/')[-1])
+                tracks.append(line.strip().split(
+                        ' to s3://dj.beatcloud.com/dj/music/')[-1])
             else:
-                print(f'{line.strip()}                                                          ',
-                        end='\r', flush=True)
+                print(f'{line.strip()}                                      ' \
+                      '                    ', end='\r', flush=True)
 
         p.stdout.close()
         return_code = p.wait()
@@ -43,7 +61,8 @@ def run_sync(_cmd):
 
     new_music = ''
     if tracks:
-        logger.info(f'\nSuccessfully {"down" if "s3://" in _cmd[3] else "up"}loaded the following tracks:')
+        logger.info(f'Successfully {"down" if "s3://" in _cmd[3] else "up"}' \
+                    'loaded the following tracks:')
     for g, group in groupby(sorted(tracks,
             key=lambda x: '/'.join(x.split('/')[:-1])),
             key=lambda x: '/'.join(x.split('/')[:-1])):
@@ -58,7 +77,22 @@ def run_sync(_cmd):
     return new_music
 
 
-def parse_include_exclude(_cmd, config, upload=False):
+def parse_sync_command(_cmd, config, upload=False):
+    """Appends flags to 'aws s3 sync' command. If '*_INCLUDE_DIRS' is
+    specified, all directories are ignored except those specified. If
+    '*_EXCLUDE_DIRS' is specified, all directories are included except those
+    specified. Only one of these can be specified at once. If
+    'AWS_USE_DATE_MODIFIED', then tracks will be redownloaded / reuploaded if
+    their date modified at the source is after that of the destination.
+
+    Args:
+        _cmd (str): partial 'aws s3 sync' command
+        config (str): configuration object
+        upload (bool, optional): whether uploading or downloading
+
+    Returns:
+        str: fully built 'aws s3 sync' command
+    """
     if (upload and config['UPLOAD_INCLUDE_DIRS']) or \
             (not upload and config['DOWNLOAD_INCLUDE_DIRS']):
         _cmd.extend(['--exclude', '*'])
@@ -76,6 +110,17 @@ def parse_include_exclude(_cmd, config, upload=False):
 
 
 def webhook(url, content=None, content_size_limit=2000):
+    """Post track list of newly uploaded tracks to Discord channel associated
+    with 'url'. Track list is split across multiple messages if the character
+    limit exceed 'content_size_limit'.
+
+    Args:
+        url (str): Discord URL for webhook
+        content (str, optional): uploaded tracks (if any)
+        content_size_limit (int, optional): character limit for Discord
+                                            message; if content is larger, then
+                                            multiple messages are sent
+    """
     if not content:
         logger.info("There's no content")
         return
@@ -103,13 +148,16 @@ def webhook(url, content=None, content_size_limit=2000):
         remainder = remainder[content_size_limit:]
 
 
-def rewrite_xml(_file, config):
-    logger.info('Syncing remote rekordbox.xml...')
-    cmd = f"aws s3 cp s3://dj.beatcloud.com/dj/xml/{config['XML_IMPORT_USER']}/rekordbox.xml {_file}"
-    logger.info(cmd)
-    os.system(cmd)
+def rewrite_xml(config):
+    """This function modifies the 'Location' field of track tags in a
+    downloaded rekordbox.xml replacing the 'USB_PATH' written by
+    'XML_IMPORT_USER' with the 'USB_PATH' in 'config'.
 
-    registered_users = json.load(open('registered_users.json', 'r'))
+    Args:
+        config (dict): configuration object
+    """
+    registered_users = json.load(open(os.path.join('config',
+                                                   'registered_users.json')))
     src = registered_users[config['XML_IMPORT_USER']]
     dst = registered_users[config['USER']]
 

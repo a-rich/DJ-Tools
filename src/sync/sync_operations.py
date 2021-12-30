@@ -1,10 +1,15 @@
+"""This module is responsible for syncing tracks between 'USB_PATH' and the
+beatcloud (upload and download). It also handles uploading the rekordbox.xml
+located at 'XML_PATH' and downloading the rekordbox.xml uploaded to the
+beatcloud by 'XML_IMPORT_USER' before modifying it to point to track locations
+at 'USB_PATH'.
+"""
 from datetime import datetime
 import logging
 import os
 from pathlib import Path
 
-from src.sync.helpers import parse_include_exclude, rewrite_xml, run_sync, \
-                             webhook
+from src.sync.helpers import parse_sync_command, rewrite_xml, run_sync, webhook
 
 
 logging.basicConfig(level=logging.INFO,
@@ -15,6 +20,17 @@ logger = logging.getLogger('sync_operations')
 
 
 def upload_music(config):
+    """This function syncs tracks from 'USB_PATH' to the beatcloud.
+    'AWS_USE_DATE_MODIFIED' can be used in order to reupload tracks that
+    already exist in the beatcloud but have been modified since the last time
+    they were uploaded (i.e. ID3 tags have been altered).
+
+    Args:
+        config (dict): configuration object
+
+    Raises:
+        FileNotFoundError: 'USB_PATH' must exist
+    """
     if not os.path.exists(config['USB_PATH']):
         raise FileNotFoundError(f'{config["USB_PATH"]} does not exist!')
 
@@ -38,13 +54,20 @@ def upload_music(config):
 
     if config['DISCORD_URL']:
         webhook(config['DISCORD_URL'],
-                content=run_sync(parse_include_exclude(cmd, config,
-                                                       upload=True)))
+                content=run_sync(parse_sync_command(cmd, config, upload=True)))
     else:
-        run_sync(parse_include_exclude(cmd, config))
+        run_sync(parse_sync_command(cmd, config))
 
 
 def upload_xml(config):
+    """This function uploads 'XML_PATH' to beatcloud.
+
+    Args:
+        config (dict): configuration object
+
+    Raises:
+        FileNotFoundError: 'XML_PATH' file must exist 
+    """
     if not os.path.exists(config['XML_PATH']):
         raise FileNotFoundError(f'{config["XML_PATH"]} does not exist!')
 
@@ -56,6 +79,17 @@ def upload_xml(config):
 
 
 def download_music(config):
+    """This function syncs tracks from the beatcloud to 'USB_PATH'.
+    'AWS_USE_DATE_MODIFIED' can be used in order to redownload tracks that
+    already exist in 'USB_PATH' but have been modified since the last time they
+    were downloaded (i.e. ID3 tags have been altered).
+
+    Args:
+        config (dict): configuration object
+
+    Raises:
+        FileNotFoundError: 'USB_PATH' must exist
+    """
     if not os.path.exists(config['USB_PATH']):
         raise FileNotFoundError(f'{config["USB_PATH"]} does not exist!')
 
@@ -67,7 +101,7 @@ def download_music(config):
     os.makedirs(os.path.join(config['USB_PATH'], 'DJ Music'), exist_ok=True)
     cmd = ['aws', 's3', 'sync', 's3://dj.beatcloud.com/dj/music/',
            f"{os.path.join(config['USB_PATH'], 'DJ Music')}"]
-    run_sync(parse_include_exclude(cmd, config))
+    run_sync(parse_sync_command(cmd, config))
 
     new = set([str(p) for p in glob_path.rglob(os.path.join('**', '*.*'))])
     difference = sorted(list(new.difference(old)),
@@ -85,10 +119,21 @@ def download_music(config):
 
 
 def download_xml(config):
+    """This function downloads the beatcloud XML of 'XML_IMPORT_USER' and
+    modifies the 'Location' field of all the tracks so that it points to the
+    current user's 'USB_PATH'.
+
+    Args:
+        config (dict): configuration object
+
+    Raises:
+        FileNotFoundError: XML destination directory must exist
+    """
     xml_dir = os.path.dirname(config['XML_PATH'])
     if not os.path.exists(xml_dir):
         raise FileNotFoundError(f'{xml_dir} does not exist!')
 
+    logger.info('Syncing remote rekordbox.xml...')
     if os.name == 'nt':
         cwd = os.getcwd()
         path_parts = os.path.dirname(config['XML_PATH']).split(os.path.sep)
@@ -98,11 +143,15 @@ def download_xml(config):
         for part in path_parts:
             os.makedirs(part, exist_ok=True)
             os.chdir(part)
-        rewrite_xml(f'{config["XML_IMPORT_USER"]}_rekordbox.xml', config)
-        os.chdir(cwd)
+        _file = f'{config["XML_IMPORT_USER"]}_rekordbox.xml', 
     else:
-        xml_dir = os.path.dirname(config['XML_PATH'])
-        os.makedirs(xml_dir, exist_ok=True)
-        rewrite_xml(os.path.join(xml_dir,
-                                 f'{config["XML_IMPORT_USER"]}_rekordbox.xml'),
-                    config)
+        _file = os.path.join(xml_dir, f'{config["XML_IMPORT_USER"]}_rekordbox.xml')
+
+    cmd = "aws s3 cp s3://dj.beatcloud.com/dj/xml/" \
+          f"{config['XML_IMPORT_USER']}/rekordbox.xml {_file}"
+    logger.info(cmd)
+    os.system(cmd)
+    rewrite_xml(config)
+
+    if os.name == 'nt':
+        os.chdir(cwd)

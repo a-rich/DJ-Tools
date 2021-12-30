@@ -1,3 +1,12 @@
+"""This module is responsible for creating or updating Spotify playlists by
+querying subreddit top posts. Posts are first checked to see if they are
+directly links to a Spotify track. If this is not the case, then the post title
+is parsed in an attempt to interpret it as either 'ARTIST NAME - TRACK TITLE'
+or 'TRACK TITLE - ARTIST NAME'. These components are then used to search the
+Spotify API for tracks. The resulting tracks have their title and artist fields
+compared with the reddit post title and are added to the respective playlist
+if the Levenshtein similarity passes a threshold.
+"""
 from concurrent.futures import ThreadPoolExecutor
 import json
 import logging
@@ -20,6 +29,13 @@ logger = logging.getLogger('playlist_builder')
 
 
 def update_auto_playlists(config):
+    """This function updates the contents of one or more Spotify playlists with
+    the top posts of one or more subreddits (currently only supports one
+    subreddit per playlist).
+
+    Args:
+        config (dict): configuration object
+    """
     spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(
             client_id=config['SPOTIFY_CLIENT_ID'], 
             client_secret=config['SPOTIFY_CLIENT_SECRET'], 

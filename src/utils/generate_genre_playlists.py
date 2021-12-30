@@ -119,6 +119,6 @@ def add_tracks(soup, playlists, tracks):
 
 def wrap_playlists(soup, playlists):
     playlists_root = soup.find_all('NODE', {'Name': 'ROOT', 'Type': '0'})[0]
-    new_playlist = soup.new_tag('NODE', Name='AUTO', Type="0")
+    new_playlist = soup.new_tag('NODE', Name='AUTO_GENRES', Type="0")
     new_playlist.insert(0, playlists)
     playlists_root.insert(0, new_playlist)    

@@ -36,7 +36,9 @@ def randomize_tracks(config):
             continue
 
         random.shuffle(tracks)
-        payload = [tracks, [config] * len(tracks), list(range(len(tracks)))]
+        payload = [tracks, 
+                   [config['RANDOMIZE_TRACKS_TAG']] * len(tracks),
+                   list(range(len(tracks)))]
         with ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as executor:
             [x for x in tqdm(executor.map(set_tag, *payload),
                              total=len(tracks),
@@ -52,7 +54,15 @@ def get_playlist_track_locations(soup, _playlist, lookup):
     return [lookup[x['Key']] for x in playlist.children if str(x).strip()]
         
 
-def set_tag(track, config, index):
+def set_tag(track, tag, index):
+    """Loads mp3 file with eyed3 package and sets it's 'tag' ID3 tag with
+    'index' to emulate randomization.
+
+    Args:
+        track (str): path to mp3 file
+        tag (str): ID3 tag to set
+        index (int): [description]
+    """
     track = eyed3.load(track)
-    setattr(track.tag, config['RANDOMIZE_TRACKS_TAG'], index)
+    setattr(track.tag, tag, index)
     track.tag.save()

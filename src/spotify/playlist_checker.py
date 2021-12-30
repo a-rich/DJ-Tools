@@ -1,3 +1,7 @@
+"""This module is responsible for identifying any potential overlap between
+tracks in one or more Spotify playlists with all the tracks already in the
+beatcloud.
+"""
 from concurrent.futures import ThreadPoolExecutor
 from itertools import groupby, product
 import json
@@ -5,7 +9,6 @@ import logging
 from operator import itemgetter
 import os
 
-from dateutil.parser import parse
 from fuzzywuzzy import fuzz
 import Levenshtein
 import spotipy
@@ -21,6 +24,13 @@ logger = logging.getLogger('spotify_analysis')
 
 
 def check_playlists(config):
+    """Gets track titles and artists from both Spotify playlist(s) and
+    beatcloud and computes the Levenshtein similarity between their product in
+    order to identify any overlapping tracks.
+
+    Args:
+        config (dict): configuration object
+    """
     spotify_tracks = get_spotify_tracks(config)
     beatcloud_tracks = get_beatcloud_tracks()
     matches = find_matches(spotify_tracks, beatcloud_tracks, config)
@@ -34,6 +44,16 @@ def check_playlists(config):
 
 
 def get_spotify_tracks(config):
+    """Aggregates the tracks from one or more Spotify playlists into a
+    dictionary mapped with playlist names.
+
+    Args:
+        config (dict): configuration object
+
+    Returns:
+        (dict): Spotify track titles and artist names keyed by playlist name
+    """
+
     spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(
             client_id=config['SPOTIFY_CLIENT_ID'], 
             client_secret=config['SPOTIFY_CLIENT_SECRET'], 
@@ -60,6 +80,18 @@ def get_spotify_tracks(config):
 
 
 def get_playlist_tracks(spotify, playlist_id):
+    """Queries Spotify API for a playlist and pull tracks from it.
+
+    Args:
+        spotify (spotipy.Spotify): Spotify client
+        playlist_id (str): playlist ID of Spotify playlist to pull tracks from
+
+    Raises:
+        Exception: playlist_id must correspond with a valid Spotify playlist
+
+    Returns:
+        set: Spotify track titles and artist names from a given playlist
+    """
     try:
         playlist = spotify.playlist(playlist_id)
     except Exception:
@@ -76,6 +108,15 @@ def get_playlist_tracks(spotify, playlist_id):
 
 
 def add_tracks(result):
+    """Parses a page of Spotify API result tracks and returns a list of the
+    track titles and artist names.
+
+    Args:
+        result (spotipy.Tracks): paged result of Spotify tracks
+
+    Returns:
+        (list): Spotify track titles and artist names
+    """
     tracks = []
     for track in result['items']:
         title = track['track']['name']
@@ -86,6 +127,12 @@ def add_tracks(result):
 
 
 def get_beatcloud_tracks():
+    """Lists all the music files in S3 and parses out the track titles and
+    artist names.
+
+    Returns:
+        list: beatcloud track titles and artist names
+    """
     logger.info('Getting tracks from the beatcloud...')
     cmd = 'aws s3 ls --recursive s3://dj.beatcloud.com/dj/music/'
     with os.popen(cmd) as proc:
@@ -98,6 +145,19 @@ def get_beatcloud_tracks():
 
 
 def find_matches(spotify_tracks, beatcloud_tracks, config):
+    """Computes the Levenshtein similarity between the product of all beatcloud
+    tracks with all the tracks in the given Spotify playlist(s) and returns
+    those that match above a threshold.
+
+    Args:
+        spotify_tracks (list): Spotify track titles and artist names
+        beatcloud_tracks (list): beatcloud track titles and artist names
+        config (dict): configuration object 
+
+    Returns:
+        list: Spotify tracks which match beatcloud tracks with a Levenshtein
+              similarity above a threshold
+    """
     spotify_tracks = [(playlist, track)
                       for playlist, tracks in spotify_tracks.items()
                       for track in tracks]
@@ -107,16 +167,29 @@ def find_matches(spotify_tracks, beatcloud_tracks, config):
     payload = [spotify_playlists, spotify_tracks, beatcloud_tracks,
                [config['SPOTIFY_PLAYLISTS_CHECK_FUZZ_RATIO']] * len(_product)]
     with ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as executor:
-        matches = list(filter(None, tqdm(executor.map(compute_distance,
-                                                      *payload),
-                                         total=len(_product),
-                                         desc='Matching Spotify and Beatcloud tracks')))
+        matches = list(filter(None,
+                tqdm(executor.map(compute_distance, *payload),
+                     total=len(_product),
+                     desc='Matching Spotify and Beatcloud tracks')))
     
     return matches
 
 
 def compute_distance(spotify_playlist, spotify_track, beatcloud_track,
                      threshold):
+    """Qualifies a match between a Spotify track and a beatcloud track using
+    Levenshtein similarity.
+
+    Args:
+        spotify_playlist (str): playlist that Spotify track belongs to
+        spotify_track (str): Spotify track title and artist name
+        beatcloud_track (str): beatcloud track title and artist name
+        threshold (float): Levenshtein similarity threshold for acceptance
+
+    Returns:
+        tuple: Spotify playlist, Spotify 'TRACK TITLE - ARTIST NAME', beatcloud
+               'TRACK TITLE - ARTIST NAME', Levenshtein similarity
+    """
     fuzz_ratio = fuzz.ratio(spotify_track, beatcloud_track)
     if fuzz_ratio >= threshold:
         return spotify_playlist, spotify_track, beatcloud_track, fuzz_ratio

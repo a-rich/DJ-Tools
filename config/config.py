@@ -1,3 +1,8 @@
+"""This module is responsible for validating 'config.json' which is used by
+this library and handling the parsing of command-line arguments which, if
+provided, override the respective values of 'config.json'; In addition, it will
+update 'registered_users.json' with the current user's username and USB_PATH.
+"""
 from argparse import ArgumentParser
 import json
 import logging
@@ -13,6 +18,8 @@ logging.basicConfig(level=logging.INFO,
                     datefmt='%Y-%m-%d %H:%M:%S')
 logger = logging.getLogger('parser')
 
+# This is the template for 'config.json' specifying the required and necessary
+# config options as well as their value types.
 CONFIG_TEMPLATE = {
     "USB_PATH": "",
     "AWS_PROFILE": "",
@@ -33,8 +40,8 @@ CONFIG_TEMPLATE = {
     "RANDOMIZE_TRACKS_TAG": "",
     "SYNC_OPERATIONS": [],
     "GET_GENRES": False,
-    "GENRE_TAG_DELIMITER": "",
     "GENRE_EXCLUDE_DIRS": [],
+    "GENRE_TAG_DELIMITER": "",
     "GENERATE_GENRE_PLAYLISTS": False,
     "GENERATE_GENRE_PLAYLISTS_REMAINDER": "",
     "SPOTIFY_CHECK_PLAYLISTS": False,
@@ -58,11 +65,17 @@ CONFIG_TEMPLATE = {
 
 
 def arg_parse():
+    """This function parses command-line arguments, if any, and sets this
+    module's logger's log level.
+
+    Returns:
+        argparse.NameSpace: command-line arguments
+    """
     p = ArgumentParser()
     p.add_argument('--usb_path', type=str, metavar='FILE',
             help='path to USB with music and rekordbox files')
     p.add_argument('--aws_profile', type=str,
-            help='AWS configuration profile')
+            help='AWS config profile')
     p.add_argument('--upload_include_dirs', type=str, nargs='+',
             help='folders to include when uploading to S3')
     p.add_argument('--upload_exclude_dirs', type=str, nargs='+',
@@ -103,10 +116,10 @@ def arg_parse():
             help='DJ Tools sync operations to perform')
     p.add_argument('--get_genres', action='store_true',
             help='perform genre analysis')
-    p.add_argument('--genre_tag_delimiter', type=str,
-            help='expected delimiter for "genre" tags')
     p.add_argument('--genre_exclude_dirs', type=str, nargs='+',
             help='paths to exclude from tracks during genre analysis')
+    p.add_argument('--genre_tag_delimiter', type=str,
+            help='expected delimiter for "genre" tags')
     p.add_argument('--generate_genre_playlists', action='store_true',
             help='perform automatic genre playlist creation')
     p.add_argument('--generate_genre_playlists_remainder', type=str,
@@ -149,7 +162,6 @@ def arg_parse():
     p.add_argument('--log_level',
             choices=['DEBUG', 'INFO', 'WARN', 'ERROR', 'CRITICAL'],
             help='default logger level')
-
     args = p.parse_args()
 
     if args.log_level:
@@ -159,12 +171,41 @@ def arg_parse():
 
 
 def update_config(args):
+    """This function loads 'config.json', updates it with command-line
+    arguments, if any, validates the final config object, and then updates
+    'registered_users.json' with the current user's username and USB_PATH.
+    Validation steps include:
+        * ensuring all required config options are present
+        * AWS_PROFILE is specified if also performing any sync operations
+        * ensuring that include / exclude directory specifications are mutually
+          exclusive for both uploading and downloading
+        * warns if DISCORD_URL is absent
+        * warns if 'registered_users.json' is absent (if there are other users
+          sharing this beatcloud instances, then this file should exist already)
+        * warns if the user is performing the sync operation 'download_xml'
+          while XML_IMPORT_USER is either empty or absent from
+          'registered_users.json'
+
+    Args:
+        args (argparser.NameSpace): command-line arguments 
+
+    Raises:
+        FileNotFoundError: 'config.json' must exist
+        Exception: 'config.json' must be a proper JSON file
+        ValueError: 'config.json' must have required options
+        ValueError: AWS_PROFILE must be specified if performing sync operations
+        ValueError: include / exclude directories cannot both be specified
+                    simultaneously
+
+    Returns:
+        dict: config object
+    """
     try:
         config_file = os.path.join('config', 'config.json')
         config = json.load(open(config_file, 'r'))
-        logger.info(f'Read config: {config}')
+        logger.info(f'Config: {config}')
     except FileNotFoundError:
-        msg = 'No "config.json" file found.'
+        msg = '"config.json" file not found.'
         logger.critical(msg)
         raise FileNotFoundError(msg)
     except:
@@ -177,29 +218,24 @@ def update_config(args):
         logger.info(f'Args: {args}')
         config.update(args)
 
-    for key in CONFIG_TEMPLATE:
-        missing_config_keys = []
-        if key not in config:
-            missing_config_keys.append(key)
-
+    missing_config_keys = [k for k in CONFIG_TEMPLATE if k not in config]
     if missing_config_keys:
         msg = f'Config does not contain required keys: {missing_config_keys}'
         logger.critical(msg)
         raise ValueError(msg)
     
-    if not config.get('AWS_PROFILE'):
-        msg = 'config must include AWS_PROFILE'
+    if config['SYNC_OPERATIONS'] and not config.get('AWS_PROFILE'):
+        msg = 'Config must include AWS_PROFILE if performing sync operations'
         logger.critical(msg)
         raise ValueError(msg)
-
     os.environ['AWS_PROFILE'] = config['AWS_PROFILE']
 
     if (config['UPLOAD_INCLUDE_DIRS'] and config['UPLOAD_EXCLUDE_DIRS']) \
             or (config['DOWNLOAD_INCLUDE_DIRS'] and 
                 config['DOWNLOAD_EXCLUDE_DIRS']):
-        msg = 'config must not contain either (a) both UPLOAD_INCLUDE_DIRS ' \
-              'and UPLOAD_EXCLUDE_DIRS or (b) both DOWNLOAD_INCLUDE_DIRS ' \
-              'and DOWNLOAD_EXCLUDE_DIRS'
+        msg = 'Config must neither contain (a) both UPLOAD_INCLUDE_DIRS and ' \
+              'UPLOAD_EXCLUDE_DIRS or (b) both DOWNLOAD_INCLUDE_DIRS and' \
+              'DOWNLOAD_EXCLUDE_DIRS'
         logger.critical(msg)
         raise ValueError(msg)
 
@@ -207,18 +243,19 @@ def update_config(args):
         logger.warning('DISCORD_URL is not configured...set this for ' \
                        '"new music" discord messages!')
 
-    if os.path.exists('registered_users.json'):
-        registered_users = json.load(open('registered_users.json', 'r'))
+    registered_users_path = os.path.join('config', 'registered_users.json')
+    if os.path.exists(registered_users_path):
+        registered_users = json.load(open(registered_users_path))
         logger.info(f'Registered users: {registered_users}')
     else:
-        logger.warning(f'No registered users, "git pull" to ensure you are ' \
+        logger.warning('No registered users, "git pull" to ensure you are ' \
                        'up-to-date!')
         registered_users = {}
 
     if 'download_xml' in config['SYNC_OPERATIONS'] and (
             not config['XML_IMPORT_USER']
             or config['XML_IMPORT_USER'] not in registered_users):
-        logger.warning(f'Unable to import from XML of unregistered user ' \
+        logger.warning('Unable to import from XML of unregistered user ' \
                        f'"{config["XML_IMPORT_USER"]}"')
         config['SYNC_OPERATIONS'].remove('download_xml')
 
@@ -227,6 +264,6 @@ def update_config(args):
 
     os.makedirs(config['LOG_DIR'], exist_ok=True)
     registered_users[config['USER']] = config['USB_PATH']
-    json.dump(registered_users, open('registered_users.json', 'w'))
+    json.dump(registered_users, open(registered_users_path, 'w'))
 
     return config
