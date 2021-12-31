@@ -173,6 +173,6 @@ def rewrite_xml(config):
         track['Location'] = track['Location'].replace(src,
                 os.path.join(dst, ''))
     
-    with open(config['XML_PATH'], mode='wb',
+    with open(xml_path, mode='wb',
               encoding=soup.orignal_encoding) as f:
         f.write(soup.prettify('utf-8'))
