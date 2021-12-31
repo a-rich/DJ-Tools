@@ -1,7 +1,7 @@
 """This is the entry point for the DJ Tools library.
 
 Spotify operations:
-    * SPOTIFY_CHECK_PLAYLIST (playlist_checker.py): identify overlap between
+    * SPOTIFY_CHECK_PLAYLISTS (playlist_checker.py): identify overlap between
             Spotify playlist(s) and beatcloud
     * AUTO_PLAYLIST_UPDATE (playlist_builder.py): creating and updating Spotify
             playlists using subreddit top posts
@@ -12,17 +12,18 @@ Utils operations:
             present in an XML
     * GET_GENRES (get_genres.py): display track counts for all genres using the
             ID3 tag field of local mp3 files
-    * RANDOMIZE_TRACKS (randomize_tracks.py): set the track_num ID3 tags of
-            tracks in playlists sequentially (after shuffling) to randomize
+    * RANDOMIZE_TRACKS (randomize_tracks.py): set ID3 tags of tracks in
+            playlists sequentially (after shuffling) to randomize
     * YOUTUBE_DL (youtube_dl.py): download tracks from a URL (e.g. Soundcloud
             playlist)
 
 Sync operations:
     * SYNC_OPERATIONS (sync_operations.py)
-        - download_music: sync tracks from beatcloud to USB
-        - download_xml: sync XML_IMPORT_USER's beatcloud rekordbox.xml to USB
-        - upload_music: sync tracks from USB to beatcloud
-        - upload_xml: sync rekordbox.xml to beatcloud
+        - download_music: sync tracks from beatcloud to USB_PATH
+        - download_xml: sync XML_IMPORT_USER's beatcloud XML to
+                XML_PATH's parent folder
+        - upload_music: sync tracks from USB_PATH to beatcloud
+        - upload_xml: sync XML_PATH to USER's beatcloud XML folder
 """
 import logging
 import sys
@@ -42,23 +43,29 @@ logger = logging.getLogger('dj_tools')
 
 
 if __name__ == '__main__':
+    # load 'config.json', override with any command-line arguments, and
+    # validate the final config
     try:
         config = update_config(arg_parse())
         if config.get('LOG_LEVEL'):
             logger.setLevel(config['LOG_LEVEL'])
-    except Exception as e:
-        logger.critical(f'Failed to load config: {e}\n{format_exc()}')
+    except Exception as exc:
+        logger.critical(f'Failed to load config: {exc}\n{format_exc()}')
         sys.exit()
-    
+
+    # run 'spotify' package and 'utils' package operations if any of the flags
+    # to do so are present in the config
     for op, func in {**SPOTIFY_OPERATIONS, **UTILS_OPERATIONS}.items():
         if not config.get(op):
             continue
         try:
             logger.info(f'Beginning {op}...')
             func(config)
-        except Exception as e:
-            logger.error(f'{op} failed: {e}\n{format_exc()}')
-    
+        except Exception as exc:
+            logger.error(f'{op} failed: {exc}\n{format_exc()}')
+
+    # run 'sync' package operations if any of the options to do so are present
+    # in the 'SYNC_OPERATIONS' config option
     for op in config['SYNC_OPERATIONS']:
         func = SYNC_OPERATIONS.get(op)
         if not func:
@@ -68,5 +75,5 @@ if __name__ == '__main__':
         try:
             logger.info(f'Beginning {op}...')
             func(config)
-        except Exception as e:
-            logger.error(f'{op} failed: {e}\n{format_exc()}')
+        except Exception as exc:
+            logger.error(f'{op} failed: {exc}\n{format_exc()}')

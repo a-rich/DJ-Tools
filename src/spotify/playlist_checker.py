@@ -55,12 +55,13 @@ def get_spotify_tracks(config):
     """
 
     spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(
-            client_id=config['SPOTIFY_CLIENT_ID'], 
-            client_secret=config['SPOTIFY_CLIENT_SECRET'], 
-            redirect_uri=config['SPOTIFY_REDIRECT_URI'], 
+            client_id=config['SPOTIFY_CLIENT_ID'],
+            client_secret=config['SPOTIFY_CLIENT_SECRET'],
+            redirect_uri=config['SPOTIFY_REDIRECT_URI'],
             scope='playlist-modify-public'))
     playlist_ids = {key.lower(): value for key, value in json.load(
-            open(os.path.join('config', 'playlist_checker.json'))).items()}
+            open(os.path.join('config', 'playlist_checker.json'),
+                 encoding='utf-8')).items()}
     playlist_tracks = {}
     for playlist in config["SPOTIFY_PLAYLISTS_CHECK"]:
         playlist_id = playlist_ids.get(playlist.lower())
@@ -80,7 +81,7 @@ def get_spotify_tracks(config):
 
 
 def get_playlist_tracks(spotify, playlist_id):
-    """Queries Spotify API for a playlist and pull tracks from it.
+    """Queries Spotify API for a playlist and pulls tracks from it.
 
     Args:
         spotify (spotipy.Spotify): Spotify client
@@ -95,7 +96,8 @@ def get_playlist_tracks(spotify, playlist_id):
     try:
         playlist = spotify.playlist(playlist_id)
     except Exception:
-        raise Exception(f"Failed to get playlist with ID {playlist_id}")
+        raise Exception(f"Failed to get playlist with ID {playlist_id}") \
+                from Exception
 
     result = playlist['tracks']
     tracks = add_tracks(result)
@@ -122,7 +124,7 @@ def add_tracks(result):
         title = track['track']['name']
         artists = ', '.join([y['name'] for y in track['track']['artists']])
         tracks.append(f'{title} - {artists}')
-    
+
     return tracks
 
 
@@ -152,7 +154,7 @@ def find_matches(spotify_tracks, beatcloud_tracks, config):
     Args:
         spotify_tracks (list): Spotify track titles and artist names
         beatcloud_tracks (list): beatcloud track titles and artist names
-        config (dict): configuration object 
+        config (dict): configuration object
 
     Returns:
         list: Spotify tracks which match beatcloud tracks with a Levenshtein
@@ -171,7 +173,7 @@ def find_matches(spotify_tracks, beatcloud_tracks, config):
                 tqdm(executor.map(compute_distance, *payload),
                      total=len(_product),
                      desc='Matching Spotify and Beatcloud tracks')))
-    
+
     return matches
 
 

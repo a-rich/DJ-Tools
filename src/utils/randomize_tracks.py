@@ -1,6 +1,6 @@
-"""This module is used to emulate shuffling the track order of one or more playlists.
-This is done by setting the ID3 tag (e.g. 'track_num') of tracks in the
-playlists to sequential numbers. After setting track ID3 tags, those tracks
+"""This module is used to emulate shuffling the track order of one or more
+playlists. This is done by setting the ID3 tag (e.g. 'track_num') of tracks in
+the playlists to sequential numbers. After setting track ID3 tags, those tracks
 must have their tags reloaded (Select > right-click > Reload Tags).
 """
 from concurrent.futures import ThreadPoolExecutor
@@ -24,7 +24,7 @@ logger = logging.getLogger('randomize_tracks')
 
 def randomize_tracks(config):
     """For each playlist in 'RANDOMIZE_TRACKS_PLAYLISTS', shuffle the tracks
-    and sequentially set the 'RANDOMIZE_TRACKS_TAG' ID3 tag to number to
+    and sequentially set the 'RANDOMIZE_TRACKS_TAG' ID3 tag to a number to
     emulate track randomization.
 
     Args:
@@ -40,7 +40,8 @@ def randomize_tracks(config):
     if not os.path.exists(config['XML_PATH']):
         raise FileNotFoundError(f'{config["XML_PATH"]} does not exist!')
 
-    soup = BeautifulSoup(open(config['XML_PATH'], 'r').read(), 'xml')
+    soup = BeautifulSoup(open(config['XML_PATH'], 'r',
+                              encoding='utf-8').read(), 'xml')
     lookup = {x['TrackID']: unquote(x['Location'].replace(
               'file://localhost', ''))
               for x in soup.find_all('TRACK') if x.get('Location')}
@@ -48,18 +49,18 @@ def randomize_tracks(config):
     for playlist in config['RANDOMIZE_TRACKS_PLAYLISTS']:
         try:
             tracks = get_playlist_track_locations(soup, playlist, lookup)
-        except LookupError as e:
-            logger.error(e)
+        except LookupError as exc:
+            logger.error(exc)
             continue
 
         random.shuffle(tracks)
-        payload = [tracks, 
+        payload = [tracks,
                    [config['RANDOMIZE_TRACKS_TAG']] * len(tracks),
                    list(range(len(tracks)))]
         with ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as executor:
-            [x for x in tqdm(executor.map(set_tag, *payload),
-                             total=len(tracks),
-                             desc=f'Randomizing "{playlist}" tracks')]
+            _ = list(tqdm(executor.map(set_tag, *payload),
+                          total=len(tracks),
+                          desc=f'Randomizing "{playlist}" tracks'))
 
 
 def get_playlist_track_locations(soup, _playlist, lookup):
@@ -80,10 +81,10 @@ def get_playlist_track_locations(soup, _playlist, lookup):
     try:
         playlist = soup.find_all('NODE', {'Name': _playlist})[0]
     except IndexError:
-        raise LookupError(f'{_playlist} not found')
-    
+        raise LookupError(f'{_playlist} not found') from LookupError
+
     return [lookup[x['Key']] for x in playlist.children if str(x).strip()]
-        
+
 
 def set_tag(track, tag, index):
     """Loads mp3 file with eyed3 package and sets its 'tag' ID3 tag with

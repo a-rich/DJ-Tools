@@ -58,7 +58,6 @@ from bs4 import BeautifulSoup
 import eyed3
 eyed3.log.setLevel("ERROR")
 from fuzzywuzzy import fuzz
-from tqdm import tqdm
 
 
 logging.basicConfig(level=logging.INFO,
@@ -68,25 +67,25 @@ logging.basicConfig(level=logging.INFO,
 logger = logging.getLogger('swap_title_artist')
 
 
-def get_bad_tracks(args):
+def get_bad_tracks(_args):
     """This function globs for mp3 files on '--usb_path' (ignoring those that
     are in the IGNORE_TRACKS set), reads the track title ID3 tag, splits the
     file name on ' - ', and then computes the Levenshtein similarity between
     the two. If the similarity is below '--fuzz_ratio' these files, along with
     the file name prefix and title tag, are printed and the file paths are
-    returned as a list.
+    returned as a list of "bad" tracks.
 
     Args:
-        args (argparser.NameSpace): command-line arguments
+        _args (argparser.NameSpace): command-line arguments
 
     Returns:
         list: paths to files whose ID3 title tag has a Levenshtein similarity
               below '--fuzz_ratio' from the first part of the file name
               (split on ' - ')
     """
-    usb_path = os.path.join(args.usb_path, 'DJ Music', '**', '*.mp3')
+    usb_path = os.path.join(_args.usb_path, 'DJ Music', '**', '*.mp3')
     files = glob(usb_path, recursive=True)
-    bad_tracks = []
+    _bad_tracks = []
     for _file in files:
         if os.path.basename(_file) in IGNORE_TRACKS:
             continue
@@ -95,15 +94,15 @@ def get_bad_tracks(args):
         tag_title = getattr(eyed3.load(_file).tag, 'title')
         fuzz_ratio = fuzz.ratio(file_title.lower().strip(),
                                 tag_title.lower().strip())
-        if fuzz_ratio < args.fuzz_ratio and tag_title not in file_title and \
+        if fuzz_ratio < _args.fuzz_ratio and tag_title not in file_title and \
                 file_title not in tag_title:
             logger.info(f'{os.path.basename(_file)}: {file_title} vs. ' \
                         f'{tag_title} = {fuzz_ratio}')
-            bad_tracks.append(_file)
+            _bad_tracks.append(_file)
 
-    logger.info(f'{len(bad_tracks)} bad tracks')
+    logger.info(f'{len(_bad_tracks)} bad tracks')
 
-    return bad_tracks
+    return _bad_tracks
 
 
 def replace_tracks(tracks):
@@ -115,9 +114,9 @@ def replace_tracks(tracks):
     """
     s3_prefix = 's3://dj.beatcloud.com/dj/music/'
     for track in tracks:
-        dir = os.path.dirname(track)
+        _dir = os.path.dirname(track)
         base_name = os.path.basename(track)
-        sub_dir = os.path.basename(dir)
+        sub_dir = os.path.basename(_dir)
         name, ext = os.path.splitext(base_name)
         artist, title = name.split(' - ')
         new_base_name = ' - '.join([title, artist]) + ext
@@ -126,7 +125,7 @@ def replace_tracks(tracks):
         rm_cmd = f'aws s3 rm "{os.path.join(s3_prefix, sub_dir, base_name)}"'
         os.system(rm_cmd)
         # NOTE: no need to upload files one-by-one since
-        # `dj_tools.py --upload_music` does so in parallel
+        # `dj_tools.py --sync_operations upload_music` does so in parallel
         # cp_cmd = f'aws s3 cp "{new_name}" ' \
         #          f'"{os.path.join(s3_prefix, sub_dir, new_base_name)}"'
         # os.system(cp_cmd)
@@ -143,16 +142,16 @@ def fix_track_location(xml_path, playlist):
                         (missing because they were renamed)
         playlist (str): name of the playlist containing missing files
     """
-    soup = BeautifulSoup(open(xml_path, 'r').read(), 'xml')
+    soup = BeautifulSoup(open(xml_path, 'r', encoding='utf-8').read(), 'xml')
     lookup = {x['TrackID']: x
               for x in soup.find_all('TRACK') if x.get('Location')}
 
     try:
         tracks = get_playlist_track_locations(soup, playlist, lookup)
-    except LookupError as e:
-        logger.error(e)
+    except LookupError as exc:
+        logger.error(exc)
         return
-    
+
     logger.info(f'{len(tracks)} tracks to repair in playlist "{playlist}"')
     for track in tracks:
         loc = track['Location']
@@ -166,8 +165,8 @@ def fix_track_location(xml_path, playlist):
                     f'{unquote(os.path.join(dir_name, new_base_name))}')
 
     with open(xml_path, mode='wb',
-              encoding=soup.orignal_encoding) as f:
-        f.write(soup.prettify('utf-8'))
+              encoding=soup.orignal_encoding) as _file:
+        _file.write(soup.prettify('utf-8'))
 
 
 def get_playlist_track_locations(soup, _playlist, lookup):
@@ -188,8 +187,8 @@ def get_playlist_track_locations(soup, _playlist, lookup):
     try:
         playlist = soup.find_all('NODE', {'Name': _playlist})[0]
     except IndexError:
-        raise LookupError(f'{_playlist} not found')
-    
+        raise LookupError(f'{_playlist} not found') from LookupError
+
     return [lookup[x['Key']] for x in playlist.children if str(x).strip()]
 
 
@@ -216,12 +215,14 @@ if __name__ == '__main__':
     ])
 
     if args.fuzz_ratio:
-        bad_tracks = get_bad_tracks()
+        bad_tracks = get_bad_tracks(args)
 
         if args.replace:
-            json.dump(bad_tracks, open(os.path.join('bad_tracks',
-                    f'{datetime.now().timestamp()}.json'), 'w'))
+            with open(os.path.join('bad_tracks',
+                      f'{datetime.now().timestamp()}.json'), 'w',
+                      encoding='utf-8') as _file:
+                json.dump(bad_tracks, _file)
             replace_tracks(bad_tracks)
-    
+
     if args.xml_swap_playlist:
         fix_track_location(args.xml_path, args.xml_swap_playlist)

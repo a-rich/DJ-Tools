@@ -1,7 +1,7 @@
-"""This module contains helper functions used by the sync operations. Helper
-functions include formatting 'aws s3 sync' commands, formatting the output of
-'aws s3 sync' commands, posting uploaded tracks to Discord, and modifying other
-user's rekordbox.xml to point to tracks located at 'USB_PATH'.
+"""This module contains helper functions used by the 'sync_operations' module.
+Helper functions include formatting 'aws s3 sync' commands, formatting the
+output of 'aws s3 sync' commands, posting uploaded tracks to Discord, and
+modifying XML_IMPORT_USER's XML to point to tracks located at 'USB_PATH'.
 """
 from itertools import groupby
 import json
@@ -36,41 +36,40 @@ def run_sync(_cmd):
     """
     tracks = []
     try:
-        p = Popen(_cmd, stdout=PIPE, universal_newlines=True)
+        with Popen(_cmd, stdout=PIPE, universal_newlines=True) as proc:
+            while True:
+                line = proc.stdout.readline()
+                if line == '' and proc.poll() is not None:
+                    break
+                if 'upload: ' in line:
+                    print(line.strip(), flush=True)
+                    tracks.append(line.strip().split(
+                            ' to s3://dj.beatcloud.com/dj/music/')[-1])
+                else:
+                    print(f'{line.strip()}                                  ' \
+                          '                        ', end='\r', flush=True)
 
-        while True:
-            line = p.stdout.readline()
-            if line == '' and p.poll() is not None:
-                break
-            if 'upload: ' in line:
-                print(line.strip(), flush=True)
-                tracks.append(line.strip().split(
-                        ' to s3://dj.beatcloud.com/dj/music/')[-1])
-            else:
-                print(f'{line.strip()}                                      ' \
-                      '                    ', end='\r', flush=True)
-
-        p.stdout.close()
-        return_code = p.wait()
+            proc.stdout.close()
+            return_code = proc.wait()
         if return_code:
             raise CalledProcessError(return_code, _cmd)
     except AttributeError:
         logger.error('No new track')
-    except Exception as e:
+    except Exception:
         logger.error(f'Failure while syncing: {format_exc()}')
 
     new_music = ''
     if tracks:
         logger.info(f'Successfully {"down" if "s3://" in _cmd[3] else "up"}' \
                     'loaded the following tracks:')
-    for g, group in groupby(sorted(tracks,
+    for group_id, group in groupby(sorted(tracks,
             key=lambda x: '/'.join(x.split('/')[:-1])),
             key=lambda x: '/'.join(x.split('/')[:-1])):
         group = sorted(group)
-        new_music += f'{g}: {len(group)}\n'
+        new_music += f'{group_id}: {len(group)}\n'
         for track in group:
-            x = track.split('/')[-1]
-            new_music += f'\t{x}\n'
+            track = track.split('/')[-1]
+            new_music += f'\t{track}\n'
     if new_music:
         logger.info(new_music)
 
@@ -96,13 +95,13 @@ def parse_sync_command(_cmd, config, upload=False):
     if (upload and config['UPLOAD_INCLUDE_DIRS']) or \
             (not upload and config['DOWNLOAD_INCLUDE_DIRS']):
         _cmd.extend(['--exclude', '*'])
-        for x in config[f'{"UP" if upload else "DOWN"}LOAD_INCLUDE_DIRS']:
-            _cmd.extend(['--include', f'{x}/*'])
+        for _dir in config[f'{"UP" if upload else "DOWN"}LOAD_INCLUDE_DIRS']:
+            _cmd.extend(['--include', f'{_dir}/*'])
     if (upload and config['UPLOAD_EXCLUDE_DIRS']) or \
             (not upload and config['DOWNLOAD_EXCLUDE_DIRS']):
         _cmd.extend(['--include', '*'])
-        for x in config[f'{"UP" if upload else "DOWN"}LOAD_EXCLUDE_DIRS']:
-            _cmd.extend(['--exclude', f'{x}/*'])
+        for _dir in config[f'{"UP" if upload else "DOWN"}LOAD_EXCLUDE_DIRS']:
+            _cmd.extend(['--exclude', f'{_dir}/*'])
     if not config['AWS_USE_DATE_MODIFIED']:
         _cmd.append('--size-only')
 
@@ -156,23 +155,24 @@ def rewrite_xml(config):
     Args:
         config (dict): configuration object
     """
-    registered_users = json.load(open(os.path.join('config',
-                                                   'registered_users.json')))
-    src = registered_users[config['XML_IMPORT_USER']]
-    dst = registered_users[config['USER']]
+    with open(os.path.join('config', 'registered_users.json'),
+              encoding='utf-8') as _file:
+        registered_users = json.load(_file)
+        src = registered_users[config['XML_IMPORT_USER']]
+        dst = registered_users[config['USER']]
 
     if os.name == 'nt':
         dst = '/' + os.path.splitdrive(dst)[0] + '/'
 
     xml_path = os.path.join(os.path.dirname(config['XML_PATH']),
                             f'{config["XML_IMPORT_USER"]}_rekordbox.xml')
-    soup = BeautifulSoup(open(xml_path, 'r').read(), 'xml')
+    soup = BeautifulSoup(open(xml_path, 'r', encoding='utf-8').read(), 'xml')
     for track in soup.find_all('TRACK'):
         if not track.get('Location'):
             continue
         track['Location'] = track['Location'].replace(src,
                 os.path.join(dst, ''))
-    
+
     with open(xml_path, mode='wb',
-              encoding=soup.orignal_encoding) as f:
-        f.write(soup.prettify('utf-8'))
+              encoding=soup.orignal_encoding) as _file:
+        _file.write(soup.prettify('utf-8'))

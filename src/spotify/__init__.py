@@ -8,5 +8,5 @@ from src.spotify.playlist_builder import update_auto_playlists
 
 SPOTIFY_OPERATIONS = {
     "SPOTIFY_CHECK_PLAYLISTS": check_playlists,
-    "AUTO_PLAYLIST_UPDATE": update_auto_playlists 
+    "AUTO_PLAYLIST_UPDATE": update_auto_playlists
 }

@@ -411,8 +411,8 @@ if __name__ == '__main__':
     p.add_argument('--verbose', action='store_true',
             help='verbosity level')
     args = p.parse_args()
-    args.include_dirs = set([x.lower() for x in args.include_dirs])
-                             if args.include_dirs else []
+    if args.include_dirs:
+        args.include_dirs = set([x.lower() for x in args.include_dirs])
 
     spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(
             scope='playlist-modify-public'))

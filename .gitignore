@@ -9,6 +9,10 @@
 **/.cache
 **/.DS_store
 **/.python-version
+**/*.code-workspace
 
 # ignore directories
 logs/*
+
+# allow registered_users.json to be tracked
+!config/registered_users.json

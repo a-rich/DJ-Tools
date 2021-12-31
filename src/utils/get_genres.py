@@ -24,7 +24,7 @@ logger = logging.getLogger('get_genres')
 
 def get_genres(config):
     """Globs mp3 files on 'USB_PATH', extracts the 'genre' ID3 tags, prints the
-    number of tracks in each alphabetized genre, and, if verbosity level in
+    number of tracks in each alphabetized genre, and, if VERBOSITY is
     increased, prints the individual tracks.
 
     Args:
@@ -39,8 +39,8 @@ def get_genres(config):
     files = set(glob(os.path.join(config['USB_PATH'], 'DJ Music', '**/*.mp3'),
                      recursive=True))
     exclude = set(config['GENRE_EXCLUDE_DIRS'])
-    files = [x for x in files if not any([y in x for y in exclude])]
-    
+    files = [x for x in files if not any((y in x for y in exclude))]
+
     payload = [files, [config] * len(files)]
     with ThreadPoolExecutor(max_workers=cpu_count() * 4) as executor:
         tracks = [y for x in tqdm(executor.map(get_tag, *payload),
@@ -67,7 +67,7 @@ def get_tag(_file, config):
     Returns:
         list: (genre tag, track title) tuples
     """
-    genres = set(map(clean_tag, 
+    genres = set(map(clean_tag,
                      str(getattr(eyed3.load(_file).tag, 'genre')).split(
                             config['GENRE_TAG_DELIMITER'])))
     track = os.path.basename(_file)

@@ -1,6 +1,6 @@
 """This module is responsible for syncing tracks between 'USB_PATH' and the
-beatcloud (upload and download). It also handles uploading the rekordbox.xml
-located at 'XML_PATH' and downloading the rekordbox.xml uploaded to the
+beatcloud (upload and download). It also handles uploading the Rekordbox XML
+located at 'XML_PATH' and downloading the Rekordbox XML uploaded to the
 beatcloud by 'XML_IMPORT_USER' before modifying it to point to track locations
 at 'USB_PATH'.
 """
@@ -39,8 +39,8 @@ def upload_music(config):
         return
 
     glob_path = Path(os.path.join(config['USB_PATH'], 'DJ Music'))
-    hidden_files = set([str(p) for p in glob_path.rglob(os.path.join('**',
-                                                                     '.*.*'))])
+    hidden_files = {str(p) for p in glob_path.rglob(os.path.join('**',
+                                                                     '.*.*'))}
     if hidden_files:
         logger.info(f'Removed {len(hidden_files)} files...')
         for _file in hidden_files:
@@ -66,7 +66,7 @@ def upload_xml(config):
         config (dict): configuration object
 
     Raises:
-        FileNotFoundError: 'XML_PATH' file must exist 
+        FileNotFoundError: 'XML_PATH' file must exist
     """
     if not os.path.exists(config['XML_PATH']):
         raise FileNotFoundError(f'{config["XML_PATH"]} does not exist!')
@@ -94,34 +94,33 @@ def download_music(config):
         raise FileNotFoundError(f'{config["USB_PATH"]} does not exist!')
 
     glob_path = Path(os.path.join(config['USB_PATH'], 'DJ Music'))
-    old = set([str(p) for p in glob_path.rglob(os.path.join('**', '*.*'))])
+    old = {str(p) for p in glob_path.rglob(os.path.join('**', '*.*'))}
     logger.info(f"Found {len(old)} files")
 
-    logger.info(f"Syncing remote track collection...")
+    logger.info("Syncing remote track collection...")
     os.makedirs(os.path.join(config['USB_PATH'], 'DJ Music'), exist_ok=True)
     cmd = ['aws', 's3', 'sync', 's3://dj.beatcloud.com/dj/music/',
            f"{os.path.join(config['USB_PATH'], 'DJ Music')}"]
     run_sync(parse_sync_command(cmd, config))
 
-    new = set([str(p) for p in glob_path.rglob(os.path.join('**', '*.*'))])
-    difference = sorted(list(new.difference(old)),
-                        key=lambda x: os.path.getmtime(x))
+    new = {str(p) for p in glob_path.rglob(os.path.join('**', '*.*'))}
+    difference = sorted(list(new.difference(old)), key=os.path.getmtime)
     if difference:
         logger.info(f"Found {len(difference)} new files")
         os.makedirs(os.path.join(config['LOG_DIR'], 'new'), exist_ok=True)
         now = datetime.now().strftime('%Y-%m-%dT%H.%M.%S')
         log_file = f"{now}.txt"
         with open(os.path.join(config['LOG_DIR'], 'new', log_file), 'w',
-                  encoding='utf-8') as f:
-            for x in difference:
-                logger.info(f"\t{x}")
-                f.write(f"{x}\n")
+                  encoding='utf-8') as _file:
+            for diff in difference:
+                logger.info(f"\t{diff}")
+                _file.write(f"{diff}\n")
 
 
 def download_xml(config):
     """This function downloads the beatcloud XML of 'XML_IMPORT_USER' and
-    modifies the 'Location' field of all the tracks so that it points to the
-    current user's 'USB_PATH'.
+    modifies the 'Location' field of all the tracks so that it points to USER's
+    'USB_PATH'.
 
     Args:
         config (dict): configuration object
@@ -143,7 +142,7 @@ def download_xml(config):
         for part in path_parts:
             os.makedirs(part, exist_ok=True)
             os.chdir(part)
-        _file = f'{config["XML_IMPORT_USER"]}_rekordbox.xml', 
+        _file = f'{config["XML_IMPORT_USER"]}_rekordbox.xml'
     else:
         _file = os.path.join(xml_dir,
                              f'{config["XML_IMPORT_USER"]}_rekordbox.xml')

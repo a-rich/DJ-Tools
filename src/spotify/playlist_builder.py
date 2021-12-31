@@ -1,6 +1,6 @@
 """This module is responsible for creating or updating Spotify playlists by
 querying subreddit top posts. Posts are first checked to see if they are
-directly links to a Spotify track. If this is not the case, then the post title
+direct links to a Spotify track. If this is not the case, then the post title
 is parsed in an attempt to interpret it as either 'ARTIST NAME - TRACK TITLE'
 or 'TRACK TITLE - ARTIST NAME'. These components are then used to search the
 Spotify API for tracks. The resulting tracks have their title and artist fields
@@ -32,13 +32,15 @@ def update_auto_playlists(config):
     the top posts of one or more subreddits (currently only supports one
     subreddit per playlist).
 
+    TODO: implement many-to-many subreddit-playlist multiplicity
+
     Args:
         config (dict): configuration object
     """
     spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(
-            client_id=config['SPOTIFY_CLIENT_ID'], 
-            client_secret=config['SPOTIFY_CLIENT_SECRET'], 
-            redirect_uri=config['SPOTIFY_REDIRECT_URI'], 
+            client_id=config['SPOTIFY_CLIENT_ID'],
+            client_secret=config['SPOTIFY_CLIENT_SECRET'],
+            redirect_uri=config['SPOTIFY_REDIRECT_URI'],
             scope='playlist-modify-public'))
 
     reddit = praw.Reddit(
@@ -48,15 +50,15 @@ def update_auto_playlists(config):
 
     ids_path = os.path.join('config', 'playlist_builder.json')
     if os.path.exists(ids_path):
-        subreddit_playlist_ids = json.load(open(ids_path))
+        subreddit_playlist_ids = json.load(open(ids_path, encoding='utf-8'))
     else:
         subreddit_playlist_ids = {}
-    
+
     for subreddit in config['AUTO_PLAYLIST_SUBREDDITS']:
         playlist_id = subreddit_playlist_ids.get(subreddit)
         if not playlist_id:
-            logger.warn(f'Unable to resolve {subreddit} into an ID for an ' \
-                        'existing playlist...creating a new playlist')
+            logger.warning(f'Unable to resolve {subreddit} into an ID for ' \
+                           'an existing playlist...creating a new playlist')
 
         new_tracks = get_top_subreddit_posts(spotify, reddit, subreddit,
                                              config)
@@ -69,7 +71,8 @@ def update_auto_playlists(config):
                                               config['SPOTIFY_USERNAME'],
                                               subreddit, new_tracks)
                 subreddit_playlist_ids[subreddit] = playlist['id']
-                json.dump(subreddit_playlist_ids, open(ids_path, 'w'))
+                with open(ids_path, 'w', encoding='utf-8') as _file:
+                    json.dump(subreddit_playlist_ids, _file)
             logger.info(f"Playlist '{playlist['name']}' URL: " \
                         f"{playlist['external_urls'].get('spotify')}")
         else:
@@ -95,10 +98,10 @@ def get_top_subreddit_posts(spotify, reddit, subreddit, config):
     submissions = list(reddit.subreddit(subreddit).top(limit=None,
             time_filter=config['AUTO_PLAYLIST_TOP_PERIOD']))
     payload = [
-            submissions, 
+            submissions,
             [spotify] * len(submissions),
             [config['AUTO_PLAYLIST_TRACK_LIMIT']] * len(submissions),
-            [config['AUTO_PLAYLIST_LEVENSHTEIN_SIMILARITY']] * len(submissions)
+            [config['AUTO_PLAYLIST_FUZZ_RATIO']] * len(submissions)
     ]
     with ThreadPoolExecutor(max_workers=8) as executor:
         new_tracks = list(tqdm(executor.map(process, *payload),
@@ -120,8 +123,7 @@ def process(submission, spotify, limit, threshold):
     """
     if 'spotify.com/track/' in submission.url:
         return [(submission.url, submission.title)]
-    else:
-        return fuzzy_match(spotify, submission.title, limit, threshold)
+    return fuzzy_match(spotify, submission.title, limit, threshold)
 
 
 def fuzzy_match(spotify, title, limit, threshold):
@@ -159,21 +161,21 @@ def parse_title(title):
         title (str): submission title
 
     Returns:
-        (tuple): pair of strings that represent (in no particular order) the 
+        (tuple): pair of strings that represent (in no particular order) the
                  artist(s) and track name(s)
     """
     try:
-        x, y = map(str.strip, title.split(' - '))
+        title, artist = map(str.strip, title.split(' - '))
     except ValueError:
         try:
-            x, y = map(str.strip, title.lower().split(' by '))
+            title, artist = map(str.strip, title.lower().split(' by '))
         except ValueError:
             return None, None
 
-    x, y = x.split('(')[0], y.split('(')[0]
-    x, y = x.split('[')[0], y.split('[')[0]
+    title, artist = title.split('(')[0], artist.split('(')[0]
+    title, artist = title.split('[')[0], artist.split('[')[0]
 
-    return x, y
+    return title, artist
 
 
 def filter_results(spotify, results, threshold, title, artist):
@@ -186,13 +188,13 @@ def filter_results(spotify, results, threshold, title, artist):
     Returns:
         ([spotipy.TrackObject, ...]): list of TrackObjects
     """
-    tracks = [filter_tracks(results['tracks']['items'], threshold, title, 
+    tracks = [filter_tracks(results['tracks']['items'], threshold, title,
                             artist)]
     while results['tracks']['next']:
         try:
             results = spotify.next(results['tracks'])
         except Exception:
-            logger.warn(f"Failed to get next batch of tracks: {format_exc()}")
+            logger.warning(f"Failed to get next tracks: {format_exc()}")
             break
         tracks.append(filter_tracks(results['tracks']['items'], threshold,
                                     title, artist))
@@ -213,12 +215,12 @@ def filter_tracks(tracks, threshold, title, artist):
                                title
     """
     for track in tracks:
-        artists = set([x['name'].lower() for x in track['artists']])
+        artists = {x['name'].lower() for x in track['artists']}
         if fuzz.ratio(track['name'].lower(), title.lower()) >= threshold or \
                 fuzz.ratio(track['name'].lower(), artist.lower()) >= threshold:
-            if any([fuzz.ratio(a, part) >= threshold
+            if any((fuzz.ratio(a, part) >= threshold
                     for part in [title.lower(), artist.lower()]
-                    for a in artists]):
+                    for a in artists)):
                 return track
 
 
@@ -241,7 +243,7 @@ def update_existing_playlist(spotify, playlist, new_tracks, limit):
 
     track_count = len(tracks)
     track_index = 0
-    ids = set([x['track']['id'] for x in tracks])
+    ids = {x['track']['id'] for x in tracks}
     remove_payload = []
     add_payload = []
     tracks_added = []
@@ -254,17 +256,17 @@ def update_existing_playlist(spotify, playlist, new_tracks, limit):
         if id_ in ids:
             continue
         if track_count >= limit:
-            t = tracks.pop(0)
-            remove_payload.append({"uri": t['track']['uri'],
+            track = tracks.pop(0)
+            remove_payload.append({"uri": track['track']['uri'],
                                    "positions": [track_index]})
             track_index += 1
         tracks_added.append(track)
         add_payload.append(id_)
 
     if tracks_added:
-        logger.info(f"Tracks added:")
-        for x in tracks_added:
-            logger.info(f"\t{x}")
+        logger.info("Tracks added:")
+        for track in tracks_added:
+            logger.info(f"\t{track}")
 
     if remove_payload:
         spotify.playlist_remove_specific_occurrences_of_items(playlist,

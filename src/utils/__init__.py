@@ -3,8 +3,8 @@
             structure based on the genre ID3 tags present in an XML
     * get_genres.py: display track counts for all genres using the ID3 tag
             field of local mp3 files
-    * randomize_tracks.py: set the track_num ID3 tags of tracks in playlists
-            sequentially (after shuffling) to randomize
+    * randomize_tracks.py: set ID3 tags of tracks in playlists sequentially
+            (after shuffling) to randomize
     * youtube_dl.py: download tracks from a URL (e.g. Soundcloud playlist)
 """
 from src.utils.generate_genre_playlists import generate_genre_playlists
