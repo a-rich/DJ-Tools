@@ -7,6 +7,6 @@ from src.spotify.playlist_builder import update_auto_playlists
 
 
 SPOTIFY_OPERATIONS = {
-    "CHECK_PLAYLISTS": check_playlists,
-    "UPDATE_AUTO_PLAYLISTS": update_auto_playlists 
+    "SPOTIFY_CHECK_PLAYLISTS": check_playlists,
+    "AUTO_PLAYLIST_UPDATE": update_auto_playlists 
 }

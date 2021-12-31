@@ -1,10 +1,10 @@
 """This is the entry point for the DJ Tools library.
 
 Spotify operations:
-    * CHECK_PLAYLIST (playlist_checker.py): identify overlap between Spotify
-            playlist(s) and beatcloud
-    * UPDATE_AUTO_PLAYLISTS (playlist_builder.py): creating and updating
-            Spotify playlists using subreddit top posts
+    * SPOTIFY_CHECK_PLAYLIST (playlist_checker.py): identify overlap between
+            Spotify playlist(s) and beatcloud
+    * AUTO_PLAYLIST_UPDATE (playlist_builder.py): creating and updating Spotify
+            playlists using subreddit top posts
 
 Utils operations:
     * GENERATE_GENRE_PLAYLISTS (generate_genre_playlists.py): automatically

@@ -9,8 +9,6 @@ import logging
 import os
 from traceback import format_exc
 
-from dateutil.parser import parse
-
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s:%(lineno)s - ' \

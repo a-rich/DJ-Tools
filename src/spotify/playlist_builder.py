@@ -13,7 +13,6 @@ import logging
 import os
 from traceback import format_exc
 
-from dateutil import parser
 from fuzzywuzzy import fuzz
 import praw
 import spotipy
@@ -101,8 +100,8 @@ def get_top_subreddit_posts(spotify, reddit, subreddit, config):
             [config['AUTO_PLAYLIST_TRACK_LIMIT']] * len(submissions),
             [config['AUTO_PLAYLIST_LEVENSHTEIN_SIMILARITY']] * len(submissions)
     ]
-    with ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as executor:
-        new_tracks = list(tqdm(executor.map(process, payload),
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        new_tracks = list(tqdm(executor.map(process, *payload),
                 total=len(submissions), desc=f'Filtering r/{subreddit} posts'))
     new_tracks = [track for x in new_tracks for track in x]
     new_tracks = new_tracks[:config['AUTO_PLAYLIST_TRACK_LIMIT']]
@@ -214,7 +213,7 @@ def filter_tracks(tracks, threshold, title, artist):
                                title
     """
     for track in tracks:
-        artists = set([x['name'].lower() for x in t['artists']])
+        artists = set([x['name'].lower() for x in track['artists']])
         if fuzz.ratio(track['name'].lower(), title.lower()) >= threshold or \
                 fuzz.ratio(track['name'].lower(), artist.lower()) >= threshold:
             if any([fuzz.ratio(a, part) >= threshold
@@ -240,8 +239,6 @@ def update_existing_playlist(spotify, playlist, new_tracks, limit):
         _playlist = spotify.next(_playlist['tracks'])
         tracks.extend(_playlist['tracks']['items'])
 
-    # tracks = sorted(tracks, key=lambda x: parser.parse(x['added_at']),
-    #                 reverse=True)
     track_count = len(tracks)
     track_index = 0
     ids = set([x['track']['id'] for x in tracks])

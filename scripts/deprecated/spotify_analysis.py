@@ -15,7 +15,6 @@ import sys
 from typing import Union
 
 from bs4 import BeautifulSoup
-from dateutil.parser import parse
 from fuzzywuzzy import fuzz
 import requests
 import spotipy
@@ -294,9 +293,6 @@ def get_tracks_local():
             for g, group in groupby(tracks,
                     key=lambda x: os.path.basename(os.path.split(x)[0]))}
     
-    if args.find_new and args.date:
-        _most_recent = [args.date, '']
-
     return _tracks_by_folder, _most_recent
 
 
@@ -377,12 +373,6 @@ def compare_local_tracks(_tracks_by_playlist, _tracks_by_folder, _new_tracks):
 
 
 if __name__ == '__main__':
-    def date_checker(x):
-        try:
-            return parse(x)
-        except Exception:
-            return None
-
     p = ArgumentParser()
     p.add_argument('--get_tracks_by_label', type=str,
             help="given a record label's artists page URL (only Beatport " \
@@ -403,7 +393,6 @@ if __name__ == '__main__':
     find_new_subparser = subparsers.add_parser(name='find_new',
             help="provide `find_new` alone to use local track's date " \
                  "modified field; otherwise provide `--date` datetime string")
-    find_new_subparser.add_argument('--date', type=date_checker)
     p.add_argument('--compare_local', action='store_true',
             help='find overlaping (or missing) files between Spotify and ' \
                  'local')
