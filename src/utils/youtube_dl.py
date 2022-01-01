@@ -10,11 +10,7 @@ import re
 import youtube_dl as ytdl
 
 
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(name)s:%(lineno)s - ' \
-                           '%(levelname)s - %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S')
-logger = logging.getLogger('youtube_dl')
+logger = logging.getLogger(__name__)
 
 
 def youtube_dl(config):

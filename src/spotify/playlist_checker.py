@@ -16,11 +16,7 @@ from spotipy.oauth2 import SpotifyOAuth
 from tqdm import tqdm
 
 
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(name)s:%(lineno)s - ' \
-                           '%(levelname)s - %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S')
-logger = logging.getLogger('spotify_analysis')
+logger = logging.getLogger(__name__)
 
 
 def check_playlists(config):

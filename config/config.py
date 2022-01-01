@@ -4,17 +4,14 @@ values of 'config.json'; In addition, it will update 'registered_users.json'
 with USER and USB_PATH.
 """
 from argparse import ArgumentParser
+import getpass
 import json
 import logging
 import os
 from traceback import format_exc
 
 
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(name)s:%(lineno)s - ' \
-                           '%(levelname)s - %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S')
-logger = logging.getLogger('parser')
+logger = logging.getLogger(__name__)
 
 # This is the template for 'config.json' specifying the required and necessary
 # config options as well as their value types.
@@ -29,7 +26,6 @@ CONFIG_TEMPLATE = {
     "XML_IMPORT_USER": "",
     "XML_PATH": "",
     "USER": "",
-    "LOG_DIR": "",
     "DISCORD_URL": "",
     "YOUTUBE_DL": False,
     "YOUTUBE_DL_URL": "",
@@ -94,8 +90,6 @@ def arg_parse():
     parser.add_argument('--user', type=str,
             metavar='entry of registered_user.json',
             help='user to add to registered_users.json (default is OS user)')
-    parser.add_argument('--log_dir', type=str, metavar='DIRECTORY',
-            help='directory where log files are stored')
     parser.add_argument('--discord_url', type=str,
             help='discord webhook URL')
     parser.add_argument('--youtube_dl', action='store_true',
@@ -278,14 +272,11 @@ def update_config(args):
 
     # if USER isn't set already, set it to the OS user
     if not config.get('USER'):
-        config['USER'] = os.environ.get('USER')
+        config['USER'] = getpass.getuser()
 
     # enter USER into 'registered_users.json'
     registered_users[config['USER']] = config['USB_PATH']
     with open(registered_users_path, 'w', encoding='utf-8') as _file:
         json.dump(registered_users, _file)
-
-    # create log folder
-    os.makedirs(config['LOG_DIR'], exist_ok=True)
 
     return config

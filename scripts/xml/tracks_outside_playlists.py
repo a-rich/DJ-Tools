@@ -10,11 +10,7 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 
 
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(name)s:%(lineno)s - ' \
-                           '%(levelname)s - %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S')
-logger = logging.getLogger('tracks_outside_playlists')
+logger = logging.getLogger(__name__)
 
 
 def create_playlist(_soup, tracks, new_playlist_name):

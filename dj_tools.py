@@ -25,7 +25,10 @@ Sync operations:
         - upload_music: sync tracks from USB_PATH to beatcloud
         - upload_xml: sync XML_PATH to USER's beatcloud XML folder
 """
+from datetime import datetime
 import logging
+import logging.config
+import os
 import sys
 from traceback import format_exc
 
@@ -33,13 +36,15 @@ from config.config import arg_parse, update_config
 from src.spotify import SPOTIFY_OPERATIONS
 from src.sync import SYNC_OPERATIONS
 from src.utils import UTILS_OPERATIONS
+from src.utils.helpers import upload_log
 
 
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(name)s:%(lineno)s - ' \
-                           '%(levelname)s - %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S')
-logger = logging.getLogger('dj_tools')
+os.makedirs('logs', exist_ok=True)
+LOG_FILE = os.path.join('logs', f"{datetime.now().strftime('%Y-%m-%d')}.log")
+logging.config.fileConfig(fname=os.path.join('config', 'logging.conf'),
+        defaults={'logfilename': LOG_FILE},
+        disable_existing_loggers=False)
+logger = logging.getLogger(__name__)
 
 
 if __name__ == '__main__':
@@ -51,6 +56,10 @@ if __name__ == '__main__':
             logger.setLevel(config['LOG_LEVEL'])
     except Exception as exc:
         logger.critical(f'Failed to load config: {exc}\n{format_exc()}')
+        try:
+            upload_log(config, LOG_FILE)
+        except Exception:
+            logger.error(f'Unable to upload log "{LOG_FILE}":\n{format_exc()}')
         sys.exit()
 
     # run 'spotify' package and 'utils' package operations if any of the flags
@@ -77,3 +86,9 @@ if __name__ == '__main__':
             func(config)
         except Exception as exc:
             logger.error(f'{op} failed: {exc}\n{format_exc()}')
+
+    # attempt uploading today's log file
+    try:
+        upload_log(config, LOG_FILE)
+    except Exception:
+        logger.error(f'Unable to upload log "{LOG_FILE}":\n{format_exc()}')

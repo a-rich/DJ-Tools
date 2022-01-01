@@ -11,6 +11,7 @@ The `utils` package contains modules:
 * `get_genres`: analyzes genre tags directly from local MP3 files
 * `randomize_tracks`: writes sequential numbers to ID3 tags of shuffled tracks in playlists to emulate playlist shuffling
 * `youtube_dl`: downloads files from a URL to `DJ Music` -> `New Music`
+* `helpers`: helper functions for top-level operations (`upload_log`)
 
 # Setup
 The `generate_genre_playlists` module requires that you utilize the genre ID3 / Rekordbox tag for tracks in your Collection. It's also required that `XML_PATH` exists as well as a `generate_genre_playlists.json` in the `config` folder. Additionally, if any of your Collection's tracks have multiple genres specified in the genre tag field delimited with a character, `GENRE_TAG_DELIMITER` must be set to that character.
@@ -24,11 +25,11 @@ The `youtube_dl` module requires that `USB_PATH` exists and that `YOUTUBE_DL_URL
 # Usage
 
 ## generate_genre_playlists
-For the `generate_genre_playlists` module to run, there must be a `generate_genre_playlists.json` in the `config` folder. This JSON must be a dictionary with a "name" key for the name of your playlist folder (should be "Genres" for proper behavior) and a "playlists" key with a list of values which can be a combination of strings (playlist names matching genre tags...case-sensitive) and dictionaries (subfolders with more playlists / subfolders inside them).
+For the `generate_genre_playlists` module to run, there must be a `generate_genre_playlists.json` in the `config` folder. This JSON must be a dictionary with a "name" key for the name of your playlist folder and a "playlists" key with a list of values which can be a combination of strings (playlist names matching genre tags...case-sensitive) and dictionaries (subfolders with more playlists / subfolders inside them).
 
-Any subfolder will implicitly have an `All <subfolder name>` playlist to collect all tracks that are inserted into playlists belonging to that subfolder. This operation is recursive ignoring the top-level folder name.
+Any subfolder will implicitly have an `All <subfolder name>` playlist to collect all tracks that are inserted into playlists belonging to that subfolder. This operation is recursive ignoring the top-level folder.
 
-You can insert a folder called "_ignore" anywhere in the structure except for the top-level and add a list of genres to ignore in the "playlists" key. Tracks with these genres will not be inserted into the "Other" folder / playlist.
+You can insert a folder called "_ignore" anywhere in the structure except at the top-level and add a list of genres to ignore in the "playlists" key. Tracks with these genres will not be inserted into the "Other" folder / playlist.
 
 Here is an example `generate_genre_playlists.json`:
 ```
@@ -80,9 +81,13 @@ Here is an example `generate_genre_playlists.json`:
     ]
 }
 ```
-There is special logic regarding in this module which will create a collection of tracks which only have genre tags that contain the substring 'techno' (case-insensitive). The purpose of this is to support the creation of a "Pure Techno" playlist which excludes techno tracks that also belong to non-techno genres.
+The above structure generates a genre playlists folder like this:
 
-There is additional special logic regarding playlists called "Hip Hop". If a playlist with the name "Hip Hop" appears in the top-level of playlists, then only tracks which have genre tags containing "Hip Hop" or both "Hip Hop" and "R&B" will be added. If the playlist is called "Hip Hop" and does not appear in the top-level of playlists, then only tracks that contain at least one tag which does not contain either "Hip Hop" or "R&B" will be added. The purpose of this is to distinguish between pure hip hop tracks and bass tracks which have hip hop elements.
+![alt text](../../images/Pioneer_Auto_Playlist.png "Automatic Genre Playlist")
+
+There is special logic which will create a collection of tracks which only have genre tags that contain the substring 'techno' (case-insensitive). The purpose of this is to support the creation of a "Pure Techno" playlist which excludes techno tracks that also belong to non-techno genres.
+
+There is additional special logic regarding playlists called "Hip Hop". If a playlist with the name "Hip Hop" appears at the top-level of the playlists structure, then only tracks which have genre tags containing "Hip Hop" or both "Hip Hop" and "R&B" will be added. If the playlist is called "Hip Hop" and does not appear at the top-level of playlists, then only tracks that contain at least one tag which does not contain either "Hip Hop" or "R&B" will be added. The purpose of this is to distinguish between pure hip hop tracks and bass tracks which have hip hop elements.
 
 To trigger the `generate_genre_playlists` module, set `GENERATE_GENRE_PLAYLISTS: true`. Additionally, you can set `GENERATE_GENRE_PLAYLISTS_REMAINDER` to either `folder` or `playlist` to place tracks belonging to genres not specified in `generate_genre_playlists.json` in either an "Other" folder of genre playlists or simply aggregate them all into an "Other" playlist.
 

@@ -4,7 +4,6 @@ located at 'XML_PATH' and downloading the Rekordbox XML uploaded to the
 beatcloud by 'XML_IMPORT_USER' before modifying it to point to track locations
 at 'USB_PATH'.
 """
-from datetime import datetime
 import logging
 import os
 from pathlib import Path
@@ -12,11 +11,7 @@ from pathlib import Path
 from src.sync.helpers import parse_sync_command, rewrite_xml, run_sync, webhook
 
 
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(name)s:%(lineno)s - ' \
-                           '%(levelname)s - %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S')
-logger = logging.getLogger('sync_operations')
+logger = logging.getLogger(__name__)
 
 
 def upload_music(config):
@@ -107,14 +102,8 @@ def download_music(config):
     difference = sorted(list(new.difference(old)), key=os.path.getmtime)
     if difference:
         logger.info(f"Found {len(difference)} new files")
-        os.makedirs(os.path.join(config['LOG_DIR'], 'new'), exist_ok=True)
-        now = datetime.now().strftime('%Y-%m-%dT%H.%M.%S')
-        log_file = f"{now}.txt"
-        with open(os.path.join(config['LOG_DIR'], 'new', log_file), 'w',
-                  encoding='utf-8') as _file:
-            for diff in difference:
-                logger.info(f"\t{diff}")
-                _file.write(f"{diff}\n")
+        for diff in difference:
+            logger.info(f"\t{diff}")
 
 
 def download_xml(config):
