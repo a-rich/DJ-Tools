@@ -237,7 +237,7 @@ def update_config(args):
             logger.warning('DISCORD_URL is not configured...set this for ' \
                         '"new music" discord messages!')
 
-        os.environ['AWS_PROFILE'] = config['AWS_PROFILE']
+    os.environ['AWS_PROFILE'] = config['AWS_PROFILE']
 
     # ensure include / exclude folders are not both set at the same time
     if (config['UPLOAD_INCLUDE_DIRS'] and config['UPLOAD_EXCLUDE_DIRS']) \
