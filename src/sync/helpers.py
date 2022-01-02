@@ -166,7 +166,7 @@ def rewrite_xml(config):
     for track in soup.find_all('TRACK'):
         if not track.get('Location'):
             continue
-        track['Location'] = track['Location'].replace(src,
+        track['Location'] = track['Location'].replace(os.path.join(src, ''),
                 os.path.join(dst, ''))
 
     with open(xml_path, mode='wb',
