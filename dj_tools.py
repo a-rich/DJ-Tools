@@ -32,10 +32,10 @@ import os
 import sys
 from traceback import format_exc
 
-from config.config import arg_parse, update_config
 from src.spotify import SPOTIFY_OPERATIONS
 from src.sync import SYNC_OPERATIONS
 from src.utils import UTILS_OPERATIONS
+from src.utils.config import arg_parse, update_config
 from src.utils.helpers import upload_log
 
 
