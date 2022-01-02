@@ -19,6 +19,10 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from tqdm import tqdm
 
+# silence PRAW, Spotify, and urllib3 loggers
+for logger in ['prawcore', 'spotipy', 'urllib3']:
+    logger = logging.getLogger(logger)
+    logger.setLevel(logging.CRITICAL)
 
 logger = logging.getLogger(__name__)
 
@@ -52,28 +56,23 @@ def update_auto_playlists(config):
 
     for subreddit in config['AUTO_PLAYLIST_SUBREDDITS']:
         playlist_id = subreddit_playlist_ids.get(subreddit)
-        if not playlist_id:
-            logger.warning(f'Unable to resolve {subreddit} into an ID for ' \
-                           'an existing playlist...creating a new playlist')
-
-        new_tracks = get_top_subreddit_posts(spotify, reddit, subreddit,
-                                             config)
-        if new_tracks:
-            if playlist_id:
-                playlist = update_existing_playlist(spotify, playlist_id,
-                        new_tracks, config['AUTO_PLAYLIST_TRACK_LIMIT'])
-            else:
-                playlist = build_new_playlist(spotify,
-                                              config['SPOTIFY_USERNAME'],
-                                              subreddit, new_tracks)
-                subreddit_playlist_ids[subreddit] = playlist['id']
-                with open(ids_path, 'w', encoding='utf-8') as _file:
-                    json.dump(subreddit_playlist_ids, _file)
-            logger.info(f"Playlist '{playlist['name']}' URL: " \
-                        f"{playlist['external_urls'].get('spotify')}")
+        tracks = get_top_subreddit_posts(spotify, reddit, subreddit, config)
+        logger.info(f'Got {len(tracks)} track(s) from "r/{subreddit}"')
+        if playlist_id:
+            playlist = update_existing_playlist(spotify, playlist_id,
+                    tracks, config['AUTO_PLAYLIST_TRACK_LIMIT'],
+                    config['VERBOSITY'])
         else:
-            logger.info('No top tracks for the ' \
-                        f"{config['AUTO_PLAYLIST_TOP_PERIOD']} in {subreddit}")
+            logger.warning(f'Unable to get ID for {subreddit}...' \
+                            'creating a new playlist')
+            playlist = build_new_playlist(spotify,
+                                            config['SPOTIFY_USERNAME'],
+                                            subreddit, tracks)
+            subreddit_playlist_ids[subreddit] = playlist['id']
+            with open(ids_path, 'w', encoding='utf-8') as _file:
+                json.dump(subreddit_playlist_ids, _file)
+        logger.info(f"'{playlist['name']}': " \
+                    f"{playlist['external_urls'].get('spotify')}")
 
 
 def get_top_subreddit_posts(spotify, reddit, subreddit, config):
@@ -93,6 +92,8 @@ def get_top_subreddit_posts(spotify, reddit, subreddit, config):
     new_tracks = []
     submissions = list(reddit.subreddit(subreddit).top(limit=None,
             time_filter=config['AUTO_PLAYLIST_TOP_PERIOD']))
+    logger.info(f'"r/{subreddit}" has {len(submissions)} top posts for the ' \
+                f"{config['AUTO_PLAYLIST_TOP_PERIOD']}")
     payload = [
             submissions,
             [spotify] * len(submissions),
@@ -144,9 +145,10 @@ def fuzzy_match(spotify, title, limit, threshold):
             q=f"{title.replace(' ', '+')}+{artist.replace(' ', '+')}",
             type='track', limit=limit)
 
-    return [(x['id'], x['name']) for x in filter_results(spotify, results,
-                                                         threshold, title,
-                                                         artist)]
+    return [(x['id'], f"{x['name']} - " \
+                      f"{', '.join([y['name'] for y in x['artists']])}")
+            for x in filter_results(spotify, results, threshold, title,
+                                    artist)]
 
 
 def parse_title(title):
@@ -220,13 +222,14 @@ def filter_tracks(tracks, threshold, title, artist):
                 return track
 
 
-def update_existing_playlist(spotify, playlist, new_tracks, limit):
-    """Adds new tracks to an existing playlist; removes old tracks if the
+def update_existing_playlist(spotify, playlist, new_tracks, limit, verbosity):
+    """Adds new tracks to an existing playlist; removes old tracks if adding
+    new track causes playlist count to surpass 'limit'.
 
     Args:
-        spotify ([type]): [description]
-        playlist ([type]): [description]
-        new_tracks ([type]): [description]
+        spotify (spotipy.Spotify): spotify client
+        playlist (str): Spotify playlist ID
+        new_tracks (list): list of spotipy.Track objects
 
     Returns:
         (spotipy.Playlist): Playlist object for the newly constructed playlist.
@@ -241,6 +244,7 @@ def update_existing_playlist(spotify, playlist, new_tracks, limit):
     track_index = 0
     ids = {x['track']['id'] for x in tracks}
     remove_payload = []
+    tracks_removed = []
     add_payload = []
     tracks_added = []
 
@@ -248,21 +252,31 @@ def update_existing_playlist(spotify, playlist, new_tracks, limit):
         if 'spotify.com/track/' in id_:
             resp = spotify.track(id_)
             id_ = resp['id']
-            track = resp['name']
+            track = f"{resp['name']} - " \
+                    f"{', '.join([x['name'] for x in resp['artists']])}"
         if id_ in ids:
             continue
         if track_count >= limit:
-            track = tracks.pop(0)
-            remove_payload.append({"uri": track['track']['uri'],
+            _track = tracks.pop(0)['track']
+            tracks_removed.append(f"{_track['name']} - " \
+                                  f"{', '.join(_track['artist'])}")
+            remove_payload.append({"uri": _track['uri'],
                                    "positions": [track_index]})
             track_index += 1
         tracks_added.append(track)
         add_payload.append(id_)
 
+    logger.info(f"{len(tracks_added)} new tracks added")
     if tracks_added:
-        logger.info("Tracks added:")
-        for track in tracks_added:
-            logger.info(f"\t{track}")
+        if verbosity > 0:
+            for track in tracks_added:
+                logger.info(f"\t{track}")
+    
+    logger.info(f"{len(tracks_removed)} old tracks removed")
+    if tracks_removed:
+        if verbosity > 0:
+            for track in tracks_removed:
+                logger.info(f"\t{track}")
 
     if remove_payload:
         spotify.playlist_remove_specific_occurrences_of_items(playlist,
