@@ -1,0 +1,4 @@
+include README.md
+include src/djtools/configs/config_template.json
+include src/djtools/configs/logging.conf
+include src/djtools/logs/empty.txt

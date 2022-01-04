@@ -1,6 +1,20 @@
+# ignore file types
+**/*.json
+**/*.log
 **/*.mp3
-**/.cache*
-**/.DS_store
 **/*.pyc
+**/*.xml
+
+# ignore specific files
+**/.cache
+**/.DS_store
 **/.python-version
-scripts/playlist_builder.log
+**/*.code-workspace
+
+# ignore directories
+logs/*
+
+# allow tracking of essential configs
+!src/djtools/configs/config_template.json
+!src/djtools/configs/logging.conf
+!src/djtools/configs/registered_users.json
