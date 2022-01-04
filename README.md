@@ -29,7 +29,7 @@ The core functionality of this library can be broken up into three components or
 2. `spotify`: allows users to:
     * compare the tracks of one or more Spotify playlists against the `beatcloud` (to identify redundancies)
     * update Spotify playlists using the top posts of subreddits
-3. `utils`: contains of variety of utilities for things such as: 
+3. `utils`: contains a variety of utilities for things such as: 
     * generating an XML with playlists based on the genre tags of your Collection
     * analyzing the genre tags directly from your local mp3 files
     * emulating a playlist randomization feature which is strangely absent from Rekordbox
