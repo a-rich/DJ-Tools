@@ -41,7 +41,8 @@ def update_auto_playlists(config):
             client_id=config['SPOTIFY_CLIENT_ID'],
             client_secret=config['SPOTIFY_CLIENT_SECRET'],
             redirect_uri=config['SPOTIFY_REDIRECT_URI'],
-            scope='playlist-modify-public'))
+            scope='playlist-modify-public',
+            cache_path=os.path.join(os.path.dirname(__file__), '.cache')))
 
     reddit = praw.Reddit(
             client_id=config['REDDIT_CLIENT_ID'],
@@ -260,7 +261,7 @@ def update_existing_playlist(spotify, playlist, new_tracks, limit, verbosity):
         if track_count >= limit:
             _track = tracks.pop(0)['track']
             tracks_removed.append(f"{_track['name']} - " \
-                                  f"{', '.join(_track['artist'])}")
+                    f"{', '.join([x['name'] for x in _track['artists']])}")
             remove_payload.append({"uri": _track['uri'],
                                    "positions": [track_index]})
             track_index += 1

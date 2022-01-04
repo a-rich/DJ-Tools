@@ -66,7 +66,7 @@ CLASSIFIERS = [
 
 setup(
     name='dj_beatcloud',
-    version='2.0.1',
+    version='2.0.2',
     description='DJ Tools is a library for managing a collection of MP3 ' \
                 'and Rekordbox XML files.',
     long_description=LONG_DESCRIPTION,

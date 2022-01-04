@@ -12,7 +12,7 @@
 **/*.code-workspace
 
 # ignore directories
-src/djtools/configs
+src/djtools/_configs
 
 # allow tracking of essential configs
 !src/djtools/configs/config_template.json

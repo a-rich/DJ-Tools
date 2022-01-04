@@ -54,7 +54,8 @@ def get_spotify_tracks(config):
             client_id=config['SPOTIFY_CLIENT_ID'],
             client_secret=config['SPOTIFY_CLIENT_SECRET'],
             redirect_uri=config['SPOTIFY_REDIRECT_URI'],
-            scope='playlist-modify-public'))
+            scope='playlist-modify-public',
+            cache_path=os.path.join(os.path.dirname(__file__), '.cache')))
     playlist_ids = {key.lower(): value for key, value in json.load(
             open(os.path.join(os.path.dirname(os.path.dirname(__file__)),
                               'configs', 'playlist_checker.json'),
