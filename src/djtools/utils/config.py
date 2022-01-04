@@ -247,7 +247,8 @@ def arg_parse():
     if args.link_configs:
         os.symlink(os.path.join(os.path.dirname(os.path.dirname(__file__)),
                                 'configs'),
-                   args.link_configs)
+                   args.link_configs,
+                   target_is_directory=True)
 
     if args.log_level:
         logger.setLevel(args.log_level)
