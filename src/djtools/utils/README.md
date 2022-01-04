@@ -83,7 +83,7 @@ Here is an example `generate_genre_playlists.json`:
 ```
 The above structure generates a genre playlists folder like this:
 
-![alt text](../../images/Pioneer_Auto_Playlist.png "Automatic Genre Playlist")
+![alt text](https://raw.githubusercontent.com/a-rich/DJ-Tools/main/images/Pioneer_Auto_Playlist.png "Automatic Genre Playlist")
 
 There is special logic which will create a collection of tracks which only have genre tags that contain the substring 'techno' (case-insensitive). The purpose of this is to support the creation of a "Pure Techno" playlist which excludes techno tracks that also belong to non-techno genres.
 

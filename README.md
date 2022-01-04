@@ -18,9 +18,9 @@
 
 # Overview
 `DJ Tools` is a library for managing a collection of audio files (not necessarily mp3 files, although that is preferred) and Rekordbox XML files. To take full advantage of this library, users must:
-* have access to an AWS S3 instance (the `beatcloud`) and have the `awscli` client installed
+* have access to an AWS S3 instance (the `beatcloud`) and have the `awscli` client configured to reach it
 * be a Rekordbox user
-* keep your music collection and Rekordbox database on a USB drive (why wouldn't you?)
+* keep your music collection and Rekordbox database on a USB drive
 * utilize the genre ID3 / Rekordbox tag of the music files in your collection
 * have a Spotify account
 
@@ -45,26 +45,32 @@ The `DJ Tools` library uses f-strings so a minimum version of Python 3.6 is requ
 * Linux installation: `sudo apt install python3.6`
 * Windows installation: [Windows releases](https://www.python.org/downloads/windows/) or [3.6.0 installer](https://www.python.org/ftp/python/3.6.0/python-3.6.0.exe)
 
-Run `python3 -m pip install requirements.txt` to install the required packages.
+Run `python3 -m pip install dj-beatcloud` (or just `pip install dj-beatcloud` if using a virtual environment) to install the DJ Tools library.
 ## AWS
-Next you will need to install `awscli`:
+Next you will need to configure `awscli` to access your instance of the `beatcloud`. The Python package `awscli` should have been installed during the `pip` install of the previous step, but in the event that you cannot configure your `beatcloud` you will need to install `awscli` the long way:
 * Mac installation: `brew install awscli`
 * Linux installation: `sudo apt-get install awscli`
 * Windows installation [[official instructions](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)]: [download installer](https://awscli.amazonaws.com/AWSCLIV2.msi) OR run:
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`msiexec.exe /i https://awscli.amazonaws.com/AWSCLIV2.msi`
 
-Now you can configure `awscli` to access your instance of the `beatcloud`:
+Now configure `awscli` to connect to your `beatcloud` instance:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`aws configure --profile DJ`
 
 Enter the `access_key` and `secret_key`. Default values for the rest of the configuration is fine.
 
 # Usage
-`DJ Tools` contains quite a bit of functionality, but all of it is configurable via a required JSON file called `config.json` (located in the `config` folder). The presence of all 39 configuration options is required for operation, though not all the values need to be populated; it's recommended that you copy the `CONFIG_TEMPLATE` from `config.py` and modify it as necessary to suit your needs. You may also copy the example `config.json` below.
+You should now be able to run `djtools` from anywhere, though none of the operations will be immediately successful since you won't have yet populated the required `config.json`. Because this `config.json` file (and all other JSON files used by this library) live next to the package code (i.e. somewhere not user-friendly), it's recommended that you choose a non-existent directory (e.g. `djtools_configs`) and run this command first to establish a user-friendly location where you can create and modify your config files:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`djtools --link_configs /path/to/djtools_configs/`
+
+After running this, you can navigate to this directory and open `config.json` with your favorite text editor and configure the library for your needs. Please be sure to read the README files in this library regarding the usage of other config files {`registered_users.json`, `playlist_builder.json`, `playlist_checker.json`, `generate_genre_playlists.json`}.
+
+
+`DJ Tools` contains quite a bit of functionality, but all of it is configurable via `config.json`. The presence of all 39 configuration options is required for operation, though not all the values need to be populated.
 
 All configuration options may be overridden via command-line arguments of the same name. Example:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`python3 dj_tools.py --usb_path /path/to/usb/`
+
 
 ### Example `config.json`:
 ```
@@ -171,7 +177,7 @@ It's true that MP3 is lossy, meaning it's _possible_ for MP3 files to produce lo
 
 `NOTE`: it's also _highly_ recommended that you use Mixed In Key to do your melodic key analysis. Mixed In Key is the most accurate key analysis software out there and is _much_ better than Rekordbox's key analysis. Make sure you turn off `KEY` under `Preferences > Analysis > Track Analysis Setting`.
 
-![alt text](images/Pioneer_Preferences_Analysis.png "Turn off Rekordbox key analysis")
+![alt text](https://raw.githubusercontent.com/a-rich/DJ-Tools/main/images/Pioneer_Preferences_Analysis.png "Turn off Rekordbox key analysis")
 
 ---
 
@@ -209,22 +215,22 @@ Once the beatgrid is established, I will apply a standardized hot cue schema so 
 ## Importing tracks from XML
 Make sure you have made the `rekordbox.xml` database visible under `Preferences > View > Layout`:
 
-![alt text](images/Pioneer_Preferences_View.png "Show XML database in side panel")
+![alt text](https://raw.githubusercontent.com/a-rich/DJ-Tools/main/images/Pioneer_Preferences_View.png "Show XML database in side panel")
 
 Also ensure you have the proper XML file selected under `Preferences > Advanced > Database > rekordbox xml`:
 
-![alt text](images/Pioneer_Preferences_Database.png "Select XML database")
+![alt text](https://raw.githubusercontent.com/a-rich/DJ-Tools/main/images/Pioneer_Preferences_Database.png "Select XML database")
 
 Then select the track(s), playlist(s), or folder(s) and choose "Import To Collection" or "Import Playlist"; this will overwrite playlists, beatgrids, hot cues, and Rekordbox Tags for files / playlists / folders with the same name!
 
-![alt text](images/Pioneer_Importing.png "Import tracks to Collection")
+![alt text](https://raw.githubusercontent.com/a-rich/DJ-Tools/main/images/Pioneer_Importing.png "Import tracks to Collection")
 
 ---
 
 ## Reloading tags
 If you are modifying ID3 tags (e.g. using `DJ Tools` playlist randomization feature), then you will need to reload the tags from Rekordbox to acknowledge those changes (`select one or more tracks > right-click > Reload Tags`).
 
-![alt text](images/Pioneer_Reload_Tags.png "Reloading Tags")
+![alt text](https://raw.githubusercontent.com/a-rich/DJ-Tools/main/images/Pioneer_Reload_Tags.png "Reloading Tags")
 
 If you are redownloading tracks with new genre tags (i.e. using `AWS_USE_DATE_MODIFIED`) reloading tags does not work for updating the genre tags...for Rekordbox to acknowledge those specific changes, you must reimport the tracks to your collection.
 
@@ -233,4 +239,4 @@ If you are redownloading tracks with new genre tags (i.e. using `AWS_USE_DATE_MO
 ## Exporting to a Device
 Exporting to a Device is necessary if you want to have access to your Collection on CDJ hardware or another Rekordbox user's laptop (if any USB, besides your own, is set as the Database `Preferences > Advanced > Database > Database management`). You can export your entire Playlists tree tab (as shown in this image) or any folders / playlists you select inside the Playlists tree tab by right-clicking the playlist / folder.
 
-![alt text](images/Pioneer_Export_Device.png "Exporting Device")
+![alt text](https://raw.githubusercontent.com/a-rich/DJ-Tools/main/images/Pioneer_Export_Device.png "Exporting Device")
