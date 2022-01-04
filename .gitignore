@@ -14,5 +14,7 @@
 # ignore directories
 logs/*
 
-# allow registered_users.json to be tracked
-!config/registered_users.json
+# allow tracking of essential configs
+!src/djtools/configs/config_template.json
+!src/djtools/configs/logging.conf
+!src/djtools/configs/registered_users.json
