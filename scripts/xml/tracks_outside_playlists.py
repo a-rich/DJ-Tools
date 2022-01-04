@@ -91,8 +91,8 @@ if __name__ == '__main__':
     try:
         create_playlist(soup, get_tracks(soup, args.name, args.folder),
                         args.new_playlist)
-    except ValueError as e:
-        logger.critical(e)
+    except ValueError as exc:
+        logger.critical(exc)
     except Exception:
         logger.critical(f'Some error occured: {format_exc()}')
 
