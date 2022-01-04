@@ -16,7 +16,6 @@ REQUIREMENTS = [
     "colorama==0.4.3",
     "coverage==5.5",
     "deprecation==2.1.0",
-    "djtools==2.0.0",
     "docutils==0.15.2",
     "eyed3==0.9.6",
     "filetype==1.0.9",
@@ -66,7 +65,7 @@ CLASSIFIERS = [
 ]
 
 setup(
-    name='djtools',
+    name='dj_beatcloud',
     version='2.0.0',
     description='DJ Tools is a library for managing a collection of MP3 ' \
                 'and Rekordbox XML files.',
