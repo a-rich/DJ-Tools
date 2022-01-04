@@ -2,6 +2,7 @@
     * upload_logs: writes a log file to the logs directory of S3
 """
 from datetime import datetime, timedelta
+from glob import glob
 import logging
 import os
 
@@ -25,7 +26,6 @@ def upload_log(config, log_file):
 
     now = datetime.now()
     one_day = timedelta(days=1)
-    log_dir = os.path.dirname(log_file)
-    for _file in os.listdir(log_dir):
+    for _file in glob(f'{os.path.dirname(log_file)}/*'):
         if os.path.getctime(_file) < (now - one_day).timestamp():
-            os.remove(os.path.join(log_dir, _file))
+            os.remove(_file)
