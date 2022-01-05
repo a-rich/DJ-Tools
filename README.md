@@ -173,7 +173,7 @@ It's true that MP3 is lossy, meaning it's _possible_ for MP3 files to produce lo
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`Title (Artist2 Remix) - Artist1, Artist2.mp3`
 
-`NOTE`: before importing tracks for the first time, it's _highly_ recommended that you use MP3 tagging software (e.g. [Mp3tag](https://www.mp3tag.de/en/) or [Picard](https://picard.musicbrainz.org/)) to extract title and artist tags from the file names automatically
+`NOTE`: before importing unprocessed tracks, it's _highly_ recommended that you use MP3 tagging software (e.g. [Mp3tag](https://www.mp3tag.de/en/) or [Picard](https://picard.musicbrainz.org/)) to extract title and artist tags from the file names automatically
 
 `NOTE`: it's also _highly_ recommended that you use Mixed In Key to do your melodic key analysis. Mixed In Key is the most accurate key analysis software out there and is _much_ better than Rekordbox's key analysis. Make sure you turn off `KEY` under `Preferences > Analysis > Track Analysis Setting`.
 
