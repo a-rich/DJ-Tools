@@ -69,7 +69,7 @@ After running this, you can navigate to this directory and open `config.json` wi
 `DJ Tools` contains quite a bit of functionality, but all of it is configurable via `config.json`. The presence of all 39 configuration options is required for operation, though not all the values need to be populated.
 
 All configuration options may be overridden via command-line arguments of the same name. Example:
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`python3 dj_tools.py --usb_path /path/to/usb/`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`python3 dj_tools.py --usb_path /path/to/usb/` or `djtools --usb_path /path/to/usb/`
 
 
 ### Example `config.json`:
