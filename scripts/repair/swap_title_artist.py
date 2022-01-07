@@ -79,7 +79,8 @@ def get_bad_tracks(_args):
               below '--fuzz_ratio' from the first part of the file name
               (split on ' - ')
     """
-    usb_path = os.path.join(_args.usb_path, 'DJ Music', '**', '*.mp3')
+    usb_path = os.path.join(_args.usb_path, 'DJ Music', '**',
+                            '*.mp3').replace(os.sep, '/')
     files = glob(usb_path, recursive=True)
     _bad_tracks = []
     for _file in files:
@@ -116,15 +117,11 @@ def replace_tracks(tracks):
         name, ext = os.path.splitext(base_name)
         artist, title = name.split(' - ')
         new_base_name = ' - '.join([title, artist]) + ext
-        new_name = os.path.join(dir, new_base_name)
+        new_name = os.path.join(dir, new_base_name).replace(os.sep, '/')
         os.rename(track, new_name)
-        rm_cmd = f'aws s3 rm "{os.path.join(s3_prefix, sub_dir, base_name)}"'
+        dest = os.path.join(s3_prefix, sub_dir, base_name).replace(os.sep, "/")
+        rm_cmd = f'aws s3 rm "{dest}"'
         os.system(rm_cmd)
-        # NOTE: no need to upload files one-by-one since
-        # `dj_tools.py --sync_operations upload_music` does so in parallel
-        # cp_cmd = f'aws s3 cp "{new_name}" ' \
-        #          f'"{os.path.join(s3_prefix, sub_dir, new_base_name)}"'
-        # os.system(cp_cmd)
 
 
 def fix_track_location(xml_path, playlist):
@@ -156,9 +153,11 @@ def fix_track_location(xml_path, playlist):
         base_name, ext = os.path.splitext(base_name)
         artist, title = base_name.split(' - ')
         new_base_name = quote(' - '.join([title, artist]) + ext)
-        track['Location'] = os.path.join(dir_name, new_base_name)
-        logger.info(f'{unquote(loc)} -> ' \
-                    f'{unquote(os.path.join(dir_name, new_base_name))}')
+        track['Location'] = os.path.join(dir_name,
+                                         new_base_name).replace(os.sep, '/')
+        logger.info(f'{unquote(loc)} -> ' + \
+                    unquote(os.path.join(dir_name,
+                                         new_base_name).replace(os.sep, "/")))
 
     with open(xml_path, mode='wb',
               encoding=soup.orignal_encoding) as _file:
@@ -214,9 +213,9 @@ if __name__ == '__main__':
         bad_tracks = get_bad_tracks(args)
 
         if args.replace:
-            with open(os.path.join('bad_tracks',
-                      f'{datetime.now().timestamp()}.json'), 'w',
-                      encoding='utf-8') as _file:
+            _file = f'{datetime.now().timestamp()}.json'
+            with open(os.path.join('bad_tracks', _file).replace(os.sep, '/'),
+                      'w', encoding='utf-8') as _file:
                 json.dump(bad_tracks, _file)
             replace_tracks(bad_tracks)
 

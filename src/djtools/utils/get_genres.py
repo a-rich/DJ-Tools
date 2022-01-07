@@ -32,7 +32,8 @@ def get_genres(config):
     if not os.path.exists(config['USB_PATH']):
         raise FileNotFoundError(f'{config["USB_PATH"]} does not exist!')
 
-    files = set(glob(os.path.join(config['USB_PATH'], 'DJ Music', '**/*.mp3'),
+    files = set(glob(os.path.join(config['USB_PATH'], 'DJ Music',
+                                  '**/*.mp3').replace(os.sep, '/'),
                      recursive=True))
     exclude = set(config['GENRE_EXCLUDE_DIRS'])
     files = [x for x in files if not any((y in x for y in exclude))]

@@ -25,7 +25,8 @@ def youtube_dl(config):
     if not os.path.exists(config['USB_PATH']):
         raise FileNotFoundError(f'{config["USB_PATH"]} does not exist!')
 
-    dest_path = os.path.join(config['USB_PATH'], 'DJ Music', 'New Music', '')
+    dest_path = os.path.join(config['USB_PATH'], 'DJ Music', 'New Music',
+                             '').replace(os.sep, '/')
     if not os.path.exists(dest_path):
         if os.name == 'nt':
             cwd = os.getcwd()
@@ -55,8 +56,8 @@ def youtube_dl(config):
         ydl.download([config['YOUTUBE_DL_URL']])
 
     for _file in os.listdir(dest_path):
-        os.rename(os.path.join(dest_path, _file),
-                  os.path.join(dest_path, fix_up(_file)))
+        os.rename(os.path.join(dest_path, _file).replace(os.sep, '/'),
+                  os.path.join(dest_path, fix_up(_file)).replace(os.sep, '/'))
 
 
 def fix_up(_file):

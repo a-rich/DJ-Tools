@@ -42,7 +42,8 @@ def update_auto_playlists(config):
             client_secret=config['SPOTIFY_CLIENT_SECRET'],
             redirect_uri=config['SPOTIFY_REDIRECT_URI'],
             scope='playlist-modify-public',
-            cache_path=os.path.join(os.path.dirname(__file__), '.cache')))
+            cache_path=os.path.join(os.path.dirname(__file__),
+                                    '.cache').replace(os.sep, '/')))
 
     reddit = praw.Reddit(
             client_id=config['REDDIT_CLIENT_ID'],
@@ -50,7 +51,7 @@ def update_auto_playlists(config):
             user_agent=config['REDDIT_USER_AGENT'])
 
     ids_path = os.path.join(os.path.dirname(os.path.dirname(__file__)),
-                            'configs', 'playlist_builder.json')
+            'configs', 'playlist_builder.json').replace(os.sep, '/')
     if os.path.exists(ids_path):
         subreddit_playlist_ids = json.load(open(ids_path, encoding='utf-8'))
     else:

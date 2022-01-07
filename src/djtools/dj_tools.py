@@ -40,9 +40,10 @@ from djtools.utils.helpers import upload_log
 
 # initialize logger
 log_file = os.path.join(os.path.dirname(__file__), 'logs',
-                        f"{datetime.now().strftime('%Y-%m-%d')}.log")
-logging.config.fileConfig(fname=os.path.join(os.path.dirname(__file__),
-                                             'configs', 'logging.conf'),
+        f"{datetime.now().strftime('%Y-%m-%d')}.log").replace(os.sep, '/')
+log_conf = os.path.join(os.path.dirname(__file__), 'configs',
+                        'logging.conf').replace(os.sep, '/')
+logging.config.fileConfig(fname=log_conf,
                           defaults={'logfilename': log_file},
                           disable_existing_loggers=False)
 logger = logging.getLogger(__name__)

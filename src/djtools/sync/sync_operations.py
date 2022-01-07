@@ -34,9 +34,10 @@ def upload_music(config):
         logger.error('User "aweeeezy" has not yet authorized uploading music')
         return
 
-    glob_path = Path(os.path.join(config['USB_PATH'], 'DJ Music'))
-    hidden_files = {str(p) for p in glob_path.rglob(os.path.join('**',
-                                                                     '.*.*'))}
+    glob_path = Path(os.path.join(config['USB_PATH'],
+                                  'DJ Music').replace(os.sep, '/'))
+    hidden_files = {str(p) for p in glob_path.rglob(
+            os.path.join('**', '.*.*').replace(os.sep, '/'))}
     if hidden_files:
         logger.info(f'Removed {len(hidden_files)} files...')
         for _file in hidden_files:
@@ -44,9 +45,8 @@ def upload_music(config):
             os.remove(_file)
 
     logger.info('Syncing track collection...')
-    cmd = ['aws', 's3', 'sync',
-           f"{os.path.join(config['USB_PATH'], 'DJ Music')}",
-           's3://dj.beatcloud.com/dj/music/']
+    src = os.path.join(config['USB_PATH'], 'DJ Music').replace(os.sep, '/')
+    cmd = ['aws', 's3', 'sync', src, 's3://dj.beatcloud.com/dj/music/']
 
     if config['DISCORD_URL']:
         webhook(config['DISCORD_URL'],
@@ -89,17 +89,21 @@ def download_music(config):
     if not os.path.exists(config['USB_PATH']):
         raise FileNotFoundError(f'{config["USB_PATH"]} does not exist!')
 
-    glob_path = Path(os.path.join(config['USB_PATH'], 'DJ Music'))
-    old = {str(p) for p in glob_path.rglob(os.path.join('**', '*.*'))}
+    glob_path = Path(os.path.join(config['USB_PATH'],
+                                  'DJ Music').replace(os.sep, '/'))
+    old = {str(p) for p in glob_path.rglob(
+            os.path.join('**', '*.*').replace(os.sep, '/'))}
     logger.info(f"Found {len(old)} files")
 
     logger.info("Syncing remote track collection...")
-    os.makedirs(os.path.join(config['USB_PATH'], 'DJ Music'), exist_ok=True)
-    cmd = ['aws', 's3', 'sync', 's3://dj.beatcloud.com/dj/music/',
-           f"{os.path.join(config['USB_PATH'], 'DJ Music')}"]
+    os.makedirs(os.path.join(config['USB_PATH'],
+                             'DJ Music').replace(os.sep, '/'), exist_ok=True)
+    dest = os.path.join(config['USB_PATH'], 'DJ Music').replace(os.sep, '/')
+    cmd = ['aws', 's3', 'sync', 's3://dj.beatcloud.com/dj/music/', dest]
     run_sync(parse_sync_command(cmd, config))
 
-    new = {str(p) for p in glob_path.rglob(os.path.join('**', '*.*'))}
+    new = {str(p) for p in glob_path.rglob(
+            os.path.join('**', '*.*').replace(os.sep, '/'))}
     difference = sorted(list(new.difference(old)), key=os.path.getmtime)
     if difference:
         logger.info(f"Found {len(difference)} new files")
@@ -134,8 +138,8 @@ def download_xml(config):
             os.chdir(part)
         _file = f'{config["XML_IMPORT_USER"]}_rekordbox.xml'
     else:
-        _file = os.path.join(xml_dir,
-                             f'{config["XML_IMPORT_USER"]}_rekordbox.xml')
+        _file = f'{config["XML_IMPORT_USER"]}_rekordbox.xml'
+        _file = os.path.join(xml_dir, _file).replace(os.sep, '/')
 
     cmd = "aws s3 cp s3://dj.beatcloud.com/dj/xml/" \
           f"{config['XML_IMPORT_USER']}/rekordbox.xml {_file}"

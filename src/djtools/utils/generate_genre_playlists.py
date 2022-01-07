@@ -60,7 +60,8 @@ def generate_genre_playlists(config):
     tracks = get_track_genres(soup, config['GENRE_TAG_DELIMITER'])
     genres = set()
     with open(os.path.join(os.path.dirname(os.path.dirname(__file__)),
-                           'configs', 'generate_genre_playlists.json'),
+                           'configs', 'generate_genre_playlists.json').replace(
+                                os.sep, '/'),
               encoding='utf-8') as _file:
         playlists = create_playlists(soup, json.load(_file), genres,
                                      top_level=True)
@@ -73,7 +74,7 @@ def generate_genre_playlists(config):
     wrap_playlists(soup, playlists)
 
     _dir, _file = os.path.split(config['XML_PATH'])
-    auto_xml_path = os.path.join(_dir, f'auto_{_file}')
+    auto_xml_path = os.path.join(_dir, f'auto_{_file}').replace(os.sep, '/')
     with open(auto_xml_path, mode='wb', encoding=soup.orignal_encoding) as \
             _file:
         _file.write(soup.prettify('utf-8'))

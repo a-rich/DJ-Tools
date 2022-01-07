@@ -152,7 +152,8 @@ def rewrite_xml(config):
         config (dict): configuration object
     """
     with open(os.path.join(os.path.dirname(os.path.dirname(__file__)),
-                           'configs', 'registered_users.json'),
+                           'configs', 'registered_users.json').replace(os.sep,
+                                                                       '/'),
               encoding='utf-8') as _file:
         registered_users = json.load(_file)
         src = registered_users[config['XML_IMPORT_USER']]
@@ -162,13 +163,14 @@ def rewrite_xml(config):
         dst = '/' + os.path.splitdrive(dst)[0] + '/'
 
     xml_path = os.path.join(os.path.dirname(config['XML_PATH']),
-                            f'{config["XML_IMPORT_USER"]}_rekordbox.xml')
+            f'{config["XML_IMPORT_USER"]}_rekordbox.xml').replace(os.sep, '/')
     soup = BeautifulSoup(open(xml_path, 'r', encoding='utf-8').read(), 'xml')
     for track in soup.find_all('TRACK'):
         if not track.get('Location'):
             continue
-        track['Location'] = track['Location'].replace(os.path.join(src, ''),
-                os.path.join(dst, ''))
+        track['Location'] = track['Location'].replace(
+                os.path.join(src, '').replace(os.sep, '/'),
+                os.path.join(dst, '').replace(os.sep, '/'))
 
     with open(xml_path, mode='wb',
               encoding=soup.orignal_encoding) as _file:

@@ -43,17 +43,18 @@ def build_config():
     """
     # load 'config.json'
     config_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)),
-                              'configs')
+                              'configs').replace(os.sep, '/')
     try:
-        with open(os.path.join(config_dir, 'config.json'), 'r',
-                  encoding='utf-8') as _file:
+        with open(os.path.join(config_dir, 'config.json').replace(os.sep, '/'),
+                  'r', encoding='utf-8') as _file:
             config = json.load(_file)
     except FileNotFoundError:
-        with open(os.path.join(config_dir, 'config_template.json'), 'r',
-                  encoding='utf-8') as _file:
+        with open(os.path.join(config_dir,
+                               'config_template.json').replace(os.sep, '/'),
+                  'r', encoding='utf-8') as _file:
             config = json.load(_file)
-        with open(os.path.join(config_dir, 'config.json'), 'w',
-                  encoding='utf-8') as _file:
+        with open(os.path.join(config_dir, 'config.json').replace(os.sep, '/'),
+                  'w', encoding='utf-8') as _file:
             json.dump(config, _file, indent=2)
     except:
         msg = f'Error reading "config.json": {format_exc()}'
@@ -69,8 +70,9 @@ def build_config():
         config.update(args)
 
     # identify any required keys that are absent from the config
-    with open(os.path.join(config_dir, 'config_template.json'), 'r',
-                encoding='utf-8') as _file:
+    with open(os.path.join(config_dir, 'config_template.json').replace(os.sep,
+                                                                       '/'),
+                'r', encoding='utf-8') as _file:
         config_template = json.load(_file)
     missing_config_keys = [k for k in config_template if k not in config]
     if missing_config_keys:
@@ -110,7 +112,7 @@ def build_config():
     registered_users_path = os.path.join(
             os.path.dirname(os.path.dirname(__file__)),
             'configs',
-            'registered_users.json')
+            'registered_users.json').replace(os.sep, '/')
     if os.path.exists(registered_users_path):
         registered_users = json.load(open(registered_users_path,
                                           encoding='utf-8'))
@@ -246,7 +248,7 @@ def arg_parse():
 
     if args.link_configs:
         os.symlink(os.path.join(os.path.dirname(os.path.dirname(__file__)),
-                                'configs'),
+                                'configs').replace(os.sep, '/'),
                    args.link_configs,
                    target_is_directory=True)
 
