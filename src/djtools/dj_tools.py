@@ -48,6 +48,12 @@ logging.config.fileConfig(fname=log_conf,
                           disable_existing_loggers=False)
 logger = logging.getLogger(__name__)
 
+try:
+    import Levenshtein
+except ImportError:
+    logger.warning('NOTE: Track similarity can be made faster by running ' \
+                   '`pip install "dj-beatcloud[levenshtein]"`')
+
 # load 'config.json', override with any command-line arguments, and
 # validate the final config
 try:

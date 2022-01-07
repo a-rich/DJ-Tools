@@ -46,6 +46,17 @@ The `DJ Tools` library uses f-strings so a minimum version of Python 3.6 is requ
 * Windows installation: [Windows releases](https://www.python.org/downloads/windows/) or [3.6.0 installer](https://www.python.org/ftp/python/3.6.0/python-3.6.0.exe)
 
 Run `python3 -m pip install dj-beatcloud` (or just `pip install dj-beatcloud` if using a virtual environment) to install the DJ Tools library.
+
+`NOTE`: operations that involve computing the similarity between tracks (both modules in the `spotify` package as well as the `swap_title_artist` repair script) can be made much faster by installing the `python-Levenshtein` package...
+
+Just install `DJ Tools` with:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`pip install dj-beatcloud[with_levenshtein]`
+
+or run this separate command after installing without Levenshtein:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`pip install python-Levenshtein`
+
 ## AWS
 Next you will need to configure `awscli` to access your instance of the `beatcloud`. The Python package `awscli` should have been installed during the `pip` install of the previous step, but in the event that you cannot configure your `beatcloud` you will need to install `awscli` the long way:
 * Mac installation: `brew install awscli`

@@ -62,6 +62,12 @@ from fuzzywuzzy import fuzz
 
 logger = logging.getLogger(__name__)
 
+try:
+    import Levenshtein
+except ImportError:
+    logger.warning('NOTE: Track similarity can be made faster by running ' \
+                   '`pip install "dj-beatcloud[levenshtein]"`')
+
 
 def get_bad_tracks(_args):
     """This function globs for mp3 files on '--usb_path' (ignoring those that

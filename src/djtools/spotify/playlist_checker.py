@@ -10,7 +10,6 @@ from operator import itemgetter
 import os
 
 from fuzzywuzzy import fuzz
-import Levenshtein
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from tqdm import tqdm
