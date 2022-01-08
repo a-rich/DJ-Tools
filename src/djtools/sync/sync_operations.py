@@ -48,11 +48,11 @@ def upload_music(config):
     src = os.path.join(config['USB_PATH'], 'DJ Music').replace(os.sep, '/')
     cmd = ['aws', 's3', 'sync', src, 's3://dj.beatcloud.com/dj/music/']
 
-    if config['DISCORD_URL']:
+    if config['DISCORD_URL'] and not config.get('DRYRUN'):
         webhook(config['DISCORD_URL'],
                 content=run_sync(parse_sync_command(cmd, config, upload=True)))
     else:
-        run_sync(parse_sync_command(cmd, config))
+        run_sync(parse_sync_command(cmd, config, upload=True))
 
 
 def upload_xml(config):
