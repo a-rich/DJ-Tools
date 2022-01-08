@@ -24,3 +24,5 @@ The setup required for all these operations is having `awscli` installed and con
 
 # Usage
 To run any of the four sync operations, just add them by name to `SYNC_OPERATIONS`. If running `download_xml` make sure `XML_IMPORT_USER` is set to the proper `beatcloud` user. Before uploading / after downloading, you can follow any of the prescribed workflows specified under the main README's "Basic Information" section to ensure consistency both in your local library and in the `beatcloud`.
+
+`NOTE`: you can run `upload_music` and / or `download_music` with the `--dryrun` flag to inspect the result of the same sync operations without actually performing them.

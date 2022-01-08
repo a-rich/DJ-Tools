@@ -170,6 +170,8 @@ def arg_parse():
             help='drop --size-only flag for `aws s3 sync` command; ' \
                  '--aws_use_date_modified will permit re-downloading/' \
                  're-uploading files if their ID3 tags change')
+    parser.add_argument('--dryrun', action='store_true',
+            help='show result of "aws s3 sync" command without running')
     parser.add_argument('--xml_import_user', type=str,
             metavar='entry of registered_user.json',
             help="registered user whose 'rekordbox.xml' you're importing from")

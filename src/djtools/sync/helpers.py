@@ -100,6 +100,9 @@ def parse_sync_command(_cmd, config, upload=False):
             _cmd.extend(['--exclude', f'{_dir}/*'])
     if not config['AWS_USE_DATE_MODIFIED']:
         _cmd.append('--size-only')
+    if config.get('DRYRUN'):
+        _cmd.append('--dryrun')
+    logger.info(' '.join(_cmd))
 
     return _cmd
 
