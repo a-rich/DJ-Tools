@@ -38,9 +38,15 @@ def randomize_tracks(config):
 
     soup = BeautifulSoup(open(config['XML_PATH'], 'r',
                               encoding='utf-8').read(), 'xml')
-    lookup = {x['TrackID']: unquote(x['Location'].replace(
-              'file://localhost', ''))
-              for x in soup.find_all('TRACK') if x.get('Location')}
+
+    lookup = {}
+    for track in soup.find_all('TRACK'):
+        if not track.get('Location'):
+            continue
+        lookup[track['TrackID']] = unquote(track['Location'].replace(
+                'file://localhost', ''))
+        if os.name == 'nt':
+            lookup[track['TrackID']] = lookup[track['TrackID']].lstrip('/')
 
     for playlist in config['RANDOMIZE_TRACKS_PLAYLISTS']:
         try:

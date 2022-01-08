@@ -156,11 +156,8 @@ def rewrite_xml(config):
                                                                        '/'),
               encoding='utf-8') as _file:
         registered_users = json.load(_file)
-        src = registered_users[config['XML_IMPORT_USER']]
-        dst = registered_users[config['USER']]
-
-    if os.name == 'nt':
-        dst = '/' + os.path.splitdrive(dst)[0] + '/'
+        src = registered_users[config['XML_IMPORT_USER']].strip('/')
+        dst = registered_users[config['USER']].strip('/')
 
     xml_path = os.path.join(os.path.dirname(config['XML_PATH']),
             f'{config["XML_IMPORT_USER"]}_rekordbox.xml').replace(os.sep, '/')
@@ -168,9 +165,7 @@ def rewrite_xml(config):
     for track in soup.find_all('TRACK'):
         if not track.get('Location'):
             continue
-        track['Location'] = track['Location'].replace(
-                os.path.join(src, '').replace(os.sep, '/'),
-                os.path.join(dst, '').replace(os.sep, '/'))
+        track['Location'] = track['Location'].replace(src, dst)
 
     with open(xml_path, mode='wb',
               encoding=soup.orignal_encoding) as _file:
