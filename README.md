@@ -6,6 +6,10 @@
     - Python
     - AWS
 * Usage
+    - Linking configs
+    - Populating `config.json`
+        * Example `config.json`
+        * Explanation of configuration options
 * Basic Information 
     - Preliminary
         * Music files
@@ -17,15 +21,21 @@
     - Exporting to a Device
 
 # Overview
-`DJ Tools` is a library for managing a collection of audio files (not necessarily mp3 files, although that is preferred) and Rekordbox XML files. To take full advantage of this library, users must:
-* have access to an AWS S3 instance (the `beatcloud`) and have the `awscli` client configured to reach it
-* be a Rekordbox user
-* keep your music collection and Rekordbox database on a USB drive
-* utilize the genre ID3 / Rekordbox tag of the music files in your collection
-* have a Spotify account
+`DJ Tools` is a library for managing a Collection of audio files (not necessarily mp3 files, although that is preferred) and Rekordbox XML files.
+
+To take full advantage of this library, users must:
+1. have access to an AWS S3 instance (the `beatcloud`) and have the `awscli` client configured to reach it
+2. be a Rekordbox user
+3. keep your Collection on a USB drive
+4. use the following naming convention for music files in your Collection:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`Title (Artist2 Remix) - Artist1, Artist2`
+
+5. utilize the `genre` ID3 / Rekordbox tag for music files in your Collection
+6.  have a Spotify account
 
 The core functionality of this library can be broken up into three components or packages:
-1. `sync`: allows users to push and pull audio and rekordbox XML files to and from the `beatcloud`
+1. `sync`: allows users to push and pull audio and Rekordbox XML files to and from the `beatcloud`
 2. `spotify`: allows users to:
     * compare the tracks of one or more Spotify playlists against the `beatcloud` (to identify redundancies)
     * update Spotify playlists using the top posts of subreddits
@@ -35,52 +45,65 @@ The core functionality of this library can be broken up into three components or
     * emulating a playlist randomization feature which is strangely absent from Rekordbox
     * downloading mp3 files from a URL (e.g. Soundcloud...don't use YouTube because that's some highly compressed garbage)
 
-For usage details relating to the individual packages of `DJ Tools`, checkout the README files that are collocated with those packages (under the `src` folder).
+For usage details relating to the individual packages of `DJ Tools`, checkout the README files that are [collocated with those packages](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools).
 
 # Setup
 
 ## Python
-The `DJ Tools` library uses f-strings so a minimum version of Python 3.6 is required. As always, when working with a Python project, you're going to want to create a virtual environment. [Pyenv](https://github.com/pyenv/pyenv) is really nice, but if you insist on doing a system-wide python installation then proceed with the following instructions: 
-* Mac installation: `brew install python@3.6`
-* Linux installation: `sudo apt install python3.6`
-* Windows installation: [Windows releases](https://www.python.org/downloads/windows/) or [3.6.0 installer](https://www.python.org/ftp/python/3.6.0/python-3.6.0.exe)
+1. The `DJ Tools` library uses f-strings so a minimum version of Python 3.6 is required. As always, when working with a Python project, you're going to want to create a virtual environment; [Pyenv](https://github.com/pyenv/pyenv) is really nice, but if you insist on doing a system-wide python installation then proceed with the following instructions: 
+    - Mac installation: `brew install python@3.6`
+    - Linux installation: `sudo apt install python3.6`
+    - Windows installation: [Windows releases](https://www.python.org/downloads/windows/) or [3.6.0 installer](https://www.python.org/ftp/python/3.6.0/python-3.6.0.exe)
 
-Run `python3 -m pip install dj-beatcloud` (or just `pip install dj-beatcloud` if using a virtual environment) to install the DJ Tools library.
+2. Run `pip install "dj-beatcloud[levenshtein]"` to install the DJ Tools library.
 
-`NOTE`: operations that involve computing the similarity between tracks (both modules in the `spotify` package as well as the `swap_title_artist` repair script) can be made much faster by installing the `python-Levenshtein` package...
+`NOTE`: operations that involve computing the similarity between track names (both modules in the `spotify` package as well as the `swap_title_artist` repair script) can be made much faster by installing the `python-Levenshtein` package; Windows users may find it more cumbersome to install `DJ Tools` this way though since they may not have the required C++ binaries to run the Levenshtein operations...if this applies to you, then ommit the `[levenshtein]` part:
 
-Just install `DJ Tools` with:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`pip install dj-beatcloud`
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`pip install dj-beatcloud[with_levenshtein]`
-
-or run this separate command after installing without Levenshtein:
+You can always install the necessary package to accelerate computing at a later time:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`pip install python-Levenshtein`
 
 ## AWS
-Next you will need to configure `awscli` to access your instance of the `beatcloud`. The Python package `awscli` should have been installed during the `pip` install of the previous step, but in the event that you cannot configure your `beatcloud` you will need to install `awscli` the long way:
-* Mac installation: `brew install awscli`
-* Linux installation: `sudo apt-get install awscli`
-* Windows installation [[official instructions](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)]: [download installer](https://awscli.amazonaws.com/AWSCLIV2.msi) OR run:
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`msiexec.exe /i https://awscli.amazonaws.com/AWSCLIV2.msi`
+1. Next you will need to configure `awscli` to access your instance of the `beatcloud`. The Python package `awscli` should have been installed during the `pip` install of the previous step, but in the event that you cannot run the `aws` command, you'll have to install it the long way:
+    - Mac installation: `brew install awscli`
+    - Linux installation: `sudo apt-get install awscli`
+    - Windows installation [[official instructions](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)]: [download installer](https://awscli.amazonaws.com/AWSCLIV2.msi) OR run:
 
-Now configure `awscli` to connect to your `beatcloud` instance:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`msiexec.exe /i https://awscli.amazonaws.com/AWSCLIV2.msi`
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`aws configure --profile DJ`
+2. Now configure `awscli` to connect to your `beatcloud` instance:
 
-Enter the `access_key` and `secret_key`. Default values for the rest of the configuration is fine.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`aws configure --profile DJ`
+
+3. Enter the `access_key` and `secret_key`. Default values for the rest of the configuration is fine.
 
 # Usage
-You should now be able to run `djtools` from anywhere, though none of the operations will be immediately successful since you won't have yet populated the required `config.json`. Because this `config.json` file (and all other JSON files used by this library) live next to the package code (i.e. somewhere not user-friendly), it's recommended that you choose a non-existent directory (e.g. `djtools_configs`) and run this command first to establish a user-friendly location where you can create and modify your config files:
+## Linking configs
+You should now be able to run `djtools` from anywhere, although nothing will work until you've populated the required `config.json`. 
+
+Because this `config.json` file (and all other JSON files used by this library) live next to the package code (somewhere not user-friendly), it's recommended that you choose a non-existent directory (e.g. `djtools_configs`) and run this command first to establish a user-friendly location where you can create and modify your config files:
+
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`djtools --link_configs /path/to/djtools_configs/`
 
-After running this, you can navigate to this directory and open `config.json` with your favorite text editor and configure the library for your needs. Please be sure to read the README files in this library regarding the usage of other config files {`registered_users.json`, `playlist_builder.json`, `playlist_checker.json`, `generate_genre_playlists.json`}.
+After running this command, you can navigate to that directory and open `config.json` with your favorite text editor and configure the library for your needs.
 
+Please be sure to checkout the package-level README files regarding the usage of the other config files which must also be stored in the same location as `config.json`:
+* `spotify`
+    - [playlist_builder.json](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/spotify)
+    - [playlist_checker.json](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/spotify)
+* `sync`
+    - [registered_users.json](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/sync)
+* `utils`
+    - [generate_genre_playlists.json](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/utils)
 
+## Populating `config.json`
 `DJ Tools` contains quite a bit of functionality, but all of it is configurable via `config.json`. The presence of all 39 configuration options is required for operation, though not all the values need to be populated.
 
 All configuration options may be overridden via command-line arguments of the same name. Example:
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`python3 dj_tools.py --usb_path /path/to/usb/` or `djtools --usb_path /path/to/usb/`
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`djtools --youtube_dl --sync_operations download_music download_xml --xml_import_user bob`
 
 
 ### Example `config.json`:
@@ -127,7 +150,7 @@ All configuration options may be overridden via command-line arguments of the sa
     "LOG_LEVEL": "INFO"
 }
 ```
-
+### Explanation of configuration options
 * `USB_PATH`: the full path to the USB drive which contains all your music files
 * `AWS_PROFILE`: the name of the profile used when running `aws configure --profile`
 * `UPLOAD_INCLUDE_DIRS`: the list of paths to folders (relative to the `DJ Music` folder on your `USB_PATH`) that should exclusively be uploaded to the `beatcloud` when running the `upload_music` sync operation
@@ -174,19 +197,27 @@ If you are an advanced Rekordbox user, then the following section is likely not 
 ## Preliminary
 
 ### Music files
-The music files in your collection _should_ be in the MP3 format. There are a couple reasons for this:
+The music files in your Collection _should_ be in the MP3 format. There are a couple reasons for this:
 1. MP3 files are very compact meaning you can fit more music on your USB, pay less for cloud storage, and enjoy faster upload / download times
 2. MP3 files have metadata fields called ID3 tags which couple information like track, title, artist, comment, genres, etc. with the file itself; other formats (AIFF or WAV) _may_ include implementations of ID3 but this library has not been tested with these
 
 It's true that MP3 is lossy, meaning it's _possible_ for MP3 files to produce lower quality audio than, say, FLAC files, but [research](https://www.researchgate.net/publication/257068576_Subjective_Evaluation_of_MP3_Compression_for_Different_Musical_Genres) (see [Nyquist–Shannon sampling theorem](https://en.wikipedia.org/wiki/Nyquist%E2%80%93Shannon_sampling_theorem)) shows that even the most trained ears of audiophiles cannot distinguish any difference between lossless audio and 256 kbps MP3 audio. There _are_ arguments that support using a sample rate higher than the theoretical minimum for human hearing (44.1 kHz); digital-to-analog conversion (as is performed in a speaker cone) is necessarily a non-linear system which can produce audible distortions from previously inaudible frequencies. Since my audio processing facilities support the highest quality bitrate for MP3 files, and the size of these files is negligibly larger, I use 320 kbps files.
 
-`NOTE`: all files must follow this naming convention:
+`NOTE`: to ensure Collection consistency and successful operation of `DJ Tools`, the following properties should be maintained for all music files:
+* minimum 256 kbps bitrate (320 kbps preferred)
+* files named using convention: `Title (Artist2 Remix) - Artist1, Artist2`
+* `title` and `artist` tags populated (ideally using software such as [Mp3tag](https://www.mp3tag.de/en/) or [Picard](https://picard.musicbrainz.org/))
+* `key` tags populated (ideally using Mixed In Key)
+* `genre` tags populated (split with common delimiter if multiple genres)
+* `comment` tags 1st cleared and then populated with important information
+    - BPM changes
+    - unmixable (arrhythmic, ambient, or unstable BPM)
+    - low quality
+* `color` tags
+    - `GREEN` for processed track
+    - `RED` to warn of low quality or otherwise unmixable tracks
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`Title (Artist2 Remix) - Artist1, Artist2.mp3`
-
-`NOTE`: before importing unprocessed tracks, it's _highly_ recommended that you use MP3 tagging software (e.g. [Mp3tag](https://www.mp3tag.de/en/) or [Picard](https://picard.musicbrainz.org/)) to extract title and artist tags from the file names automatically
-
-`NOTE`: it's also _highly_ recommended that you use Mixed In Key to do your melodic key analysis. Mixed In Key is the most accurate key analysis software out there and is _much_ better than Rekordbox's key analysis. Make sure you turn off `KEY` under `Preferences > Analysis > Track Analysis Setting`.
+Mixed In Key is the most accurate key analysis software out there and is _much_ better than Rekordbox's key analysis. Make sure you turn off `KEY` under `Preferences > Analysis > Track Analysis Setting` so as to not overwrite `key` tags generated by MIK when importing tracks into Rekordbox.
 
 ![alt text](https://raw.githubusercontent.com/a-rich/DJ-Tools/main/images/Pioneer_Preferences_Analysis.png "Turn off Rekordbox key analysis")
 
@@ -243,7 +274,7 @@ If you are modifying ID3 tags (e.g. using `DJ Tools` playlist randomization feat
 
 ![alt text](https://raw.githubusercontent.com/a-rich/DJ-Tools/main/images/Pioneer_Reload_Tags.png "Reloading Tags")
 
-If you are redownloading tracks with new genre tags (i.e. using `AWS_USE_DATE_MODIFIED`) reloading tags does not work for updating the genre tags...for Rekordbox to acknowledge those specific changes, you must reimport the tracks to your collection.
+If you are redownloading tracks with new genre tags (i.e. using `AWS_USE_DATE_MODIFIED`) reloading tags does not work for updating the genre tags...for Rekordbox to acknowledge those specific changes, you must reimport the tracks to your Collection.
 
 ---
 
