@@ -48,14 +48,6 @@ def build_config():
         with open(os.path.join(config_dir, 'config.json').replace(os.sep, '/'),
                   'r', encoding='utf-8') as _file:
             config = json.load(_file)
-    except FileNotFoundError:
-        with open(os.path.join(config_dir,
-                               'config_template.json').replace(os.sep, '/'),
-                  'r', encoding='utf-8') as _file:
-            config = json.load(_file)
-        with open(os.path.join(config_dir, 'config.json').replace(os.sep, '/'),
-                  'w', encoding='utf-8') as _file:
-            json.dump(config, _file, indent=2)
     except:
         msg = f'Error reading "config.json": {format_exc()}'
         logger.critical(msg)
@@ -70,10 +62,22 @@ def build_config():
         config.update(args)
 
     # identify any required keys that are absent from the config
-    with open(os.path.join(config_dir, 'config_template.json').replace(os.sep,
-                                                                       '/'),
-                'r', encoding='utf-8') as _file:
-        config_template = json.load(_file)
+    config_template = ["USB_PATH", "AWS_PROFILE", "UPLOAD_INCLUDE_DIRS",
+            "UPLOAD_EXCLUDE_DIRS", "DOWNLOAD_INCLUDE_DIRS",
+            "DOWNLOAD_EXCLUDE_DIRS", "AWS_USE_DATE_MODIFIED",
+            "XML_IMPORT_USER", "XML_PATH", "USER", "DISCORD_URL", "YOUTUBE_DL",
+            "YOUTUBE_DL_URL", "RANDOMIZE_TRACKS", "RANDOMIZE_TRACKS_PLAYLISTS",
+            "RANDOMIZE_TRACKS_TAG", "SYNC_OPERATIONS", "GET_GENRES",
+            "GENRE_EXCLUDE_DIRS", "GENRE_TAG_DELIMITER",
+            "GENERATE_GENRE_PLAYLISTS", "GENERATE_GENRE_PLAYLISTS_REMAINDER",
+            "SPOTIFY_CHECK_PLAYLISTS", "SPOTIFY_PLAYLISTS_CHECK",
+            "SPOTIFY_PLAYLISTS_CHECK_FUZZ_RATIO", "SPOTIFY_CLIENT_ID",
+            "SPOTIFY_CLIENT_SECRET", "SPOTIFY_REDIRECT_URI",
+            "SPOTIFY_USERNAME", "AUTO_PLAYLIST_UPDATE",
+            "AUTO_PLAYLIST_SUBREDDITS", "AUTO_PLAYLIST_TRACK_LIMIT",
+            "AUTO_PLAYLIST_TOP_PERIOD", "AUTO_PLAYLIST_FUZZ_RATIO",
+            "REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET", "REDDIT_USER_AGENT",
+            "VERBOSITY", "LOG_LEVEL"]
     missing_config_keys = [k for k in config_template if k not in config]
     if missing_config_keys:
         msg = f'Config does not contain required keys: {missing_config_keys}'
