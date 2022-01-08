@@ -14,7 +14,5 @@
 # ignore directories
 src/djtools/_configs
 
-# allow tracking of essential configs
-!src/djtools/configs/config_template.json
-!src/djtools/configs/logging.conf
-!src/djtools/configs/registered_users.json
+# include base configs directory
+!src/djtools/configs/*
