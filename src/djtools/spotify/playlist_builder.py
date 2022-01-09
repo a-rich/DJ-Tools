@@ -1,8 +1,8 @@
 """This module is responsible for creating or updating Spotify playlists by
-querying subreddit top posts. Posts are first checked to see if they are
-direct links to a Spotify track. If this is not the case, then the post title
-is parsed in an attempt to interpret it as either 'ARTIST NAME - TRACK TITLE'
-or 'TRACK TITLE - ARTIST NAME'. These components are then used to search the
+querying subreddit posts. Posts are first checked to see if they are direct
+links to a Spotify track. If this is not the case, then the post title is
+parsed in an attempt to interpret it as either 'ARTIST NAME - TRACK TITLE' or
+'TRACK TITLE - ARTIST NAME'. These components are then used to search the
 Spotify API for tracks. The resulting tracks have their title and artist fields
 compared with the reddit post title and are added to the respective playlist
 if the Levenshtein similarity passes a threshold.
@@ -29,8 +29,8 @@ logger = logging.getLogger(__name__)
 
 def update_auto_playlists(config):
     """This function updates the contents of one or more Spotify playlists with
-    the top posts of one or more subreddits (currently only supports one
-    subreddit per playlist).
+    the posts of one or more subreddits (currently only supports one subreddit
+    per playlist).
 
     TODO: implement many-to-many subreddit-playlist multiplicity
 
@@ -58,56 +58,68 @@ def update_auto_playlists(config):
         subreddit_playlist_ids = {}
 
     for subreddit in config['AUTO_PLAYLIST_SUBREDDITS']:
-        playlist_id = subreddit_playlist_ids.get(subreddit)
-        tracks = get_top_subreddit_posts(spotify, reddit, subreddit, config)
-        logger.info(f'Got {len(tracks)} track(s) from "r/{subreddit}"')
+        playlist_id = subreddit_playlist_ids.get(subreddit['name'])
+        tracks = get_subreddit_posts(spotify, reddit, subreddit,
+                                     config)
+        logger.info(f'Got {len(tracks)} track(s) from "r/{subreddit["name"]}"')
         if playlist_id:
             playlist = update_existing_playlist(spotify, playlist_id,
-                    tracks, config['AUTO_PLAYLIST_TRACK_LIMIT'],
+                    tracks, subreddit['limit'],
                     config['VERBOSITY'])
         else:
-            logger.warning(f'Unable to get ID for {subreddit}...' \
+            logger.warning(f'Unable to get ID for {subreddit["name"]}...' \
                             'creating a new playlist')
             playlist = build_new_playlist(spotify,
                                             config['SPOTIFY_USERNAME'],
-                                            subreddit, tracks)
-            subreddit_playlist_ids[subreddit] = playlist['id']
+                                            subreddit['name'], tracks)
+            subreddit_playlist_ids[subreddit['name']] = playlist['id']
             with open(ids_path, 'w', encoding='utf-8') as _file:
                 json.dump(subreddit_playlist_ids, _file, indent=2)
         logger.info(f"'{playlist['name']}': " \
                     f"{playlist['external_urls'].get('spotify')}")
 
 
-def get_top_subreddit_posts(spotify, reddit, subreddit, config):
-    """Filters the top submissions for the provided subreddit' and tries to
-    resolve each into a Spotify track until all the submissions are parsed or
-    the track limit has been met.
+def get_subreddit_posts(spotify, reddit, subreddit, config):
+    """Filters the submissions for the provided subreddit' and tries to resolve
+    each into a Spotify track until all the submissions are parsed or the track
+    limit has been met.
 
     Args:
         spotify (spotipy.Spotify): spotify client
         reddit (praw.Reddit): reddit client
-        subreddit (str): subreddit name to filter
+        subreddit (dict): 'name', 'type', 'period', and 'limit'
         config (dict): configuration object
 
     Returns:
         ([(str, str), ...]): list of Spotify track ('id', 'name') tuples
     """
+    sub = reddit.subreddit(subreddit['name'])
+    sub_funcs = {'top': sub.top,
+                 'hot': sub.hot,
+                 'new': sub.new,
+                 'rising': sub.rising,
+                 'controversial': sub.controversial}
+    try:
+        submissions = list(sub_funcs[subreddit['type']](limit=None,
+                time_filter=subreddit['period']))
+        logger.info(f'"r/{subreddit["name"]}" has {len(submissions)} ' \
+                    f"{subreddit['type']} posts for the {subreddit['period']}")
+    except TypeError:
+        submissions = list(sub_funcs[subreddit['type']](limit=None))
+        logger.info(f'"r/{subreddit["name"]}" has {len(submissions)} ' \
+                    f"{subreddit['type']} posts")
+
     new_tracks = []
-    submissions = list(reddit.subreddit(subreddit).top(limit=None,
-            time_filter=config['AUTO_PLAYLIST_TOP_PERIOD']))
-    logger.info(f'"r/{subreddit}" has {len(submissions)} top posts for the ' \
-                f"{config['AUTO_PLAYLIST_TOP_PERIOD']}")
-    payload = [
-            submissions,
-            [spotify] * len(submissions),
-            [config['AUTO_PLAYLIST_TRACK_LIMIT']] * len(submissions),
-            [config['AUTO_PLAYLIST_FUZZ_RATIO']] * len(submissions)
-    ]
+    payload = [submissions,
+              [spotify] * len(submissions),
+              [subreddit['limit']] * len(submissions),
+              [config['AUTO_PLAYLIST_FUZZ_RATIO']] * len(submissions)]
     with ThreadPoolExecutor(max_workers=8) as executor:
         new_tracks = list(tqdm(executor.map(process, *payload),
-                total=len(submissions), desc=f'Filtering r/{subreddit} posts'))
+                               total=len(submissions),
+                               desc=f'Filtering r/{subreddit} posts'))
     new_tracks = [track for x in new_tracks for track in x]
-    new_tracks = new_tracks[:config['AUTO_PLAYLIST_TRACK_LIMIT']]
+    new_tracks = new_tracks[:subreddit['limit']]
 
     return new_tracks
 
