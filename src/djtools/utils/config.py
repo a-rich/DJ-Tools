@@ -74,8 +74,7 @@ def build_config():
             "SPOTIFY_PLAYLISTS_CHECK_FUZZ_RATIO", "SPOTIFY_CLIENT_ID",
             "SPOTIFY_CLIENT_SECRET", "SPOTIFY_REDIRECT_URI",
             "SPOTIFY_USERNAME", "AUTO_PLAYLIST_UPDATE",
-            "AUTO_PLAYLIST_SUBREDDITS", "AUTO_PLAYLIST_TRACK_LIMIT",
-            "AUTO_PLAYLIST_TOP_PERIOD", "AUTO_PLAYLIST_FUZZ_RATIO",
+            "AUTO_PLAYLIST_SUBREDDITS", "AUTO_PLAYLIST_FUZZ_RATIO",
             "REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET", "REDDIT_USER_AGENT",
             "VERBOSITY", "LOG_LEVEL"]
     missing_config_keys = [k for k in config_template if k not in config]
@@ -155,6 +154,13 @@ def arg_parse():
     Returns:
         argparse.NameSpace: command-line arguments
     """
+    def lint_json(_json):
+        try:
+            json.load(_json)
+        except Exception as exc:
+            raise Exception(f'unable to parse JSON type argument "{_json}": ' \
+                            + exc)
+
     parser = ArgumentParser()
     parser.add_argument('--link_configs', type=str, metavar='FILE',
             help='symlink package configs to more user friendly location')
@@ -230,13 +236,9 @@ def arg_parse():
             help='Spotify user to maintain auto-playlists for')
     parser.add_argument('--auto_playlist_update', action='store_true',
             help='update auto-playlists')
-    parser.add_argument('--auto_playlist_subreddits', type=str, nargs='+',
-            help='subreddits to generate playlists from')
-    parser.add_argument('--auto_playlist_track_limit', type=int,
-            help='maximum number of tracks in a playlist')
-    parser.add_argument('--auto_playlist_top_period', type=str,
-            choices=['all', 'day', 'hour', 'month', 'week', 'year'],
-            help='"top" period to consider when updating playlists')
+    parser.add_argument('--auto_playlist_subreddits', type=lint_json, nargs='+',
+            help='list of subreddits to generate playlists from; dicts with ' \
+                 '"name", "type", "period", and "limit" keys')
     parser.add_argument('--auto_playlist_fuzz_ratio', type=int,
             help='minimum Levenshtein similarity to add track to playlist')
     parser.add_argument('--reddit_client_id', type=str,

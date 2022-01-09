@@ -57,7 +57,7 @@ The core functionality of this library can be broken up into three components or
 1. `sync`: allows users to push and pull audio and Rekordbox XML files to and from the `beatcloud`
 2. `spotify`: allows users to:
     * compare the tracks of one or more Spotify playlists against the `beatcloud` (to identify redundancies)
-    * update Spotify playlists using the top posts of subreddits
+    * update Spotify playlists using posts of subreddits
 3. `utils`: contains a variety of utilities for things such as: 
     * generating an XML with playlists based on the genre tags of your Collection
     * analyzing the genre tags directly from your local mp3 files
@@ -118,7 +118,7 @@ Please be sure to checkout the package-level README files regarding the usage of
     - [generate_genre_playlists.json](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/utils)
 
 ## Populating `config.json`
-`DJ Tools` contains quite a bit of functionality, but all of it is configurable via `config.json`. The presence of all 39 configuration options is required for operation, though not all the values need to be populated.
+`DJ Tools` contains quite a bit of functionality, but all of it is configurable via `config.json`. The presence of all 37 configuration options is required for operation, though not all the values need to be populated.
 
 All configuration options may be overridden via command-line arguments of the same name. Example:
 
@@ -158,9 +158,10 @@ All configuration options may be overridden via command-line arguments of the sa
     "SPOTIFY_REDIRECT_URI": "",
     "SPOTIFY_USERNAME": "",
     "AUTO_PLAYLIST_UPDATE": false,
-    "AUTO_PLAYLIST_SUBREDDITS": ["HalftimeDnB", "spacebass"],
-    "AUTO_PLAYLIST_TRACK_LIMIT": 50,
-    "AUTO_PLAYLIST_TOP_PERIOD": "week",
+    "AUTO_PLAYLIST_SUBREDDITS": [
+        {"name": "HalftimeDnB", "type": "hot", "period": "week", "limit": 50},
+        {"name": "spacebass", "type": "top", "period": "week", "limit": 50}
+    ],
     "AUTO_PLAYLIST_FUZZ_RATIO": 50,
     "REDDIT_CLIENT_ID": "",
     "REDDIT_CLIENT_SECRET": "",
@@ -200,9 +201,7 @@ All configuration options may be overridden via command-line arguments of the sa
 * `SPOTIFY_REDIRECT_URI`: redirect URI for registered Spotify API application
 * `AUTO_PLAYLIST_UPDATE`: boolean flag to trigger the automatic generation or updating of Spotify playlists from subreddits
 * `SPOTIFY_USERNAME`: Spotify username that will keep playlists automatically generated
-* `AUTO_PLAYLIST_SUBREDDITS`: list of subreddits from which tracks should be added to Spotify auto-playlist
-* `AUTO_PLAYLIST_TRACK_LIMIT`: maximum length of Spotify auto-playlist before oldest tracks are removed
-* `AUTO_PLAYLIST_TOP_PERIOD`: time period to query subreddit top posts over -- choices: {`hour`, `day`, `week`, `month`, `year`, `all`}
+* `AUTO_PLAYLIST_SUBREDDITS`: list of subreddits from which tracks should be added to Spotify auto-playlist; each element is a dictionary with keys for subreddit's "name", "type", "period", and "limit"
 * `AUTO_PLAYLIST_FUZZ_RATIO`: the minimum Levenshtein similarity between a Spotify API track search result and a subreddit post title (if post is not directly a Spotify URL) to trigger the addition of that track to the corresponding Spotify auto-playlist
 * `REDDIT_CLIENT_ID`: client ID for registered Reddit API application
 * `REDDIT_CLIENT_SECRET`: client secret for registered Reddit API application
