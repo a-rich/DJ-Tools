@@ -8,7 +8,7 @@
 # Overview
 The `spotify` package contains modules:
 * `playlist_checker`: checks Spotify playlists for tracks that overlap with those already in the beatcloud
-* `playlist_builder`: constructs / updates Spotify playlists from subreddit top posts
+* `playlist_builder`: constructs / updates Spotify playlists from subreddit posts
 
 # Setup
 To begin using the `spotify` package, you must create a Spotify API application by following [these instructions](https://developer.spotify.com/documentation/web-api/quick-start/). Once you've registered your application, you must populate the `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, and `SPOTIFY_REDIRECT_URI` configuration options in `config.json`.
@@ -25,8 +25,12 @@ The `SPOTIFY_PLAYLISTS_CHECK_FUZZ_RATIO` configuration option `[0, 100]` sets th
 Triggering the `playlist_checker` module can be done by setting `SPOTIFY_CHECK_PLAYLISTS: true`.
 
 ## playlist_builder
-In order to use the `playlist_builder` module, you must add a `playlist_builder.json` file to the `config` folder. This JSON contains subreddits as keys and Spotify playlist IDs as values. Unlike `playlist_checker.json`, the JSON keys _MUST_ match the subreddit (case-insensitive). Then you must add the subreddits you want to generate / update paylists for to the `AUTO_PLAYLIST_SUBREDDITS` configuration option.
+In order to use the `playlist_builder` module, you must add a `playlist_builder.json` file to the `config` folder. This JSON contains subreddits as keys and Spotify playlist IDs as values. Unlike `playlist_checker.json`, the JSON keys _MUST_ match the subreddit (case-insensitive). Then you must add the subreddits you want to generate / update paylists for to the `AUTO_PLAYLIST_SUBREDDITS` configuration option. `AUTO_PLAYLIST_FUZZ_RATIO` `[0, 100]` sets the minimum Levenshtein similarity to add tracks to an auto-playlist when comparing the subreddit post title to a Spotify API search result.
 
-There are three other relevant configuration options for the `playlist_builder` module. `AUTO_PLAYLIST_TRACK_LIMIT` is the maximum number of tracks in the auto-playlists; the oldest track will be removed when adding a new track exceeds this limit. `AUTO_PLAYLIST_TOP_PERIOD` is the time period for which top posts are considered; `week` is recommended. Should a subreddit top post not contain a direct link to a Spotify track, `AUTO_PLAYLIST_FUZZ_RATIO` `[0, 100]` sets the minimum Levenshtein similarity to add tracks to an auto-playlist when comparing the subreddit post title to a Spotify API search result.
+Each element of `AUTO_PLAYLIST_SUBREDDITS` is a dictionary of subreddit-specific configuration options for the `playlist_builder` module:
+* `name` is the subreddit name.
+* `type` is whether to query subreddit's "hot", "top", "new", "rising", or "controversial" posts
+* `period` is the time period for which posts are considered (`week` is recommended); should a subreddit post not contain a direct link to a Spotify track
+* `limit` is the maximum number of tracks in the auto-playlist; the oldest track will be removed when adding a new track exceeds this limit
 
 Triggering the `playlist_builder` module can be done by setting `AUTO_PLAYLIST_UPDATE: true`.

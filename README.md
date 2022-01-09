@@ -120,7 +120,7 @@ Please be sure to checkout the package-level README files regarding the usage of
     - [generate_genre_playlists.json](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/utils)
 
 ## Populating `config.json`
-`DJ Tools` contains quite a bit of functionality, but all of it is configurable via `config.json`. The presence of all 39 configuration options is required for operation, though not all the values need to be populated.
+`DJ Tools` contains quite a bit of functionality, but all of it is configurable via `config.json`. The presence of all 37 configuration options is required for operation, though not all the values need to be populated.
 
 All configuration options may be overridden via command-line arguments of the same name. Example:
 
@@ -145,13 +145,13 @@ All configuration options may be overridden via command-line arguments of the sa
     "YOUTUBE_DL_URL": "https://soundcloud.com/me/sets/to-download",
     "RANDOMIZE_TRACKS": false,
     "RANDOMIZE_TRACKS_PLAYLISTS": ["Halftime", "Trip Hop"],
-    "RANDOMIZE_TRACKS_TAG": "track_num",
     "SYNC_OPERATIONS": ["download_music", "download_xml"],
     "GET_GENRES": false,
     "GENRE_EXCLUDE_DIRS": [],
     "GENRE_TAG_DELIMITER": "/",
     "GENERATE_GENRE_PLAYLISTS": true,
     "GENERATE_GENRE_PLAYLISTS_REMAINDER": "folder",
+    "GENERATE_GENRE_PLAYLISTS_PURE": ["Techno", "Hip Hop"],
     "SPOTIFY_CHECK_PLAYLISTS": false,
     "SPOTIFY_PLAYLISTS_CHECK": ["Download", "Maybe Download"],
     "SPOTIFY_PLAYLISTS_CHECK_FUZZ_RATIO": 80,
@@ -160,9 +160,10 @@ All configuration options may be overridden via command-line arguments of the sa
     "SPOTIFY_REDIRECT_URI": "",
     "SPOTIFY_USERNAME": "",
     "AUTO_PLAYLIST_UPDATE": false,
-    "AUTO_PLAYLIST_SUBREDDITS": ["HalftimeDnB", "spacebass"],
-    "AUTO_PLAYLIST_TRACK_LIMIT": 50,
-    "AUTO_PLAYLIST_TOP_PERIOD": "week",
+    "AUTO_PLAYLIST_SUBREDDITS": [
+        {"name": "HalftimeDnB", "type": "hot", "period": "week", "limit": 50},
+        {"name": "spacebass", "type": "top", "period": "week", "limit": 50}
+    ],
     "AUTO_PLAYLIST_FUZZ_RATIO": 50,
     "REDDIT_CLIENT_ID": "",
     "REDDIT_CLIENT_SECRET": "",
@@ -187,13 +188,13 @@ All configuration options may be overridden via command-line arguments of the sa
 * `YOUTUBE_DL_URL`: URL from which music files should be downloaded (i.e. a Soundcloud playlist)
 * `RANDOMIZE_TRACKS`: boolean flag to trigger the emulated playlist shuffling feature on each playlist in `RANDOMIZE_TRACKS_PLAYLISTS`
 * `RANDOMIZE_TRACKS_PLAYLISTS`: list of playlist names (must exist in `XML_PATH`) that should have their tracks shuffled
-* `RANDOMIZE_TRACKS_TAG`: ID3 tag (must be acknowledged by the `eyed3` package) which is overwritten to emulate playlist shuffling (it's recommended that you leave this as `track_num`)
 * `SYNC_OPERATIONS`: list of sync operations to run in order -- choices: {`download_music`, `download_xml`, `upload_music`, `upload_xml`}
 * `GET_GENRES`: boolean flag to trigger an analysis of the genre ID3 tags of your local mp3 files (prints the number of tracks in alphabetized genres...increasing `VERBOSITY` prints tracks in each genre)
 * `GENRE_EXCLUDE_DIRS`: list of partial paths (folders) which cannot appear in full paths of mp3 files when considering their genre ID3 tags
 * `GENRE_TAG_DELIMITER`: character to use for splitting a track's genre ID3 tag when tag contains multiple genres (e.g. "/")
 * `GENERATE_GENRE_PLAYLISTS`: boolean flag to trigger the generation of a playlist structure (as informed by `generate_genre_playlists.json`) using the genre tags in `XML_PATH`...the resulting XML file is `XML_PATH` prefixed with "`auto_`"
 * `GENERATE_GENRE_PLAYLISTS_REMAINDER`: whether tracks of remainder genres (those not specified in `generate_genre_playlists.json`) will be placed in a `folder` called "Other" with individual genre playlists or a `playlist` called "Other"
+* `GENERATE_GENRE_PLAYLISTS_PURE`: list of genre tags (case-sensitive) which will each have a "Pure" playlist generated for...each item must be accompanied with a "Pure \<genre>" entry in `generate_genre_playlists.json`,
 * `SPOTIFY_CHECK_PLAYLISTS`: boolean flag to trigger checking the contents of Spotify playlists specified in `SPOTIFY_PLAYLISTS_CHECK` against the `beatcloud` (to identify redundancies)
 * `SPOTIFY_PLAYLISTS_CHECK`: list of Spotify playlists to use with `SPOTIFY_CHECK_PLAYLISTS`
 * `SPOTIFY_PLAYLISTS_CHECK_FUZZ_RATIO`: the minimum Levenshtein similarity for indicating potential redundancies between Spotify playlists and the `beatcloud`
@@ -202,9 +203,7 @@ All configuration options may be overridden via command-line arguments of the sa
 * `SPOTIFY_REDIRECT_URI`: redirect URI for registered Spotify API application
 * `AUTO_PLAYLIST_UPDATE`: boolean flag to trigger the automatic generation or updating of Spotify playlists from subreddits
 * `SPOTIFY_USERNAME`: Spotify username that will keep playlists automatically generated
-* `AUTO_PLAYLIST_SUBREDDITS`: list of subreddits from which tracks should be added to Spotify auto-playlist
-* `AUTO_PLAYLIST_TRACK_LIMIT`: maximum length of Spotify auto-playlist before oldest tracks are removed
-* `AUTO_PLAYLIST_TOP_PERIOD`: time period to query subreddit top posts over -- choices: {`hour`, `day`, `week`, `month`, `year`, `all`}
+* `AUTO_PLAYLIST_SUBREDDITS`: list of subreddits from which tracks should be added to Spotify auto-playlist; each element is a dictionary with keys for subreddit's "name", "type", "period", and "limit"
 * `AUTO_PLAYLIST_FUZZ_RATIO`: the minimum Levenshtein similarity between a Spotify API track search result and a subreddit post title (if post is not directly a Spotify URL) to trigger the addition of that track to the corresponding Spotify auto-playlist
 * `REDDIT_CLIENT_ID`: client ID for registered Reddit API application
 * `REDDIT_CLIENT_SECRET`: client secret for registered Reddit API application
@@ -330,11 +329,9 @@ Then select the track(s), playlist(s), or folder(s) and choose "Import To Collec
 ---
 
 ## Reloading tags
-If you are modifying ID3 tags (e.g. using `DJ Tools` playlist randomization feature), then you will need to reload the tags from Rekordbox to acknowledge those changes (`select one or more tracks > right-click > Reload Tags`).
+Reloading tags repopulates the Rekordbox tags using data stored in the MP3 files' ID3 tags. Be careful though, information you edit in Rekordbox doesn't necessarily overwrite the files' ID3 tags; for example, modifying `genre` tags in Rekordbox _does_ edit the ID3 tags but modifying `comment` tags _does not_. You may inadvertently overwrite your hard work to cleanup `comment` tags by running `Reload Tags`! If you want data either generated by another `beatcloud` user or by utilities, like `generate_genre_playlists` or `randomize_tracks`, you must reimport those tracks / playlists in Rekordbox rather than `Reload Tags`.
 
 ![alt text](https://raw.githubusercontent.com/a-rich/DJ-Tools/main/images/Pioneer_Reload_Tags.png "Reloading Tags")
-
-If you are redownloading tracks with new genre tags (i.e. using `AWS_USE_DATE_MODIFIED`) reloading tags does not work for updating the genre tags...for Rekordbox to acknowledge those specific changes, you must reimport the tracks to your Collection.
 
 ---
 
