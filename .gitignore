@@ -12,7 +12,7 @@
 **/*.code-workspace
 
 # ignore directories
-src/djtools/_configs
+src/djtools/_*configs*
 
 # include base configs directory
 !src/djtools/configs/*
