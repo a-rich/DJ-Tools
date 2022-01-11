@@ -85,7 +85,7 @@ The above structure generates a genre playlists folder like this:
 
 ![alt text](https://raw.githubusercontent.com/a-rich/DJ-Tools/main/images/Pioneer_Auto_Playlist.png "Automatic Genre Playlist")
 
-There is special logic which will create a collection of tracks which only have genre tags that contain the substring 'techno' (case-insensitive). The purpose of this is to support the creation of a "Pure Techno" playlist which excludes techno tracks that also belong to non-techno genres.
+There is special logic for creating "Pure" genre playlists; for example, say you want a "Pure Techno" playlist where the only tracks allowed in it have all genre tags containing the substring "techno". Simply add "techno" to the `GENERATE_GENRE_PLAYLISTS_PURE` list in `config.json`. Then add "Pure Techno" as a playlist in the desired location of your `generate_genre_playlists.json`. After running `djtools --generate_genre_playlists`, the resulting XML will contain this "Pure" genre playlist.
 
 There is additional special logic regarding playlists called "Hip Hop". If a playlist with the name "Hip Hop" appears at the top-level of the playlists structure, then only tracks which have genre tags containing "Hip Hop" or both "Hip Hop" and "R&B" will be added. If the playlist is called "Hip Hop" and does not appear at the top-level of playlists, then only tracks that contain at least one tag which does not contain either "Hip Hop" or "R&B" will be added. The purpose of this is to distinguish between pure hip hop tracks and bass tracks which have hip hop elements.
 
