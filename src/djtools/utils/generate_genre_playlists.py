@@ -25,11 +25,12 @@ tags will be inserted into all of those playlists...the exception to this is
 for playlists named 'Hip Hop' that exist at the top-level versus any sub-level
 (see docstring of 'add_tracks' function for more detail).
 
-NOTE: there is special logic for creating an additional grouping of tracks that
-have genre tags that all include the substring 'techno'...the purpose of this
-is to support the automatic generation of a 'Pure Techno' playlist despite
-there being no such genre tag in my personal beatcloud (see docstring of
-'get_track_genres' for more detail).
+NOTE: there is special logic for creating additional groupings of tracks that
+have genre tags that all include one of the substrings in
+'GENERATE_GENRE_PLAYLISTS_PURE'...the purpose of this is to support the
+automatic generation of 'Pure <genre>' playlists, for each of the genres in
+'GENERATE_GENRE_PLAYLISTS_PURE', despite there being no such tags in the
+Collection (see docstring of 'get_track_genres' for more detail).
 """
 import json
 import logging
@@ -57,7 +58,8 @@ def generate_genre_playlists(config):
 
     soup = BeautifulSoup(open(config['XML_PATH'], encoding='utf-8').read(),
                          'xml')
-    tracks = get_track_genres(soup, config['GENRE_TAG_DELIMITER'])
+    tracks = get_track_genres(soup, config['GENRE_TAG_DELIMITER'],
+                              config['GENERATE_GENRE_PLAYLISTS_PURE'])
     genres = set()
     with open(os.path.join(os.path.dirname(os.path.dirname(__file__)),
                            'configs', 'generate_genre_playlists.json').replace(
@@ -80,16 +82,16 @@ def generate_genre_playlists(config):
         _file.write(soup.prettify('utf-8'))
 
 
-def get_track_genres(soup, delimiter):
+def get_track_genres(soup, delimiter, pure_genres):
     """Creates a map of genres to lists of tracks belonging to those genres.
     Supports multiple genres per track via a split on 'delimiter'.
 
-    There is special logic regarding tracks which have genre tags that all
-    contain the string 'techno'...since my desired playlist structure
-    includes a 'Pure Techno' playlist, and there is no genre tag for
-    'Pure Techno', tracks which meet the aforementioned rule are inserted into
-    a list keyed by 'Pure Techno' to support the automatic generation of such a
-    playlist.
+    There is special logic for creating additional groupings of tracks that
+    have genre tags that all include one of the substrings in
+    'GENERATE_GENRE_PLAYLISTS_PURE'...the purpose of this is to support the
+    automatic generation of 'Pure <genre>' playlists, for each of the genres in
+    'GENERATE_GENRE_PLAYLISTS_PURE', despite there being no such tags in the
+    Collection (see docstring of 'get_track_genres' for more detail).
 
     Args:
         soup (bs4.BeautifulSoup): parsed XML
@@ -105,13 +107,13 @@ def get_track_genres(soup, delimiter):
             continue
         track_genres = [x.strip() for x in track['Genre'].split(delimiter)]
 
-        # NOTE: special logic to create 'Pure Techno' playlist despite there
-        # being no 'Pure Techno' genre tag
-        if all(('techno' in x.lower() for x in track_genres)):
-            if 'Pure Techno' in tracks:
-                tracks['Pure Techno'].append((track['TrackID'], track_genres))
-            else:
-                tracks['Pure Techno'] = [(track['TrackID'], track_genres)]
+        for genre in pure_genres:
+            name = f'Pure {genre}'
+            if all((genre.lower() in x.lower() for x in track_genres)):
+                if name in tracks:
+                    tracks[name].append((track['TrackID'], track_genres))
+                else:
+                    tracks[name] = [(track['TrackID'], track_genres)]
 
         for genre in track_genres:
             if genre in tracks:
