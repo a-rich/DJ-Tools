@@ -70,7 +70,11 @@ EXTRAS = {
 
 setup(
     name='dj_beatcloud',
+<<<<<<< HEAD
     version='2.1.0-beta.7',
+=======
+    version='2.1.0-beta.1',
+>>>>>>> 2073a13... default pure playlists config empty
     description='DJ Tools is a library for managing a collection of MP3 ' \
                 'and Rekordbox XML files.',
     long_description=LONG_DESCRIPTION,
