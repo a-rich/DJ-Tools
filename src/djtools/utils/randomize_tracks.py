@@ -1,17 +1,15 @@
 """This module is used to emulate shuffling the track order of one or more
-playlists. This is done by setting the ID3 tag (e.g. 'track_num') of tracks in
-the playlists to sequential numbers. After setting track ID3 tags, those tracks
-must have their tags reloaded (Select > right-click > Reload Tags).
+playlists. This is done by setting the Rekordbox tag (i.e. 'TrackNumber') of
+tracks in the playlists to sequential numbers. After setting the TrackNumber
+tags of tracks in the provided playlists, those playlists must be reimported
+for Rekordbox to be aware of the update.
 """
 from concurrent.futures import ThreadPoolExecutor
 import logging
 import os
 import random
-from urllib.parse import unquote
 
 from bs4 import BeautifulSoup
-import eyed3
-eyed3.log.setLevel("ERROR")
 from tqdm import tqdm
 
 
@@ -36,38 +34,43 @@ def randomize_tracks(config):
     if not os.path.exists(config['XML_PATH']):
         raise FileNotFoundError(f'{config["XML_PATH"]} does not exist!')
 
-    soup = BeautifulSoup(open(config['XML_PATH'], 'r',
-                              encoding='utf-8').read(), 'xml')
+    with open(config['XML_PATH'], 'r', encoding='utf-8') as _file:
+        soup = BeautifulSoup(_file.read(), 'xml')
 
     lookup = {}
     for track in soup.find_all('TRACK'):
         if not track.get('Location'):
             continue
-        lookup[track['TrackID']] = unquote(track['Location'].replace(
-                'file://localhost', ''))
-        if os.name == 'nt':
-            lookup[track['TrackID']] = lookup[track['TrackID']].lstrip('/')
+        lookup[track['TrackID']] = track
 
+    playlist_nodes = []
     for playlist in config['RANDOMIZE_TRACKS_PLAYLISTS']:
         try:
-            tracks = get_playlist_track_locations(soup, playlist, lookup)
+            _playlist = get_playlist_track_locations(soup, playlist, lookup)
+            tracks = _playlist['tracks']
+            playlist_nodes.append(_playlist['playlist'])
         except LookupError as exc:
             logger.error(exc)
             continue
 
         random.shuffle(tracks)
-        payload = [tracks,
-                   [config['RANDOMIZE_TRACKS_TAG']] * len(tracks),
-                   list(range(len(tracks)))]
+        payload = [tracks, list(range(len(tracks)))]
         with ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as executor:
             _ = list(tqdm(executor.map(set_tag, *payload),
                           total=len(tracks),
                           desc=f'Randomizing "{playlist}" tracks'))
 
+    wrap_playlists(soup, playlist_nodes)
+    _dir, _file = os.path.split(config['XML_PATH'])
+    auto_xml_path = os.path.join(_dir, f'auto_{_file}').replace(os.sep, '/')
+    with open(auto_xml_path, mode='wb', encoding=soup.orignal_encoding) as \
+            _file:
+        _file.write(soup.prettify('utf-8'))
+
 
 def get_playlist_track_locations(soup, _playlist, lookup):
-    """Finds playlist in 'XML_PATH' that matches '_playlist' and returns a list
-    of track 'Location' fields.
+    """Finds playlist in 'XML_PATH' that matches '_playlist' and returns a dict
+    of the playlist node and track nodes.
 
     Args:
         soup (bs4.BeautifulSoup): parsed XML
@@ -78,25 +81,39 @@ def get_playlist_track_locations(soup, _playlist, lookup):
         LookupError: '_playlist' must exist
 
     Returns:
-        list: track 'Location' fields
+        dict: playlist node and list of track nodes
     """
     try:
         playlist = soup.find_all('NODE', {'Name': _playlist})[0]
     except IndexError:
         raise LookupError(f'{_playlist} not found') from LookupError
 
-    return [lookup[x['Key']] for x in playlist.children if str(x).strip()]
+    return {'playlist': playlist,
+            'tracks': [lookup[x['Key']] for x in playlist.children
+                       if str(x).strip()]}
 
 
-def set_tag(track, tag, index):
-    """Loads mp3 file with eyed3 package and sets its 'tag' ID3 tag with
-    'index' to emulate randomization.
+def set_tag(track, index):
+    """Threaded process to set TRACK node's TrackNumber tag.
 
     Args:
-        track (str): path to mp3 file
-        tag (str): ID3 tag to set
-        index (int): [description]
+        track (str): TRACK node
+        index (int): new TrackNumber
     """
-    track = eyed3.load(track)
-    setattr(track.tag, tag, index)
-    track.tag.save()
+    track['TrackNumber'] = index
+
+
+def wrap_playlists(soup, playlists):
+    """Creates a folder called 'AUTO_RANDOMIZE', inserts the generated playlist
+    structure into it, and then inserts 'AUTO_RANDOMIZE' into the root of the
+    'Playlist' folder.
+
+    Args:
+        soup (bs4.BeautifulSoup): parsed XML
+        playlists (bs4.element.Tag): playlist structure
+    """
+    playlists_root = soup.find_all('NODE', {'Name': 'ROOT', 'Type': '0'})[0]
+    new_playlist = soup.new_tag('NODE', Name='AUTO_RANDOMIZE', Type="0")
+    for playlist in playlists:
+        new_playlist.append(playlist)
+    playlists_root.insert(0, new_playlist)
