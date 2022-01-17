@@ -9,7 +9,7 @@
 The `utils` package contains modules:
 * `generate_genre_playlists`: constructs genre playlists using genre tags in a Collection and a defined playlist structure in `generate_genre_playlists.json`
 * `get_genres`: analyzes genre tags directly from local MP3 files
-* `randomize_tracks`: writes sequential numbers to ID3 tags of shuffled tracks in playlists to emulate playlist shuffling
+* `randomize_tracks`: writes sequential numbers to Rekordbox tags of shuffled tracks in playlists to emulate playlist shuffling
 * `youtube_dl`: downloads files from a URL to `DJ Music` -> `New Music`
 * `helpers`: helper functions for top-level operations (`upload_log`)
 
@@ -97,7 +97,7 @@ Once the operation completes, an XML is generated at `XML_PATH` with the prefix 
 To trigger the `get_genres` modules, set `GET_GENRES: true`. The operation will print all the genres alphabetized with a count of tracks belonging to those genres. If `VERBOSITY` is increased, the individual tracks under each genre will be printed as well.
 
 ## randomize_tracks
-To trigger the `randomize_tracks` module, set `RANDOMIZE_TRACKS: true`. Once the operation has completed, you'll need to open Rekordbox, select all the tracks of the targeted playlists, right-click, and then select `Reload Tags`.
+To trigger the `randomize_tracks` module, set `RANDOMIZE_TRACKS: true`. Once the operation has completed, you'll need to open Rekordbox and reimport the playlists that were randomized.
 
 ## youtube_dl
 To trigger the `youtube_dl` module, set `YOUTUBE_DL: true`. Once tracks are downloaded, make sure all file names adhere to convention:
