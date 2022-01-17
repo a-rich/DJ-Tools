@@ -10,6 +10,7 @@
     - Populating `config.json`
         * Example `config.json`
         * Explanation of configuration options
+* Contribution
 * Basic Information 
     - Preliminary
         * Music files
@@ -190,6 +191,16 @@ All configuration options may be overridden via command-line arguments of the sa
 * `REDDIT_USER_AGENT`: user-agent for registered Reddit API application
 * `VERBOSITY`: verbosity level for logging messages
 * `LOG_LEVEL`: logger log level
+
+# Contribution
+If you wish to contribute to `DJ Tools`, please follow these development rules:
+1. Only release branches (`major: 3.0.0`, `minor: 2.1.0`, `patch: 2.0.5`) can be made off of `main`
+2. Minor version release branches will be created and released quarterly (the 1st of January, April, July, and October)
+3. Non-release (feature or bugfix) branches must have a concise name for the feature or bugfix specifically targeted by that branch
+4. Bug fixes go in patch release branches
+5. New features and functionality changes go in minor release branches
+6. Rebase the release branch from your development branch before merging (squash, fixup, reword, etc.)
+7. Notify me when you are ready for a beta release of a patch or minor release branch
 
 # Basic Information
 If you are an advanced Rekordbox user, then the following section is likely not for you. If you are not an advanced Rekordbox user, or are interested in the workflow patterns that accompany this library, read on!
