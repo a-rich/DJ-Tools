@@ -67,13 +67,12 @@ def build_config():
             "DOWNLOAD_EXCLUDE_DIRS", "AWS_USE_DATE_MODIFIED",
             "XML_IMPORT_USER", "XML_PATH", "USER", "DISCORD_URL", "YOUTUBE_DL",
             "YOUTUBE_DL_URL", "RANDOMIZE_TRACKS", "RANDOMIZE_TRACKS_PLAYLISTS",
-            "RANDOMIZE_TRACKS_TAG", "SYNC_OPERATIONS", "GET_GENRES",
-            "GENRE_EXCLUDE_DIRS", "GENRE_TAG_DELIMITER",
-            "GENERATE_GENRE_PLAYLISTS", "GENERATE_GENRE_PLAYLISTS_REMAINDER",
-            "SPOTIFY_CHECK_PLAYLISTS", "SPOTIFY_PLAYLISTS_CHECK",
-            "SPOTIFY_PLAYLISTS_CHECK_FUZZ_RATIO", "SPOTIFY_CLIENT_ID",
-            "SPOTIFY_CLIENT_SECRET", "SPOTIFY_REDIRECT_URI",
-            "SPOTIFY_USERNAME", "AUTO_PLAYLIST_UPDATE",
+            "SYNC_OPERATIONS", "GET_GENRES", "GENRE_EXCLUDE_DIRS",
+            "GENRE_TAG_DELIMITER", "GENERATE_GENRE_PLAYLISTS",
+            "GENERATE_GENRE_PLAYLISTS_REMAINDER", "SPOTIFY_CHECK_PLAYLISTS",
+            "SPOTIFY_PLAYLISTS_CHECK", "SPOTIFY_PLAYLISTS_CHECK_FUZZ_RATIO",
+            "SPOTIFY_CLIENT_ID", "SPOTIFY_CLIENT_SECRET",
+            "SPOTIFY_REDIRECT_URI", "SPOTIFY_USERNAME", "AUTO_PLAYLIST_UPDATE",
             "AUTO_PLAYLIST_SUBREDDITS", "AUTO_PLAYLIST_FUZZ_RATIO",
             "REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET", "REDDIT_USER_AGENT",
             "VERBOSITY", "LOG_LEVEL"]
@@ -200,9 +199,6 @@ def arg_parse():
             help='perform track randomization')
     parser.add_argument('--randomize_tracks_playlists', type=str, nargs='+',
             help='playlist name(s) to randomize tracks in')
-    parser.add_argument('--randomize_tracks_tag', type=str,
-            choices=['track_num'],
-            help='ID3 tag to use for encoding randomization')
     parser.add_argument('--sync_operations', nargs='+',
             choices=['upload_music', 'upload_xml', 'download_music',
                      'download_xml'],

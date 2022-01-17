@@ -14,7 +14,6 @@
     "YOUTUBE_DL_URL": "",
     "RANDOMIZE_TRACKS": false,
     "RANDOMIZE_TRACKS_PLAYLISTS": [],
-    "RANDOMIZE_TRACKS_TAG": "track_num",
     "SYNC_OPERATIONS": [],
     "GET_GENRES": false,
     "GENRE_EXCLUDE_DIRS": [],
