@@ -96,7 +96,10 @@ def get_track_genres(soup, delimiter, pure_genres):
     Args:
         soup (bs4.BeautifulSoup): parsed XML
         delimiter (str): character(s) used to deliminate genres in the genre
-                         ID3 tag
+                ID3 tag
+        pure_genres (list): strings matching genre tags in the collection; will
+                be used to generate "Pure <genre>" playlists (if they are
+                included in `generate_genre_playlists.json`)
 
     Returns:
         dict: map of genres to lists of (track_id, genres) tuples
@@ -138,6 +141,8 @@ def create_playlists(soup, content, genres, top_level=False):
         soup (bs4.BeautifulSoup): parsed XML
         content (str or dict): playlist name or folder name with playlists
         genres (set): playlist genres set to populate
+        top_level (bool): flag used to indicate that no "All" playlist should
+                be created at the top-level of the playlist tree
 
     Raises:
         ValueError: 'generate_genre_playlists.json' must be properly formatted
@@ -179,9 +184,9 @@ def add_other(soup, remainder_type, genres, tracks, playlists):
     Args:
         soup (bs4.BeautifulSoup): parsed XML
         remainder_type (str): whether to put genres not specified in
-                              'generate_genre_playlists.json' into an 'Other'
-                              folder with individual playlists for each genre
-                              or into a single 'Other' playlist
+                'generate_genre_playlists.json' into an 'Other'
+                folder with individual playlists for each genre
+                or into a single 'Other' playlist
         genres (set): all the genres in 'generate_genre_playlists.json'
         tracks (dict): map of genres to lists of (track_id, genres) tuples
         playlists (bs4.element.Tag): empty playlist structure
