@@ -133,13 +133,13 @@ All configuration options may be overridden via command-line arguments of the sa
     "YOUTUBE_DL_URL": "https://soundcloud.com/me/sets/to-download",
     "RANDOMIZE_TRACKS": false,
     "RANDOMIZE_TRACKS_PLAYLISTS": ["Halftime", "Trip Hop"],
-    "RANDOMIZE_TRACKS_TAG": "track_num",
     "SYNC_OPERATIONS": ["download_music", "download_xml"],
     "GET_GENRES": false,
     "GENRE_EXCLUDE_DIRS": [],
     "GENRE_TAG_DELIMITER": "/",
     "GENERATE_GENRE_PLAYLISTS": true,
     "GENERATE_GENRE_PLAYLISTS_REMAINDER": "folder",
+    "GENERATE_GENRE_PLAYLISTS_PURE": ["Techno", "Hip Hop"],
     "SPOTIFY_CHECK_PLAYLISTS": false,
     "SPOTIFY_PLAYLISTS_CHECK": ["Download", "Maybe Download"],
     "SPOTIFY_PLAYLISTS_CHECK_FUZZ_RATIO": 80,
@@ -176,13 +176,13 @@ All configuration options may be overridden via command-line arguments of the sa
 * `YOUTUBE_DL_URL`: URL from which music files should be downloaded (i.e. a Soundcloud playlist)
 * `RANDOMIZE_TRACKS`: boolean flag to trigger the emulated playlist shuffling feature on each playlist in `RANDOMIZE_TRACKS_PLAYLISTS`
 * `RANDOMIZE_TRACKS_PLAYLISTS`: list of playlist names (must exist in `XML_PATH`) that should have their tracks shuffled
-* `RANDOMIZE_TRACKS_TAG`: ID3 tag (must be acknowledged by the `eyed3` package) which is overwritten to emulate playlist shuffling (it's recommended that you leave this as `track_num`)
 * `SYNC_OPERATIONS`: list of sync operations to run in order -- choices: {`download_music`, `download_xml`, `upload_music`, `upload_xml`}
 * `GET_GENRES`: boolean flag to trigger an analysis of the genre ID3 tags of your local mp3 files (prints the number of tracks in alphabetized genres...increasing `VERBOSITY` prints tracks in each genre)
 * `GENRE_EXCLUDE_DIRS`: list of partial paths (folders) which cannot appear in full paths of mp3 files when considering their genre ID3 tags
 * `GENRE_TAG_DELIMITER`: character to use for splitting a track's genre ID3 tag when tag contains multiple genres (e.g. "/")
 * `GENERATE_GENRE_PLAYLISTS`: boolean flag to trigger the generation of a playlist structure (as informed by `generate_genre_playlists.json`) using the genre tags in `XML_PATH`...the resulting XML file is `XML_PATH` prefixed with "`auto_`"
 * `GENERATE_GENRE_PLAYLISTS_REMAINDER`: whether tracks of remainder genres (those not specified in `generate_genre_playlists.json`) will be placed in a `folder` called "Other" with individual genre playlists or a `playlist` called "Other"
+* `GENERATE_GENRE_PLAYLISTS_PURE`: list of genre tags (case-sensitive) which will each have a "Pure" playlist generated for...each item must be accompanied with a "Pure \<genre>" entry in `generate_genre_playlists.json`,
 * `SPOTIFY_CHECK_PLAYLISTS`: boolean flag to trigger checking the contents of Spotify playlists specified in `SPOTIFY_PLAYLISTS_CHECK` against the `beatcloud` (to identify redundancies)
 * `SPOTIFY_PLAYLISTS_CHECK`: list of Spotify playlists to use with `SPOTIFY_CHECK_PLAYLISTS`
 * `SPOTIFY_PLAYLISTS_CHECK_FUZZ_RATIO`: the minimum Levenshtein similarity for indicating potential redundancies between Spotify playlists and the `beatcloud`
