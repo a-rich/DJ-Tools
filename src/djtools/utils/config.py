@@ -61,7 +61,7 @@ def build_config():
         logger.info(f'Args: {args}')
         config.update(args)
 
-    # identify any required keys that are absent from the config
+    # identify misspelled or non-existing keys from the configuration file against the template
     config_template = ["USB_PATH", "AWS_PROFILE", "UPLOAD_INCLUDE_DIRS",
             "UPLOAD_EXCLUDE_DIRS", "DOWNLOAD_INCLUDE_DIRS",
             "DOWNLOAD_EXCLUDE_DIRS", "AWS_USE_DATE_MODIFIED",
@@ -78,9 +78,9 @@ def build_config():
             "AUTO_PLAYLIST_TOP_PERIOD", "AUTO_PLAYLIST_FUZZ_RATIO",
             "REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET", "REDDIT_USER_AGENT",
             "VERBOSITY", "LOG_LEVEL"]
-    missing_config_keys = [k for k in config_template if k not in config]
-    if missing_config_keys:
-        msg = f'Config does not contain required keys: {missing_config_keys}'
+    unknown_config_keys = [k for k in config.keys() if k not in config_template]
+    if unknown_config_keys:
+        msg = f'Config does not contain required keys: {unknown_config_keys}'
         logger.critical(msg)
         raise ValueError(msg)
 
