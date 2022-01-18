@@ -23,7 +23,8 @@
     - Exporting to a Device
 
 # Release Plan 
-* 2.1.0
+* 2.0.5
+* 2.1.0 (April 1st release)
     - configure `playlist_builder` for subreddit-specific choice between {`top`, `hot`, `new`}
     - parameterize `Pure <genre>` playlist generation logic
     - write track randomization data to XML instead of ID3 tags (circumvent issues related to "Reload Tags")
