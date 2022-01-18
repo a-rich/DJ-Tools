@@ -10,6 +10,7 @@
 **/.DS_store
 **/.python-version
 **/*.code-workspace
+**/*.idea
 
 # ignore directories
 src/djtools/_*configs*
