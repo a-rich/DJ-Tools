@@ -10,6 +10,7 @@ if the Levenshtein similarity passes a threshold.
 from concurrent.futures import ThreadPoolExecutor
 import json
 import logging
+from operator import itemgetter
 import os
 from traceback import format_exc
 
@@ -53,7 +54,8 @@ def update_auto_playlists(config):
     ids_path = os.path.join(os.path.dirname(os.path.dirname(__file__)),
             'configs', 'playlist_builder.json').replace(os.sep, '/')
     if os.path.exists(ids_path):
-        subreddit_playlist_ids = json.load(open(ids_path, encoding='utf-8'))
+        with open(ids_path, encoding='utf-8') as _file:
+            subreddit_playlist_ids = json.load(_file)
     else:
         subreddit_playlist_ids = {}
 
@@ -106,7 +108,7 @@ def get_top_subreddit_posts(spotify, reddit, subreddit, config):
     with ThreadPoolExecutor(max_workers=8) as executor:
         new_tracks = list(tqdm(executor.map(process, *payload),
                 total=len(submissions), desc=f'Filtering r/{subreddit} posts'))
-    new_tracks = [track for x in new_tracks for track in x]
+    new_tracks = [track for track in new_tracks if track]
     new_tracks = new_tracks[:config['AUTO_PLAYLIST_TRACK_LIMIT']]
 
     return new_tracks
@@ -122,7 +124,7 @@ def process(submission, spotify, limit, threshold):
         ([TrackObject, ...]): list of one or more TrackObjects
     """
     if 'spotify.com/track/' in submission.url:
-        return [(submission.url, submission.title)]
+        return (submission.url, submission.title)
     return fuzzy_match(spotify, submission.title, limit, threshold)
 
 
@@ -148,10 +150,11 @@ def fuzzy_match(spotify, title, limit, threshold):
             q=f"{title.replace(' ', '+')}+{artist.replace(' ', '+')}",
             type='track', limit=limit)
 
-    return [(x['id'], f"{x['name']} - " \
-                      f"{', '.join([y['name'] for y in x['artists']])}")
-            for x in filter_results(spotify, results, threshold, title,
-                                    artist)]
+    match = filter_results(spotify, results, threshold, title, artist)
+    if match:
+        return (match['id'], f"{match['name']} - " \
+                f"{', '.join([y['name'] for y in match['artists']])}")
+    return None
 
 
 def parse_title(title):
@@ -189,18 +192,21 @@ def filter_results(spotify, results, threshold, title, artist):
     Returns:
         ([spotipy.TrackObject, ...]): list of TrackObjects
     """
-    tracks = [filter_tracks(results['tracks']['items'], threshold, title,
-                            artist)]
+    tracks = filter_tracks(results['tracks']['items'], threshold, title,
+                           artist)
     while results['tracks']['next']:
         try:
             results = spotify.next(results['tracks'])
         except Exception:
             logger.warning(f"Failed to get next tracks: {format_exc()}")
             break
-        tracks.append(filter_tracks(results['tracks']['items'], threshold,
+        tracks.extend(filter_tracks(results['tracks']['items'], threshold,
                                     title, artist))
 
-    return filter(None, tracks)
+    if tracks:
+        track, _ = sorted(tracks, key=itemgetter(1)).pop()
+
+        return track
 
 
 def filter_tracks(tracks, threshold, title, artist):
@@ -215,14 +221,18 @@ def filter_tracks(tracks, threshold, title, artist):
         (spotify.TrackObject): first TrackObject that matches the submission
                                title
     """
+    results = []
     for track in tracks:
         artists = {x['name'].lower() for x in track['artists']}
-        if fuzz.ratio(track['name'].lower(), title.lower()) >= threshold or \
-                fuzz.ratio(track['name'].lower(), artist.lower()) >= threshold:
+        title_match = max(fuzz.ratio(track['name'].lower(), title.lower()),
+                          fuzz.ratio(track['name'].lower(), artist.lower()))
+        if title_match >= threshold:
             if any((fuzz.ratio(a, part) >= threshold
                     for part in [title.lower(), artist.lower()]
                     for a in artists)):
-                return track
+                results.append((track, title_match))
+
+    return results
 
 
 def update_existing_playlist(spotify, playlist, new_tracks, limit, verbosity):
