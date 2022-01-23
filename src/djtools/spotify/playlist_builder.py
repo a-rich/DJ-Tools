@@ -120,7 +120,7 @@ def get_subreddit_posts(spotify, reddit, subreddit, config):
         new_tracks = list(tqdm(executor.map(process, *payload),
                 total=len(submissions), desc=f'Filtering r/{subreddit} posts'))
     new_tracks = [track for track in new_tracks if track]
-    new_tracks = new_tracks[:config['AUTO_PLAYLIST_TRACK_LIMIT']]
+    new_tracks = new_tracks[:subreddit['limit']]
 
     return new_tracks
 
