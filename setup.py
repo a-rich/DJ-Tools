@@ -73,6 +73,7 @@ setup(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     version='2.1.0-beta.7',
 =======
     version='2.1.0-beta.1',
@@ -83,6 +84,9 @@ setup(
 =======
     version='2.1.0-beta.3',
 >>>>>>> 517b703... 2.1.0-beta.3 release
+=======
+    version='2.1.0-beta.4',
+>>>>>>> 7f21c9c... merge 2.0.5 bug fix
     description='DJ Tools is a library for managing a collection of MP3 ' \
                 'and Rekordbox XML files.',
     long_description=LONG_DESCRIPTION,
