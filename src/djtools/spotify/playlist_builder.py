@@ -197,10 +197,13 @@ def filter_results(spotify, results, threshold, title, artist):
         except Exception:
             logger.warning(f"Failed to get next tracks: {format_exc()}")
             break
-        tracks.append(filter_tracks(results['tracks']['items'], threshold,
-                                    title, artist))
+        result = filter_tracks(results['tracks']['items'], threshold, title,
+                               artist)
+        if result:
+            tracks.append(result)
+            break
 
-    return filter(None, tracks)
+    return tracks
 
 
 def filter_tracks(tracks, threshold, title, artist):
