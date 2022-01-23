@@ -10,6 +10,7 @@ if the Levenshtein similarity passes a threshold.
 from concurrent.futures import ThreadPoolExecutor
 import json
 import logging
+from operator import itemgetter
 import os
 from traceback import format_exc
 
@@ -106,7 +107,7 @@ def get_top_subreddit_posts(spotify, reddit, subreddit, config):
     with ThreadPoolExecutor(max_workers=8) as executor:
         new_tracks = list(tqdm(executor.map(process, *payload),
                 total=len(submissions), desc=f'Filtering r/{subreddit} posts'))
-    new_tracks = [track for x in new_tracks for track in x]
+    new_tracks = [track for track in new_tracks if track]
     new_tracks = new_tracks[:config['AUTO_PLAYLIST_TRACK_LIMIT']]
 
     return new_tracks
@@ -148,10 +149,10 @@ def fuzzy_match(spotify, title, limit, threshold):
             q=f"{title.replace(' ', '+')}+{artist.replace(' ', '+')}",
             type='track', limit=limit)
 
-    return [(x['id'], f"{x['name']} - " \
-                      f"{', '.join([y['name'] for y in x['artists']])}")
-            for x in filter_results(spotify, results, threshold, title,
-                                    artist)]
+    match = filter_results(spotify, results, threshold, title, artist)
+    if match:
+        return (match['id'], f"{match['name']} - " \
+                f"{', '.join([y['name'] for y in match['artists']])}")
 
 
 def parse_title(title):
@@ -197,13 +198,13 @@ def filter_results(spotify, results, threshold, title, artist):
         except Exception:
             logger.warning(f"Failed to get next tracks: {format_exc()}")
             break
-        result = filter_tracks(results['tracks']['items'], threshold, title,
-                               artist)
-        if result:
-            tracks.append(result)
-            break
+        tracks.extend(filter_tracks(results['tracks']['items'], threshold,
+                                    title, artist))
 
-    return tracks
+    if tracks:
+        track, _ = sorted(tracks, key=itemgetter(1)).pop()
+
+        return track
 
 
 def filter_tracks(tracks, threshold, title, artist):
@@ -220,12 +221,13 @@ def filter_tracks(tracks, threshold, title, artist):
     """
     for track in tracks:
         artists = {x['name'].lower() for x in track['artists']}
-        if fuzz.ratio(track['name'].lower(), title.lower()) >= threshold or \
-                fuzz.ratio(track['name'].lower(), artist.lower()) >= threshold:
+        title_match = max(fuzz.ratio(track['name'].lower(), title.lower()),
+                          fuzz.ratio(track['name'].lower(), artist.lower()))
+        if title_match >= threshold:
             if any((fuzz.ratio(a, part) >= threshold
                     for part in [title.lower(), artist.lower()]
                     for a in artists)):
-                return track
+                return (track, title_match)
 
 
 def update_existing_playlist(spotify, playlist, new_tracks, limit, verbosity):
