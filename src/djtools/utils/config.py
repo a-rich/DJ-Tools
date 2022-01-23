@@ -156,7 +156,7 @@ def arg_parse():
     """
     def lint_json(_json):
         try:
-            json.load(_json)
+            return json.loads(_json)
         except Exception as exc:
             raise Exception(f'unable to parse JSON type argument "{_json}": ' \
                             + exc)
@@ -233,7 +233,7 @@ def arg_parse():
             help='Spotify user to maintain auto-playlists for')
     parser.add_argument('--auto_playlist_update', action='store_true',
             help='update auto-playlists')
-    parser.add_argument('--auto_playlist_subreddits', type=lint_json, nargs='+',
+    parser.add_argument('--auto_playlist_subreddits', type=lint_json,
             help='list of subreddits to generate playlists from; dicts with ' \
                  '"name", "type", "period", and "limit" keys')
     parser.add_argument('--auto_playlist_fuzz_ratio', type=int,

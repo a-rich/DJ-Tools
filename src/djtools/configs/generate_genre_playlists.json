@@ -23,7 +23,7 @@
                 "Latin Pop",
                 "Merengue",
                 "Metalcore",
-                "Norteno", 
+                "Norteno",
                 "Nu-disco",
                 "Nu Metal",
                 "Post-disco",
@@ -65,7 +65,7 @@
                 {
                     "name": "Future",
                     "playlists": [
-                        "Pure Future"
+                        "Pure Future",
                         "Future Bass",
                         "Future Beats",
                         "Future Funk",
