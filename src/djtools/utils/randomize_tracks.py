@@ -43,24 +43,24 @@ def randomize_tracks(config):
             continue
         lookup[track['TrackID']] = track
 
-    playlist_nodes = []
+    randomized_tracks = []
     for playlist in config['RANDOMIZE_TRACKS_PLAYLISTS']:
         try:
-            _playlist = get_playlist_track_locations(soup, playlist, lookup)
-            tracks = _playlist['tracks']
-            playlist_nodes.append(_playlist['playlist'])
+            tracks = get_playlist_track_locations(soup, playlist, lookup)
         except LookupError as exc:
             logger.error(exc)
             continue
 
         random.shuffle(tracks)
-        payload = [tracks, list(range(len(tracks)))]
-        with ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as executor:
-            _ = list(tqdm(executor.map(set_tag, *payload),
-                          total=len(tracks),
-                          desc=f'Randomizing "{playlist}" tracks'))
+        randomized_tracks.extend(tracks)
 
-    wrap_playlists(soup, playlist_nodes)
+    payload = [randomized_tracks, list(range(1, len(randomized_tracks) + 1))]
+    with ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as executor:
+        _ = list(tqdm(executor.map(set_tag, *payload),
+                        total=len(tracks),
+                        desc=f'Randomizing {len(randomized_tracks)} tracks'))
+
+    wrap_playlists(soup, randomized_tracks)
     _dir, _file = os.path.split(config['XML_PATH'])
     auto_xml_path = os.path.join(_dir, f'auto_{_file}').replace(os.sep, '/')
     with open(auto_xml_path, mode='wb', encoding=soup.orignal_encoding) as \
@@ -88,9 +88,7 @@ def get_playlist_track_locations(soup, _playlist, lookup):
     except IndexError:
         raise LookupError(f'{_playlist} not found') from LookupError
 
-    return {'playlist': playlist,
-            'tracks': [lookup[x['Key']] for x in playlist.children
-                       if str(x).strip()]}
+    return [lookup[x['Key']] for x in playlist.children if str(x).strip()]
 
 
 def set_tag(track, index):
@@ -103,7 +101,7 @@ def set_tag(track, index):
     track['TrackNumber'] = index
 
 
-def wrap_playlists(soup, playlists):
+def wrap_playlists(soup, randomized_tracks):
     """Creates a folder called 'AUTO_RANDOMIZE', inserts the generated playlist
     structure into it, and then inserts 'AUTO_RANDOMIZE' into the root of the
     'Playlist' folder.
@@ -113,7 +111,7 @@ def wrap_playlists(soup, playlists):
         playlists (bs4.element.Tag): playlist structure
     """
     playlists_root = soup.find_all('NODE', {'Name': 'ROOT', 'Type': '0'})[0]
-    new_playlist = soup.new_tag('NODE', Name='AUTO_RANDOMIZE', Type="0")
-    for playlist in playlists:
-        new_playlist.append(playlist)
+    new_playlist = soup.new_tag('NODE', Name='AUTO_RANDOMIZE', Type="1")
+    for track in randomized_tracks:
+        new_playlist.appenkd(track)
     playlists_root.insert(0, new_playlist)
