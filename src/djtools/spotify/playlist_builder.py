@@ -54,7 +54,8 @@ def update_auto_playlists(config):
     ids_path = os.path.join(os.path.dirname(os.path.dirname(__file__)),
             'configs', 'playlist_builder.json').replace(os.sep, '/')
     if os.path.exists(ids_path):
-        subreddit_playlist_ids = json.load(open(ids_path, encoding='utf-8'))
+        with open(ids_path, encoding='utf-8') as _file:
+            subreddit_playlist_ids = json.load(_file)
     else:
         subreddit_playlist_ids = {}
 
@@ -123,7 +124,7 @@ def process(submission, spotify, limit, threshold):
         ([TrackObject, ...]): list of one or more TrackObjects
     """
     if 'spotify.com/track/' in submission.url:
-        return [(submission.url, submission.title)]
+        return (submission.url, submission.title)
     return fuzzy_match(spotify, submission.title, limit, threshold)
 
 
@@ -153,6 +154,7 @@ def fuzzy_match(spotify, title, limit, threshold):
     if match:
         return (match['id'], f"{match['name']} - " \
                 f"{', '.join([y['name'] for y in match['artists']])}")
+    return None
 
 
 def parse_title(title):
