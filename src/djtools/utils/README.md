@@ -97,7 +97,7 @@ Once the operation completes, an XML is generated at `XML_PATH` with the prefix 
 To trigger the `get_genres` modules, set `GET_GENRES: true`. The operation will print all the genres alphabetized with a count of tracks belonging to those genres. If `VERBOSITY` is increased, the individual tracks under each genre will be printed as well.
 
 ## randomize_tracks
-To trigger the `randomize_tracks` module, set `RANDOMIZE_TRACKS: true`. Once the operation has completed, you'll need to open Rekordbox and reimport the playlists that were randomized.
+To trigger the `randomize_tracks` module, set `RANDOMIZE_TRACKS: true`. Once the operation has completed, you'll need to open Rekordbox and reimport the `AUTO_RANDOMIZE` playlist containing the set of tracks with updated `TrackNumber` fields.
 
 ## youtube_dl
 To trigger the `youtube_dl` module, set `YOUTUBE_DL: true`. Once tracks are downloaded, make sure all file names adhere to convention:
