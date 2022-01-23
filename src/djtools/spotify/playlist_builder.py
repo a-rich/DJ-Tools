@@ -190,8 +190,8 @@ def filter_results(spotify, results, threshold, title, artist):
     Returns:
         ([spotipy.TrackObject, ...]): list of TrackObjects
     """
-    tracks = [filter_tracks(results['tracks']['items'], threshold, title,
-                            artist)]
+    tracks = filter_tracks(results['tracks']['items'], threshold, title,
+                           artist)
     while results['tracks']['next']:
         try:
             results = spotify.next(results['tracks'])
@@ -219,6 +219,7 @@ def filter_tracks(tracks, threshold, title, artist):
         (spotify.TrackObject): first TrackObject that matches the submission
                                title
     """
+    results = []
     for track in tracks:
         artists = {x['name'].lower() for x in track['artists']}
         title_match = max(fuzz.ratio(track['name'].lower(), title.lower()),
@@ -227,7 +228,9 @@ def filter_tracks(tracks, threshold, title, artist):
             if any((fuzz.ratio(a, part) >= threshold
                     for part in [title.lower(), artist.lower()]
                     for a in artists)):
-                return (track, title_match)
+                results.append((track, title_match))
+
+    return results
 
 
 def update_existing_playlist(spotify, playlist, new_tracks, limit, verbosity):
