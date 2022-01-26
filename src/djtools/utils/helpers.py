@@ -27,5 +27,7 @@ def upload_log(config, log_file):
     now = datetime.now()
     one_day = timedelta(days=1)
     for _file in glob(f'{os.path.dirname(log_file)}/*'):
+        if os.path.basename(_file) == 'empty.txt':
+            continue
         if os.path.getctime(_file) < (now - one_day).timestamp():
             os.remove(_file)

@@ -61,9 +61,9 @@ try:
     if config.get('LOG_LEVEL'):
         logger.setLevel(config['LOG_LEVEL'])
 except Exception as exc:
-    msg = f'Failed to load config: {exc}\n{format_exc()}'
+    msg = f'Failed to load config: {exc}'
     logger.critical(msg)
-    raise ValueError(msg) from Exception
+    raise ValueError(msg) from exc
 
 
 def main():
