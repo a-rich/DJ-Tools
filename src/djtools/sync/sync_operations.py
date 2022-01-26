@@ -30,10 +30,6 @@ def upload_music(config):
     if not os.path.exists(config['USB_PATH']):
         raise FileNotFoundError(f'{config["USB_PATH"]} does not exist!')
 
-    if os.environ.get('USER') != 'aweeeezy':
-        logger.error('User "aweeeezy" has not yet authorized uploading music')
-        return
-
     glob_path = Path(os.path.join(config['USB_PATH'],
                                   'DJ Music').replace(os.sep, '/'))
     hidden_files = {str(p) for p in glob_path.rglob(
