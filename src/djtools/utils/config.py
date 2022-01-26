@@ -252,13 +252,23 @@ def arg_parse():
             help='logger level')
     args = parser.parse_args()
 
-    if args.link_configs:
-        os.symlink(os.path.join(os.path.dirname(os.path.dirname(__file__)),
-                                'configs').replace(os.sep, '/'),
-                   args.link_configs,
-                   target_is_directory=True)
-
     if args.log_level:
         logger.setLevel(args.log_level)
+
+    if args.link_configs:
+        if os.path.exists(args.link_configs):
+            msg = f'{args.link_configs} must be a directory that does not ' \
+                  'already exist'
+            logger.error(msg)
+            raise ValueError(msg)
+        if not os.path.exists(os.path.dirname(args.link_configs)):
+            msg = f'{os.path.dirname(args.link_configs)} must be a ' \
+                  'directory that already exists'
+            logger.error(msg)
+            raise ValueError(msg)
+
+        package_root = os.path.dirname(os.path.dirname(__file__))
+        configs_dir = os.path.join(package_root, 'configs').replace(os.sep, '/')
+        os.symlink(configs_dir, args.link_configs, target_is_directory=True)
 
     return vars(args)
