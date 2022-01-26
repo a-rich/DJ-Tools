@@ -25,6 +25,7 @@
 * 2.0.5
     - bugfix adding multiple Spotify API results to playlist for same subreddit submission
     - removed `upload_music` restriction
+    - better user input validation for `--link_configs` argument
 * 2.1.0 (April 1st release)
     - subreddit-specific `playlist_builder` configuration
     - parameterize `Pure <genre>` playlist generation logic
