@@ -256,6 +256,7 @@ def arg_parse():
         logger.setLevel(args.log_level)
 
     if args.link_configs:
+        args.link_configs = args.link_configs.rstrip('/')
         if os.path.exists(args.link_configs):
             msg = f'{args.link_configs} must be a directory that does not ' \
                   'already exist'
