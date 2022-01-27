@@ -255,11 +255,17 @@ def update_existing_playlist(spotify, playlist, new_tracks, limit, verbosity):
 
     track_count = len(tracks)
     track_index = 0
-    ids = {x['track']['id'] for x in tracks}
-    remove_payload = []
-    tracks_removed = []
     add_payload = []
     tracks_added = []
+    remove_payload = []
+    tracks_removed = []
+    ids = set()
+    playlist_track_names = set()
+    for track in tracks:
+        track = track['track']
+        ids.add(track['id'])
+        playlist_track_names.add(f"{track['name']} - " \
+                f"{', '.join([x['name'] for x in track['artists']])}")
 
     for id_, track in new_tracks:
         if 'spotify.com/track/' in id_:
@@ -268,16 +274,21 @@ def update_existing_playlist(spotify, playlist, new_tracks, limit, verbosity):
             track = f"{resp['name']} - " \
                     f"{', '.join([x['name'] for x in resp['artists']])}"
         if id_ in ids:
+            logger.warning(f'Candidate new track "{track}" is already in ' \
+                           'the playlist')
             continue
-        if track_count >= limit:
+        if track_name_too_similar(track, playlist_track_names):
+            continue
+        tracks_added.append(track)
+        add_payload.append(id_)
+        if track_count + len(tracks_added) > limit:
             _track = tracks.pop(0)['track']
             tracks_removed.append(f"{_track['name']} - " \
                     f"{', '.join([x['name'] for x in _track['artists']])}")
             remove_payload.append({"uri": _track['uri'],
                                    "positions": [track_index]})
             track_index += 1
-        tracks_added.append(track)
-        add_payload.append(id_)
+            track_count -= 1
 
     logger.info(f"{len(tracks_added)} new tracks added")
     if tracks_added:
@@ -298,6 +309,25 @@ def update_existing_playlist(spotify, playlist, new_tracks, limit, verbosity):
         spotify.playlist_add_items(playlist, add_payload)
 
     return _playlist
+
+
+def track_name_too_similar(track, playlist_track_names):
+    """Fuzzy matches candidate new track with tracks already in playlist to see
+    if it's a duplicate.
+
+    Args:
+        track (str): track title - artist name of candidate new track
+        playlist_track_names (set): track title - artist names in playlist
+
+    Returns:
+        bool: whether or not any tracks in the playlist are too similar
+    """
+    for other_track in playlist_track_names:
+        if fuzz.ratio(track.lower(), other_track.lower()) > 90:
+            logger.warning(f'Candidate new track "{track}" is too similar ' \
+                           f'to existing track "{other_track}"')
+            return True
+    return False
 
 
 def build_new_playlist(spotify, username, subreddit, new_tracks):
