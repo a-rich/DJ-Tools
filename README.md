@@ -1,4 +1,5 @@
 # DJ Tools
+[![image](https://img.shields.io/pypi/v/dj-beatcloud.svg)](https://pypi.org/project/dj-beatcloud/)
 
 ## Contents
 * Release Plan
@@ -12,7 +13,7 @@
         * Example `config.json`
         * Explanation of configuration options
 * Contribution
-* Basic Information 
+* Basic Information
     - Preliminary
         * Music files
         * Rekordbox XML
@@ -21,7 +22,7 @@
     - Importing tracks from XML
     - Reloading tags
     - Exporting to a Device
-# Release Plan 
+# Release Plan
 * 2.0.5
     - `spotify.playlist_builder`
         * bugfix adding multiple Spotify API results to playlist for same subreddit submission
@@ -58,7 +59,7 @@ The core functionality of this library can be broken up into three components or
 2. `spotify`: allows users to:
     * compare the tracks of one or more Spotify playlists against the `beatcloud` (to identify redundancies)
     * update Spotify playlists using the top posts of subreddits
-3. `utils`: contains a variety of utilities for things such as: 
+3. `utils`: contains a variety of utilities for things such as:
     * generating an XML with playlists based on the genre tags of your Collection
     * analyzing the genre tags directly from your local mp3 files
     * emulating a playlist randomization feature which is strangely absent from Rekordbox
@@ -69,12 +70,14 @@ For usage details relating to the individual packages of `DJ Tools`, checkout th
 # Setup
 
 ## Python
-1. The `DJ Tools` library uses f-strings so a minimum version of Python 3.6 is required. As always, when working with a Python project, you're going to want to create a virtual environment; [Pyenv](https://github.com/pyenv/pyenv) is really nice, but if you insist on doing a system-wide python installation then proceed with the following instructions: 
+1. The `DJ Tools` library uses f-strings so a minimum version of Python 3.6 is required. As always, when working with a Python project, you're going to want to create a virtual environment; [Pyenv](https://github.com/pyenv/pyenv) is really nice, but if you insist on doing a system-wide python installation then proceed with the following instructions:
     - Mac installation: `brew install python@3.6`
     - Linux installation: `sudo apt install python3.6`
     - Windows installation: [Windows releases](https://www.python.org/downloads/windows/) or [3.6.0 installer](https://www.python.org/ftp/python/3.6.0/python-3.6.0.exe)
 
 2. Run `pip install "dj-beatcloud[levenshtein]"` to install the DJ Tools library.
+3. You can install the very latest pre-release version with `pip install "dj-beatcloud[levenshtein]" --pre`
+    - if you want to restrict the version being installed to not include, say, the next minor version's beta release then you can do so like `pip install "dj-beatcloud[levenshtein]<2.1.0" --pre`
 
 `NOTE`: operations that involve computing the similarity between track names (both modules in the `spotify` package as well as the `swap_title_artist` repair script) can be made much faster by installing the `python-Levenshtein` package; Windows users may find it more cumbersome to install `DJ Tools` this way though since they may not have the required C++ binaries to run the Levenshtein operations...if this applies to you, then ommit the `[levenshtein]` part:
 
@@ -100,7 +103,7 @@ You can always install the necessary package to accelerate computing at a later 
 
 # Usage
 ## Linking configs
-You should now be able to run `djtools` from anywhere, although nothing will work until you've populated the required `config.json`. 
+You should now be able to run `djtools` from anywhere, although nothing will work until you've populated the required `config.json`.
 
 Because this `config.json` file (and all other JSON files used by this library) live next to the package code (somewhere not user-friendly), it's recommended that you choose a non-existent directory (e.g. `djtools_configs`) and run this command first to establish a user-friendly location where you can create and modify your config files:
 
@@ -239,7 +242,7 @@ It's true that MP3 is lossy, meaning it's _possible_ for MP3 files to produce lo
 3. `title` and `artist` tags populated (ideally using software such as [Mp3tag](https://www.mp3tag.de/en/) or [Picard](https://picard.musicbrainz.org/))
 4. `key` tags populated (ideally using Mixed In Key)
 5. `genre` tags populated (split with common delimiter if multiple genres)
-6. `beatgrid` should be set correctly 
+6. `beatgrid` should be set correctly
 7. `hot cues` should be set the expected schema
 8. `comment` tags 1st cleared and then populated with important information
     - BPM changes
@@ -279,7 +282,7 @@ When importing a track, there are several beatgrid-related states that the built
 
 Once the beatgrid is established, I will apply a standardized hot cue schema so that I can reliably mix any track in my library, even if it's quite old and I've forgotten its nuances. Below is a description of the schema that I personally use for all my tracks:
 
-* `A` and `B`: beat on which a break or build starts (in chronological order) 
+* `A` and `B`: beat on which a break or build starts (in chronological order)
 * `C`: "best" downbeat to begin a mix on (not too high energy, but definitely a prominent downbeat)
 * `D`, `G`, `H`: chronologically successive "drops" of the track (generally following a break / build)
 * `E`: the very first sound of the track (not necessarily a downbeat)
