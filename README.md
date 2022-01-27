@@ -23,13 +23,21 @@
     - Exporting to a Device
 # Release Plan 
 * 2.0.5
-    - bugfix adding multiple Spotify API results to playlist for same subreddit submission
-    - removed `upload_music` restriction
-    - better user input validation for `--link_configs` argument
+    - `spotify.playlist_builder`
+        * bugfix adding multiple Spotify API results to playlist for same subreddit submission
+        * bugfix adding duplicate tracks to playlist when tracks come from different albums
+        * bugfix exceeding playlist `limit` when adding new tracks
+    - `sync.sync_operations`
+        * removed `upload_music` restriction
+    - `utils.config`
+        * better user input validation for `--link_configs` argument
 * 2.1.0 (April 1st release)
-    - subreddit-specific `playlist_builder` configuration
-    - parameterize `Pure <genre>` playlist generation logic
-    - write track randomization data to XML instead of ID3 tags (circumvent issues related to "Reload Tags")
+    - `spotify.playlist_builder`
+        * subreddit-specific `playlist_builder` configuration
+    - `utils.generate_genre_playlists`
+        * parameterize `Pure <genre>` playlist generation logic
+    - `utils.randomize_tracks`
+        * write track randomization data to XML instead of ID3 tags (circumvent issues related to "Reload Tags")
 
 # Overview
 `DJ Tools` is a library for managing a Collection of audio files (not necessarily mp3 files, although that is preferred) and Rekordbox XML files.
