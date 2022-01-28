@@ -31,3 +31,18 @@ def upload_log(config, log_file):
             continue
         if os.path.getctime(_file) < (now - one_day).timestamp():
             os.remove(_file)
+
+
+def make_dirs(path):
+    if os.name == 'nt':
+        cwd = os.getcwd()
+        path_parts = path.split(os.path.sep)
+        root = path_parts[0]
+        path_parts = path_parts[1:]
+        os.chdir(root)
+        for part in path_parts:
+            os.makedirs(part, exist_ok=True)
+            os.chdir(part)
+        os.chdir(cwd)
+    else:
+        os.makedirs(path, exist_ok=True)
