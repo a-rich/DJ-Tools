@@ -9,6 +9,8 @@ import re
 
 import youtube_dl as ytdl
 
+from djtools.utils.helpers import make_dirs
+
 
 logger = logging.getLogger(__name__)
 
@@ -28,18 +30,7 @@ def youtube_dl(config):
     dest_path = os.path.join(config['USB_PATH'], 'DJ Music', 'New Music',
                              '').replace(os.sep, '/')
     if not os.path.exists(dest_path):
-        if os.name == 'nt':
-            cwd = os.getcwd()
-            path_parts = dest_path.split(os.path.sep)
-            root = path_parts[0]
-            path_parts = path_parts[1:]
-            os.chdir(root)
-            for part in path_parts:
-                os.makedirs(part, exist_ok=True)
-                os.chdir(part)
-            os.chdir(cwd)
-        else:
-            os.makedirs(dest_path, exist_ok=True)
+        make_dirs(dest_path)
 
     ydl_opts = {
         'format': 'bestaudio/best',

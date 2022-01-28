@@ -10,6 +10,7 @@ from pathlib import Path
 
 from djtools.sync.helpers import parse_sync_command, rewrite_xml, run_sync, \
                                  webhook
+from djtools.utils.helpers import make_dirs
 
 
 logger = logging.getLogger(__name__)
@@ -85,16 +86,14 @@ def download_music(config):
     if not os.path.exists(config['USB_PATH']):
         raise FileNotFoundError(f'{config["USB_PATH"]} does not exist!')
 
-    glob_path = Path(os.path.join(config['USB_PATH'],
-                                  'DJ Music').replace(os.sep, '/'))
+    dest = os.path.join(config['USB_PATH'], 'DJ Music').replace(os.sep, '/')
+    glob_path = Path(dest)
     old = {str(p) for p in glob_path.rglob(
             os.path.join('**', '*.*').replace(os.sep, '/'))}
     logger.info(f"Found {len(old)} files")
 
     logger.info("Syncing remote track collection...")
-    os.makedirs(os.path.join(config['USB_PATH'],
-                             'DJ Music').replace(os.sep, '/'), exist_ok=True)
-    dest = os.path.join(config['USB_PATH'], 'DJ Music').replace(os.sep, '/')
+    make_dirs(dest)
     cmd = ['aws', 's3', 'sync', 's3://dj.beatcloud.com/dj/music/', dest]
     run_sync(parse_sync_command(cmd, config))
 
@@ -118,30 +117,13 @@ def download_xml(config):
     Raises:
         FileNotFoundError: XML destination directory must exist
     """
-    xml_dir = os.path.dirname(config['XML_PATH'])
-    if not os.path.exists(xml_dir):
-        raise FileNotFoundError(f'{xml_dir} does not exist!')
-
     logger.info('Syncing remote rekordbox.xml...')
-    if os.name == 'nt':
-        cwd = os.getcwd()
-        path_parts = os.path.dirname(config['XML_PATH']).split(os.path.sep)
-        root = path_parts[0]
-        path_parts = path_parts[1:]
-        os.chdir(root)
-        for part in path_parts:
-            os.makedirs(part, exist_ok=True)
-            os.chdir(part)
-        _file = f'{config["XML_IMPORT_USER"]}_rekordbox.xml'
-    else:
-        _file = f'{config["XML_IMPORT_USER"]}_rekordbox.xml'
-        _file = os.path.join(xml_dir, _file).replace(os.sep, '/')
-
+    xml_dir = os.path.dirname(config['XML_PATH'])
+    make_dirs(xml_dir)
+    _file = f'{config["XML_IMPORT_USER"]}_rekordbox.xml'
+    _file = os.path.join(xml_dir, _file).replace(os.sep, '/')
     cmd = "aws s3 cp s3://dj.beatcloud.com/dj/xml/" \
           f"{config['XML_IMPORT_USER']}/rekordbox.xml {_file}"
     logger.info(cmd)
     os.system(cmd)
     rewrite_xml(config)
-
-    if os.name == 'nt':
-        os.chdir(cwd)
