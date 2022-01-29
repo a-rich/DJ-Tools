@@ -28,12 +28,16 @@
 # Release Plan
 * 2.0.6
 * 2.1.0 (April 1st release)
+    - `djtools`
+        - [x] `get` config options with defaults, when possible; exception handle when not
     - `spotify.playlist_builder`
-        * subreddit-specific `playlist_builder` configuration
+        - [x] subreddit-specific `playlist_builder` configuration
+        - [ ] aiohttp refactor
+        - [x] parameterize subreddit result limit
     - `utils.generate_genre_playlists`
-        * parameterize `Pure <genre>` playlist generation logic
+        - [x] parameterize `Pure <genre>` playlist generation logic
     - `utils.randomize_tracks`
-        * write track randomization data to XML instead of ID3 tags (circumvent issues related to "Reload Tags")
+        - [x] write track randomization data to XML instead of ID3 tags (circumvent issues related to "Reload Tags")
 
 # Overview
 `DJ Tools` is a library for managing a Collection of audio files (not necessarily mp3 files, although that is preferred) and Rekordbox XML files.
@@ -251,8 +255,8 @@ Out[4]: "Track_Title (Artist2 Remix) ['Things' & Stuff!] - Artist1, Artist2.mp3"
 ```
 
 In general:
-* keep the filenames as close as possible to the `Title (Artist2 Remix) - Artist1, Artist2` format 
-* if the source is Spotify, try to match the fields as close as possible; e.g. if the title includes `(Radio Edit)` then you should name the track accordingly 
+* keep the filenames as close as possible to the `Title (Artist2 Remix) - Artist1, Artist2` format
+* if the source is Spotify, try to match the fields as close as possible; e.g. if the title includes `(Radio Edit)` then you should name the track accordingly
 * don't use accent marks, any of the explicitly listed characters disallowed by Windows, or any other weird / non-standard characters
 
 #### Standardization
