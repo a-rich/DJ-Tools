@@ -16,6 +16,9 @@
 * Basic Information
     - Preliminary
         * Music files
+            * Format
+            * Allowed characters
+            * Standardization
         * Rekordbox XML
     - Importing tracks from Explorer
     - Setting beatgrid and hot cues
@@ -23,15 +26,7 @@
     - Reloading tags
     - Exporting to a Device
 # Release Plan
-* 2.0.5
-    - `spotify.playlist_builder`
-        * bugfix adding multiple Spotify API results to playlist for same subreddit submission
-        * bugfix adding duplicate tracks to playlist when tracks come from different albums
-        * bugfix exceeding playlist `limit` when adding new tracks
-    - `sync.sync_operations`
-        * removed `upload_music` restriction
-    - `utils.config`
-        * better user input validation for `--link_configs` argument
+* 2.0.6
 * 2.1.0 (April 1st release)
     - `spotify.playlist_builder`
         * subreddit-specific `playlist_builder` configuration
@@ -230,13 +225,38 @@ If you are an advanced Rekordbox user, then the following section is likely not 
 ## Preliminary
 
 ### Music files
+#### Format
 The music files in your Collection _should_ be in the MP3 format. There are a couple reasons for this:
 1. MP3 files are very compact meaning you can fit more music on your USB, pay less for cloud storage, and enjoy faster upload / download times
 2. MP3 files have metadata fields called ID3 tags which couple information like track, title, artist, comment, genres, etc. with the file itself; other formats (AIFF or WAV) _may_ include implementations of ID3 but this library has not been tested with these
 
 It's true that MP3 is lossy, meaning it's _possible_ for MP3 files to produce lower quality audio than, say, FLAC files, but [research](https://www.researchgate.net/publication/257068576_Subjective_Evaluation_of_MP3_Compression_for_Different_Musical_Genres) (see [Nyquist–Shannon sampling theorem](https://en.wikipedia.org/wiki/Nyquist%E2%80%93Shannon_sampling_theorem)) shows that even the most trained ears of audiophiles cannot distinguish any difference between lossless audio and 256 kbps MP3 audio. There _are_ arguments that support using a sample rate higher than the theoretical minimum for human hearing (44.1 kHz); digital-to-analog conversion (as is performed in a speaker cone) is necessarily a non-linear system which can produce audible distortions from previously inaudible frequencies. Since my audio processing facilities support the highest quality bitrate for MP3 files, and the size of these files is negligibly larger, I use 320 kbps files.
 
-`NOTE`: to ensure Collection consistency and successful operation of `DJ Tools`, the following properties should be maintained for all music files. **Users of my beatcloud _must_ complete a minimum of (1) and (2) prior to uploading**. Since track title, artist names, and melodic key are objective, and populating these tags prior to uploading saves every other user from repeating these efforts, it is greatly appreciated if users also complete (3) and (4). Futhermore, it is advised that users complete (5) through (9) as well, although users should expect to redo these themselves when integrating others' tracks since they are mostly subjective (with the exception of `beatgrid` and, to some extent, `color`):
+#### Allowed characters
+The characters you use in the filenames added to the beatcloud _does_ matter; while Unix systems are very tolerant of filenames, Windows systems are comparably very sensitive. Windoes explicitly lists these characters as forbidden: `<`, `>`, `:`, `"`, `/`, `\`, `|`, `?`, `*`, `%`, `?`
+
+Futher more, files stored in S3 may not interact properly with the protocols that may be used to sync them if they contain particular characters.
+
+Lastly, the `djtools` package wraps paths in double-quotes `"` so these MUST NOT be used in filenames!
+
+I'm advocating that the character set matched by this regex expression be the whitelist of characters for filenames:
+
+```
+In [2]: string = "Track_Title (Artist2 Remix) ['Things' & Stuff!] - Artist1, Artist2.mp3"
+
+In [3]: pattern = r"[0-9 a-z A-Z _ ' & \( \) \[ \] \s \- , . !]+"
+
+In [4]: re.match(pattern, string).group(0)
+Out[4]: "Track_Title (Artist2 Remix) ['Things' & Stuff!] - Artist1, Artist2.mp3"
+```
+
+In general:
+* keep the filenames as close as possible to the `Title (Artist2 Remix) - Artist1, Artist2` format 
+* if the source is Spotify, try to match the fields as close as possible; e.g. if the title includes `(Radio Edit)` then you should name the track accordingly 
+* don't use accent marks, any of the explicitly listed characters disallowed by Windows, or any other weird / non-standard characters
+
+#### Standardization
+To ensure Collection consistency and successful operation of `DJ Tools`, the following properties should be maintained for all music files. **Users of my beatcloud _must_ complete a minimum of (1) and (2) prior to uploading**. Since track title, artist names, and melodic key are objective, and populating these tags prior to uploading saves every other user from repeating these efforts, it is greatly appreciated if users also complete (3) and (4). Futhermore, it is advised that users complete (5) through (9) as well, although users should expect to redo these themselves when integrating others' tracks since they are mostly subjective (with the exception of `beatgrid` and, to some extent, `color`):
 1. minimum 256 kbps bitrate (320 kbps preferred)
 2. files named using convention: `Title (Artist2 Remix) - Artist1, Artist2`
 3. `title` and `artist` tags populated (ideally using software such as [Mp3tag](https://www.mp3tag.de/en/) or [Picard](https://picard.musicbrainz.org/))
