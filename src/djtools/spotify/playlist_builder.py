@@ -102,13 +102,14 @@ def get_subreddit_posts(spotify, reddit, subreddit, config):
                  'new': sub.new,
                  'rising': sub.rising,
                  'controversial': sub.controversial}
+    subreddit_limit = config.get('AUTO_PLAYLIST_SUBREDDIT_LIMIT', 500) or None
     try:
-        submissions = list(sub_funcs[subreddit['type']](limit=500,
+        submissions = list(sub_funcs[subreddit['type']](limit=subreddit_limit,
                 time_filter=subreddit['period']))
         logger.info(f'"r/{subreddit["name"]}" has {len(submissions)} ' \
                     f"{subreddit['type']} posts for the {subreddit['period']}")
     except TypeError:
-        submissions = list(sub_funcs[subreddit['type']](limit=500))
+        submissions = list(sub_funcs[subreddit['type']](limit=subreddit_limit))
         logger.info(f'"r/{subreddit["name"]}" has {len(submissions)} ' \
                     f"{subreddit['type']} posts")
 

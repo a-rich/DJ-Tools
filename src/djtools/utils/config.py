@@ -75,8 +75,9 @@ def build_config():
             "SPOTIFY_CLIENT_ID", "SPOTIFY_CLIENT_SECRET",
             "SPOTIFY_REDIRECT_URI", "SPOTIFY_USERNAME", "AUTO_PLAYLIST_UPDATE",
             "AUTO_PLAYLIST_SUBREDDITS", "AUTO_PLAYLIST_FUZZ_RATIO",
-            "REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET", "REDDIT_USER_AGENT",
-            "VERBOSITY", "LOG_LEVEL"]
+            "AUTO_PLAYLIST_SUBREDDIT_LIMIT", "REDDIT_CLIENT_ID",
+            "REDDIT_CLIENT_SECRET", "REDDIT_USER_AGENT", "VERBOSITY",
+            "LOG_LEVEL"]
     missing_config_keys = [k for k in config_template if k not in config]
     if missing_config_keys:
         msg = f'Config does not contain required keys: {missing_config_keys}'
@@ -238,6 +239,8 @@ def arg_parse():
                  '"name", "type", "period", and "limit" keys')
     parser.add_argument('--auto_playlist_fuzz_ratio', type=int,
             help='minimum Levenshtein similarity to add track to playlist')
+    parser.add_argument('--auto_playlist_subreddit_limit', type=int,
+            help='maximum number of subreddit posts to get')
     parser.add_argument('--reddit_client_id', type=str,
             help='Reddit API client ID')
     parser.add_argument('--reddit_client_secret', type=str,
