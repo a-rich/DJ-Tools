@@ -43,6 +43,7 @@ def update_auto_playlists(config):
             client_secret=config['SPOTIFY_CLIENT_SECRET'],
             redirect_uri=config['SPOTIFY_REDIRECT_URI'],
             scope='playlist-modify-public',
+            requests_timeout=10,
             cache_path=os.path.join(os.path.dirname(__file__),
                                     '.cache').replace(os.sep, '/')))
 
@@ -102,19 +103,18 @@ def get_subreddit_posts(spotify, reddit, subreddit, config):
                  'rising': sub.rising,
                  'controversial': sub.controversial}
     try:
-        submissions = list(sub_funcs[subreddit['type']](limit=None,
+        submissions = list(sub_funcs[subreddit['type']](limit=500,
                 time_filter=subreddit['period']))
         logger.info(f'"r/{subreddit["name"]}" has {len(submissions)} ' \
                     f"{subreddit['type']} posts for the {subreddit['period']}")
     except TypeError:
-        submissions = list(sub_funcs[subreddit['type']](limit=None))
+        submissions = list(sub_funcs[subreddit['type']](limit=500))
         logger.info(f'"r/{subreddit["name"]}" has {len(submissions)} ' \
                     f"{subreddit['type']} posts")
 
     new_tracks = []
     payload = [submissions,
               [spotify] * len(submissions),
-              [subreddit['limit']] * len(submissions),
               [config['AUTO_PLAYLIST_FUZZ_RATIO']] * len(submissions)]
     with ThreadPoolExecutor(max_workers=8) as executor:
         new_tracks = list(tqdm(executor.map(process, *payload),
@@ -125,21 +125,23 @@ def get_subreddit_posts(spotify, reddit, subreddit, config):
     return new_tracks
 
 
-def process(submission, spotify, limit, threshold):
+def process(submission, spotify, threshold):
     """Worker thread process.
 
     Args:
         submission (praw.Submission): Submission object
+        spotify (spotipy.Spotify): Spotify API client
+        threshold (float): minimum Levenshtein distance
 
     Returns:
         ([TrackObject, ...]): list of one or more TrackObjects
     """
     if 'spotify.com/track/' in submission.url:
         return (submission.url, submission.title)
-    return fuzzy_match(spotify, submission.title, limit, threshold)
+    return fuzzy_match(spotify, submission.title, threshold)
 
 
-def fuzzy_match(spotify, title, limit, threshold):
+def fuzzy_match(spotify, title, threshold):
     """Attempts to split submission title into two parts
     (track name, artist(s)), search Spotify for tracks that have an
     'artist' field that matches one of these parts and a 'name' field that
@@ -148,7 +150,6 @@ def fuzzy_match(spotify, title, limit, threshold):
     Args:
         spotify (spotipy.Spotify): spotify client
         title (str): submission title
-        limit (int): maximum number of Spotify tracks to extract
 
     Returns:
         ([(str, str), ...]): list of Spotify track ('id', 'name') tuples
@@ -159,7 +160,7 @@ def fuzzy_match(spotify, title, limit, threshold):
 
     results = spotify.search(
             q=f"{title.replace(' ', '+')}+{artist.replace(' ', '+')}",
-            type='track', limit=limit)
+            type='track', limit=50)
 
     match = filter_results(spotify, results, threshold, title, artist)
     if match:
