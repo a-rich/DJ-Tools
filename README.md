@@ -33,7 +33,7 @@
     - `spotify.playlist_builder`
         - [x] subreddit-specific `playlist_builder` configuration
         - [ ] aiohttp refactor
-        - [ ] parameterize subreddit result limit
+        - [x] parameterize subreddit result limit
     - `utils.generate_genre_playlists`
         - [x] parameterize `Pure <genre>` playlist generation logic
     - `utils.randomize_tracks`
