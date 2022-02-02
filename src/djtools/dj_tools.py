@@ -82,7 +82,7 @@ def main():
 
     # run 'sync' package operations if any of the options to do so are present
     # in the 'SYNC_OPERATIONS' config option
-    for operation in config['SYNC_OPERATIONS']:
+    for operation in config.get('SYNC_OPERATIONS', []):
         func = SYNC_OPERATIONS.get(operation)
         if not func:
             logger.warning(f'Invalid sync operation "{operation}"')
@@ -95,10 +95,7 @@ def main():
             logger.error(f'{operation} failed: {exc}\n{format_exc()}')
 
     # attempt uploading today's log file
-    try:
-        upload_log(config, log_file)
-    except Exception:
-        logger.error(f'Unable to upload log "{log_file}":\n{format_exc()}')
+    upload_log(config, log_file)
 
 
 if __name__ == '__main__':

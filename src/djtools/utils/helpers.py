@@ -18,6 +18,13 @@ def upload_log(config, log_file):
         config (dict): configuration object
         log_file (str): path to log file
     """
+    try:
+        aws_profile = config['AWS_PROFILE']
+    except KeyError:
+        logger.warn('Logs cannot be backed up without specifying the config ' \
+                    'option AWS_PROFILE')
+        return
+
     dst = 's3://dj.beatcloud.com/dj/logs/' \
           f'{config["USER"]}/{os.path.basename(log_file)}'
     cmd = f'aws s3 cp {log_file} {dst}'

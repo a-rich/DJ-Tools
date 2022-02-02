@@ -27,15 +27,22 @@ def get_genres(config):
         config (dict): configuration object
 
     Raises:
+        KeyError: 'USB_PATH' must be configured
         FileNotFoundError: 'USB_PATH' must exist
     """
-    if not os.path.exists(config['USB_PATH']):
-        raise FileNotFoundError(f'{config["USB_PATH"]} does not exist!')
+    try:
+        usb_path = config['USB_PATH']
+    except KeyError:
+        raise KeyError('Using the get_genres module requires the config ' \
+                       'option USB_PATH') from KeyError
 
-    files = set(glob(os.path.join(config['USB_PATH'], 'DJ Music',
+    if not os.path.exists(usb_path):
+        raise FileNotFoundError(f'{usb_path} does not exist!')
+
+    files = set(glob(os.path.join(usb_path, 'DJ Music',
                                   '**/*.mp3').replace(os.sep, '/'),
                      recursive=True))
-    exclude = set(config['GENRE_EXCLUDE_DIRS'])
+    exclude = set(config.get('GENRE_EXCLUDE_DIRS', []))
     files = [x for x in files if not any((y in x for y in exclude))]
 
     payload = [files, [config] * len(files)]
@@ -47,7 +54,7 @@ def get_genres(config):
                                    key=itemgetter(0)):
         group = list(group)
         logger.info(f'{group_id}: {len(group)}')
-        if config['VERBOSITY'] > 0:
+        if config.get('VERBOSITY', 0) > 0:
             for track in group:
                 logger.info(f'\t{track}')
 
@@ -66,7 +73,7 @@ def get_tag(_file, config):
     """
     genres = set(map(clean_tag,
                      str(getattr(eyed3.load(_file).tag, 'genre')).split(
-                            config['GENRE_TAG_DELIMITER'])))
+                            config.get('GENRE_TAG_DELIMITER', '/'))))
     track = os.path.basename(_file)
 
     return list(zip(genres, [track] * len(genres)))
