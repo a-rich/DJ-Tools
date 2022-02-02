@@ -35,6 +35,7 @@ def build_config():
         Exception: 'config.json' must be a proper JSON file
         ValueError: 'config.json' must have required options
         ValueError: AWS_PROFILE must be specified if performing sync operations
+        KeyError: 'AWS_PROFILE' must be configured
         ValueError: include / exclude directories cannot both be specified
                     simultaneously
 
@@ -61,30 +62,8 @@ def build_config():
         logger.info(f'Args: {args}')
         config.update(args)
 
-    # identify any required keys that are absent from the config
-    config_template = ["USB_PATH", "AWS_PROFILE", "UPLOAD_INCLUDE_DIRS",
-            "UPLOAD_EXCLUDE_DIRS", "DOWNLOAD_INCLUDE_DIRS",
-            "DOWNLOAD_EXCLUDE_DIRS", "AWS_USE_DATE_MODIFIED",
-            "XML_IMPORT_USER", "XML_PATH", "USER", "DISCORD_URL", "YOUTUBE_DL",
-            "YOUTUBE_DL_URL", "RANDOMIZE_TRACKS", "RANDOMIZE_TRACKS_PLAYLISTS",
-            "SYNC_OPERATIONS", "GET_GENRES", "GENRE_EXCLUDE_DIRS",
-            "GENRE_TAG_DELIMITER", "GENERATE_GENRE_PLAYLISTS",
-            "GENERATE_GENRE_PLAYLISTS_PURE",
-            "GENERATE_GENRE_PLAYLISTS_REMAINDER", "SPOTIFY_CHECK_PLAYLISTS",
-            "SPOTIFY_PLAYLISTS_CHECK", "SPOTIFY_PLAYLISTS_CHECK_FUZZ_RATIO",
-            "SPOTIFY_CLIENT_ID", "SPOTIFY_CLIENT_SECRET",
-            "SPOTIFY_REDIRECT_URI", "SPOTIFY_USERNAME", "AUTO_PLAYLIST_UPDATE",
-            "AUTO_PLAYLIST_SUBREDDITS", "AUTO_PLAYLIST_FUZZ_RATIO",
-            "REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET", "REDDIT_USER_AGENT",
-            "VERBOSITY", "LOG_LEVEL"]
-    missing_config_keys = [k for k in config_template if k not in config]
-    if missing_config_keys:
-        msg = f'Config does not contain required keys: {missing_config_keys}'
-        logger.critical(msg)
-        raise ValueError(msg)
-
     # if doing SYNC_OPERATIONS...
-    if config['SYNC_OPERATIONS']:
+    if config.get('SYNC_OPERATIONS'):
         # ensure AWS_PROFILE is set
         if not config.get('AWS_PROFILE'):
             msg = 'Config must include AWS_PROFILE if performing sync ' \
@@ -93,18 +72,25 @@ def build_config():
             raise ValueError(msg)
 
         # warn user if uploading music without a Discord webhook URL to notify
-        # other beatcloud users about new tracks
-        if 'upload_music' in config['SYNC_OPERATIONS'] \
-                and not config['DISCORD_URL']:
+        # other beatcloud users about new track
+        if 'upload_music' in config.get('SYNC_OPERATIONS', []) \
+                and not config.get('DISCORD_URL'):
             logger.warning('DISCORD_URL is not configured...set this for ' \
                         '"new music" discord messages!')
 
-    os.environ['AWS_PROFILE'] = config['AWS_PROFILE']
+    if config.get('SYNC_OPERATIONS') or config.get('SPOTIFY_CHECK_PLAYLISTS'):
+        try:
+            os.environ['AWS_PROFILE'] = config['AWS_PROFILE']
+        except KeyError:
+            raise KeyError('Using the sync_operations and/or ' \
+                           'playlist_checker modules requires the config ' \
+                           'option AWS_PROFILE') from KeyError
 
     # ensure include / exclude folders are not both set at the same time
-    if (config['UPLOAD_INCLUDE_DIRS'] and config['UPLOAD_EXCLUDE_DIRS']) \
-            or (config['DOWNLOAD_INCLUDE_DIRS'] and
-                config['DOWNLOAD_EXCLUDE_DIRS']):
+    if (config.get('UPLOAD_INCLUDE_DIRS') and 
+        config.get('UPLOAD_EXCLUDE_DIRS')) \
+            or (config.get('DOWNLOAD_INCLUDE_DIRS') and
+                config.get('DOWNLOAD_EXCLUDE_DIRS')):
         msg = 'Config must neither contain (a) both UPLOAD_INCLUDE_DIRS and ' \
               'UPLOAD_EXCLUDE_DIRS or (b) both DOWNLOAD_INCLUDE_DIRS and' \
               'DOWNLOAD_EXCLUDE_DIRS'
@@ -128,11 +114,11 @@ def build_config():
     # if downloading another user's XML and that user doesn't have an entry in
     # 'registered_users.json', display a warning and remove 'download_xml' from
     # SYNC_OPERATIONS
-    if 'download_xml' in config['SYNC_OPERATIONS'] and (
-            not config['XML_IMPORT_USER']
-            or config['XML_IMPORT_USER'] not in registered_users):
-        logger.warning('Unable to import from XML of unregistered user ' \
-                       f'"{config["XML_IMPORT_USER"]}"')
+    if 'download_xml' in config.get('SYNC_OPERATIONS', []) and (
+            not config.get('XML_IMPORT_USER')
+            or config.get('XML_IMPORT_USER') not in registered_users):
+        logger.warning('Unable to import from XML of unregistered ' \
+                       f'XML_IMPORT_USER "{config.get("XML_IMPORT_USER")}"')
         config['SYNC_OPERATIONS'].remove('download_xml')
 
     # if USER isn't set already, set it to the OS user
@@ -140,7 +126,7 @@ def build_config():
         config['USER'] = getpass.getuser()
 
     # enter USER into 'registered_users.json'
-    registered_users[config['USER']] = config['USB_PATH']
+    registered_users[config['USER']] = config.get('USB_PATH', None)
     with open(registered_users_path, 'w', encoding='utf-8') as _file:
         json.dump(registered_users, _file, indent=2)
 
@@ -238,6 +224,8 @@ def arg_parse():
                  '"name", "type", "period", and "limit" keys')
     parser.add_argument('--auto_playlist_fuzz_ratio', type=int,
             help='minimum Levenshtein similarity to add track to playlist')
+    parser.add_argument('--auto_playlist_subreddit_limit', type=int,
+            help='maximum number of subreddit posts to get')
     parser.add_argument('--reddit_client_id', type=str,
             help='Reddit API client ID')
     parser.add_argument('--reddit_client_secret', type=str,
