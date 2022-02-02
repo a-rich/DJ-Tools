@@ -33,7 +33,7 @@
     - `spotify.playlist_builder`
         - [x] subreddit-specific `playlist_builder` configuration
         - [ ] aiohttp refactor
-        - [ ] parameterize subreddit result limit
+        - [x] parameterize subreddit result limit
     - `utils.generate_genre_playlists`
         - [x] parameterize `Pure <genre>` playlist generation logic
     - `utils.randomize_tracks`
@@ -165,6 +165,7 @@ All configuration options may be overridden via command-line arguments of the sa
         {"name": "spacebass", "type": "top", "period": "week", "limit": 50}
     ],
     "AUTO_PLAYLIST_FUZZ_RATIO": 50,
+    "AUTO_PLAYLIST_SUBREDDIT_LIMIT": 500,
     "REDDIT_CLIENT_ID": "",
     "REDDIT_CLIENT_SECRET": "",
     "REDDIT_USER_AGENT": "",
@@ -205,6 +206,7 @@ All configuration options may be overridden via command-line arguments of the sa
 * `SPOTIFY_USERNAME`: Spotify username that will keep playlists automatically generated
 * `AUTO_PLAYLIST_SUBREDDITS`: list of subreddits from which tracks should be added to Spotify auto-playlist; each element is a dictionary with keys for subreddit's "name", "type", "period", and "limit"
 * `AUTO_PLAYLIST_FUZZ_RATIO`: the minimum Levenshtein similarity between a Spotify API track search result and a subreddit post title (if post is not directly a Spotify URL) to trigger the addition of that track to the corresponding Spotify auto-playlist
+* `AUTO_PLAYLIST_SUBREDDIT_LIMIT`: the maximum number of posts to retrieve from a subreddit
 * `REDDIT_CLIENT_ID`: client ID for registered Reddit API application
 * `REDDIT_CLIENT_SECRET`: client secret for registered Reddit API application
 * `REDDIT_USER_AGENT`: user-agent for registered Reddit API application
