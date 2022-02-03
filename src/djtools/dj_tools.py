@@ -82,7 +82,7 @@ def main():
 
     # run 'sync' package operations if any of the options to do so are present
     # in the 'SYNC_OPERATIONS' config option
-    for operation in config['SYNC_OPERATIONS']:
+    for operation in config.get('SYNC_OPERATIONS', []):
         func = SYNC_OPERATIONS.get(operation)
         if not func:
             logger.warning(f'Invalid sync operation "{operation}"')
