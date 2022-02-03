@@ -48,20 +48,26 @@ def get_spotify_tracks(config):
     Returns:
         (dict): Spotify track titles and artist names keyed by playlist name
     """
+    try:
+        spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(
+                client_id=config['SPOTIFY_CLIENT_ID'],
+                client_secret=config['SPOTIFY_CLIENT_SECRET'],
+                redirect_uri=config['SPOTIFY_REDIRECT_URI'],
+                scope='playlist-modify-public',
+                cache_path=os.path.join(os.path.dirname(__file__),
+                                        '.cache').replace(os.sep, '/')))
+    except KeyError:
+        raise KeyError('Using the playlist_checker module requires the ' \
+                       'following config options: SPOTIFY_CLIENT_ID, ' \
+                       'SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI') \
+                from KeyError 
 
-    spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(
-            client_id=config['SPOTIFY_CLIENT_ID'],
-            client_secret=config['SPOTIFY_CLIENT_SECRET'],
-            redirect_uri=config['SPOTIFY_REDIRECT_URI'],
-            scope='playlist-modify-public',
-            cache_path=os.path.join(os.path.dirname(__file__),
-                                    '.cache').replace(os.sep, '/')))
     playlist_ids = {key.lower(): value for key, value in json.load(
             open(os.path.join(os.path.dirname(os.path.dirname(__file__)),
                     'configs', 'playlist_checker.json').replace(os.sep, '/'),
                  encoding='utf-8')).items()}
     playlist_tracks = {}
-    for playlist in config["SPOTIFY_PLAYLISTS_CHECK"]:
+    for playlist in config.get('SPOTIFY_PLAYLISTS_CHECK', []):
         playlist_id = playlist_ids.get(playlist.lower())
         if not playlist_id:
             logger.error(f'{playlist} not in playlist_checker.json')
@@ -71,7 +77,7 @@ def get_spotify_tracks(config):
         playlist_tracks[playlist] = get_playlist_tracks(spotify, playlist_id)
         logger.info(f'Got {len(playlist_tracks[playlist])} tracks')
 
-        if config['VERBOSITY'] > 0:
+        if config.get('VERBOSITY', 0) > 0:
             for track in playlist_tracks[playlist]:
                 logger.info(f'\t{track}')
 
@@ -164,8 +170,9 @@ def find_matches(spotify_tracks, beatcloud_tracks, config):
     _product = list(product(spotify_tracks, beatcloud_tracks))
     _temp, beatcloud_tracks = zip(*_product)
     spotify_playlists, spotify_tracks = zip(*_temp)
+    fuzz_ratio = config.get('SPOTIFY_PLAYLISTS_CHECK_FUZZ_RATIO', 80)
     payload = [spotify_playlists, spotify_tracks, beatcloud_tracks,
-               [config['SPOTIFY_PLAYLISTS_CHECK_FUZZ_RATIO']] * len(_product)]
+               [fuzz_ratio] * len(_product)]
     with ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as executor:
         matches = list(filter(None,
                 tqdm(executor.map(compute_distance, *payload),
