@@ -136,6 +136,7 @@ def download_xml(config):
         config (dict): configuration object
 
     Raises:
+        KeyError: 'XML_PATH' must be configured
         FileNotFoundError: XML destination directory must exist
     """
     try:

@@ -51,6 +51,7 @@ def generate_genre_playlists(config):
         config (dict): configuration object
 
     Raises:
+        KeyError: 'XML_PATH' must be configured
         FileNotFoundError: 'XML_PATH' must exist
     """
     try:

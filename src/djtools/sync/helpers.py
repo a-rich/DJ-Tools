@@ -154,6 +154,9 @@ def rewrite_xml(config):
 
     Args:
         config (dict): configuration object
+
+    Raises:
+        KeyError: 'XML_PATH' must be configured
     """
     try:
         xml_path = config['XML_PATH']
