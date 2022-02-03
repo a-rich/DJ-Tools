@@ -44,6 +44,10 @@ def get_spotify_tracks(config):
 
     Args:
         config (dict): configuration object
+    
+    Raises:
+        KeyError: 'SPOTIFY_CLIENT_ID', 'SPOTIFY_CLIENT_SECRET', and
+                  'SPOTIFY_REDIRECT_URI' must be configured
 
     Returns:
         (dict): Spotify track titles and artist names keyed by playlist name

@@ -37,6 +37,13 @@ def update_auto_playlists(config):
 
     Args:
         config (dict): configuration object
+    
+    Raises:
+        KeyError: 'SPOTIFY_CLIENT_ID', 'SPOTIFY_CLIENT_SECRET', and
+                  'SPOTIFY_REDIRECT_URI' must be configured
+        KeyError: 'REDDIT_CLIENT_ID', 'REDDIT_CLIENT_SECRET', and
+                  'REDDIT_USER_AGENT' must be configured
+        KeyError: 'SPOTIFY_USERNAME' must be configured
     """
     try:
         spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(
