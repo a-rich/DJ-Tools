@@ -27,6 +27,7 @@ def get_genres(config):
         config (dict): configuration object
 
     Raises:
+        KeyError: 'USB_PATH' must be configured
         FileNotFoundError: 'USB_PATH' must exist
     """
     try:
