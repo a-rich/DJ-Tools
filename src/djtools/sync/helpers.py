@@ -88,17 +88,18 @@ def parse_sync_command(_cmd, config, upload=False):
     Returns:
         str: fully built 'aws s3 sync' command
     """
-    if (upload and config['UPLOAD_INCLUDE_DIRS']) or \
-            (not upload and config['DOWNLOAD_INCLUDE_DIRS']):
+    dirs = f'{"UP" if upload else "DOWN"}LOAD_EXCLUDE_DIRS'
+    if (upload and config.get('UPLOAD_INCLUDE_DIRS')) or \
+            (not upload and config.get('DOWNLOAD_INCLUDE_DIRS')):
         _cmd.extend(['--exclude', '*'])
-        for _dir in config[f'{"UP" if upload else "DOWN"}LOAD_INCLUDE_DIRS']:
+        for _dir in config.get(dirs, []):
             _cmd.extend(['--include', f'{_dir}/*'])
-    if (upload and config['UPLOAD_EXCLUDE_DIRS']) or \
-            (not upload and config['DOWNLOAD_EXCLUDE_DIRS']):
+    if (upload and config.get('UPLOAD_EXCLUDE_DIRS')) or \
+            (not upload and config.get('DOWNLOAD_EXCLUDE_DIRS')):
         _cmd.extend(['--include', '*'])
-        for _dir in config[f'{"UP" if upload else "DOWN"}LOAD_EXCLUDE_DIRS']:
+        for _dir in config.get(dirs, []):
             _cmd.extend(['--exclude', f'{_dir}/*'])
-    if not config['AWS_USE_DATE_MODIFIED']:
+    if not config.get('AWS_USE_DATE_MODIFIED'):
         _cmd.append('--size-only')
     if config.get('DRYRUN'):
         _cmd.append('--dryrun')
@@ -154,6 +155,13 @@ def rewrite_xml(config):
     Args:
         config (dict): configuration object
     """
+    try:
+        xml_path = config['XML_PATH']
+    except KeyError:
+        raise KeyError("Using the sync_operations module's download_xml " \
+                       "function requires the config option XML_PATH") \
+                from KeyError
+
     with open(os.path.join(os.path.dirname(os.path.dirname(__file__)),
                            'configs', 'registered_users.json').replace(os.sep,
                                                                        '/'),
@@ -162,7 +170,7 @@ def rewrite_xml(config):
         src = registered_users[config['XML_IMPORT_USER']].strip('/')
         dst = registered_users[config['USER']].strip('/')
 
-    xml_path = os.path.join(os.path.dirname(config['XML_PATH']),
+    xml_path = os.path.join(os.path.dirname(xml_path),
             f'{config["XML_IMPORT_USER"]}_rekordbox.xml').replace(os.sep, '/')
     soup = BeautifulSoup(open(xml_path, 'r', encoding='utf-8').read(), 'xml')
     for track in soup.find_all('TRACK'):
