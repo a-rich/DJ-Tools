@@ -35,6 +35,7 @@ def build_config():
         Exception: 'config.json' must be a proper JSON file
         ValueError: 'config.json' must have required options
         ValueError: AWS_PROFILE must be specified if performing sync operations
+        KeyError: 'AWS_PROFILE' must be configured
         ValueError: include / exclude directories cannot both be specified
                     simultaneously
 
