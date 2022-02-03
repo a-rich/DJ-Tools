@@ -85,7 +85,7 @@ def build_config():
         raise ValueError(msg)
 
     # if doing SYNC_OPERATIONS...
-    if config['SYNC_OPERATIONS']:
+    if config.get('SYNC_OPERATIONS'):
         # ensure AWS_PROFILE is set
         if not config.get('AWS_PROFILE'):
             msg = 'Config must include AWS_PROFILE if performing sync ' \
@@ -94,18 +94,25 @@ def build_config():
             raise ValueError(msg)
 
         # warn user if uploading music without a Discord webhook URL to notify
-        # other beatcloud users about new tracks
-        if 'upload_music' in config['SYNC_OPERATIONS'] \
-                and not config['DISCORD_URL']:
+        # other beatcloud users about new track
+        if 'upload_music' in config.get('SYNC_OPERATIONS', []) \
+                and not config.get('DISCORD_URL'):
             logger.warning('DISCORD_URL is not configured...set this for ' \
                         '"new music" discord messages!')
 
-    os.environ['AWS_PROFILE'] = config['AWS_PROFILE']
+    if config.get('SYNC_OPERATIONS') or config.get('SPOTIFY_CHECK_PLAYLISTS'):
+        try:
+            os.environ['AWS_PROFILE'] = config['AWS_PROFILE']
+        except KeyError:
+            raise KeyError('Using the sync_operations and/or ' \
+                           'playlist_checker modules requires the config ' \
+                           'option AWS_PROFILE') from KeyError
 
     # ensure include / exclude folders are not both set at the same time
-    if (config['UPLOAD_INCLUDE_DIRS'] and config['UPLOAD_EXCLUDE_DIRS']) \
-            or (config['DOWNLOAD_INCLUDE_DIRS'] and
-                config['DOWNLOAD_EXCLUDE_DIRS']):
+    if (config.get('UPLOAD_INCLUDE_DIRS') and 
+        config.get('UPLOAD_EXCLUDE_DIRS')) \
+            or (config.get('DOWNLOAD_INCLUDE_DIRS') and
+                config.get('DOWNLOAD_EXCLUDE_DIRS')):
         msg = 'Config must neither contain (a) both UPLOAD_INCLUDE_DIRS and ' \
               'UPLOAD_EXCLUDE_DIRS or (b) both DOWNLOAD_INCLUDE_DIRS and' \
               'DOWNLOAD_EXCLUDE_DIRS'
@@ -129,11 +136,11 @@ def build_config():
     # if downloading another user's XML and that user doesn't have an entry in
     # 'registered_users.json', display a warning and remove 'download_xml' from
     # SYNC_OPERATIONS
-    if 'download_xml' in config['SYNC_OPERATIONS'] and (
-            not config['XML_IMPORT_USER']
-            or config['XML_IMPORT_USER'] not in registered_users):
+    if 'download_xml' in config.get('SYNC_OPERATIONS', []) and (
+            not config.get('XML_IMPORT_USER')
+            or config.get('XML_IMPORT_USER') not in registered_users):
         logger.warning('Unable to import from XML of unregistered user ' \
-                       f'"{config["XML_IMPORT_USER"]}"')
+                       f'"{config.get("XML_IMPORT_USER")}"')
         config['SYNC_OPERATIONS'].remove('download_xml')
 
     # if USER isn't set already, set it to the OS user
@@ -141,7 +148,7 @@ def build_config():
         config['USER'] = getpass.getuser()
 
     # enter USER into 'registered_users.json'
-    registered_users[config['USER']] = config['USB_PATH']
+    registered_users[config['USER']] = config.get('USB_PATH', None)
     with open(registered_users_path, 'w', encoding='utf-8') as _file:
         json.dump(registered_users, _file, indent=2)
 
