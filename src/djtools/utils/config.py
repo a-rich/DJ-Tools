@@ -62,29 +62,6 @@ def build_config():
         logger.info(f'Args: {args}')
         config.update(args)
 
-    # identify any required keys that are absent from the config
-    config_template = ["USB_PATH", "AWS_PROFILE", "UPLOAD_INCLUDE_DIRS",
-            "UPLOAD_EXCLUDE_DIRS", "DOWNLOAD_INCLUDE_DIRS",
-            "DOWNLOAD_EXCLUDE_DIRS", "AWS_USE_DATE_MODIFIED",
-            "XML_IMPORT_USER", "XML_PATH", "USER", "DISCORD_URL", "YOUTUBE_DL",
-            "YOUTUBE_DL_URL", "RANDOMIZE_TRACKS", "RANDOMIZE_TRACKS_PLAYLISTS",
-            "SYNC_OPERATIONS", "GET_GENRES", "GENRE_EXCLUDE_DIRS",
-            "GENRE_TAG_DELIMITER", "GENERATE_GENRE_PLAYLISTS",
-            "GENERATE_GENRE_PLAYLISTS_PURE",
-            "GENERATE_GENRE_PLAYLISTS_REMAINDER", "SPOTIFY_CHECK_PLAYLISTS",
-            "SPOTIFY_PLAYLISTS_CHECK", "SPOTIFY_PLAYLISTS_CHECK_FUZZ_RATIO",
-            "SPOTIFY_CLIENT_ID", "SPOTIFY_CLIENT_SECRET",
-            "SPOTIFY_REDIRECT_URI", "SPOTIFY_USERNAME", "AUTO_PLAYLIST_UPDATE",
-            "AUTO_PLAYLIST_SUBREDDITS", "AUTO_PLAYLIST_FUZZ_RATIO",
-            "AUTO_PLAYLIST_SUBREDDIT_LIMIT", "REDDIT_CLIENT_ID",
-            "REDDIT_CLIENT_SECRET", "REDDIT_USER_AGENT", "VERBOSITY",
-            "LOG_LEVEL"]
-    missing_config_keys = [k for k in config_template if k not in config]
-    if missing_config_keys:
-        msg = f'Config does not contain required keys: {missing_config_keys}'
-        logger.critical(msg)
-        raise ValueError(msg)
-
     # if doing SYNC_OPERATIONS...
     if config.get('SYNC_OPERATIONS'):
         # ensure AWS_PROFILE is set
