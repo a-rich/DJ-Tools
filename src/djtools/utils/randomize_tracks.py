@@ -25,16 +25,30 @@ def randomize_tracks(config):
         config (dict): configuration object
 
     Raises:
+        KeyError: 'USB_PATH' must be configured
+        KeyError: 'XML_PATH' must be configured
         FileNotFoundError: 'USB_PATH' must exist
         FileNotFoundError: 'XML_PATH' must exist
     """
-    if not os.path.exists(config['USB_PATH']):
-        raise FileNotFoundError(f'{config["USB_PATH"]} does not exist!')
+    try:
+        usb_path = config['USB_PATH']
+    except KeyError:
+        raise KeyError('Using the get_genres module requires the config ' \
+                       'option USB_PATH') from KeyError
+    
+    try:
+        xml_path = config['XML_PATH']
+    except KeyError:
+        raise KeyError('Using the get_genres module requires the config ' \
+                       'option XML_PATH') from KeyError
 
-    if not os.path.exists(config['XML_PATH']):
-        raise FileNotFoundError(f'{config["XML_PATH"]} does not exist!')
+    if not os.path.exists(usb_path):
+        raise FileNotFoundError(f'{usb_path} does not exist!')
 
-    with open(config['XML_PATH'], 'r', encoding='utf-8') as _file:
+    if not os.path.exists(xml_path):
+        raise FileNotFoundError(f'{xml_path} does not exist!')
+
+    with open(xml_path, 'r', encoding='utf-8') as _file:
         soup = BeautifulSoup(_file.read(), 'xml')
 
     lookup = {}
@@ -45,7 +59,7 @@ def randomize_tracks(config):
 
     seen_tracks = set()
     randomized_tracks = []
-    for playlist in config['RANDOMIZE_TRACKS_PLAYLISTS']:
+    for playlist in config.get('RANDOMIZE_TRACKS_PLAYLISTS', []):
         try:
             tracks = get_playlist_track_locations(soup, playlist, seen_tracks)
         except LookupError as exc:
@@ -63,7 +77,7 @@ def randomize_tracks(config):
                         desc=f'Randomizing {len(randomized_tracks)} tracks'))
 
     wrap_playlists(soup, randomized_tracks)
-    _dir, _file = os.path.split(config['XML_PATH'])
+    _dir, _file = os.path.split(xml_path)
     auto_xml_path = os.path.join(_dir, f'auto_{_file}').replace(os.sep, '/')
     with open(auto_xml_path, mode='wb', encoding=soup.orignal_encoding) as \
             _file:
