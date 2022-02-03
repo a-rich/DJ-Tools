@@ -26,12 +26,19 @@ def upload_music(config):
         config (dict): configuration object
 
     Raises:
+        KeyError: 'USB_PATH' must be configured
         FileNotFoundError: 'USB_PATH' must exist
     """
-    if not os.path.exists(config['USB_PATH']):
-        raise FileNotFoundError(f'{config["USB_PATH"]} does not exist!')
+    try:
+        usb_path = config['USB_PATH']
+    except KeyError:
+        raise KeyError('Using the sync_operations module requires the ' \
+                       'config option USB_PATH') from KeyError
 
-    glob_path = Path(os.path.join(config['USB_PATH'],
+    if not os.path.exists(usb_path):
+        raise FileNotFoundError(f'{usb_path} does not exist!')
+
+    glob_path = Path(os.path.join(usb_path,
                                   'DJ Music').replace(os.sep, '/'))
     hidden_files = {str(p) for p in glob_path.rglob(
             os.path.join('**', '.*.*').replace(os.sep, '/'))}
@@ -42,10 +49,10 @@ def upload_music(config):
             os.remove(_file)
 
     logger.info('Syncing track collection...')
-    src = os.path.join(config['USB_PATH'], 'DJ Music').replace(os.sep, '/')
+    src = os.path.join(usb_path, 'DJ Music').replace(os.sep, '/')
     cmd = ['aws', 's3', 'sync', src, 's3://dj.beatcloud.com/dj/music/']
 
-    if config['DISCORD_URL'] and not config.get('DRYRUN'):
+    if config.get('DISCORD_URL') and not config.get('DRYRUN'):
         webhook(config['DISCORD_URL'],
                 content=run_sync(parse_sync_command(cmd, config, upload=True)))
     else:
@@ -59,14 +66,21 @@ def upload_xml(config):
         config (dict): configuration object
 
     Raises:
+        KeyError: 'XML_PATH' must be configured
         FileNotFoundError: 'XML_PATH' file must exist
     """
-    if not os.path.exists(config['XML_PATH']):
-        raise FileNotFoundError(f'{config["XML_PATH"]} does not exist!')
+    try:
+        xml_path = config['XML_PATH']
+    except KeyError:
+        raise KeyError('Using the sync_operations module requires the ' \
+                       'config option XML_PATH') from KeyError
+
+    if not os.path.exists(xml_path):
+        raise FileNotFoundError(f'{xml_path} does not exist!')
 
     logger.info(f"Uploading {config['USER']}'s rekordbox.xml...")
     dst = f's3://dj.beatcloud.com/dj/xml/{config["USER"]}/'
-    cmd = f'aws s3 cp {config["XML_PATH"]} {dst}'
+    cmd = f'aws s3 cp {xml_path} {dst}'
     logger.info(cmd)
     os.system(cmd)
 
@@ -81,12 +95,19 @@ def download_music(config):
         config (dict): configuration object
 
     Raises:
+        KeyError: 'USB_PATH' must be configured
         FileNotFoundError: 'USB_PATH' must exist
     """
-    if not os.path.exists(config['USB_PATH']):
-        raise FileNotFoundError(f'{config["USB_PATH"]} does not exist!')
+    try:
+        usb_path = config['USB_PATH']
+    except KeyError:
+        raise KeyError('Using the sync_operations module requires the ' \
+                       'config option USB_PATH') from KeyError
+    
+    if not os.path.exists(usb_path):
+        raise FileNotFoundError(f'{usb_path} does not exist!')
 
-    dest = os.path.join(config['USB_PATH'], 'DJ Music').replace(os.sep, '/')
+    dest = os.path.join(usb_path, 'DJ Music').replace(os.sep, '/')
     glob_path = Path(dest)
     old = {str(p) for p in glob_path.rglob(
             os.path.join('**', '*.*').replace(os.sep, '/'))}
@@ -117,8 +138,14 @@ def download_xml(config):
     Raises:
         FileNotFoundError: XML destination directory must exist
     """
+    try:
+        xml_path = config['XML_PATH']
+    except KeyError:
+        raise KeyError('Using the get_genres module requires the config ' \
+                       'option XML_PATH') from KeyError
+
     logger.info('Syncing remote rekordbox.xml...')
-    xml_dir = os.path.dirname(config['XML_PATH'])
+    xml_dir = os.path.dirname(xml_path)
     make_dirs(xml_dir)
     _file = f'{config["XML_IMPORT_USER"]}_rekordbox.xml'
     _file = os.path.join(xml_dir, _file).replace(os.sep, '/')
