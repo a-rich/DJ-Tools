@@ -25,25 +25,14 @@ def randomize_tracks(config):
         config (dict): configuration object
 
     Raises:
-        KeyError: 'USB_PATH' must be configured
         KeyError: 'XML_PATH' must be configured
-        FileNotFoundError: 'USB_PATH' must exist
         FileNotFoundError: 'XML_PATH' must exist
     """
-    try:
-        usb_path = config['USB_PATH']
-    except KeyError:
-        raise KeyError('Using the get_genres module requires the config ' \
-                       'option USB_PATH') from KeyError
-    
     try:
         xml_path = config['XML_PATH']
     except KeyError:
         raise KeyError('Using the get_genres module requires the config ' \
                        'option XML_PATH') from KeyError
-
-    if not os.path.exists(usb_path):
-        raise FileNotFoundError(f'{usb_path} does not exist!')
 
     if not os.path.exists(xml_path):
         raise FileNotFoundError(f'{xml_path} does not exist!')
