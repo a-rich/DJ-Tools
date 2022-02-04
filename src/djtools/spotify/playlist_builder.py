@@ -77,8 +77,13 @@ def update_auto_playlists(config):
             subreddit_playlist_ids = json.load(_file)
     else:
         subreddit_playlist_ids = {}
+    
+    if not config.get('AUTO_PLAYLIST_SUBREDDITS'):
+        logger.warn('Using the playlist_builder module requires the config' \
+                    'option AUTO_PLAYLIST_SUBREDDITS')
+        return
 
-    for subreddit in config.get('AUTO_PLAYLIST_SUBREDDITS', []):
+    for subreddit in config['AUTO_PLAYLIST_SUBREDDITS']:
         playlist_id = subreddit_playlist_ids.get(subreddit['name'])
         tracks = get_subreddit_posts(spotify, reddit, subreddit,
                                      config)

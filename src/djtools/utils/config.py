@@ -117,8 +117,8 @@ def build_config():
     if 'download_xml' in config.get('SYNC_OPERATIONS', []) and (
             not config.get('XML_IMPORT_USER')
             or config.get('XML_IMPORT_USER') not in registered_users):
-        logger.warning('Unable to import from XML of unregistered user ' \
-                       f'"{config.get("XML_IMPORT_USER")}"')
+        logger.warning('Unable to import from XML of unregistered ' \
+                       f'XML_IMPORT_USER "{config.get("XML_IMPORT_USER")}"')
         config['SYNC_OPERATIONS'].remove('download_xml')
 
     # if USER isn't set already, set it to the OS user

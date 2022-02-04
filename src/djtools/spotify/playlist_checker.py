@@ -27,6 +27,11 @@ def check_playlists(config):
         config (dict): configuration object
     """
     spotify_tracks = get_spotify_tracks(config)
+    if not spotify_tracks:
+        logger.warn('There are no Spotify tracks; make sure ' \
+                    'SPOTIFY_PLAYLISTS_CHECK has one or more keys from ' \
+                    '"playlist_checker.json"')
+        return
     beatcloud_tracks = get_beatcloud_tracks()
     matches = find_matches(spotify_tracks, beatcloud_tracks, config)
 

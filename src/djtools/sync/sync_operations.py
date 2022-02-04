@@ -36,7 +36,7 @@ def upload_music(config):
                        'config option USB_PATH') from KeyError
 
     if not os.path.exists(usb_path):
-        raise FileNotFoundError(f'{usb_path} does not exist!')
+        raise FileNotFoundError(f'USB_PATH "{usb_path}" does not exist!')
 
     glob_path = Path(os.path.join(usb_path,
                                   'DJ Music').replace(os.sep, '/'))
@@ -72,11 +72,12 @@ def upload_xml(config):
     try:
         xml_path = config['XML_PATH']
     except KeyError:
-        raise KeyError('Using the sync_operations module requires the ' \
-                       'config option XML_PATH') from KeyError
+        raise KeyError('Using the upload_xml mode of the sync_operations ' \
+                       'module requires the config option XML_PATH') \
+                from KeyError
 
     if not os.path.exists(xml_path):
-        raise FileNotFoundError(f'{xml_path} does not exist!')
+        raise FileNotFoundError(f'XML_PATH "{xml_path}" does not exist!')
 
     logger.info(f"Uploading {config['USER']}'s rekordbox.xml...")
     dst = f's3://dj.beatcloud.com/dj/xml/{config["USER"]}/'
@@ -105,7 +106,7 @@ def download_music(config):
                        'config option USB_PATH') from KeyError
     
     if not os.path.exists(usb_path):
-        raise FileNotFoundError(f'{usb_path} does not exist!')
+        raise FileNotFoundError(f'USB_PATH "{usb_path}" does not exist!')
 
     dest = os.path.join(usb_path, 'DJ Music').replace(os.sep, '/')
     glob_path = Path(dest)
@@ -142,8 +143,9 @@ def download_xml(config):
     try:
         xml_path = config['XML_PATH']
     except KeyError:
-        raise KeyError('Using the get_genres module requires the config ' \
-                       'option XML_PATH') from KeyError
+        raise KeyError('Using the download_xml mode of the sync_operations ' \
+                       'module requires the config option XML_PATH') \
+                from KeyError
 
     logger.info('Syncing remote rekordbox.xml...')
     xml_dir = os.path.dirname(xml_path)
