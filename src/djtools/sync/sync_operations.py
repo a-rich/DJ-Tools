@@ -32,8 +32,9 @@ def upload_music(config):
     try:
         usb_path = config['USB_PATH']
     except KeyError:
-        raise KeyError('Using the sync_operations module requires the ' \
-                       'config option USB_PATH') from KeyError
+        raise KeyError('Using the upload_music mode of the sync_operations ' \
+                       'module requires the config option USB_PATH') \
+                from KeyError
 
     if not os.path.exists(usb_path):
         raise FileNotFoundError(f'USB_PATH "{usb_path}" does not exist!')
@@ -102,8 +103,9 @@ def download_music(config):
     try:
         usb_path = config['USB_PATH']
     except KeyError:
-        raise KeyError('Using the sync_operations module requires the ' \
-                       'config option USB_PATH') from KeyError
+        raise KeyError('Using the download_music mode of the sync_operations ' \
+                       'module requires the config option USB_PATH') \
+                from KeyError
     
     if not os.path.exists(usb_path):
         raise FileNotFoundError(f'USB_PATH "{usb_path}" does not exist!')
