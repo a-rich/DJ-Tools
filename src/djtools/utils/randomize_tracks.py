@@ -37,6 +37,11 @@ def randomize_tracks(config):
     if not os.path.exists(xml_path):
         raise FileNotFoundError(f'{xml_path} does not exist!')
 
+    if not config.get('RANDOMIZE_TRACKS_PLAYLISTS'):
+        logger.warn('Using the randomize_tracks module requires the config ' \
+                    'option RANDOMIZE_TRACKS_PLAYLISTS')
+        return
+
     with open(xml_path, 'r', encoding='utf-8') as _file:
         soup = BeautifulSoup(_file.read(), 'xml')
 
