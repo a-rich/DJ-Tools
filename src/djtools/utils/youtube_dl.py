@@ -22,12 +22,26 @@ def youtube_dl(config):
         config (dict): configuration object
 
     Raises:
+        KeyError: 'USB_PATH' must be configured
+        KeyError: 'YOUTUBE_DL_URL' must be configured
         FileNotFoundError: 'USB_PATH' must exist
     """
-    if not os.path.exists(config['USB_PATH']):
-        raise FileNotFoundError(f'{config["USB_PATH"]} does not exist!')
+    try:
+        usb_path = config['USB_PATH']
+    except KeyError:
+        raise KeyError('Using the youtube_dl module requires the config ' \
+                       'option USB_PATH') from KeyError
+    
+    try:
+        youtube_dl_url = config['YOUTUBE_DL_URL']
+    except KeyError:
+        raise KeyError('Using the youtube_dl module requires the config ' \
+                       'option YOUTUBE_DL_URL') from KeyError
 
-    dest_path = os.path.join(config['USB_PATH'], 'DJ Music', 'New Music',
+    if not os.path.exists(usb_path):
+        raise FileNotFoundError(f'{usb_path} does not exist!')
+
+    dest_path = os.path.join(usb_path, 'DJ Music', 'New Music',
                              '').replace(os.sep, '/')
     if not os.path.exists(dest_path):
         make_dirs(dest_path)
@@ -43,8 +57,8 @@ def youtube_dl(config):
     }
 
     with ytdl.YoutubeDL(ydl_opts) as ydl:
-        logger.info(f'Downloading {config["YOUTUBE_DL_URL"]} to {dest_path}')
-        ydl.download([config['YOUTUBE_DL_URL']])
+        logger.info(f'Downloading {youtube_dl_url} to {dest_path}')
+        ydl.download([youtube_dl_url])
 
     for _file in os.listdir(dest_path):
         os.rename(os.path.join(dest_path, _file).replace(os.sep, '/'),

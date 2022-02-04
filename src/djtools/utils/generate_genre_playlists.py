@@ -51,15 +51,22 @@ def generate_genre_playlists(config):
         config (dict): configuration object
 
     Raises:
+        KeyError: 'XML_PATH' must be configured
         FileNotFoundError: 'XML_PATH' must exist
     """
-    if not os.path.exists(config['XML_PATH']):
-        raise FileNotFoundError(f'{config["XML_PATH"]} does not exist!')
+    try:
+        xml_path = config['XML_PATH']
+    except KeyError:
+        raise KeyError('Using the generate_genre_playlists module requires ' \
+                       'the config option XML_PATH') from KeyError
 
-    soup = BeautifulSoup(open(config['XML_PATH'], encoding='utf-8').read(),
+    if not os.path.exists(xml_path):
+        raise FileNotFoundError(f'{xml_path} does not exist!')
+
+    soup = BeautifulSoup(open(xml_path, encoding='utf-8').read(),
                          'xml')
-    tracks = get_track_genres(soup, config['GENRE_TAG_DELIMITER'],
-                              config['GENERATE_GENRE_PLAYLISTS_PURE'])
+    tracks = get_track_genres(soup, config.get('GENRE_TAG_DELIMITER', '/'),
+                              config.get('GENERATE_GENRE_PLAYLISTS_PURE', []))
     genres = set()
     with open(os.path.join(os.path.dirname(os.path.dirname(__file__)),
                            'configs', 'generate_genre_playlists.json').replace(
@@ -68,14 +75,14 @@ def generate_genre_playlists(config):
         playlists = create_playlists(soup, json.load(_file), genres,
                                      top_level=True)
 
-    if config['GENERATE_GENRE_PLAYLISTS_REMAINDER']:
+    if config.get('GENERATE_GENRE_PLAYLISTS_REMAINDER'):
         add_other(soup, config['GENERATE_GENRE_PLAYLISTS_REMAINDER'], genres,
                   tracks, playlists)
 
     add_tracks(soup, playlists, tracks)
     wrap_playlists(soup, playlists)
 
-    _dir, _file = os.path.split(config['XML_PATH'])
+    _dir, _file = os.path.split(xml_path)
     auto_xml_path = os.path.join(_dir, f'auto_{_file}').replace(os.sep, '/')
     with open(auto_xml_path, mode='wb', encoding=soup.orignal_encoding) as \
             _file:

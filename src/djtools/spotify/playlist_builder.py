@@ -37,20 +37,38 @@ def update_auto_playlists(config):
 
     Args:
         config (dict): configuration object
+    
+    Raises:
+        KeyError: 'SPOTIFY_CLIENT_ID', 'SPOTIFY_CLIENT_SECRET', and
+                  'SPOTIFY_REDIRECT_URI' must be configured
+        KeyError: 'REDDIT_CLIENT_ID', 'REDDIT_CLIENT_SECRET', and
+                  'REDDIT_USER_AGENT' must be configured
+        KeyError: 'SPOTIFY_USERNAME' must be configured
     """
-    spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(
-            client_id=config['SPOTIFY_CLIENT_ID'],
-            client_secret=config['SPOTIFY_CLIENT_SECRET'],
-            redirect_uri=config['SPOTIFY_REDIRECT_URI'],
-            scope='playlist-modify-public',
-            requests_timeout=10,
-            cache_path=os.path.join(os.path.dirname(__file__),
-                                    '.cache').replace(os.sep, '/')))
+    try:
+        spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(
+                client_id=config['SPOTIFY_CLIENT_ID'],
+                client_secret=config['SPOTIFY_CLIENT_SECRET'],
+                redirect_uri=config['SPOTIFY_REDIRECT_URI'],
+                scope='playlist-modify-public',
+                requests_timeout=10,
+                cache_path=os.path.join(os.path.dirname(__file__),
+                                        '.cache').replace(os.sep, '/')))
+    except KeyError:
+        raise KeyError('Using the playlist_builder module requires the ' \
+                       'following config options: SPOTIFY_CLIENT_ID, ' \
+                       'SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI') \
+                from KeyError 
 
-    reddit = praw.Reddit(
-            client_id=config['REDDIT_CLIENT_ID'],
-            client_secret=config['REDDIT_CLIENT_SECRET'],
-            user_agent=config['REDDIT_USER_AGENT'])
+    try:
+        reddit = praw.Reddit(
+                client_id=config['REDDIT_CLIENT_ID'],
+                client_secret=config['REDDIT_CLIENT_SECRET'],
+                user_agent=config['REDDIT_USER_AGENT'])
+    except KeyError:
+        raise KeyError('Using the playlist_builder module requires the ' \
+                       'following config options: REDDIT_CLIENT_ID, ' \
+                       'REDDIT_CLIENT_SECRET, REDDIT_USER_AGENT') from KeyError
 
     ids_path = os.path.join(os.path.dirname(os.path.dirname(__file__)),
             'configs', 'playlist_builder.json').replace(os.sep, '/')
@@ -59,22 +77,32 @@ def update_auto_playlists(config):
             subreddit_playlist_ids = json.load(_file)
     else:
         subreddit_playlist_ids = {}
+    
+    if not config.get('AUTO_PLAYLIST_SUBREDDITS'):
+        logger.warn('Using the playlist_builder module requires the config ' \
+                    'option AUTO_PLAYLIST_SUBREDDITS')
+        return
 
     for subreddit in config['AUTO_PLAYLIST_SUBREDDITS']:
         playlist_id = subreddit_playlist_ids.get(subreddit['name'])
-        tracks = get_subreddit_posts(spotify, reddit, subreddit,
-                                     config)
+        if not playlist_id:
+            try:
+                username = config['SPOTIFY_USERNAME']
+            except KeyError:
+                raise KeyError('Building a new playlist in the ' \
+                               'playlist_builder module requires the config ' \
+                               'option SPOTIFY_USERNAME') from KeyError
+        tracks = get_subreddit_posts(spotify, reddit, subreddit, config)
         logger.info(f'Got {len(tracks)} track(s) from "r/{subreddit["name"]}"')
         if playlist_id:
-            playlist = update_existing_playlist(spotify, playlist_id,
-                    tracks, subreddit['limit'],
-                    config['VERBOSITY'])
+            playlist = update_existing_playlist(spotify, playlist_id, tracks,
+                                                subreddit['limit'],
+                                                config.get('VERBOSITY', 0))
         else:
             logger.warning(f'Unable to get ID for {subreddit["name"]}...' \
                             'creating a new playlist')
-            playlist = build_new_playlist(spotify,
-                                            config['SPOTIFY_USERNAME'],
-                                            subreddit['name'], tracks)
+            playlist = build_new_playlist(spotify, username, subreddit['name'],
+                                          tracks)
             subreddit_playlist_ids[subreddit['name']] = playlist['id']
             with open(ids_path, 'w', encoding='utf-8') as _file:
                 json.dump(subreddit_playlist_ids, _file, indent=2)
@@ -116,7 +144,7 @@ def get_subreddit_posts(spotify, reddit, subreddit, config):
     new_tracks = []
     payload = [submissions,
               [spotify] * len(submissions),
-              [config['AUTO_PLAYLIST_FUZZ_RATIO']] * len(submissions)]
+              [config.get('AUTO_PLAYLIST_FUZZ_RATIO', 50)] * len(submissions)]
     with ThreadPoolExecutor(max_workers=8) as executor:
         new_tracks = list(tqdm(executor.map(process, *payload),
                 total=len(submissions), desc=f'Filtering r/{subreddit} posts'))
