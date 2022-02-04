@@ -29,7 +29,7 @@
 * 2.0.6
 * 2.1.0 (April 1st release)
     - `djtools`
-        - [ ] `get` config options with defaults, when possible; exception handle when not
+        - [x] `get` config options with defaults, when possible; exception handle when not
     - `spotify.playlist_builder`
         - [x] subreddit-specific `playlist_builder` configuration
         - [ ] aiohttp refactor
