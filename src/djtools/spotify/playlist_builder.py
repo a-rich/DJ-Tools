@@ -79,29 +79,28 @@ def update_auto_playlists(config):
         subreddit_playlist_ids = {}
     
     if not config.get('AUTO_PLAYLIST_SUBREDDITS'):
-        logger.warn('Using the playlist_builder module requires the config' \
+        logger.warn('Using the playlist_builder module requires the config ' \
                     'option AUTO_PLAYLIST_SUBREDDITS')
         return
 
     for subreddit in config['AUTO_PLAYLIST_SUBREDDITS']:
         playlist_id = subreddit_playlist_ids.get(subreddit['name'])
-        tracks = get_subreddit_posts(spotify, reddit, subreddit,
-                                     config)
-        logger.info(f'Got {len(tracks)} track(s) from "r/{subreddit["name"]}"')
-        if playlist_id:
-            playlist = update_existing_playlist(spotify, playlist_id,
-                    tracks, subreddit['limit'],
-                    config.get('VERBOSITY', 0))
-        else:
-            logger.warning(f'Unable to get ID for {subreddit["name"]}...' \
-                            'creating a new playlist')
+        if not playlist_id:
             try:
                 username = config['SPOTIFY_USERNAME']
             except KeyError:
                 raise KeyError('Building a new playlist in the ' \
                                'playlist_builder module requires the config ' \
                                'option SPOTIFY_USERNAME') from KeyError
-
+        tracks = get_subreddit_posts(spotify, reddit, subreddit, config)
+        logger.info(f'Got {len(tracks)} track(s) from "r/{subreddit["name"]}"')
+        if playlist_id:
+            playlist = update_existing_playlist(spotify, playlist_id, tracks,
+                                                subreddit['limit'],
+                                                config.get('VERBOSITY', 0))
+        else:
+            logger.warning(f'Unable to get ID for {subreddit["name"]}...' \
+                            'creating a new playlist')
             playlist = build_new_playlist(spotify, username, subreddit['name'],
                                           tracks)
             subreddit_playlist_ids[subreddit['name']] = playlist['id']
