@@ -95,10 +95,7 @@ def main():
             logger.error(f'{operation} failed: {exc}\n{format_exc()}')
 
     # attempt uploading today's log file
-    try:
-        upload_log(config, log_file)
-    except Exception:
-        logger.error(f'Unable to upload log "{log_file}":\n{format_exc()}')
+    upload_log(config, log_file)
 
 
 if __name__ == '__main__':
