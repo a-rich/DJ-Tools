@@ -120,11 +120,9 @@ Please be sure to checkout the package-level README files regarding the usage of
     - [generate_genre_playlists.json](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/utils)
 
 ## Populating `config.json`
-`DJ Tools` contains quite a bit of functionality, but all of it is configurable via `config.json`. The presence of all 38 configuration options is required for operation, though not all the values need to be populated.
+`DJ Tools` contains quite a bit of functionality, but all of it is configurable via `config.json`. You may decide to not use `config.json` at all and, instead, opt to use the corollary command-line arguments; all configuration options may be overridden via command-line arguments of the same name but in lowercase. Example:
 
-All configuration options may be overridden via command-line arguments of the same name. Example:
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`djtools --youtube_dl --sync_operations download_music download_xml --xml_import_user bob`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`djtools --sync_operations download_xml --xml_import_user bob --aws_profile DJ`
 
 
 ### Example `config.json`:
