@@ -26,18 +26,12 @@
     - Reloading tags
     - Exporting to a Device
 # Release Plan
-* 2.0.6
-* 2.1.0 (April 1st release)
-    - `djtools`
-        - [x] `get` config options with defaults, when possible; exception handle when not
-    - `spotify.playlist_builder`
-        - [x] subreddit-specific `playlist_builder` configuration
-        - [ ] aiohttp refactor
-        - [x] parameterize subreddit result limit
-    - `utils.generate_genre_playlists`
-        - [x] parameterize `Pure <genre>` playlist generation logic
-    - `utils.randomize_tracks`
-        - [x] write track randomization data to XML instead of ID3 tags (circumvent issues related to "Reload Tags")
+* 2.1.1
+* 2.2.0 (July 1st release)
+    - `spotify.playlist_builder` / `spotify.playlist_checker`
+        - [x] async PRAW
+        - [ ] tekore (async Spotify API client)
+        - [ ] cache reddit posts results
 
 # Overview
 `DJ Tools` is a library for managing a Collection of audio files (not necessarily mp3 files, although that is preferred) and Rekordbox XML files.
