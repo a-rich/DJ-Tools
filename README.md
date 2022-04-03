@@ -30,8 +30,8 @@
 * 2.2.0 (July 1st release)
     - `spotify.playlist_builder` / `spotify.playlist_checker`
         - [x] async PRAW
-        - [ ] tekore (async Spotify API client)
-        - [ ] cache reddit posts results
+        - [x] tekore (async Spotify API client)
+        - [x] cache reddit posts results
 
 # Overview
 `DJ Tools` is a library for managing a Collection of audio files (not necessarily mp3 files, although that is preferred) and Rekordbox XML files.
