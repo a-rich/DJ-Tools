@@ -53,7 +53,7 @@ def update_auto_playlists(config):
                 scope='playlist-modify-public',
                 requests_timeout=10,
                 cache_path=os.path.join(os.path.dirname(__file__),
-                                        '.cache').replace(os.sep, '/')))
+                        '.spotify.cache').replace(os.sep, '/')))
     except KeyError:
         raise KeyError('Using the playlist_builder module requires the ' \
                        'following config options: SPOTIFY_CLIENT_ID, ' \
@@ -82,7 +82,15 @@ def update_auto_playlists(config):
         logger.warn('Using the playlist_builder module requires the config ' \
                     'option AUTO_PLAYLIST_SUBREDDITS')
         return
-
+    
+    cache_file = os.path.join(os.path.dirname(__file__),
+                              '.praw.cache').replace(os.sep, '/')
+    try:
+        with open(cache_file, 'r') as _file:
+            praw_cache = json.load(_file)
+    except FileNotFoundError:
+        praw_cache = {}
+    
     for subreddit in config['AUTO_PLAYLIST_SUBREDDITS']:
         playlist_id = subreddit_playlist_ids.get(subreddit['name'])
         if not playlist_id:
@@ -92,7 +100,8 @@ def update_auto_playlists(config):
                 raise KeyError('Building a new playlist in the ' \
                                'playlist_builder module requires the config ' \
                                'option SPOTIFY_USERNAME') from KeyError
-        tracks = get_subreddit_posts(spotify, reddit, subreddit, config)
+        tracks = get_subreddit_posts(spotify, reddit, subreddit, config,
+                                     praw_cache)
         logger.info(f'Got {len(tracks)} track(s) from "r/{subreddit["name"]}"')
         if playlist_id:
             playlist = update_existing_playlist(spotify, playlist_id, tracks,
@@ -109,8 +118,11 @@ def update_auto_playlists(config):
         logger.info(f"'{playlist['name']}': " \
                     f"{playlist['external_urls'].get('spotify')}")
 
+    with open(cache_file, 'w') as _file:
+        json.dump(praw_cache, _file)
 
-def get_subreddit_posts(spotify, reddit, subreddit, config):
+
+def get_subreddit_posts(spotify, reddit, subreddit, config, praw_cache):
     """Filters the submissions for the provided subreddit' and tries to resolve
     each into a Spotify track until all the submissions are parsed or the track
     limit has been met.
@@ -120,26 +132,31 @@ def get_subreddit_posts(spotify, reddit, subreddit, config):
         reddit (praw.Reddit): reddit client
         subreddit (dict): 'name', 'type', 'period', and 'limit'
         config (dict): configuration object
+        praw_cache (dict): cached praw submissions
 
     Returns:
         ([(str, str), ...]): list of Spotify track ('id', 'name') tuples
     """
     sub = reddit.subreddit(subreddit['name'])
-    sub_funcs = {'top': sub.top,
-                 'hot': sub.hot,
-                 'new': sub.new,
-                 'rising': sub.rising,
-                 'controversial': sub.controversial}
-    subreddit_limit = config.get('AUTO_PLAYLIST_SUBREDDIT_LIMIT', 500) or None
+    funcs = {'top': sub.top,
+             'hot': sub.hot,
+             'new': sub.new,
+             'rising': sub.rising,
+             'controversial': sub.controversial}
+    sub_limit = config.get('AUTO_PLAYLIST_SUBREDDIT_LIMIT', 500) or None
     try:
-        submissions = list(sub_funcs[subreddit['type']](limit=subreddit_limit,
-                time_filter=subreddit['period']))
-        logger.info(f'"r/{subreddit["name"]}" has {len(submissions)} ' \
-                    f"{subreddit['type']} posts for the {subreddit['period']}")
+        sub_generator = funcs[subreddit['type']](
+                limit=sub_limit, time_filter=subreddit['period'])
     except TypeError:
-        submissions = list(sub_funcs[subreddit['type']](limit=subreddit_limit))
-        logger.info(f'"r/{subreddit["name"]}" has {len(submissions)} ' \
-                    f"{subreddit['type']} posts")
+        sub_generator = funcs[subreddit['type']](limit=sub_limit)
+    submissions = []
+    for submission in sub_generator:
+        if submission.id in praw_cache:
+            continue
+        submissions.append(submission)
+        praw_cache[submission.id] = True
+    logger.info(f'"r/{subreddit["name"]}" has {len(submissions)} ' \
+                f"{subreddit['type']} posts")
 
     new_tracks = []
     payload = [submissions,
