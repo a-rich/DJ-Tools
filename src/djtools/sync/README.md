@@ -23,6 +23,6 @@ The setup required for all these operations is having `awscli` installed and con
 `download_xml` requires that the folder where `XML_PATH` lives exists and that `XML_IMPORT_USER` has run `upload_xml`; it's also required that `XML_IMPORT_USER` has an entry in `registered_users.json`...this will be the case if they have ever run `dj_tools.py` with a valid `config.json` and then pushed their changes to `registered_users.json` prior to your most recent pull of `DJ Tools`.
 
 # Usage
-To run any of the four sync operations, just add them by name to `SYNC_OPERATIONS`. If running `download_xml` make sure `XML_IMPORT_USER` is set to the proper `beatcloud` user. Before uploading / after downloading, you can follow any of the prescribed workflows specified under the main README's "Basic Information" section to ensure consistency both in your local library and in the `beatcloud`.
+To run any of the four sync operations {`DOWNLOAD_XML`, `DOWNLOAD_MUSIC`, `UPLOAD_XML`, `UPLOAD_MUSIC`}, just set the corresponding config option to true. If running `DOWNLOAD_XML` make sure `XML_IMPORT_USER` is set to the proper `beatcloud` user. Before uploading / after downloading, you can follow any of the prescribed workflows specified under the main README's "Basic Information" section to ensure consistency both in your local library and in the `beatcloud`.
 
-`NOTE`: you can run `upload_music` and / or `download_music` with the `--dryrun` flag to inspect the result of the same sync operations without actually performing them.
+`NOTE`: you can run `UPLOAD_MUSIC` and / or `DOWNLOAD_MUSIC` with the `--dryrun` flag to inspect the result of the same sync operations without actually performing them.

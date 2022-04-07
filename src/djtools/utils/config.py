@@ -38,6 +38,8 @@ def build_config():
         KeyError: 'AWS_PROFILE' must be configured
         ValueError: include / exclude directories cannot both be specified
                     simultaneously
+        ValueError: 'XML_IMPORT_USER' must exist in 'registered_user.json' 
+                    if 'DOWNLOAD_XML'
 
     Returns:
         dict: config object
@@ -62,8 +64,10 @@ def build_config():
         logger.info(f'Args: {args}')
         config.update(args)
 
-    # if doing SYNC_OPERATIONS...
-    if config.get('SYNC_OPERATIONS'):
+    # if doing any 'sync' operations...
+    syncing = any(config.get(op) for op in {'DOWNLOAD_XML', 'DOWNLOAD_MUSIC',
+            'UPLOAD_XML', 'UPLOAD_MUSIC'})
+    if syncing:
         # ensure AWS_PROFILE is set
         if not config.get('AWS_PROFILE'):
             msg = 'Config must include AWS_PROFILE if performing sync ' \
@@ -73,16 +77,17 @@ def build_config():
 
         # warn user if uploading music without a Discord webhook URL to notify
         # other beatcloud users about new track
-        if 'upload_music' in config.get('SYNC_OPERATIONS', []) \
-                and not config.get('DISCORD_URL'):
+        if config.get('UPLOAD_MUSIC') and not config.get('DISCORD_URL'):
             logger.warning('DISCORD_URL is not configured...set this for ' \
                         '"new music" discord messages!')
 
-    if config.get('SYNC_OPERATIONS') or config.get('SPOTIFY_CHECK_PLAYLISTS'):
+    # syncing and / or comparing Spotify / local tracks with the beatcloud
+    # requires having an AWS key configured.
+    if syncing or config.get('CHECK_TRACK_OVERLAP'):
         try:
             os.environ['AWS_PROFILE'] = config['AWS_PROFILE']
         except KeyError:
-            raise KeyError('Using the sync_operations and/or ' \
+            raise KeyError('Using the "sync" package and / or ' \
                            'playlist_checker modules requires the config ' \
                            'option AWS_PROFILE') from KeyError
 
@@ -111,15 +116,11 @@ def build_config():
                        'up-to-date!')
         registered_users = {}
 
-    # if downloading another user's XML and that user doesn't have an entry in
-    # 'registered_users.json', display a warning and remove 'download_xml' from
-    # SYNC_OPERATIONS
-    if 'download_xml' in config.get('SYNC_OPERATIONS', []) and (
-            not config.get('XML_IMPORT_USER')
+    # ensure XML_IMPORT_USER exists in 'registered_users.json' if DOWNLOAD_XML
+    if config.get('DOWNLOAD_XML') and (not config.get('XML_IMPORT_USER')
             or config.get('XML_IMPORT_USER') not in registered_users):
-        logger.warning('Unable to import from XML of unregistered ' \
-                       f'XML_IMPORT_USER "{config.get("XML_IMPORT_USER")}"')
-        config['SYNC_OPERATIONS'].remove('download_xml')
+        raise ValueError('Unable to import from XML of unregistered ' \
+                         f'XML_IMPORT_USER "{config.get("XML_IMPORT_USER")}"')
 
     # if USER isn't set already, set it to the OS user
     if not config.get('USER'):
@@ -186,10 +187,14 @@ def arg_parse():
             help='perform track randomization')
     parser.add_argument('--randomize_tracks_playlists', type=str, nargs='+',
             help='playlist name(s) to randomize tracks in')
-    parser.add_argument('--sync_operations', nargs='+',
-            choices=['upload_music', 'upload_xml', 'download_music',
-                     'download_xml'],
-            help='DJ Tools sync operations to perform')
+    parser.add_argument('--download_music', action='store_true',
+            help='sync remote beatcloud to "DJ Music" folder')
+    parser.add_argument('--download_xml', action='store_true',
+            help='sync remote XML of XML_IMPORT_USER to parent of XML_PATH')
+    parser.add_argument('--upload_music', action='store_true',
+            help='sync local "DJ Music" folder to the beatcloud')
+    parser.add_argument('--upload_xml', action='store_true',
+            help='sync local `XML_PATH` to the beatcloud')
     parser.add_argument('--get_genres', action='store_true',
             help='perform genre analysis')
     parser.add_argument('--genre_exclude_dirs', type=str, nargs='+',
@@ -202,13 +207,17 @@ def arg_parse():
             choices=['folder', 'playlist'],
             help='place remainder tracks in either an "Other" folder of ' \
                  'genre playlists or a single "Other" playlist')
-    parser.add_argument('--spotify_check_playlists', action='store_true',
-            help='check Spotify playlists against beatcloud')
-    parser.add_argument('--spotify_playlists_check', type=str, nargs='+',
+    parser.add_argument('--check_track_overlap', action='store_true',
+            help='check Spotify playlists and local directories against ' \
+                 'beatcloud')
+    parser.add_argument('--local_check_dirs', type=str, nargs='+',
+            help='local directory name(s) (under "DJ Music") to check ' \
+                 'against beatcloud')
+    parser.add_argument('--spotify_check_playlists', type=str, nargs='+',
             help='playlist name(s) to check against beatcloud')
-    parser.add_argument('--spotify_playlists_check_fuzz_ratio', type=int,
+    parser.add_argument('--check_track_overlap_fuzz_ratio', type=int,
             help='minimum Levenshtein similarity to indicate potential ' \
-                 'overlap between Spotify and beatcloud tracks')
+                 'overlap between Spotify / local and beatcloud tracks')
     parser.add_argument('--spotify_client_id', type=str,
             help='Spotify API client ID')
     parser.add_argument('--spotify_client_secret', type=str,
