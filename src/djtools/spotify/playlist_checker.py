@@ -18,7 +18,7 @@ from tqdm import tqdm
 logger = logging.getLogger(__name__)
 
 
-def check_playlists(config):
+def check_playlists(config, beatcloud_tracks=[]):
     """Gets track titles and artists from both Spotify playlist(s) and
     beatcloud and computes the Levenshtein similarity between their product in
     order to identify any overlapping tracks.
@@ -29,18 +29,20 @@ def check_playlists(config):
     spotify_tracks = get_spotify_tracks(config)
     if not spotify_tracks:
         logger.warn('There are no Spotify tracks; make sure ' \
-                    'SPOTIFY_PLAYLISTS_CHECK has one or more keys from ' \
+                    'SPOTIFY_CHECK_PLAYLISTS has one or more keys from ' \
                     '"playlist_checker.json"')
         return
-    beatcloud_tracks = get_beatcloud_tracks()
+    if not beatcloud_tracks:
+        beatcloud_tracks = get_beatcloud_tracks()
     matches = find_matches(spotify_tracks, beatcloud_tracks, config)
-
     logger.info(f'Spotify playlist(s) / beatcloud matches: {len(matches)}')
     for playlist, matches in groupby(sorted(matches, key=itemgetter(0)),
                                      key=itemgetter(0)):
         logger.info(f'{playlist}:')
         for _, spotify_track, beatcloud_track, fuzz_ratio in matches:
             logger.info(f'\t{fuzz_ratio}: {spotify_track} | {beatcloud_track}')
+    
+    return beatcloud_tracks
 
 
 def get_spotify_tracks(config):
@@ -76,7 +78,7 @@ def get_spotify_tracks(config):
                     'configs', 'playlist_checker.json').replace(os.sep, '/'),
                  encoding='utf-8')).items()}
     playlist_tracks = {}
-    for playlist in config.get('SPOTIFY_PLAYLISTS_CHECK', []):
+    for playlist in config.get('SPOTIFY_CHECK_PLAYLISTS', []):
         playlist_id = playlist_ids.get(playlist.lower())
         if not playlist_id:
             logger.error(f'{playlist} not in playlist_checker.json')
@@ -179,14 +181,14 @@ def find_matches(spotify_tracks, beatcloud_tracks, config):
     _product = list(product(spotify_tracks, beatcloud_tracks))
     _temp, beatcloud_tracks = zip(*_product)
     spotify_playlists, spotify_tracks = zip(*_temp)
-    fuzz_ratio = config.get('SPOTIFY_PLAYLISTS_CHECK_FUZZ_RATIO', 80)
+    fuzz_ratio = config.get('CHECK_TRACK_OVERLAP_FUZZ_RATIO', 80)
     payload = [spotify_playlists, spotify_tracks, beatcloud_tracks,
                [fuzz_ratio] * len(_product)]
     with ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as executor:
         matches = list(filter(None,
                 tqdm(executor.map(compute_distance, *payload),
                      total=len(_product),
-                     desc='Matching Spotify and Beatcloud tracks')))
+                     desc='Matching new and Beatcloud tracks')))
 
     return matches
 

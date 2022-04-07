@@ -1,7 +1,7 @@
 """This is the entry point for the DJ Tools library.
 
 Spotify operations:
-    * SPOTIFY_CHECK_PLAYLISTS (playlist_checker.py): identify overlap between
+    * CHECK_TRACK_OVERLAP (playlist_checker.py): identify overlap between
             Spotify playlist(s) and beatcloud
     * AUTO_PLAYLIST_UPDATE (playlist_builder.py): creating and updating Spotify
             playlists using subreddit top posts
@@ -18,12 +18,11 @@ Utils operations:
             playlist)
 
 Sync operations:
-    * SYNC_OPERATIONS (sync_operations.py)
-        - download_music: sync tracks from beatcloud to USB_PATH
-        - download_xml: sync XML_IMPORT_USER's beatcloud XML to
-                XML_PATH's parent folder
-        - upload_music: sync tracks from USB_PATH to beatcloud
-        - upload_xml: sync XML_PATH to USER's beatcloud XML folder
+    * DOWNLOAD_MUSIC: sync tracks from beatcloud to USB_PATH
+    * DOWNLOAD_XML: sync XML_IMPORT_USER's beatcloud XML to
+            XML_PATH's parent folder
+    * UPLOAD_MUSIC: sync tracks from USB_PATH to beatcloud
+    * UPLOAD_XML: sync XML_PATH to USER's beatcloud XML folder
 """
 from datetime import datetime
 import logging
@@ -71,28 +70,19 @@ def main():
     """
     # run 'spotify' package and 'utils' package operations if any of the flags
     # to do so are present in the config
-    for operation, func in {**SPOTIFY_OPERATIONS, **UTILS_OPERATIONS}.items():
-        if not config.get(operation):
-            continue
-        try:
-            logger.info(f'Beginning {operation}...')
-            func(config)
-        except Exception as exc:
-            logger.error(f'{operation} failed: {exc}\n{format_exc()}')
-
-    # run 'sync' package operations if any of the options to do so are present
-    # in the 'SYNC_OPERATIONS' config option
-    for operation in config.get('SYNC_OPERATIONS', []):
-        func = SYNC_OPERATIONS.get(operation)
-        if not func:
-            logger.warning(f'Invalid sync operation "{operation}"')
-            continue
-
-        try:
-            logger.info(f'Beginning {operation}...')
-            func(config)
-        except Exception as exc:
-            logger.error(f'{operation} failed: {exc}\n{format_exc()}')
+    beatcloud_cache = []
+    for package in  [SPOTIFY_OPERATIONS, UTILS_OPERATIONS, SYNC_OPERATIONS]:
+        for operation, func in package.items():
+            if not config.get(operation):
+                continue
+            try:
+                logger.info(f'Beginning {operation}...')
+                if operation == 'CHECK_TRACK_OVERLAP':
+                    beatcloud_cache = func(config, beatcloud_tracks=beatcloud_cache)
+                else:
+                    func(config)
+            except Exception as exc:
+                logger.error(f'{operation} failed: {exc}\n{format_exc()}')
 
     # attempt uploading today's log file
     upload_log(config, log_file)
