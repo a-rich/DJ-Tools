@@ -13,7 +13,7 @@ from djtools.spotify.playlist_checker import get_beatcloud_tracks, find_matches
 logger = logging.getLogger(__name__)
 
 
-def local_dirs_checker(config, beatcloud_tracks=[]):
+def check_local_dirs(config, beatcloud_tracks=[]):
     """Gets track titles and artists from both local files and beatcloud and 
     computes the Levenshtein similarity between their product in order to
     identify any overlapping tracks.
@@ -36,6 +36,8 @@ def local_dirs_checker(config, beatcloud_tracks=[]):
         logger.info(f'{playlist}:')
         for _, spotify_track, beatcloud_track, fuzz_ratio in matches:
             logger.info(f'\t{fuzz_ratio}: {spotify_track} | {beatcloud_track}')
+    
+    return beatcloud_tracks
 
 
 def get_local_tracks(config):

@@ -18,7 +18,7 @@ from tqdm import tqdm
 logger = logging.getLogger(__name__)
 
 
-def check_playlists(config, beatcloud_cache=[]):
+def check_playlists(config, beatcloud_tracks=[]):
     """Gets track titles and artists from both Spotify playlist(s) and
     beatcloud and computes the Levenshtein similarity between their product in
     order to identify any overlapping tracks.
@@ -41,6 +41,8 @@ def check_playlists(config, beatcloud_cache=[]):
         logger.info(f'{playlist}:')
         for _, spotify_track, beatcloud_track, fuzz_ratio in matches:
             logger.info(f'\t{fuzz_ratio}: {spotify_track} | {beatcloud_track}')
+    
+    return beatcloud_tracks
 
 
 def get_spotify_tracks(config):

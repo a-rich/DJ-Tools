@@ -11,7 +11,7 @@
 """
 from djtools.utils.generate_genre_playlists import generate_genre_playlists
 from djtools.utils.get_genres import get_genres
-from djtools.utils.local_dirs_checker import local_dirs_checker
+from djtools.utils.local_dirs_checker import check_local_dirs
 from djtools.utils.randomize_tracks import randomize_tracks
 from djtools.utils.youtube_dl import youtube_dl
 
@@ -19,7 +19,7 @@ from djtools.utils.youtube_dl import youtube_dl
 UTILS_OPERATIONS = {
     'GENERATE_GENRE_PLAYLISTS': generate_genre_playlists,
     'GET_GENRES': get_genres,
-    'CHECK_TRACK_OVERLAP': local_dirs_checker,
+    'CHECK_TRACK_OVERLAP': check_local_dirs,
     'RANDOMIZE_TRACKS': randomize_tracks,
     'YOUTUBE_DL': youtube_dl
 }
