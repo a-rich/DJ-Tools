@@ -145,9 +145,10 @@ Please be sure to checkout the package-level README files regarding the usage of
     "GENERATE_GENRE_PLAYLISTS": true,
     "GENERATE_GENRE_PLAYLISTS_REMAINDER": "folder",
     "GENERATE_GENRE_PLAYLISTS_PURE": ["Techno", "Hip Hop"],
-    "SPOTIFY_CHECK_PLAYLISTS": false,
-    "SPOTIFY_PLAYLISTS_CHECK": ["Download", "Maybe Download"],
-    "SPOTIFY_PLAYLISTS_CHECK_FUZZ_RATIO": 80,
+    "CHECK_TRACK_OVERLAP": false,
+    "CHECK_TRACK_OVERLAP_FUZZ_RATIO": 80,
+    "LOCAL_CHECK_DIRS": ["New Music"],
+    "SPOTIFY_CHECK_PLAYLISTS": ["Download", "Maybe Download"],
     "SPOTIFY_CLIENT_ID": "",
     "SPOTIFY_CLIENT_SECRET": "",
     "SPOTIFY_REDIRECT_URI": "",
@@ -189,9 +190,10 @@ Please be sure to checkout the package-level README files regarding the usage of
 * `GENERATE_GENRE_PLAYLISTS`: boolean flag to trigger the generation of a playlist structure (as informed by `generate_genre_playlists.json`) using the genre tags in `XML_PATH`...the resulting XML file is `XML_PATH` prefixed with "`auto_`"
 * `GENERATE_GENRE_PLAYLISTS_REMAINDER`: whether tracks of remainder genres (those not specified in `generate_genre_playlists.json`) will be placed in a `folder` called "Other" with individual genre playlists or a `playlist` called "Other"
 * `GENERATE_GENRE_PLAYLISTS_PURE`: list of genre tags (case-sensitive) which will each have a "Pure" playlist generated for...each item must be accompanied with a "Pure \<genre>" entry in `generate_genre_playlists.json`,
-* `SPOTIFY_CHECK_PLAYLISTS`: boolean flag to trigger checking the contents of Spotify playlists specified in `SPOTIFY_PLAYLISTS_CHECK` against the `beatcloud` (to identify redundancies)
-* `SPOTIFY_PLAYLISTS_CHECK`: list of Spotify playlists to use with `SPOTIFY_CHECK_PLAYLISTS`
-* `SPOTIFY_PLAYLISTS_CHECK_FUZZ_RATIO`: the minimum Levenshtein similarity for indicating potential redundancies between Spotify playlists and the `beatcloud`
+* `CHECK_TRACK_OVERLAP`: boolean flag to trigger checking the contents of Spotify playlists specified in `SPOTIFY_CHECK_PLAYLISTS` and the local files specified in `LOCAL_CHECK_DIRS` against the `beatcloud` (to identify redundancies)
+* `CHECK_TRACK_OVERLAP_FUZZ_RATIO`: the minimum Levenshtein similarity for indicating potential redundancies between Spotify playlists / local directories and the `beatcloud`
+* `LOCAL_CHECK_DIRS`: list of local directories (under "DJ Music") to use with `CHECK_TRACK_OVERLAP`,
+* `SPOTIFY_CHECK_PLAYLISTS`: list of Spotify playlists to use with `CHECK_TRACK_OVERLAP`
 * `SPOTIFY_CLIENT_ID`: client ID for registered Spotify API application
 * `SPOTIFY_CLIENT_SECRET`: client secret for registered Spotify API application
 * `SPOTIFY_REDIRECT_URI`: redirect URI for registered Spotify API application

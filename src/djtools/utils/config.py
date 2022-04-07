@@ -78,11 +78,13 @@ def build_config():
             logger.warning('DISCORD_URL is not configured...set this for ' \
                         '"new music" discord messages!')
 
-    if config.get('SYNC_OPERATIONS') or config.get('SPOTIFY_CHECK_PLAYLISTS'):
+    # syncing and / or comparing Spotify / local tracks with the beatcloud
+    # requires having an AWS key configured.
+    if config.get('SYNC_OPERATIONS') or config.get('CHECK_TRACK_OVERLAP'):
         try:
             os.environ['AWS_PROFILE'] = config['AWS_PROFILE']
         except KeyError:
-            raise KeyError('Using the sync_operations and/or ' \
+            raise KeyError('Using the sync_operations and / or ' \
                            'playlist_checker modules requires the config ' \
                            'option AWS_PROFILE') from KeyError
 
@@ -202,13 +204,17 @@ def arg_parse():
             choices=['folder', 'playlist'],
             help='place remainder tracks in either an "Other" folder of ' \
                  'genre playlists or a single "Other" playlist')
-    parser.add_argument('--spotify_check_playlists', action='store_true',
-            help='check Spotify playlists against beatcloud')
-    parser.add_argument('--spotify_playlists_check', type=str, nargs='+',
+    parser.add_argument('--check_track_overlap', action='store_true',
+            help='check Spotify playlists and local directories against ' \
+                 'beatcloud')
+    parser.add_argument('--local_check_dirs', type=str, nargs='+',
+            help='local directory name(s) (under "DJ Music") to check ' \
+                 'against beatcloud')
+    parser.add_argument('--spotify_check_playlists', type=str, nargs='+',
             help='playlist name(s) to check against beatcloud')
-    parser.add_argument('--spotify_playlists_check_fuzz_ratio', type=int,
+    parser.add_argument('--check_track_overlap_fuzz_ratio', type=int,
             help='minimum Levenshtein similarity to indicate potential ' \
-                 'overlap between Spotify and beatcloud tracks')
+                 'overlap between Spotify / local and beatcloud tracks')
     parser.add_argument('--spotify_client_id', type=str,
             help='Spotify API client ID')
     parser.add_argument('--spotify_client_secret', type=str,

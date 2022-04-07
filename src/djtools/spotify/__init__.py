@@ -7,6 +7,6 @@ from djtools.spotify.playlist_checker import check_playlists
 
 
 SPOTIFY_OPERATIONS = {
-    "SPOTIFY_CHECK_PLAYLISTS": check_playlists,
+    "CHECK_TRACK_OVERLAP": check_playlists,
     "AUTO_PLAYLIST_UPDATE": update_auto_playlists
 }
