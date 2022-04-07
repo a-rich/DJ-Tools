@@ -71,12 +71,16 @@ def main():
     """
     # run 'spotify' package and 'utils' package operations if any of the flags
     # to do so are present in the config
+    beatcloud_cache = []
     for operation, func in {**SPOTIFY_OPERATIONS, **UTILS_OPERATIONS}.items():
         if not config.get(operation):
             continue
         try:
             logger.info(f'Beginning {operation}...')
-            func(config)
+            if operation == 'CHECK_TRACK_OVERLAP':
+                beatcloud_cache = func(config, beatcloud_tracks=beatcloud_cache)
+            else:
+                func(config)
         except Exception as exc:
             logger.error(f'{operation} failed: {exc}\n{format_exc()}')
 

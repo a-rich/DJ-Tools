@@ -18,7 +18,7 @@ from tqdm import tqdm
 logger = logging.getLogger(__name__)
 
 
-def check_playlists(config):
+def check_playlists(config, beatcloud_cache=[]):
     """Gets track titles and artists from both Spotify playlist(s) and
     beatcloud and computes the Levenshtein similarity between their product in
     order to identify any overlapping tracks.
@@ -32,9 +32,9 @@ def check_playlists(config):
                     'SPOTIFY_CHECK_PLAYLISTS has one or more keys from ' \
                     '"playlist_checker.json"')
         return
-    beatcloud_tracks = get_beatcloud_tracks()
+    if not beatcloud_tracks:
+        beatcloud_tracks = get_beatcloud_tracks()
     matches = find_matches(spotify_tracks, beatcloud_tracks, config)
-
     logger.info(f'Spotify playlist(s) / beatcloud matches: {len(matches)}')
     for playlist, matches in groupby(sorted(matches, key=itemgetter(0)),
                                      key=itemgetter(0)):

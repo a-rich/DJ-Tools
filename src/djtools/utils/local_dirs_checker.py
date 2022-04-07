@@ -13,7 +13,7 @@ from djtools.spotify.playlist_checker import get_beatcloud_tracks, find_matches
 logger = logging.getLogger(__name__)
 
 
-def local_dirs_checker(config):
+def local_dirs_checker(config, beatcloud_tracks=[]):
     """Gets track titles and artists from both local files and beatcloud and 
     computes the Levenshtein similarity between their product in order to
     identify any overlapping tracks.
@@ -27,9 +27,9 @@ def local_dirs_checker(config):
                        'LOCAL_CHECK_DIRS has one or more directories ' \
                        '(under "DJ Music") containing one or more tracks')
         return
-    beatcloud_tracks = get_beatcloud_tracks()
+    if not beatcloud_tracks:
+        beatcloud_tracks = get_beatcloud_tracks()
     matches = find_matches(local_tracks, beatcloud_tracks, config)
-
     logger.info(f'Local tracks / beatcloud matches: {len(matches)}')
     for playlist, matches in groupby(sorted(matches, key=itemgetter(0)),
                                      key=itemgetter(0)):
@@ -60,16 +60,14 @@ def get_local_tracks(config):
 
     local_dir_tracks = {}
     for _dir in config['LOCAL_CHECK_DIRS']:
-        try:
-            path = os.path.join(config['USB_PATH'], 'DJ Music',
-                                _dir).replace(os.sep, '/')
-            files = glob(os.path.join(path, '**', '*.*').replace(os.sep, '/'),
-                         recursive=True)
-        except FileNotFoundError:
+        path = os.path.join(config['USB_PATH'], 'DJ Music', 
+                            _dir).replace(os.sep, '/')
+        if not os.path.exists(path):
             logger.warning(f'{path} does not exist; will not be able to ' \
                            'check its contents against the beatcloud')
             continue
-    
+        files = glob(os.path.join(path, '**', '*.*').replace(os.sep, '/'),
+                     recursive=True)
         local_dir_tracks[_dir] = [os.path.splitext(os.path.basename(x))[0]
                                   for x in files]
 
