@@ -7,6 +7,8 @@ Spotify operations:
             playlists using subreddit top posts
 
 Utils operations:
+    * CHECK_TRACK_OVERLAP (local_dirs_checker.py): identify overlap between
+            local directories and beatcloud
     * GENERATE_GENRE_PLAYLISTS (generate_genre_playlists.py): automatically
             create a desired playlist structure based on the genre ID3 tags
             present in an XML
@@ -71,7 +73,7 @@ def main():
     # run 'spotify' package and 'utils' package operations if any of the flags
     # to do so are present in the config
     beatcloud_cache = []
-    for package in  [SPOTIFY_OPERATIONS, UTILS_OPERATIONS, SYNC_OPERATIONS]:
+    for package in [SPOTIFY_OPERATIONS, UTILS_OPERATIONS, SYNC_OPERATIONS]:
         for operation, func in package.items():
             if not config.get(operation):
                 continue
