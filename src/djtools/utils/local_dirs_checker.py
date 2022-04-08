@@ -70,6 +70,8 @@ def get_local_tracks(config):
             continue
         files = glob(os.path.join(path, '**', '*.*').replace(os.sep, '/'),
                      recursive=True)
+        if not files:
+            continue
         local_dir_tracks[_dir] = [os.path.splitext(os.path.basename(x))[0]
                                   for x in files]
 
