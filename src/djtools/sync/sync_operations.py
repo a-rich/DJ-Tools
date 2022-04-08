@@ -32,8 +32,9 @@ def upload_music(config):
     try:
         usb_path = config['USB_PATH']
     except KeyError:
-        raise KeyError('Using the upload_music mode of the sync_operations ' \
-                       'module requires the config option USB_PATH') \
+        raise KeyError('Using the upload_music function of the ' \
+                       'sync_operations module requires the config option ' \
+                       'USB_PATH') \
                 from KeyError
 
     if not os.path.exists(usb_path):
@@ -73,8 +74,9 @@ def upload_xml(config):
     try:
         xml_path = config['XML_PATH']
     except KeyError:
-        raise KeyError('Using the upload_xml mode of the sync_operations ' \
-                       'module requires the config option XML_PATH') \
+        raise KeyError('Using the upload_xml function of the ' \
+                       'sync_operations module requires the config option ' \
+                       'XML_PATH') \
                 from KeyError
 
     if not os.path.exists(xml_path):
@@ -103,8 +105,9 @@ def download_music(config):
     try:
         usb_path = config['USB_PATH']
     except KeyError:
-        raise KeyError('Using the download_music mode of the sync_operations ' \
-                       'module requires the config option USB_PATH') \
+        raise KeyError('Using the download_music function of the ' \
+                       'sync_operations module requires the config option ' \
+                       'USB_PATH') \
                 from KeyError
     
     if not os.path.exists(usb_path):
@@ -145,8 +148,9 @@ def download_xml(config):
     try:
         xml_path = config['XML_PATH']
     except KeyError:
-        raise KeyError('Using the download_xml mode of the sync_operations ' \
-                       'module requires the config option XML_PATH') \
+        raise KeyError('Using the download_xml function of the ' \
+                       'sync_operations module requires the config option ' \
+                       'XML_PATH') \
                 from KeyError
 
     logger.info('Syncing remote rekordbox.xml...')

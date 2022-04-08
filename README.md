@@ -117,7 +117,7 @@ Please be sure to checkout the package-level README files regarding the usage of
 ## Populating `config.json`
 `DJ Tools` contains quite a bit of functionality, but all of it is configurable via `config.json`. You may decide to not use `config.json` at all and, instead, opt to use the corollary command-line arguments; all configuration options may be overridden via command-line arguments of the same name but in lowercase. Example:
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`djtools --sync_operations download_xml --xml_import_user bob --aws_profile DJ`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`djtools --download_xml --xml_import_user bob --aws_profile DJ`
 
 
 ### Example `config.json`:
@@ -138,7 +138,10 @@ Please be sure to checkout the package-level README files regarding the usage of
     "YOUTUBE_DL_URL": "https://soundcloud.com/me/sets/to-download",
     "RANDOMIZE_TRACKS": false,
     "RANDOMIZE_TRACKS_PLAYLISTS": ["Halftime", "Trip Hop"],
-    "SYNC_OPERATIONS": ["download_music", "download_xml"],
+    "DOWNLOAD_MUSIC": false,
+    "DOWNLOAD_XML": false,
+    "UPLOAD_MUSIC": false,
+    "UPLOAD_XML": false,
     "GET_GENRES": false,
     "GENRE_EXCLUDE_DIRS": [],
     "GENRE_TAG_DELIMITER": "/",
@@ -183,7 +186,10 @@ Please be sure to checkout the package-level README files regarding the usage of
 * `YOUTUBE_DL_URL`: URL from which music files should be downloaded (i.e. a Soundcloud playlist)
 * `RANDOMIZE_TRACKS`: boolean flag to trigger the emulated playlist shuffling feature on each playlist in `RANDOMIZE_TRACKS_PLAYLISTS`
 * `RANDOMIZE_TRACKS_PLAYLISTS`: list of playlist names (must exist in `XML_PATH`) that should have their tracks shuffled
-* `SYNC_OPERATIONS`: list of sync operations to run in order -- choices: {`download_music`, `download_xml`, `upload_music`, `upload_xml`}
+* `DOWNLOAD_MUSIC`: sync remote beatcloud to "DJ Music" folder
+* `DOWNLOAD_XML`: sync remote XML of `XML_IMPORT_USER` to parent of `XML_PATH`
+* `UPLOAD_MUSIC`: sync local "DJ Music" folder to the beatcloud
+* `UPLOAD_XML`: sync local `XML_PATH` to the beatcloud
 * `GET_GENRES`: boolean flag to trigger an analysis of the genre ID3 tags of your local mp3 files (prints the number of tracks in alphabetized genres...increasing `VERBOSITY` prints tracks in each genre)
 * `GENRE_EXCLUDE_DIRS`: list of partial paths (folders) which cannot appear in full paths of mp3 files when considering their genre ID3 tags
 * `GENRE_TAG_DELIMITER`: character to use for splitting a track's genre ID3 tag when tag contains multiple genres (e.g. "/")
