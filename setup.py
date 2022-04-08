@@ -7,6 +7,7 @@ with open('README.md', encoding='utf-8') as _file:
     LONG_DESCRIPTION = _file.read()
 
 REQUIREMENTS = [
+    "asyncpraw>=7.5.0",
     "awscli>=1.22.27",
     "beautifulsoup4>=4.10.0",
     "botocore>=1.23.27",
@@ -70,7 +71,7 @@ EXTRAS = {
 
 setup(
     name='dj_beatcloud',
-    version='2.2.0-beta9',
+    version='2.2.0-beta11',
     description='DJ Tools is a library for managing a collection of MP3 ' \
                 'and Rekordbox XML files.',
     long_description=LONG_DESCRIPTION,

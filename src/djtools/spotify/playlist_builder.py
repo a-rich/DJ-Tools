@@ -7,6 +7,7 @@ Spotify API for tracks. The resulting tracks have their title and artist fields
 compared with the reddit post title and are added to the respective playlist
 if the Levenshtein similarity passes a threshold.
 """
+import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import json
 import logging
@@ -14,8 +15,8 @@ from operator import itemgetter
 import os
 from traceback import format_exc
 
+import asyncpraw as praw
 from fuzzywuzzy import fuzz
-import praw
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from tqdm import tqdm
@@ -29,11 +30,18 @@ logger = logging.getLogger(__name__)
 
 
 def update_auto_playlists(config):
+    """This helper function asynchronously updates Spotify playlists.
+
+    Args:
+        config (dict): configuration object
+    """
+    asyncio.run(async_update_auto_playlists(config))
+
+
+async def async_update_auto_playlists(config):
     """This function updates the contents of one or more Spotify playlists with
     the posts of one or more subreddits (currently only supports one subreddit
     per playlist).
-
-    TODO: implement many-to-many subreddit-playlist multiplicity
 
     Args:
         config (dict): configuration object
@@ -91,6 +99,7 @@ def update_auto_playlists(config):
     except FileNotFoundError:
         praw_cache = {}
     
+    tasks = []
     for subreddit in config['AUTO_PLAYLIST_SUBREDDITS']:
         playlist_id = subreddit_playlist_ids.get(subreddit['name'])
         if not playlist_id:
@@ -100,9 +109,12 @@ def update_auto_playlists(config):
                 raise KeyError('Building a new playlist in the ' \
                                'playlist_builder module requires the config ' \
                                'option SPOTIFY_USERNAME') from KeyError
-        tracks = get_subreddit_posts(spotify, reddit, subreddit, config,
-                                     praw_cache)
-        logger.info(f'Got {len(tracks)} track(s) from "r/{subreddit["name"]}"')
+        tasks.append(asyncio.create_task(get_subreddit_posts(spotify, reddit,
+                subreddit, config, praw_cache)))
+
+    for task in asyncio.as_completed(tasks):
+        tracks, subreddit = await task
+        playlist_id = subreddit_playlist_ids.get(subreddit['name'])
         if playlist_id:
             playlist = update_existing_playlist(spotify, playlist_id, tracks,
                                                 subreddit['limit'],
@@ -113,16 +125,17 @@ def update_auto_playlists(config):
             playlist = build_new_playlist(spotify, username, subreddit['name'],
                                           tracks)
             subreddit_playlist_ids[subreddit['name']] = playlist['id']
-            with open(ids_path, 'w', encoding='utf-8') as _file:
-                json.dump(subreddit_playlist_ids, _file, indent=2)
         logger.info(f"'{playlist['name']}': " \
                     f"{playlist['external_urls'].get('spotify')}")
+
+    with open(ids_path, 'w', encoding='utf-8') as _file:
+        json.dump(subreddit_playlist_ids, _file, indent=2)
 
     with open(cache_file, 'w') as _file:
         json.dump(praw_cache, _file)
 
 
-def get_subreddit_posts(spotify, reddit, subreddit, config, praw_cache):
+async def get_subreddit_posts(spotify, reddit, subreddit, config, praw_cache):
     """Filters the submissions for the provided subreddit' and tries to resolve
     each into a Spotify track until all the submissions are parsed or the track
     limit has been met.
@@ -135,9 +148,10 @@ def get_subreddit_posts(spotify, reddit, subreddit, config, praw_cache):
         praw_cache (dict): cached praw submissions
 
     Returns:
-        ([(str, str), ...]): list of Spotify track ('id', 'name') tuples
+        (([(str, str), ...], dict)): list of Spotify track ('id', 'name')
+                                     tuples and subreddit config dict
     """
-    sub = reddit.subreddit(subreddit['name'])
+    sub = await reddit.subreddit(subreddit['name'])
     funcs = {'top': sub.top,
              'hot': sub.hot,
              'new': sub.new,
@@ -145,32 +159,34 @@ def get_subreddit_posts(spotify, reddit, subreddit, config, praw_cache):
              'controversial': sub.controversial}
     sub_limit = config.get('AUTO_PLAYLIST_SUBREDDIT_LIMIT', 500) or None
     try:
-        subs = list(funcs[subreddit['type']](limit=sub_limit,
-                                             time_filter=subreddit['period']))
+        subs = list(await funcs[subreddit['type']](limit=sub_limit,
+                time_filter=subreddit['period']))
     except TypeError:
-        subs = list(funcs[subreddit['type']](limit=sub_limit))
+        subs = list(await funcs[subreddit['type']](limit=sub_limit))
+    msg = f'Filtering {len(subs)} "r/{subreddit["name"]}" ' \
+          f'{subreddit["type"]} posts'
+    logger.info(msg)
     submissions = []
-    for submission in tqdm(subs,
-            desc=f'Filtering {len(subs)} r/{subreddit["name"]} ' \
-                 f'{subreddit["type"]} posts'):
+    for submission in tqdm(subs, desc=msg):
         if submission.id in praw_cache:
             continue
         submissions.append(submission)
         praw_cache[submission.id] = True
-
-    new_tracks = []
+    msg = f'Searching Spotify for {len(submissions)} new submission(s) from ' \
+          f'"r/{subreddit["name"]}"'
+    logger.info(msg)
     payload = [submissions,
               [spotify] * len(submissions),
               [config.get('AUTO_PLAYLIST_FUZZ_RATIO', 50)] * len(submissions)]
+    new_tracks = []
     with ThreadPoolExecutor(max_workers=8) as executor:
         new_tracks = list(tqdm(executor.map(process, *payload),
-                total=len(submissions),
-                desc=f'Searching Spotify for {len(submissions)} ' \
-                     f'r/{subreddit["name"]} {subreddit["type"]} posts'))
+                               total=len(submissions), desc=msg))
     new_tracks = [track for track in new_tracks if track]
-    new_tracks = new_tracks[:subreddit['limit']]
+    logger.info(f'Got {len(new_tracks)} Spotify track(s) from new ' \
+                f'"r/{subreddit["name"]}" posts')
 
-    return new_tracks
+    return new_tracks, subreddit
 
 
 def process(submission, spotify, threshold):
@@ -350,17 +366,20 @@ def update_existing_playlist(spotify, playlist, new_tracks, limit, verbosity):
             track_index += 1
             track_count -= 1
 
-    logger.info(f"{len(tracks_added)} new tracks added")
     if tracks_added:
+        logger.info(f"{len(tracks_added)} new tracks added")
         if verbosity > 0:
             for track in tracks_added:
                 logger.info(f"\t{track}")
 
-    logger.info(f"{len(tracks_removed)} old tracks removed")
     if tracks_removed:
+        logger.info(f"{len(tracks_removed)} old tracks removed")
         if verbosity > 0:
             for track in tracks_removed:
                 logger.info(f"\t{track}")
+    
+    if not (tracks_added or tracks_removed):
+        logger.info('No tracks added or removed')
 
     if remove_payload:
         spotify.playlist_remove_specific_occurrences_of_items(playlist,
