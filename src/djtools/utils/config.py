@@ -65,7 +65,7 @@ def build_config():
         config.update(args)
 
     # if doing any 'sync' operations...
-    syncing = any(op in config for op in {'DOWNLOAD_XML', 'DOWNLOAD_MUSIC',
+    syncing = any(config.get(op) for op in {'DOWNLOAD_XML', 'DOWNLOAD_MUSIC',
             'UPLOAD_XML', 'UPLOAD_MUSIC'})
     if syncing:
         # ensure AWS_PROFILE is set
