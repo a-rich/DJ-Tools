@@ -129,6 +129,10 @@ Please be sure to checkout the package-level README files regarding the usage of
     "UPLOAD_EXCLUDE_DIRS": ["New Music"],
     "DOWNLOAD_INCLUDE_DIRS": [],
     "DOWNLOAD_EXCLUDE_DIRS": [],
+    "DOWNLOAD_MUSIC": false,
+    "DOWNLOAD_XML": false,
+    "UPLOAD_MUSIC": false,
+    "UPLOAD_XML": false,
     "AWS_USE_DATE_MODIFIED": false,
     "XML_IMPORT_USER": "myfriend",
     "XML_PATH": "/path/to/xmls/my_rekordbox.xml",
@@ -138,10 +142,6 @@ Please be sure to checkout the package-level README files regarding the usage of
     "YOUTUBE_DL_URL": "https://soundcloud.com/me/sets/to-download",
     "RANDOMIZE_TRACKS": false,
     "RANDOMIZE_TRACKS_PLAYLISTS": ["Halftime", "Trip Hop"],
-    "DOWNLOAD_MUSIC": false,
-    "DOWNLOAD_XML": false,
-    "UPLOAD_MUSIC": false,
-    "UPLOAD_XML": false,
     "GET_GENRES": false,
     "GENRE_EXCLUDE_DIRS": [],
     "GENRE_TAG_DELIMITER": "/",
@@ -177,6 +177,10 @@ Please be sure to checkout the package-level README files regarding the usage of
 * `UPLOAD_EXCLUDE_DIRS`: the list of paths to folders (relative to the `DJ Music` folder on your `USB_PATH`) that should NOT be uploaded to the `beatcloud` when running the `upload_music` sync operation
 * `DOWNLOAD_INCLUDE_DIRS`: the list of paths to folders (relative to the `DJ Music` folder on your `USB_PATH`) that should exclusively be downloaded from the `beatcloud` when running the `download_music` sync operation
 * `DOWNLOAD_EXCLUDE_DIRS`: the list of paths to folders (relative to the `DJ Music` folder on your `USB_PATH`) that should NOT be downloaded from the `beatcloud` when running the `download_music` sync operation
+* `DOWNLOAD_MUSIC`: sync remote beatcloud to "DJ Music" folder
+* `DOWNLOAD_XML`: sync remote XML of `XML_IMPORT_USER` to parent of `XML_PATH`
+* `UPLOAD_MUSIC`: sync local "DJ Music" folder to the beatcloud
+* `UPLOAD_XML`: sync local `XML_PATH` to the beatcloud
 * `AWS_USE_DATE_MODIFIED`: up/download files that already exist at the destination if the date modified field at the source is after that of the destination (i.e. the ID3 tags have been changed)...BE SURE THAT ALL USERS OF THIS `BEATCLOUD` INSTANCE ARE ON BOARD BEFORE UPLOADING WITH THIS FLAG SET!
 * `XML_IMPORT_USER`: the username of a fellow `beatcloud` user (as present in `registered_users.json`) from whose Rekordbox XML you are importing tracks
 * `XML_PATH`: the full path to your Rekordbox XML file which should contain an up-to-date export of your Collection...the directory where this points to is also where all other XMLs generated or utilized by this library will exist
@@ -186,10 +190,6 @@ Please be sure to checkout the package-level README files regarding the usage of
 * `YOUTUBE_DL_URL`: URL from which music files should be downloaded (i.e. a Soundcloud playlist)
 * `RANDOMIZE_TRACKS`: boolean flag to trigger the emulated playlist shuffling feature on each playlist in `RANDOMIZE_TRACKS_PLAYLISTS`
 * `RANDOMIZE_TRACKS_PLAYLISTS`: list of playlist names (must exist in `XML_PATH`) that should have their tracks shuffled
-* `DOWNLOAD_MUSIC`: sync remote beatcloud to "DJ Music" folder
-* `DOWNLOAD_XML`: sync remote XML of `XML_IMPORT_USER` to parent of `XML_PATH`
-* `UPLOAD_MUSIC`: sync local "DJ Music" folder to the beatcloud
-* `UPLOAD_XML`: sync local `XML_PATH` to the beatcloud
 * `GET_GENRES`: boolean flag to trigger an analysis of the genre ID3 tags of your local mp3 files (prints the number of tracks in alphabetized genres...increasing `VERBOSITY` prints tracks in each genre)
 * `GENRE_EXCLUDE_DIRS`: list of partial paths (folders) which cannot appear in full paths of mp3 files when considering their genre ID3 tags
 * `GENRE_TAG_DELIMITER`: character to use for splitting a track's genre ID3 tag when tag contains multiple genres (e.g. "/")
