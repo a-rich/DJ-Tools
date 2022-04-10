@@ -22,9 +22,10 @@ from spotipy.oauth2 import SpotifyOAuth
 from tqdm import tqdm
 
 # silence PRAW, Spotify, and urllib3 loggers
-for logger in ['prawcore', 'spotipy', 'urllib3']:
+for logger in ['asyncprawcore', 'spotipy', 'urllib3']:
     logger = logging.getLogger(logger)
     logger.setLevel(logging.CRITICAL)
+logging.getLogger('asyncio').setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 
@@ -115,18 +116,24 @@ async def async_update_auto_playlists(config):
     for task in asyncio.as_completed(tasks):
         tracks, subreddit = await task
         playlist_id = subreddit_playlist_ids.get(subreddit['name'])
-        if playlist_id:
+        playlist = None
+        if playlist_id and tracks:
             playlist = update_existing_playlist(spotify, playlist_id, tracks,
                                                 subreddit['limit'],
                                                 config.get('VERBOSITY', 0))
-        else:
+        elif tracks:
             logger.warning(f'Unable to get ID for {subreddit["name"]}...' \
                             'creating a new playlist')
             playlist = build_new_playlist(spotify, username, subreddit['name'],
                                           tracks)
             subreddit_playlist_ids[subreddit['name']] = playlist['id']
-        logger.info(f"'{playlist['name']}': " \
-                    f"{playlist['external_urls'].get('spotify')}")
+        elif playlist_id:
+            playlist = spotify.playlist(playlist_id)
+        if playlist:
+            logger.info(f"'{playlist['name']}': " \
+                        f"{playlist['external_urls'].get('spotify')}")
+    
+    await reddit.close()
 
     with open(ids_path, 'w', encoding='utf-8') as _file:
         json.dump(subreddit_playlist_ids, _file, indent=2)
@@ -159,10 +166,10 @@ async def get_subreddit_posts(spotify, reddit, subreddit, config, praw_cache):
              'controversial': sub.controversial}
     sub_limit = config.get('AUTO_PLAYLIST_SUBREDDIT_LIMIT', 500) or None
     try:
-        subs = list(await funcs[subreddit['type']](limit=sub_limit,
-                time_filter=subreddit['period']))
+        subs = [x async for x in funcs[subreddit['type']](limit=sub_limit,
+                time_filter=subreddit['period'])]
     except TypeError:
-        subs = list(await funcs[subreddit['type']](limit=sub_limit))
+        subs = [x async for x in funcs[subreddit['type']](limit=sub_limit)]
     msg = f'Filtering {len(subs)} "r/{subreddit["name"]}" ' \
           f'{subreddit["type"]} posts'
     logger.info(msg)
@@ -172,19 +179,22 @@ async def get_subreddit_posts(spotify, reddit, subreddit, config, praw_cache):
             continue
         submissions.append(submission)
         praw_cache[submission.id] = True
-    msg = f'Searching Spotify for {len(submissions)} new submission(s) from ' \
-          f'"r/{subreddit["name"]}"'
-    logger.info(msg)
-    payload = [submissions,
-              [spotify] * len(submissions),
-              [config.get('AUTO_PLAYLIST_FUZZ_RATIO', 50)] * len(submissions)]
     new_tracks = []
-    with ThreadPoolExecutor(max_workers=8) as executor:
-        new_tracks = list(tqdm(executor.map(process, *payload),
-                               total=len(submissions), desc=msg))
-    new_tracks = [track for track in new_tracks if track]
-    logger.info(f'Got {len(new_tracks)} Spotify track(s) from new ' \
-                f'"r/{subreddit["name"]}" posts')
+    if len(submissions):
+        msg = f'Searching Spotify for {len(submissions)} new submission(s) from ' \
+            f'"r/{subreddit["name"]}"'
+        logger.info(msg)
+        payload = [submissions,
+                [spotify] * len(submissions),
+                [config.get('AUTO_PLAYLIST_FUZZ_RATIO', 50)] * len(submissions)]
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            new_tracks = list(tqdm(executor.map(process, *payload),
+                                total=len(submissions), desc=msg))
+        new_tracks = [track for track in new_tracks if track]
+        logger.info(f'Got {len(new_tracks)} Spotify track(s) from new ' \
+                    f'"r/{subreddit["name"]}" posts')
+    else:
+        logger.info(f'No new submissions from "r/{subreddit["name"]}"')
 
     return new_tracks, subreddit
 
