@@ -21,6 +21,8 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from tqdm import tqdm
 
+from djtools.utils.helpers import catch, raise_
+
 # silence PRAW, Spotify, and urllib3 loggers
 for logger in ['asyncprawcore', 'spotipy', 'urllib3']:
     logger = logging.getLogger(logger)
@@ -60,7 +62,7 @@ async def async_update_auto_playlists(config):
                 client_secret=config['SPOTIFY_CLIENT_SECRET'],
                 redirect_uri=config['SPOTIFY_REDIRECT_URI'],
                 scope='playlist-modify-public',
-                requests_timeout=10,
+                requests_timeout=30,
                 cache_path=os.path.join(os.path.dirname(__file__),
                         '.spotify.cache').replace(os.sep, '/')))
     except KeyError:
@@ -73,7 +75,8 @@ async def async_update_auto_playlists(config):
         reddit = praw.Reddit(
                 client_id=config['REDDIT_CLIENT_ID'],
                 client_secret=config['REDDIT_CLIENT_SECRET'],
-                user_agent=config['REDDIT_USER_AGENT'])
+                user_agent=config['REDDIT_USER_AGENT'],
+                timeout=30)
     except KeyError:
         raise KeyError('Using the playlist_builder module requires the ' \
                        'following config options: REDDIT_CLIENT_ID, ' \
@@ -166,10 +169,14 @@ async def get_subreddit_posts(spotify, reddit, subreddit, config, praw_cache):
              'controversial': sub.controversial}
     sub_limit = config.get('AUTO_PLAYLIST_SUBREDDIT_LIMIT', 500) or None
     try:
-        subs = [x async for x in funcs[subreddit['type']](limit=sub_limit,
+        subs = [x async for x in catch(funcs[subreddit['type']],
+                handle=lambda exc: raise_(exc) if isinstance(exc, TypeError)
+                        else logger.info(exc),
+                limit=sub_limit,
                 time_filter=subreddit['period'])]
     except TypeError:
-        subs = [x async for x in funcs[subreddit['type']](limit=sub_limit)]
+        subs = [x async for x in catch(funcs[subreddit['type']],
+                handle=lambda exc: logger.info(exc), limit=sub_limit)]
     msg = f'Filtering {len(subs)} "r/{subreddit["name"]}" ' \
           f'{subreddit["type"]} posts'
     logger.info(msg)

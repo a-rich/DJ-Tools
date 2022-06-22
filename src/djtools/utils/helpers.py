@@ -41,6 +41,11 @@ def upload_log(config, log_file):
 
 
 def make_dirs(path):
+    """This function performs operating system agnostic directory creation.
+
+    Args:
+        path (str): directory path
+    """
     if os.name == 'nt':
         cwd = os.getcwd()
         path_parts = path.split(os.path.sep)
@@ -53,3 +58,32 @@ def make_dirs(path):
         os.chdir(cwd)
     else:
         os.makedirs(path, exist_ok=True)
+
+
+def catch(func, *args, handle=lambda e : None, **kwargs):  
+    """This function permits one-line try/except logic for comprehensions.
+
+    Args:
+        func (function): function to try
+        handle (function, optional): Handler function.
+                Defaults to lambda e: None.
+
+    Returns:
+        function return: return of func or handle
+    """
+    try:
+        return func(*args, **kwargs)
+    except Exception as exc:
+        return handle(exc)
+
+
+def raise_(exc):
+    """This function permits raising exceptions in unnamed functions.
+
+    Args:
+        exc (Exception): arbitrary exception
+
+    Raises:
+        exc: arbitrary exception
+    """
+    raise exc
