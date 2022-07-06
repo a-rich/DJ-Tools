@@ -239,9 +239,13 @@ def fuzzy_match(spotify, title, threshold):
     if not (title and artist):
         return []
 
-    results = spotify.search(
-            q=f"{title.replace(' ', '+')}+{artist.replace(' ', '+')}",
-            type='track', limit=50)
+    try:
+        results = spotify.search(
+                q=f"{title.replace(' ', '+')}+{artist.replace(' ', '+')}",
+                type='track', limit=50)
+    except Exception as exc:
+        logger.error(f'Error searching for "{title} - {artist}": {exc}')
+        return None
 
     match = filter_results(spotify, results, threshold, title, artist)
     if match:
