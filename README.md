@@ -45,7 +45,8 @@ To take full advantage of this library, users must:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`Title (Artist2 Remix) - Artist1, Artist2`
 
 5. utilize the `genre` ID3 / Rekordbox tag for music files in your Collection
-6.  have a Spotify account
+5. utilize the `My Tags` feature of Rekordbox in your Collection
+7.  have a Spotify account
 
 The core functionality of this library can be broken up into three components or packages:
 1. `sync`: allows users to push and pull audio and Rekordbox XML files to and from the `beatcloud`
@@ -53,8 +54,7 @@ The core functionality of this library can be broken up into three components or
     * compare the tracks of one or more Spotify playlists against the `beatcloud` (to identify redundancies)
     * update Spotify playlists using the top posts of subreddits
 3. `utils`: contains a variety of utilities for things such as:
-    * generating an XML with playlists based on the genre tags of your Collection
-    * analyzing the genre tags directly from your local mp3 files
+    * generating an XML with playlists based on the tags of your Collection
     * emulating a playlist randomization feature which is strangely absent from Rekordbox
     * downloading mp3 files from a URL (e.g. Soundcloud...don't use YouTube because that's some highly compressed garbage)
 
@@ -111,7 +111,7 @@ Please be sure to checkout the package-level README files regarding the usage of
 * `sync`
     - [registered_users.json](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/sync)
 * `utils`
-    - [generate_genre_playlists.json](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/utils)
+    - [generate_tags_playlists.json](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/utils)
 
 ## Populating `config.json`
 `DJ Tools` contains quite a bit of functionality, but all of it is configurable via `config.json`. You may decide to not use `config.json` at all and, instead, opt to use the corollary command-line arguments; all configuration options may be overridden via command-line arguments of the same name but in lowercase. Example:
@@ -141,11 +141,8 @@ Please be sure to checkout the package-level README files regarding the usage of
     "YOUTUBE_DL_URL": "https://soundcloud.com/me/sets/to-download",
     "RANDOMIZE_TRACKS": false,
     "RANDOMIZE_TRACKS_PLAYLISTS": ["Halftime", "Trip Hop"],
-    "GET_GENRES": false,
-    "GENRE_EXCLUDE_DIRS": [],
-    "GENRE_TAG_DELIMITER": "/",
-    "GENERATE_GENRE_PLAYLISTS": true,
-    "GENERATE_GENRE_PLAYLISTS_REMAINDER": "folder",
+    "GENERATE_TAGS_PLAYLISTS": true,
+    "GENERATE_TAGS_PLAYLISTS_REMAINDER": "folder",
     "GENERATE_GENRE_PLAYLISTS_PURE": ["Techno", "Hip Hop"],
     "CHECK_TRACK_OVERLAP": false,
     "CHECK_TRACK_OVERLAP_FUZZ_RATIO": 80,
@@ -189,12 +186,9 @@ Please be sure to checkout the package-level README files regarding the usage of
 * `YOUTUBE_DL_URL`: URL from which music files should be downloaded (i.e. a Soundcloud playlist)
 * `RANDOMIZE_TRACKS`: boolean flag to trigger the emulated playlist shuffling feature on each playlist in `RANDOMIZE_TRACKS_PLAYLISTS`
 * `RANDOMIZE_TRACKS_PLAYLISTS`: list of playlist names (must exist in `XML_PATH`) that should have their tracks shuffled
-* `GET_GENRES`: boolean flag to trigger an analysis of the genre ID3 tags of your local mp3 files (prints the number of tracks in alphabetized genres...increasing `VERBOSITY` prints tracks in each genre)
-* `GENRE_EXCLUDE_DIRS`: list of partial paths (folders) which cannot appear in full paths of mp3 files when considering their genre ID3 tags
-* `GENRE_TAG_DELIMITER`: character to use for splitting a track's genre ID3 tag when tag contains multiple genres (e.g. "/")
-* `GENERATE_GENRE_PLAYLISTS`: boolean flag to trigger the generation of a playlist structure (as informed by `generate_genre_playlists.json`) using the genre tags in `XML_PATH`...the resulting XML file is `XML_PATH` prefixed with "`auto_`"
-* `GENERATE_GENRE_PLAYLISTS_REMAINDER`: whether tracks of remainder genres (those not specified in `generate_genre_playlists.json`) will be placed in a `folder` called "Other" with individual genre playlists or a `playlist` called "Other"
-* `GENERATE_GENRE_PLAYLISTS_PURE`: list of genre tags (case-sensitive) which will each have a "Pure" playlist generated for...each item must be accompanied with a "Pure \<genre>" entry in `generate_genre_playlists.json`,
+* `GENERATE_TAGS_PLAYLISTS`: boolean flag to trigger the generation of a playlist structure (as informed by `generate_tags_playlists.json`) using the tags in `XML_PATH`...the resulting XML file is `XML_PATH` prefixed with "`auto_`"
+* `GENERATE_TAGS_PLAYLISTS_REMAINDER`: whether tracks of remainder tags (those not specified in `generate_tags_playlists.json`) will be placed in a `folder` called "Other" with individual tag playlists or a `playlist` called "Other"
+* `GENERATE_GENRE_PLAYLISTS_PURE`: list of genre tags (case-sensitive) which will each have a "Pure" playlist generated for...each item must be accompanied with a "Pure \<genre>" entry in `generate_tags_playlists.json`,
 * `CHECK_TRACK_OVERLAP`: boolean flag to trigger checking the contents of Spotify playlists specified in `SPOTIFY_CHECK_PLAYLISTS` and the local files specified in `LOCAL_CHECK_DIRS` against the `beatcloud` (to identify redundancies)
 * `CHECK_TRACK_OVERLAP_FUZZ_RATIO`: the minimum Levenshtein similarity for indicating potential redundancies between Spotify playlists / local directories and the `beatcloud`
 * `LOCAL_CHECK_DIRS`: list of local directories (under "DJ Music") to use with `CHECK_TRACK_OVERLAP`,
@@ -266,7 +260,7 @@ To ensure Collection consistency and successful operation of `DJ Tools`, the fol
 2. files named using convention: `Title (Artist2 Remix) - Artist1, Artist2`
 3. `title` and `artist` tags populated (ideally using software such as [Mp3tag](https://www.mp3tag.de/en/) or [Picard](https://picard.musicbrainz.org/))
 4. `key` tags populated (ideally using Mixed In Key)
-5. `genre` tags populated (split with common delimiter if multiple genres)
+5. `genre` tags populated (split with a common delimiter of `/` if multiple genres)
 6. `beatgrid` should be set correctly
 7. `hot cues` should be set the expected schema
 8. `comment` tags 1st cleared and then populated with important information
@@ -331,7 +325,7 @@ Then select the track(s), playlist(s), or folder(s) and choose "Import To Collec
 ---
 
 ## Reloading tags
-Reloading tags repopulates the Rekordbox tags using data stored in the MP3 files' ID3 tags. Be careful though, information you edit in Rekordbox doesn't necessarily overwrite the files' ID3 tags; for example, modifying `genre` tags in Rekordbox _does_ edit the ID3 tags but modifying `comment` tags _does not_. You may inadvertently overwrite your hard work to cleanup `comment` tags by running `Reload Tags`! If you want data either generated by another `beatcloud` user or by utilities, like `generate_genre_playlists` or `randomize_tracks`, you must reimport those tracks / playlists in Rekordbox rather than `Reload Tags`.
+Reloading tags repopulates the Rekordbox tags using data stored in the MP3 files' ID3 tags. Be careful though, information you edit in Rekordbox doesn't necessarily overwrite the files' ID3 tags; for example, modifying `genre` tags in Rekordbox _does_ edit the ID3 tags but modifying `comment` tags _does not_. You may inadvertently overwrite your hard work to cleanup `comment` tags by running `Reload Tags`! If you want data either generated by another `beatcloud` user or by utilities, like `generate_tags_playlists` or `randomize_tracks`, you must reimport those tracks / playlists in Rekordbox rather than `Reload Tags`.
 
 ![alt text](https://raw.githubusercontent.com/a-rich/DJ-Tools/main/images/Pioneer_Reload_Tags.png "Reloading Tags")
 

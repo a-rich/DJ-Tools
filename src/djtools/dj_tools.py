@@ -9,9 +9,8 @@ Spotify operations:
 Utils operations:
     * CHECK_TRACK_OVERLAP (local_dirs_checker.py): Identify overlap between
         local directories and beatcloud.
-    * GENERATE_GENRE_PLAYLISTS (generate_genre_playlists.py): Automatically
-        create a desired playlist structure based on the genre ID3 tags present
-        in an XML.
+    * GENERATE_TAGS_PLAYLISTS (generate_tags_playlists.py): Automatically
+        create a playlist structure based on the tags present in an XML.
     * GET_GENRES (get_genres.py): Display track counts for all genres using the
         ID3 tag field of local mp3 files.
     * RANDOMIZE_TRACKS (randomize_tracks.py): Set ID3 tags of tracks in
