@@ -22,6 +22,8 @@ In order to use the `playlist_checker` module, you must add a `playlist_checker.
 
 The `CHECK_TRACK_OVERLAP_FUZZ_RATIO` configuration option `[0, 100]` sets the minimum Levenshtein similarity between the `Title - Artist` of the Spotify tracks (or file names of local files) and the file names of tracks in the `beatcloud`.
 
+By providing a list of absolute paths to local directories as `LOCAL_CHECK_DIRS`, you can also compare the contents of Spotify playlists with local files to check for overlap prior to uploading.
+
 Triggering the `playlist_checker` module can be done by setting `CHECK_TRACK_OVERLAP: true`.
 
 ## playlist_builder
