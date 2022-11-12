@@ -26,12 +26,13 @@
     - Reloading tags
     - Exporting to a Device
 # Release Plan
-* 2.2.1
+* 2.2.2
     - `spotify.playlist_builder`
         - [ ] Improved Reddit post parsing and Spotify searching
 * 2.3.0
     - `utils`
-        - [ ] Playlist organization by Rekordbox Tags
+        - [x] Playlist organization by Rekordbox "My Tags" (beta)
+        - [ ] AND/OR logic for "My Tags" (and genres?)
 
 # Overview
 `DJ Tools` is a library for managing a Collection of audio files (not necessarily mp3 files, although that is preferred) and Rekordbox XML files.
