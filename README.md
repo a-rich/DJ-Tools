@@ -26,13 +26,12 @@
     - Reloading tags
     - Exporting to a Device
 # Release Plan
-* 2.1.1
-* 2.2.0 (July 1st release)
-    - `spotify.playlist_builder` / `spotify.playlist_checker`
-        - [x] async PRAW
-        - [x] tekore (async Spotify API client)
-        - [x] cache reddit posts results
-        - [x] `playlist_checker` functionality for non-Spotify (local) tracks
+* 2.2.1
+    - `spotify.playlist_builder`
+        - [ ] Improved Reddit post parsing and Spotify searching
+* 2.3.0
+    - `utils`
+        - [ ] Playlist organization by Rekordbox Tags
 
 # Overview
 `DJ Tools` is a library for managing a Collection of audio files (not necessarily mp3 files, although that is preferred) and Rekordbox XML files.
