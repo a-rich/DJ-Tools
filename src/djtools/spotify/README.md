@@ -18,11 +18,13 @@ If using the `playlist_builder` module, you must also create a Reddit API applic
 # Usage
 
 ## playlist_checker
-In order to use the `playlist_checker` module, you must add a `playlist_checker.json` file to the `config` folder. This JSON contains playlist names as keys and Spotify playlist IDs as values (the playlist names don't necessarily have to match the actual names of the Spotify playlists). Then you must add the playlist names you want to check against to the `SPOTIFY_PLAYLISTS_CHECK` configuration option. 
+In order to use the `playlist_checker` module, you must add a `playlist_checker.json` file to the `config` folder. This JSON contains playlist names as keys and Spotify playlist IDs as values (the playlist names don't necessarily have to match the actual names of the Spotify playlists). Then you must add the playlist names you want to check against to the `SPOTIFY_CHECK_PLAYLISTS` configuration option. 
 
-The `SPOTIFY_PLAYLISTS_CHECK_FUZZ_RATIO` configuration option `[0, 100]` sets the minimum Levenshtein similarity between the `Title - Artist` of the Spotify tracks and the file names of tracks in the `beatcloud`.
+The `CHECK_TRACK_OVERLAP_FUZZ_RATIO` configuration option `[0, 100]` sets the minimum Levenshtein similarity between the `Title - Artist` of the Spotify tracks (or file names of local files) and the file names of tracks in the `beatcloud`.
 
-Triggering the `playlist_checker` module can be done by setting `SPOTIFY_CHECK_PLAYLISTS: true`.
+By providing a list of absolute paths to local directories as `LOCAL_CHECK_DIRS`, you can also compare the contents of Spotify playlists with local files to check for overlap prior to uploading.
+
+Triggering the `playlist_checker` module can be done by setting `CHECK_TRACK_OVERLAP: true`.
 
 ## playlist_builder
 In order to use the `playlist_builder` module, you must add a `playlist_builder.json` file to the `config` folder. This JSON contains subreddits as keys and Spotify playlist IDs as values. Unlike `playlist_checker.json`, the JSON keys _MUST_ match the subreddit (case-insensitive). Then you must add the subreddits you want to generate / update paylists for to the `AUTO_PLAYLIST_SUBREDDITS` configuration option. `AUTO_PLAYLIST_FUZZ_RATIO` `[0, 100]` sets the minimum Levenshtein similarity to add tracks to an auto-playlist when comparing the subreddit post title to a Spotify API search result. `AUTO_PLAYLIST_SUBREDDIT_LIMIT` `[0, 999]` restricts the number of subreddit posts to consider when attempting to search Spotify for tracks. If this option isn't specified, then a value of `500` will be used. If the option's value is falsey, then `None` will be used i.e. there will be no limit and 999 posts will be retrieved (if possible). 

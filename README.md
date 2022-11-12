@@ -26,12 +26,12 @@
     - Reloading tags
     - Exporting to a Device
 # Release Plan
-* 2.1.1
-* 2.2.0 (July 1st release)
-    - `spotify.playlist_builder` / `spotify.playlist_checker`
-        - [x] async PRAW
-        - [ ] tekore (async Spotify API client)
-        - [ ] cache reddit posts results
+* 2.2.1
+    - `spotify.playlist_builder`
+        - [ ] Improved Reddit post parsing and Spotify searching
+* 2.3.0
+    - `utils`
+        - [ ] Playlist organization by Rekordbox Tags
 
 # Overview
 `DJ Tools` is a library for managing a Collection of audio files (not necessarily mp3 files, although that is preferred) and Rekordbox XML files.
@@ -116,7 +116,7 @@ Please be sure to checkout the package-level README files regarding the usage of
 ## Populating `config.json`
 `DJ Tools` contains quite a bit of functionality, but all of it is configurable via `config.json`. You may decide to not use `config.json` at all and, instead, opt to use the corollary command-line arguments; all configuration options may be overridden via command-line arguments of the same name but in lowercase. Example:
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`djtools --sync_operations download_xml --xml_import_user bob --aws_profile DJ`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`djtools --download_xml --xml_import_user bob --aws_profile DJ`
 
 
 ### Example `config.json`:
@@ -128,6 +128,10 @@ Please be sure to checkout the package-level README files regarding the usage of
     "UPLOAD_EXCLUDE_DIRS": ["New Music"],
     "DOWNLOAD_INCLUDE_DIRS": [],
     "DOWNLOAD_EXCLUDE_DIRS": [],
+    "DOWNLOAD_MUSIC": false,
+    "DOWNLOAD_XML": false,
+    "UPLOAD_MUSIC": false,
+    "UPLOAD_XML": false,
     "AWS_USE_DATE_MODIFIED": false,
     "XML_IMPORT_USER": "myfriend",
     "XML_PATH": "/path/to/xmls/my_rekordbox.xml",
@@ -137,16 +141,16 @@ Please be sure to checkout the package-level README files regarding the usage of
     "YOUTUBE_DL_URL": "https://soundcloud.com/me/sets/to-download",
     "RANDOMIZE_TRACKS": false,
     "RANDOMIZE_TRACKS_PLAYLISTS": ["Halftime", "Trip Hop"],
-    "SYNC_OPERATIONS": ["download_music", "download_xml"],
     "GET_GENRES": false,
     "GENRE_EXCLUDE_DIRS": [],
     "GENRE_TAG_DELIMITER": "/",
     "GENERATE_GENRE_PLAYLISTS": true,
     "GENERATE_GENRE_PLAYLISTS_REMAINDER": "folder",
     "GENERATE_GENRE_PLAYLISTS_PURE": ["Techno", "Hip Hop"],
-    "SPOTIFY_CHECK_PLAYLISTS": false,
-    "SPOTIFY_PLAYLISTS_CHECK": ["Download", "Maybe Download"],
-    "SPOTIFY_PLAYLISTS_CHECK_FUZZ_RATIO": 80,
+    "CHECK_TRACK_OVERLAP": false,
+    "CHECK_TRACK_OVERLAP_FUZZ_RATIO": 80,
+    "LOCAL_CHECK_DIRS": ["New Music"],
+    "SPOTIFY_CHECK_PLAYLISTS": ["Download", "Maybe Download"],
     "SPOTIFY_CLIENT_ID": "",
     "SPOTIFY_CLIENT_SECRET": "",
     "SPOTIFY_REDIRECT_URI": "",
@@ -172,6 +176,10 @@ Please be sure to checkout the package-level README files regarding the usage of
 * `UPLOAD_EXCLUDE_DIRS`: the list of paths to folders (relative to the `DJ Music` folder on your `USB_PATH`) that should NOT be uploaded to the `beatcloud` when running the `upload_music` sync operation
 * `DOWNLOAD_INCLUDE_DIRS`: the list of paths to folders (relative to the `DJ Music` folder on your `USB_PATH`) that should exclusively be downloaded from the `beatcloud` when running the `download_music` sync operation
 * `DOWNLOAD_EXCLUDE_DIRS`: the list of paths to folders (relative to the `DJ Music` folder on your `USB_PATH`) that should NOT be downloaded from the `beatcloud` when running the `download_music` sync operation
+* `DOWNLOAD_MUSIC`: sync remote beatcloud to "DJ Music" folder
+* `DOWNLOAD_XML`: sync remote XML of `XML_IMPORT_USER` to parent of `XML_PATH`
+* `UPLOAD_MUSIC`: sync local "DJ Music" folder to the beatcloud
+* `UPLOAD_XML`: sync local `XML_PATH` to the beatcloud
 * `AWS_USE_DATE_MODIFIED`: up/download files that already exist at the destination if the date modified field at the source is after that of the destination (i.e. the ID3 tags have been changed)...BE SURE THAT ALL USERS OF THIS `BEATCLOUD` INSTANCE ARE ON BOARD BEFORE UPLOADING WITH THIS FLAG SET!
 * `XML_IMPORT_USER`: the username of a fellow `beatcloud` user (as present in `registered_users.json`) from whose Rekordbox XML you are importing tracks
 * `XML_PATH`: the full path to your Rekordbox XML file which should contain an up-to-date export of your Collection...the directory where this points to is also where all other XMLs generated or utilized by this library will exist
@@ -181,16 +189,16 @@ Please be sure to checkout the package-level README files regarding the usage of
 * `YOUTUBE_DL_URL`: URL from which music files should be downloaded (i.e. a Soundcloud playlist)
 * `RANDOMIZE_TRACKS`: boolean flag to trigger the emulated playlist shuffling feature on each playlist in `RANDOMIZE_TRACKS_PLAYLISTS`
 * `RANDOMIZE_TRACKS_PLAYLISTS`: list of playlist names (must exist in `XML_PATH`) that should have their tracks shuffled
-* `SYNC_OPERATIONS`: list of sync operations to run in order -- choices: {`download_music`, `download_xml`, `upload_music`, `upload_xml`}
 * `GET_GENRES`: boolean flag to trigger an analysis of the genre ID3 tags of your local mp3 files (prints the number of tracks in alphabetized genres...increasing `VERBOSITY` prints tracks in each genre)
 * `GENRE_EXCLUDE_DIRS`: list of partial paths (folders) which cannot appear in full paths of mp3 files when considering their genre ID3 tags
 * `GENRE_TAG_DELIMITER`: character to use for splitting a track's genre ID3 tag when tag contains multiple genres (e.g. "/")
 * `GENERATE_GENRE_PLAYLISTS`: boolean flag to trigger the generation of a playlist structure (as informed by `generate_genre_playlists.json`) using the genre tags in `XML_PATH`...the resulting XML file is `XML_PATH` prefixed with "`auto_`"
 * `GENERATE_GENRE_PLAYLISTS_REMAINDER`: whether tracks of remainder genres (those not specified in `generate_genre_playlists.json`) will be placed in a `folder` called "Other" with individual genre playlists or a `playlist` called "Other"
 * `GENERATE_GENRE_PLAYLISTS_PURE`: list of genre tags (case-sensitive) which will each have a "Pure" playlist generated for...each item must be accompanied with a "Pure \<genre>" entry in `generate_genre_playlists.json`,
-* `SPOTIFY_CHECK_PLAYLISTS`: boolean flag to trigger checking the contents of Spotify playlists specified in `SPOTIFY_PLAYLISTS_CHECK` against the `beatcloud` (to identify redundancies)
-* `SPOTIFY_PLAYLISTS_CHECK`: list of Spotify playlists to use with `SPOTIFY_CHECK_PLAYLISTS`
-* `SPOTIFY_PLAYLISTS_CHECK_FUZZ_RATIO`: the minimum Levenshtein similarity for indicating potential redundancies between Spotify playlists and the `beatcloud`
+* `CHECK_TRACK_OVERLAP`: boolean flag to trigger checking the contents of Spotify playlists specified in `SPOTIFY_CHECK_PLAYLISTS` and the local files specified in `LOCAL_CHECK_DIRS` against the `beatcloud` (to identify redundancies)
+* `CHECK_TRACK_OVERLAP_FUZZ_RATIO`: the minimum Levenshtein similarity for indicating potential redundancies between Spotify playlists / local directories and the `beatcloud`
+* `LOCAL_CHECK_DIRS`: list of local directories (under "DJ Music") to use with `CHECK_TRACK_OVERLAP`,
+* `SPOTIFY_CHECK_PLAYLISTS`: list of Spotify playlists to use with `CHECK_TRACK_OVERLAP`
 * `SPOTIFY_CLIENT_ID`: client ID for registered Spotify API application
 * `SPOTIFY_CLIENT_SECRET`: client secret for registered Spotify API application
 * `SPOTIFY_REDIRECT_URI`: redirect URI for registered Spotify API application
