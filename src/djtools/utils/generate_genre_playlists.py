@@ -82,7 +82,7 @@ def generate_genre_playlists(
         os.path.dirname(os.path.dirname(__file__)),
         "configs",
         "generate_genre_playlists.json",
-    ).replace(os.sep, "/"),
+    ).replace(os.sep, "/")
     with open(playlist_config_path, encoding="utf-8") as _file:
         playlists = create_playlists(
             soup, json.load(_file), genres, top_level=True
