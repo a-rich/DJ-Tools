@@ -9,6 +9,7 @@
 The `utils` package contains modules:
 * `generate_genre_playlists`: constructs genre playlists using genre tags in a Collection and a defined playlist structure in `generate_genre_playlists.json`
 * `get_genres`: analyzes genre tags directly from local MP3 files
+* `local_dirs_checker`: checks local tracks for overlap with those already in the beatcloud
 * `randomize_tracks`: writes sequential numbers to Rekordbox tags of shuffled tracks in playlists to emulate playlist shuffling
 * `youtube_dl`: downloads files from a URL to `DJ Music` -> `New Music`
 * `helpers`: helper functions for top-level operations (`upload_log`)
@@ -17,6 +18,8 @@ The `utils` package contains modules:
 The `generate_genre_playlists` module requires that you utilize the genre ID3 / Rekordbox tag for tracks in your Collection. It's also required that `XML_PATH` exists as well as a `generate_genre_playlists.json` in the `config` folder. Additionally, if any of your Collection's tracks have multiple genres specified in the genre tag field delimited with a character, `GENRE_TAG_DELIMITER` must be set to that character.
 
 The `get_genres` module requires that you utilize the genre ID3 / Rekordbox tag for tracks in your Collection. It's also required that `USB_PATH` exists. Additionally, if any of your Collection's tracks have multiple genres specified in the genre tag field delimited with a character, `GENRE_TAG_DELIMITER` must be set to that character.
+
+The `local_dirs_checker` module requires that both `USB_PATH` exists and the directories listed in `LOCAL_CHECK_DIRS` exist under the "DJ Music" folder of `USB_PATH`.
 
 The `randomize_tracks` module requires that both `XML_PATH` and `USB_PATH` exist. Additionally, playlists in `RANDOMIZE_TRACKS_PLAYLISTS` must exist inside `XML_PATH`.
 
@@ -95,6 +98,9 @@ Once the operation completes, an XML is generated at `XML_PATH` with the prefix 
 
 ## get_genres
 To trigger the `get_genres` modules, set `GET_GENRES: true`. The operation will print all the genres alphabetized with a count of tracks belonging to those genres. If `VERBOSITY` is increased, the individual tracks under each genre will be printed as well.
+
+## local_dirs_checker
+To trigger the `local_dirs_checker` module, set `CHECK_TRACK_OVERLAP: true` and populate `lOCAL_CHECK_DIRS` with directories under the "DJ Music" directory.
 
 ## randomize_tracks
 To trigger the `randomize_tracks` module, set `RANDOMIZE_TRACKS: true`. Once the operation has completed, you'll need to open Rekordbox and reimport the `AUTO_RANDOMIZE` playlist containing the set of tracks with updated `TrackNumber` fields.
