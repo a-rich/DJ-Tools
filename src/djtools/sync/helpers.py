@@ -186,7 +186,7 @@ def rewrite_xml(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
         os.path.dirname(os.path.dirname(__file__)),
         "configs",
         "registered_users.json",
-    ).replace(os.sep, "/"),
+    ).replace(os.sep, "/")
 
     with open(registered_users_path, encoding="utf-8") as _file:
         registered_users = json.load(_file)
