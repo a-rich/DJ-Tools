@@ -90,14 +90,12 @@ def get_spotify_tracks(
             "SPOTIFY_REDIRECT_URI"
         ) from KeyError 
 
-    with open(
-        os.path.join(
-            os.path.dirname(os.path.dirname(__file__)),
-            "configs",
-            "playlist_checker.json",
-        ).replace(os.sep, "/"),
-        encoding="utf-8",
-    ) as _file:
+    playlist_ids_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        "configs",
+        "playlist_checker.json",
+    ).replace(os.sep, "/")
+    with open(playlist_ids_path, encoding="utf-8") as _file:
         playlist_ids = {
             key.lower(): value for key, value in json.load(_file).items()
         }

@@ -54,7 +54,6 @@ def build_config():
     try:
         with open(
             os.path.join(config_dir, "config.json").replace(os.sep, "/"),
-            "r",
             encoding="utf-8",
         ) as _file:
             config = json.load(_file)
