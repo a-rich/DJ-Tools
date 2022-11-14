@@ -50,6 +50,7 @@ class TagParser(ABC):
             "Classes inheriting from TagParser must override the __call__ method."
         )
 
+
 class GenreTagParser(TagParser):
     """Parses the "Genre" field of a track to produce tags."""
 
@@ -172,7 +173,7 @@ class BooleanNode:
 
 
 class Combiner(TagParser):
-    """Parses a boolean algebra expression to combine track playlists."""
+    """Parses a boolean algebra expression to combine tag playlists."""
 
     def __init__(
         self,
@@ -204,11 +205,10 @@ class Combiner(TagParser):
             Dict mapping boolean expression to a set of track IDs.
         """
         self._tracks = {k: dict(v) for k, v in tracks.items()}
-        playlist_tracks = {}
-        for expression in self.parser_config.get("playlists", []):
-            playlist_tracks[expression] = self._parse_boolean_expression(
-                expression
-            )
+        playlist_tracks = {
+            expression: self._parse_boolean_expression(expression)
+            for expression in self.parser_config.get("playlists", [])
+        }
         
         return playlist_tracks
 
