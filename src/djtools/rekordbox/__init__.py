@@ -17,4 +17,4 @@ REKORDBOX_OPERATIONS = {
     "REKORDBOX_PLAYLISTS": rekordbox_playlists
 }
 
-__all__ = "randomize_tracks", "rekordbox_playlists"
+__all__ = "randomize_tracks", "REKORDBOX_OPERATIONS", "rekordbox_playlists"

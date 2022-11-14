@@ -15,4 +15,10 @@ SYNC_OPERATIONS = {
     'UPLOAD_XML': upload_xml,
 }
 
-__all__ = ("download_music", "download_xml", "upload_music", "upload_xml")
+__all__ = (
+    "download_music",
+    "download_xml",
+    "SYNC_OPERATIONS",
+    "upload_music",
+    "upload_xml",
+)

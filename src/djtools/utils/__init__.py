@@ -17,6 +17,7 @@ UTILS_OPERATIONS = {
 __all__ = (
     "build_config",
     "check_local_dirs",
+    "UTILS_OPERATIONS",
     "upload_log",
     "youtube_dl",
 )

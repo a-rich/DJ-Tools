@@ -1,12 +1,13 @@
 
-from .rekordbox import randomize_tracks, rekordbox_playlists
-from .spotify import check_playlists, update_auto_playlists
-from .sync import download_music, download_xml, upload_music, upload_xml
+from .rekordbox import (
+    randomize_tracks, REKORDBOX_OPERATIONS, rekordbox_playlists
+)
+from .spotify import check_playlists, SPOTIFY_OPERATIONS, update_auto_playlists
+from .sync import (
+    download_music, download_xml, SYNC_OPERATIONS, upload_music, upload_xml
+)
 from .utils import (
-    build_config,
-    check_local_dirs,
-    upload_log,
-    youtube_dl,
+    build_config, check_local_dirs, UTILS_OPERATIONS, upload_log, youtube_dl
 )
 
 
@@ -16,12 +17,15 @@ __all__ = (
     "check_playlists",
     "download_music",
     "download_xml",
-    "PlaylistBuilder",
     "randomize_tracks",
+    "REKORDBOX_OPERATIONS",
     "rekordbox_playlists",
+    "SPOTIFY_OPERATIONS",
+    "SYNC_OPERATIONS",
     "update_auto_playlists",
     "upload_log",
     "upload_music",
     "upload_xml",
+    "UTILS_OPERATIONS",
     "youtube_dl",
 )

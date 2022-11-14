@@ -12,4 +12,4 @@ SPOTIFY_OPERATIONS = {
 }
 
 
-__all__ = ("check_playlists", "update_auto_playlists")
+__all__ = "check_playlists", "SPOTIFY_OPERATIONS", "update_auto_playlists"
