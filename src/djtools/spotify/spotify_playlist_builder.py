@@ -64,8 +64,8 @@ async def async_update_auto_playlists(
     """
     if not config.get("AUTO_PLAYLIST_SUBREDDITS"):
         logger.error(
-            "Using the playlist_builder module requires the config option "
-            "AUTO_PLAYLIST_SUBREDDITS"
+            "Using the spotify_playlist_builder module requires the config "
+            "option AUTO_PLAYLIST_SUBREDDITS"
         )
         return
 
@@ -85,8 +85,8 @@ async def async_update_auto_playlists(
         )
     except KeyError:
         raise KeyError(
-            "Using the playlist_builder module requires the following config "
-            "options: SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, "
+            "Using the spotify_playlist_builder module requires the following "
+            "config options: SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, "
             "SPOTIFY_REDIRECT_URI"
         ) from KeyError 
     except Exception as exc:
@@ -101,8 +101,8 @@ async def async_update_auto_playlists(
         )
     except KeyError:
         raise KeyError(
-            "Using the playlist_builder module requires the following config "
-            "options: REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, "
+            "Using the spotify_playlist_builder module requires the following "
+            "config options: REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, "
             "REDDIT_USER_AGENT"
         ) from KeyError
     except Exception as exc:
@@ -134,8 +134,8 @@ async def async_update_auto_playlists(
                 username = config["SPOTIFY_USERNAME"]
             except KeyError:
                 raise KeyError(
-                    "Building a new playlist in the playlist_builder module "
-                    "requires the config option SPOTIFY_USERNAME"
+                    "Building a new playlist in the spotify_playlist_builder "
+                    "module requires the config option SPOTIFY_USERNAME"
                 ) from KeyError
         tasks.append(
             asyncio.create_task(

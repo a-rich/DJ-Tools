@@ -9,7 +9,7 @@ from operator import itemgetter
 import os
 from typing import Dict, List, Optional, Union
 
-from djtools.spotify.playlist_checker import get_beatcloud_tracks, find_matches
+from djtools.spotify.spotify_playlist_checker import get_beatcloud_tracks, find_matches
 
 logger = logging.getLogger(__name__)
 
