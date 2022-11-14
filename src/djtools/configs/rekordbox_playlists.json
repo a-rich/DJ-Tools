@@ -1,5 +1,16 @@
 {
-    "My Tags": {
+    "Combiner": {
+        "name": "Combinations",
+        "playlists": [
+            "(Hard Techno & Acid Techno) | Minimal Techno",
+            "Minimal House | Techno",
+            "Bass House & Techno",
+            "Breaks ~ Techno",
+            "((Jungle | Breaks) ~ Techno) | (Garage ~ Tech House)",
+            "(Jungle | Breaks & Techno) | (Garage ~ Tech House)"
+        ]
+    },
+    "MyTagParser": {
         "name": "My Tags",
         "playlists": [
             "Vocal",
@@ -7,7 +18,7 @@
             "Bass Music"
         ]
     },
-    "Genres": {
+    "GenreTagParser": {
         "name": "Genres",
         "playlists": [
             {

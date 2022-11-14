@@ -1,20 +1,22 @@
 """This is the entry point for the DJ Tools library.
 
+Rekordbox operations:
+    * RANDOMIZE_TRACKS (randomize_tracks.py): Set ID3 tags of tracks in
+        playlists sequentially (after shuffling) to randomize.
+    * REKORDBOX_PLAYLISTS (rekordbox_playlist_builder.py): Automatically
+        create a playlist structure based on the tags present in an XML.
+
 Spotify operations:
-    * CHECK_TRACK_OVERLAP (playlist_checker.py): Identify overlap between
-        Spotify playlist(s) and beatcloud.
-    * AUTO_PLAYLIST_UPDATE (playlist_builder.py): Creating and updating Spotify
-        playlists using subreddit top posts.
+    * CHECK_TRACK_OVERLAP (spotify_playlist_checker.py): Identify overlap
+        between Spotify playlist(s) and beatcloud.
+    * AUTO_PLAYLIST_UPDATE (spotify_playlist_builder.py): Creating and updating
+        Spotify playlists using subreddit top posts.
 
 Utils operations:
     * CHECK_TRACK_OVERLAP (local_dirs_checker.py): Identify overlap between
         local directories and beatcloud.
-    * GENERATE_TAGS_PLAYLISTS (generate_tags_playlists.py): Automatically
-        create a playlist structure based on the tags present in an XML.
     * GET_GENRES (get_genres.py): Display track counts for all genres using the
         ID3 tag field of local mp3 files.
-    * RANDOMIZE_TRACKS (randomize_tracks.py): Set ID3 tags of tracks in
-        playlists sequentially (after shuffling) to randomize.
     * YOUTUBE_DL (youtube_dl.py): Download tracks from a URL (e.g. Soundcloud
         playlist).
 
@@ -31,11 +33,14 @@ import logging.config
 import os
 from traceback import format_exc
 
-from djtools.spotify import SPOTIFY_OPERATIONS
-from djtools.sync import SYNC_OPERATIONS
-from djtools.utils import UTILS_OPERATIONS
-from djtools.utils.config import build_config
-from djtools.utils.helpers import upload_log
+from djtools import (
+    build_config,
+    REKORDBOX_OPERATIONS,
+    SPOTIFY_OPERATIONS,
+    SYNC_OPERATIONS,
+    upload_log,
+    UTILS_OPERATIONS,
+)
 
 
 # Initialize logger.
@@ -77,10 +82,15 @@ except Exception as exc:
 def main():
     """This is the entry point for the DJ Tools library."""
 
-    # Run "spotify", "utils", and "sync" package operations if any of the flags
-    # to do so are present in the config.
+    # Run "rekordbox", "spotify", "utils", and "sync" package operations if 
+    # any of the flags to do so are present in the config.
     beatcloud_cache = []
-    for package in [SPOTIFY_OPERATIONS, UTILS_OPERATIONS, SYNC_OPERATIONS]:
+    for package in [
+        REKORDBOX_OPERATIONS,
+        SPOTIFY_OPERATIONS,
+        UTILS_OPERATIONS,
+        SYNC_OPERATIONS,
+    ]:
         for operation, func in package.items():
             if not config.get(operation):
                 continue

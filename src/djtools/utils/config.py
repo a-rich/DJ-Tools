@@ -293,12 +293,12 @@ def arg_parse():
         help='sync local "XML_PATH" to the beatcloud',
     )
     parser.add_argument(
-        "--generate_tags_playlists",
+        "--rekordbox_playlists",
         action="store_true",
         help="perform automatic playlist creation",
     )
     parser.add_argument(
-        "--generate_tags_playlists_remainder",
+        "--rekordbox_playlists_remainder",
         type=str,
         choices=["folder", "playlist"],
         help=(
