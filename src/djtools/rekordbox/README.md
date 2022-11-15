@@ -100,7 +100,7 @@ Here is an example `rekordbox_playlists.json`:
 ```
 The above structure generates a genre playlists folder like this:
 
-![alt text](https://raw.githubusercontent.com/a-rich/DJ-Tools/main/images/Pioneer_Auto_Playlist.png "Automatic Genre Playlist")
+![alt text](https://raw.githubusercontent.com/a-rich/DJ-Tools/2.3.0/images/Pioneer_Auto_Playlist.png "Automatic Genre Playlist")
 
 There is special logic for creating "Pure" genre playlists; for example, say you want a "Pure Techno" playlist where the only tracks allowed in it have all genre tags containing the substring "techno". Simply add "techno" to the `GENRE_PLAYLISTS_PURE` list in `config.json`. Then add "Pure Techno" as a playlist in the desired location of your `rekordbox_playlists.json`. After running `djtools --rekordbox_playlists`, the resulting XML will contain this "Pure" genre playlist.
 
