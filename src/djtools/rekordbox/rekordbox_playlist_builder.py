@@ -10,7 +10,6 @@ enable the 'Add "My Tag" to the "Comments"' setting under
 "Preferences > Advanced > Browse".
 """
 from collections import defaultdict
-from functools import reduce
 import json
 import logging
 import os

@@ -35,21 +35,26 @@ Here is an example `rekordbox_playlists.json`:
         "playlists": [
             "(Hard Techno & Acid Techno) | Minimal Techno",
             "Minimal House | Techno",
-            "Bass House & Techno",
-            "Breaks ~ Techno",
-            "((Jungle | Breaks) ~ Techno) | (Garage ~ Tech House)"
+            "(Jungle | Breaks & Techno) | (Garage ~ Tech House)",
+            "Wave ~ Trap | Uplifting",
+            "*House ~ Bass House"
         ]
     },
-
-    "MyTagsParser": {
+    "MyTagParser": {
         "name": "My Tags",
         "playlists": [
-            "Vocal",
-            "Synth",
-            "Bass Music"
+            {
+                "name": "_ignore",
+                "playlists": [
+                    "Vocal",
+                    "Wave"
+                ]
+            },
+            "Jazzy",
+            "Uplifiting"
         ]
     },
-    "GenreTagsParser": {
+    "GenreTagParser": {
         "name": "Genres",
         "playlists": [
             {
