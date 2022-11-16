@@ -137,7 +137,7 @@ class BooleanNode:
     
     def __call__(
         self, tracks: Dict[str, List[Tuple[str, List[str]]]]
-    ) -> List[str]:
+    ) -> Set[str]:
         """Evaluates the boolean algebraic subexpression.
 
         Args:
@@ -162,14 +162,44 @@ class BooleanNode:
             if len(self.tracks):
                 tracks_A = self.tracks.pop(0)
             else:
-                tracks_A = set(tracks.get(self.tags.pop(0), {}).keys())
+                tracks_A = self._get_tag_tracks(
+                    tag=self.tags.pop(0), tracks=tracks
+                )
             if len(self.tracks):
                 tracks_B = self.tracks.pop(0)
             else:
-                tracks_B = set(tracks.get(self.tags.pop(0), {}).keys())
-            self.tracks.insert(0, set(operator(tracks_A, tracks_B)))
+                tracks_B = self._get_tag_tracks(
+                    tag=self.tags.pop(0), tracks=tracks
+                )
+            self.tracks.insert(0, operator(tracks_A, tracks_B))
         
         return next(iter(self.tracks), set())
+
+    def _get_tag_tracks(
+        self, tag: str, tracks: Dict[str, List[Tuple[str, List[str]]]]
+    ) -> Set[str]:
+        """Gets set of track IDs for the provided tag.
+
+        If the tag contains a wildcard, denoted with "*", then the union of
+        track IDs with a tag containing the provided tag as a substring is
+        returned.
+
+        Args:
+            tag: Tag for indexing tracks.
+            tracks: Map of tags to lists of (track_id, tags) tuples.
+
+        Returns:
+            Set of track IDs for the provided tag.
+        """
+        if "*" in tag:
+            exp = re.compile(r".*".join(tag.split("*")))
+            track_ids = set()
+            for k in tracks:
+                if re.search(exp, k):
+                    track_ids.update(set(tracks[k].keys()))
+            return track_ids
+        else:
+            return set(tracks.get(tag, {}).keys())
 
 
 class Combiner(TagParser):
