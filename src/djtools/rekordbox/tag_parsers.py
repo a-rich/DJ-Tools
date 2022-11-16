@@ -162,11 +162,11 @@ class BooleanNode:
             if len(self.tracks):
                 tracks_A = self.tracks.pop(0)
             else:
-                tracks_A = set(tracks[self.tags.pop(0)].keys())
+                tracks_A = set(tracks.get(self.tags.pop(0), {}).keys())
             if len(self.tracks):
                 tracks_B = self.tracks.pop(0)
             else:
-                tracks_B = set(tracks[self.tags.pop(0)].keys())
+                tracks_B = set(tracks.get(self.tags.pop(0), {}).keys())
             self.tracks.insert(0, set(operator(tracks_A, tracks_B)))
         
         return next(iter(self.tracks), set())
