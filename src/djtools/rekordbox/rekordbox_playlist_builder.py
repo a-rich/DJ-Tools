@@ -52,11 +52,13 @@ def rekordbox_playlists(
     ).replace(os.sep, "/")
 
     pure_genre_playlists = config.get("GENRE_PLAYLISTS_PURE", [])
+    playlist_remainder_type = config.get("REKORDBOX_PLAYLISTS_REMAINDER")
 
     playlist_builder = PlaylistBuilder(
         rekordbox_database=rekordbox_database,
         playlist_config=playlist_config,
         pure_genre_playlists=pure_genre_playlists,
+        playlist_remainder_type=playlist_remainder_type,
     )
 
     return playlist_builder()
@@ -198,7 +200,6 @@ class PlaylistBuilder:
                     tags=playlist_data["tags"],
                     tracks=tracks[playlist_type],
                     playlists=playlist_data["playlists"],
-                    playlist_type=playlist_type,
                 )
             
             # Insert tracks into their respective playlists.
@@ -218,12 +219,16 @@ class PlaylistBuilder:
                 content=self._combiner_parser.parser_config,
                 top_level=True,
             ) 
+            # Reduce track tags across parsers unioning when there is overlap.
+            merged_tracks = defaultdict(list)
+            for values in tracks.values():
+                for k, v in values.items():
+                    merged_tracks[k].extend(v)
+            tracks = self._combiner_parser(merged_tracks)
             self._add_tracks(
                 soup=self._database,
                 playlists=combiner_playlists,
-                tracks=self._combiner_parser(
-                    reduce(lambda a, b: {**a, **b}, tracks.values())
-                )
+                tracks=tracks,
             )
             self._new_playlists.insert(0, combiner_playlists)
 
@@ -303,7 +308,6 @@ class PlaylistBuilder:
         tags: Set[str],
         tracks: Dict[str, List[Tuple[str, List[str]]]],
         playlists: bs4.element.Tag,
-        playlist_type: str,
     ):
         """Identifies the remainder tags by taking the set difference of all
             track tags with those that appear in "rekordbox_playlists.json". If
@@ -319,17 +323,16 @@ class PlaylistBuilder:
             tags: All the tags in "rekordbox_playlists.json".
             tracks: Map of tags to lists of (track_id, tags) tuples.
             playlists: Empty playlist structure.
-            playlist_type: Either "My Tags" or "Genres".
         """
         if remainder_type == "folder":
-            folder = soup.new_tag("NODE", Name=f"Other {playlist_type}", Type="0")
+            folder = soup.new_tag("NODE", Name="Other", Type="0")
             for other in sorted(set(tracks).difference(tags)):
                 playlist = soup.new_tag("NODE", Name=other, Type="1", KeyType="0")
                 folder.append(playlist)
             playlists.append(folder)
         elif remainder_type == "playlist":
             playlist = soup.new_tag(
-                "NODE", Name=f"Other {playlist_type}", Type="1", KeyType="0"
+                "NODE", Name="Other", Type="1", KeyType="0"
             )
             playlists.append(playlist)
         else:
