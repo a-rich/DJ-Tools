@@ -34,7 +34,7 @@
         - [x] Playlist organization by Rekordbox "My Tags"
         - [x] boolean algebra for tags ("My Tags" and "Genres")
     - `utils`
-        - [ ] Copying audio files from playlists
+        - [x] Copying audio files from playlists
 
 # Overview
 `DJ Tools` is a library for managing a Collection of audio files (not necessarily mp3 files, although that is preferred) and Rekordbox XML files.

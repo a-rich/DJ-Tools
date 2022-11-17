@@ -17,7 +17,7 @@ The `local_dirs_checker` module requires that both `USB_PATH` exists and the dir
 
 The `youtube_dl` module requires that `USB_PATH` exists and that `YOUTUBE_DL_URL` is a valid URL from which MP3 files can be downloaded.
 
-The `copy_playlists_tracks` module requires that `USB_PATH` exists and that the playlists in `COPY_PLAYLISTS_TRACKS` exist inside `XML_PATH`.
+The `copy_playlists_tracks` module requires that `USB_PATH` exists, that the playlists in `COPY_PLAYLISTS_TRACKS` exist inside `XML_PATH`, and `COPY_PLAYLISTS_TRACKS_DESTINATION` is set to a valid path.
 
 # Usage
 
@@ -32,4 +32,4 @@ To trigger the `youtube_dl` module, set `YOUTUBE_DL: true`. Once tracks are down
 After tracks are downloaded, you can follow the prescribed workflows specified under the main README's "Basic Information" section to ensure consistency both in your local library and in the `beatcloud`.
 
 ## copy_playlists_tracks
-To trigger the `copy_playlists_tracks` module, set `COPY_PLAYLISTS_TRACKS` to one or more valid playlists in `XML_PATH`.
+To trigger the `copy_playlists_tracks` module, set `COPY_PLAYLISTS_TRACKS` to one or more valid playlists in `XML_PATH` and ensure `COPY_PLAYLISTS_TRACKS` is set.
