@@ -293,33 +293,17 @@ def arg_parse():
         help='sync local "XML_PATH" to the beatcloud',
     )
     parser.add_argument(
-        "--get_genres",
+        "--rekordbox_playlists",
         action="store_true",
-        help="perform genre analysis",
+        help="perform automatic playlist creation",
     )
     parser.add_argument(
-        "--genre_exclude_dirs",
-        type=str,
-        nargs="+",
-        help="paths to exclude from tracks during genre analysis",
-    )
-    parser.add_argument(
-        "--genre_tag_delimiter",
-        type=str,
-        help='delimiter for "genre" tags',
-    )
-    parser.add_argument(
-        "--generate_genre_playlists",
-        action="store_true",
-        help="perform automatic genre playlist creation",
-    )
-    parser.add_argument(
-        "--generate_genre_playlists_remainder",
+        "--rekordbox_playlists_remainder",
         type=str,
         choices=["folder", "playlist"],
         help=(
-            'place remainder tracks in either an "Other" folder of genre '
-            'playlists or a single "Other" playlist'
+            'place remainder tracks in either an "Other" folder of playlists '
+            'or a single "Other" playlist'
         ),
     )
     parser.add_argument(
