@@ -64,11 +64,10 @@ def rekordbox_playlists(
 
 
 class PlaylistBuilder:
-    """This class writes an XML Rekordbox database with AUTO_PLAYLISTS.
+    """This class writes an XML Rekordbox database with auto-playlists.
     
-    The XML written by this class contains a folder called "AUTO_PLAYLISTS"
-    inserted into the Playlists. This folder will contain auto-generated
-    playlists using configurations found in "rekordbox_playlists.json".
+    The XML written by this class  will contain auto-generated playlists using
+    configurations found in "rekordbox_playlists.json".
 
     The "rekordbox_playlists.json" configuration file maps implemented
     TagParsers to a playlist taxonomy. Currently supported TagParsers are:
@@ -118,13 +117,10 @@ class PlaylistBuilder:
         with open(self._database_path, encoding="utf-8") as _file:
             self._database = BeautifulSoup(_file.read(), "xml")
 
-        # Create playlist node for AUTO_PLAYLISTS.
+        # Get playlist root node.
         self._playlists_root = self._database.find_all(
             "NODE", {"Name": "ROOT", "Type": "0"}
         )[0]
-        self._new_playlists = self._database.new_tag(
-            "NODE", Name="AUTO_PLAYLISTS", Type="0"
-        )
 
         # Whether tags unspecified in playlist taxonomies are grouped into an
         # "Other" "folder" or "playlist".
@@ -156,7 +152,7 @@ class PlaylistBuilder:
             self._parsers[playlist_type] = parser
 
     def __call__(self):
-        """Generates AUTO_PLAYLISTS by:
+        """Generates auto-playlists by:
             * creating playlists nodes
             * generating tags -> tracks mapping
             * inserting tags to the appropriate playlist nodes for "Genre" and
@@ -188,6 +184,11 @@ class PlaylistBuilder:
                 for tag in tags:
                     tracks[playlist_type][tag].append((track["TrackID"], tags))
         
+        # Decompose irrelevant playlists.
+        for node in self._playlists_root.find_all("NODE"):
+            if node.attrs and node.attrs["Name"] != "ROOT":
+                node.decompose()
+        
         # Add tracks to their respective playlists.
         for playlist_type, playlist_data in playlists.items():
             if self._playlist_remainder_type:
@@ -208,8 +209,8 @@ class PlaylistBuilder:
                 tracks=tracks[playlist_type],
             )
             
-            # Insert playlist node into "AUTO_PLAYLISTS".
-            self._new_playlists.insert(0, playlist_data["playlists"])
+            # Insert playlist node into playlist root.
+            self._playlists_root.insert(0, playlist_data["playlists"])
         
         if self._combiner_parser:
             # Apply "Combiner" boolean algebra to reduced parser tracks.
@@ -229,10 +230,9 @@ class PlaylistBuilder:
                 playlists=combiner_playlists,
                 tracks=tracks,
             )
-            self._new_playlists.insert(0, combiner_playlists)
+            self._playlists_root.insert(0, combiner_playlists)
 
-        # Insert AUTO_PLAYLISTS into the Playlists node and write XML file.
-        self._playlists_root.insert(0, self._new_playlists)
+        # Write XML file.
         _dir, _file = os.path.split(self._database_path)
         auto_xml_path = os.path.join(_dir, f"auto_{_file}").replace(os.sep, "/")
         with open(

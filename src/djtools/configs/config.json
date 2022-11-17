@@ -14,6 +14,8 @@
     "YOUTUBE_DL_URL": "",
     "RANDOMIZE_TRACKS": false,
     "RANDOMIZE_TRACKS_PLAYLISTS": [],
+    "COPY_PLAYLISTS_TRACKS": [],
+    "COPY_PLAYLISTS_TRACKS_DESTINATION": "",
     "DOWNLOAD_MUSIC": false, 
     "DOWNLOAD_XML": false, 
     "UPLOAD_MUSIC": false, 
