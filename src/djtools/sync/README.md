@@ -16,8 +16,6 @@ The `sync` package contains a module, `sync_operation`, which can:
 # Setup
 The setup required for all these operations is having `awscli` installed and configured to access an AWS S3 instance and a valid `AWS_PROFILE` (`DEFAULT` is the default profile if it wasn't otherwise specified by using the `--profile` option when running `aws configure`).
 
-`NOTE`: other AWS S3 API compliant object-storage solutions, such as [MinIO](https://min.io/), should also work but are untested.
-
 `upload_music` and `download_music` require that `USB_PATH` exists.
 
 `upload_xml` requires that `XML_PATH` exists.
