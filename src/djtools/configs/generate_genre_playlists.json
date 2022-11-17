@@ -1,0 +1,150 @@
+{
+    "name": "Genres",
+    "playlists": [
+        {
+            "name": "_ignore",
+            "playlists": [
+                "Acid Jazz",
+                "Alternative Hip Hop",
+                "Alternative Rock",
+                "Chill-out",
+                "Chillwave",
+                "Cloud Rap",
+                "Cumbia",
+                "Dancehall",
+                "Death Metal",
+                "Dream Pop",
+                "Electro",
+                "Electro Pop",
+                "Eurodance",
+                "Eurodisco",
+                "Glam Rock",
+                "Jump-up",
+                "Latin Pop",
+                "Merengue",
+                "Metalcore",
+                "Norteno",
+                "Nu-disco",
+                "Nu Metal",
+                "Post-disco",
+                "Progressive Rock",
+                "Psychedelic Rock",
+                "Psytrance",
+                "Salsa",
+                "Samba",
+                "Soul",
+                "Technobanda"
+            ]
+        },
+        "Ambient",
+        "Pure Ambient",
+        {
+            "name": "Bass",
+            "playlists": [
+                {
+                    "name": "Breaks",
+                    "playlists": [
+                        "Acid Breaks",
+                        "Breaks",
+                        "Breakstep",
+                        "Neurobreaks"
+                    ]
+                },
+                {
+                    "name": "DnB",
+                    "playlists": [
+                        "Darkstep",
+                        "Jungle",
+                        "Liquid Funk",
+                        "Neurofunk",
+                        "Techstep"
+                    ]
+                },
+                "Dub",
+                "Electro Funk",
+                {
+                    "name": "Future",
+                    "playlists": [
+                        "Pure Future",
+                        "Future Bass",
+                        "Future Beats",
+                        "Future Funk",
+                        "Future Garage",
+                        "Future Soul"
+                    ]
+                },
+                "Garage",
+                {
+                    "name": "Hip Hop Beats",
+                    "playlists": [
+                        "Chillhop",
+                        "Downtempo",
+                        "Glitch Hop",
+                        "Grime",
+                        "Halftime",
+                        "Hip Hop",
+                        "Lo-fi",
+                        "Neurohop",
+                        "Trap",
+                        "Trip Hop",
+                        "Wonky"
+                    ]
+                },
+                "IDM",
+                "Space Bass",
+                {
+                    "name": "[___] Step",
+                    "playlists": [
+                        "Breakstep",
+                        "Brostep",
+                        "Chillstep",
+                        "Dubstep",
+                        "Glitchstep",
+                        "Neurostep"
+                    ]
+                },
+                "UK Bass",
+                "Wave"
+            ]
+        },
+        "Disco",
+        "Experimental",
+        "Funk",
+        "Hip Hop",
+        {
+            "name": "House",
+            "playlists": [
+                "Pure House",
+                "Acid House",
+                "Bass House",
+                "Chicago House",
+                "Deep House",
+                "Electro House",
+                "French House",
+                "Funky House",
+                "Future House",
+                "Garage House",
+                "Ghetto House",
+                "Hip House",
+                "Latin House",
+                "Melodic House",
+                "Minimal House",
+                "Tech House"
+            ]
+        },
+        "Midtempo",
+        {
+            "name": "Techno",
+            "playlists": [
+                "Pure Techno",
+                "Acid Techno",
+                "Hard Techno",
+                "Industrial Techno",
+                "Melodic Techno",
+                "Minimal Techno",
+                "Techno",
+                "Tech Trance"
+            ]
+        }
+    ]
+}
