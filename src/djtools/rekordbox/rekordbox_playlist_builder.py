@@ -114,7 +114,7 @@ class PlaylistBuilder:
             raise FileNotFoundError(
                 f"Rekordbox database {self._database_path} does not exist!"
             )
-        with open(self._database_path, encoding="utf-8") as _file:
+        with open(self._database_path, mode="r", encoding="utf-8") as _file:
             self._database = BeautifulSoup(_file.read(), "xml")
 
         # Get playlist root node.
@@ -127,7 +127,7 @@ class PlaylistBuilder:
         self._playlist_remainder_type = playlist_remainder_type
 
         # Create TagParsers from rekordbox_playlist.json.
-        with open(playlist_config, encoding="utf-8") as _file:
+        with open(playlist_config, mode="r", encoding="utf-8") as _file:
             self._playlist_config = json.load(_file)
         self._parsers = {}
         self._combiner_parser = None

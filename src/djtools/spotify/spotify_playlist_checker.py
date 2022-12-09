@@ -36,7 +36,7 @@ def check_playlists(
     """
     spotify_tracks = get_spotify_tracks(config)
     if not spotify_tracks:
-        logger.warn(
+        logger.warning(
             "There are no Spotify tracks; make sure SPOTIFY_CHECK_PLAYLISTS "
             "has one or more keys from playlist_checker.json"
         )
@@ -95,7 +95,7 @@ def get_spotify_tracks(
         "configs",
         "playlist_checker.json",
     ).replace(os.sep, "/")
-    with open(playlist_ids_path, encoding="utf-8") as _file:
+    with open(playlist_ids_path, mode="r", encoding="utf-8") as _file:
         playlist_ids = {
             key.lower(): value for key, value in json.load(_file).items()
         }

@@ -54,6 +54,7 @@ def build_config():
     try:
         with open(
             os.path.join(config_dir, "config.json").replace(os.sep, "/"),
+            mode="r",
             encoding="utf-8",
         ) as _file:
             config = json.load(_file)
@@ -76,7 +77,7 @@ def build_config():
             "DOWNLOAD_XML", "DOWNLOAD_MUSIC", "UPLOAD_XML", "UPLOAD_MUSIC"
         }
     )
-    if syncing:
+    if syncing or config.get("CHECK_TRACK_OVERLAP"):
         # Ensure AWS_PROFILE is set.
         if not config.get("AWS_PROFILE"):
             msg = (
@@ -84,6 +85,7 @@ def build_config():
             )
             logger.critical(msg)
             raise ValueError(msg)
+        os.environ["AWS_PROFILE"] = config.get("AWS_PROFILE")
 
         # Warn user if uploading music without a Discord webhook URL to notify
         # other beatcloud users about new track.
@@ -92,17 +94,6 @@ def build_config():
                 'DISCORD_URL is not configured...set this for "new music" '
                 "discord messages!"
             )
-
-    # Syncing and / or comparing Spotify / local tracks with the beatcloud
-    # requires having an AWS key configured.
-    if syncing or config.get("CHECK_TRACK_OVERLAP"):
-        try:
-            os.environ["AWS_PROFILE"] = config["AWS_PROFILE"]
-        except KeyError:
-            raise KeyError(
-                'Using the "sync" package and / or playlist_checker modules '
-                "requires the config option AWS_PROFILE"
-            ) from KeyError
 
     # Ensure include / exclude folders are not both set at the same time.
     if (
@@ -126,9 +117,16 @@ def build_config():
         "registered_users.json",
     ).replace(os.sep, "/")
     if os.path.exists(registered_users_path):
-        with open(registered_users_path, encoding="utf-8") as _file:
-            registered_users = json.load(_file)
-        logger.info(f"Registered users: {registered_users}")
+        try:
+            with open(
+                registered_users_path, mode="r", encoding="utf-8"
+            ) as _file:
+                registered_users = json.load(_file)
+            logger.info(f"Registered users: {registered_users}")
+        except:
+            msg = f'Error reading "registered_users.json": {format_exc()}'
+            logger.critical(msg)
+            raise Exception(msg) from Exception
     else:
         registered_users = {}
         logger.warning("No registered users!")
@@ -151,10 +149,30 @@ def build_config():
 
     # Enter USER into "registered_users.json".
     registered_users[config["USER"]] = config.get("USB_PATH", None)
-    with open(registered_users_path, "w", encoding="utf-8") as _file:
+    with open(registered_users_path, mode="w", encoding="utf-8") as _file:
         json.dump(registered_users, _file, indent=2)
 
     return config
+
+
+def parse_json(_json: str):
+    """Parses a JSON string and returns a JSON object.
+
+    Args:
+        _json: String representing JSON.
+
+    Raises:
+        Exception: JSON string must be valid JSON.
+
+    Returns:
+        JSON object.
+    """
+    try:
+        return json.loads(_json)
+    except Exception as exc:
+        raise ValueError(
+            f'Unable to parse JSON type argument "{_json}": {exc}'
+        ) from Exception
 
 
 def arg_parse():
@@ -164,14 +182,6 @@ def arg_parse():
     Returns:
         argparse.NameSpace: command-line arguments
     """
-    def lint_json(_json):
-        try:
-            return json.loads(_json)
-        except Exception as exc:
-            raise Exception(
-                f'Unable to parse JSON type argument "{_json}": {exc}'
-            )
-
     parser = ArgumentParser()
     parser.add_argument(
         "--link_configs",
@@ -361,7 +371,7 @@ def arg_parse():
     )
     parser.add_argument(
         "--auto_playlist_subreddits",
-        type=lint_json,
+        type=parse_json,
         help=(
             "list of subreddits to generate playlists from; dicts with "
             '"name", "type", "period", and "limit" keys'

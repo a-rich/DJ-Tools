@@ -1,4 +1,3 @@
-
 from .rekordbox import (
     randomize_tracks, REKORDBOX_OPERATIONS, rekordbox_playlists
 )

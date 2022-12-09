@@ -115,7 +115,7 @@ async def async_update_auto_playlists(
         "playlist_builder.json",
     ).replace(os.sep, "/")
     if os.path.exists(ids_path):
-        with open(ids_path, encoding="utf-8") as _file:
+        with open(ids_path, mode="r", encoding="utf-8") as _file:
             subreddit_playlist_ids = json.load(_file)
     
     praw_cache = {}
@@ -123,7 +123,7 @@ async def async_update_auto_playlists(
         os.path.dirname(__file__), ".praw.cache"
     ).replace(os.sep, "/")
     if os.path.exists(cache_file):
-        with open(cache_file, "r") as _file:
+        with open(cache_file, mode="r", encoding="utf-8") as _file:
             praw_cache = json.load(_file)
     
     tasks = []
@@ -180,10 +180,10 @@ async def async_update_auto_playlists(
     
     await reddit.close()
 
-    with open(ids_path, "w", encoding="utf-8") as _file:
+    with open(ids_path, mode="w", encoding="utf-8") as _file:
         json.dump(subreddit_playlist_ids, _file, indent=2)
 
-    with open(cache_file, "w") as _file:
+    with open(cache_file, mode="w", encoding="utf-8") as _file:
         json.dump(praw_cache, _file)
 
 

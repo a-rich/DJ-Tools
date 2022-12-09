@@ -95,25 +95,55 @@ def parse_sync_command(
         _cmd: Partial "aws s3 sync" command.
         config: Configuration object.
         upload: Whether uploading or downloading.
+    
+    Raises:
+        ValueError: include / exclude directories cannot both be specified
+            simultaneously.
 
     Returns:
         Fully constructed "aws s3 sync" command.
     """
-    dirs = f'{"UP" if upload else "DOWN"}LOAD_EXCLUDE_DIRS'
     if (
-        (upload and config.get("UPLOAD_INCLUDE_DIRS"))
-        or (not upload and config.get("DOWNLOAD_INCLUDE_DIRS"))
+        (config.get("UPLOAD_INCLUDE_DIRS")
+        and config.get("UPLOAD_EXCLUDE_DIRS"))
+        or (config.get("DOWNLOAD_INCLUDE_DIRS")
+        and config.get("DOWNLOAD_EXCLUDE_DIRS"))
+    ):
+        msg = (
+            "Config must neither contain (a) both UPLOAD_INCLUDE_DIRS and "
+            "UPLOAD_EXCLUDE_DIRS or (b) both DOWNLOAD_INCLUDE_DIRS and "
+            "DOWNLOAD_EXCLUDE_DIRS"
+        )
+        logger.critical(msg)
+        raise ValueError(msg)
+    if (
+        config.get("UPLOAD_INCLUDE_DIRS")
+        or config.get("DOWNLOAD_INCLUDE_DIRS")
     ):
         _cmd.extend(["--exclude", "*"])
-        for _dir in config.get(dirs, []):
-            _cmd.extend(["--include", f"{_dir}/*"])
+        for _dir in config.get(
+            f'{"UP" if upload else "DOWN"}LOAD_INCLUDE_DIRS', []
+        ):
+            _cmd.extend(
+                [
+                    "--include",
+                    os.path.join(_dir, "*").replace(os.sep, "/"),
+                ]
+            )
     if (
-        (upload and config.get("UPLOAD_EXCLUDE_DIRS"))
-        or (not upload and config.get("DOWNLOAD_EXCLUDE_DIRS"))
+        config.get("UPLOAD_EXCLUDE_DIRS")
+        or config.get("DOWNLOAD_EXCLUDE_DIRS")
     ):
         _cmd.extend(["--include", "*"])
-        for _dir in config.get(dirs, []):
-            _cmd.extend(["--exclude", f"{_dir}/*"])
+        for _dir in config.get(
+            f'{"UP" if upload else "DOWN"}LOAD_EXCLUDE_DIRS', []
+        ):
+            _cmd.extend(
+                [
+                    "--exclude",
+                    os.path.join(_dir, "*").replace(os.sep, "/"),
+                ]
+            )
     if not config.get("AWS_USE_DATE_MODIFIED"):
         _cmd.append("--size-only")
     if config.get("DRYRUN"):
@@ -188,7 +218,7 @@ def rewrite_xml(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
         "registered_users.json",
     ).replace(os.sep, "/")
 
-    with open(registered_users_path, encoding="utf-8") as _file:
+    with open(registered_users_path, mode="r", encoding="utf-8") as _file:
         registered_users = json.load(_file)
         src = registered_users[config["XML_IMPORT_USER"]].strip("/")
         dst = registered_users[config["USER"]].strip("/")
@@ -198,7 +228,7 @@ def rewrite_xml(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
         f'{config["XML_IMPORT_USER"]}_rekordbox.xml',
     ).replace(os.sep, "/")
 
-    with open(xml_path, "r", encoding="utf-8") as _file:
+    with open(xml_path, mode="r", encoding="utf-8") as _file:
         soup = BeautifulSoup(_file.read(), "xml")
         for track in soup.find_all("TRACK"):
             if not track.get("Location"):
