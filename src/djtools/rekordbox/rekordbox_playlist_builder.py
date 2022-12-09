@@ -140,7 +140,9 @@ class PlaylistBuilder:
                 )
 
             parser = parser(
-                parser_config=config, pure_genre_playlists=pure_genre_playlists
+                parser_config=config,
+                pure_genre_playlists=pure_genre_playlists,
+                rekordbox_database=self._database,
             )
 
             # "Combiner" class used to assemble playlists by applying

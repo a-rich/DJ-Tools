@@ -6,7 +6,10 @@
             "Minimal House | Techno",
             "(Jungle | Breaks & Techno) | (Garage ~ Tech House)",
             "Wave ~ Trap | Uplifting",
-            "*House ~ Bass House"
+            "*House ~ Bass House",
+            "{All DnB} & Uplifting",
+            "{All Bass} & [137-143]",
+            "Dark & [5]"
         ]
     },
     "MyTagParser": {
@@ -19,7 +22,7 @@
                     "Wave"
                 ]
             },
-            "Jazzy",
+            "Dark",
             "Uplifiting"
         ]
     },

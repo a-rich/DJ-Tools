@@ -12,10 +12,16 @@ defined as boolean algebra expressions which combine any of the tags generated
 by the other TagParsers ("Combiner" runs after the other TagParsers).
 """
 from abc import ABC, abstractmethod
+from collections import defaultdict
+import logging
 import re
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import bs4
+from bs4 import BeautifulSoup
+
+
+logger = logging.getLogger(__name__)
 
 
 class TagParser(ABC):
@@ -141,7 +147,7 @@ class BooleanNode:
         """Evaluates the boolean algebraic subexpression.
 
         Args:
-            tracks: Map of tags to lists of (track_id, tags) tuples.
+            tracks: Map of tags to dicts of track_id: tags.
 
         Raises:
             RuntimeError: Boolean expressions must be formatted correctly.
@@ -186,7 +192,7 @@ class BooleanNode:
 
         Args:
             tag: Tag for indexing tracks.
-            tracks: Map of tags to lists of (track_id, tags) tuples.
+            tracks: Map of tags to dicts of track_id: tags.
 
         Returns:
             Set of track IDs for the provided tag.
@@ -208,6 +214,7 @@ class Combiner(TagParser):
     def __init__(
         self,
         parser_config: Dict[str, Union[str, List[Union[str, Dict]]]],
+        rekordbox_database: BeautifulSoup,
         **kwargs,
     ):
         """Constructor.
@@ -216,12 +223,151 @@ class Combiner(TagParser):
             parser_config: JSON playlist structure.
         """
         super().__init__(parser_config, **kwargs)
-        self._tracks = {}
+        self._tracks = defaultdict(lambda: defaultdict(list))
+        self._bpm_rating_lookup = {}
+        self._prescan(rekordbox_database)
         self._operators = {
             "&": set.intersection,
             "|": set.union,
             "~": set.difference,
         }
+    
+    def _prescan(self, rekordbox_database: BeautifulSoup):
+        """Populates track lookup using BPM, rating, and playlist selectors.
+
+        Boolean expressions may contain zero or more indicators for selectors:
+            * BPM and / or rating selectors: comma-delimited list of integers
+                or integer ranges (e.g. "137-143") enclosed in square brackets
+                (e.g. "[5, 120, 137-143]").
+            * Playlist selectors: exact matches to existing playlist name
+                enclosed in curly braces (e.g. "{All DnB}").
+            
+        Whether the numbers of a BPM / rating selector are interpreted as a BPM
+        or a rating depends on the value; if the 0 <= number <= 5, then it's
+        interpreted as a rating, if number > 5, then it's interpreted as a BPM.
+
+        If you want to make a Combiner playlist that has all tracks in a
+        playlist called "All DnB" that have a 5 star rating and are in the BPM
+        range [170, 172], this can be expressed as:
+            "{All DnB} & [5, 170-172]"
+
+        Args:
+            rekordbox_database: Parsed XML.
+
+        Raises:
+            LookupError: Playlists in expressions must exist in "XML_PATH".
+        """
+        # Get the sets of BPMs, ratings, and playlists in order to pre-populate
+        # the track lookup.
+        bpms, ratings, playlists = set(), set(), set()
+        for expression in self.parser_config.get("playlists", []): 
+            playlists.update(re.findall(r"(?<={)[^{}]*(?=})", expression))
+            bpm_rating_match = re.findall(r"(?<=\[)[^\[\]]*(?=\])", expression)
+            if not bpm_rating_match:
+                continue
+            _bpms, _ratings = self._parse_bpms_and_ratings(bpm_rating_match)
+            bpms.update(_bpms)
+            ratings.update(_ratings)
+
+        # Rekordbox stores rating values in the range [0, 255].
+        ratings_value_lookup = {
+            "0": "0",
+            "51": "1",
+            "102": "2",
+            "153": "3",
+            "204": "4",
+            "255": "5",
+        }
+
+        # Build out the lookup for BPMs and ratings.
+        values_set = bpms.union(ratings)
+        for track in rekordbox_database.find_all("TRACK"):
+            if not track.get("Location"):
+                continue
+
+            values = [
+                str(round(float(track["AverageBpm"]))),
+                ratings_value_lookup[track["Rating"]]
+            ]
+            for val in values:
+                if val in values_set:
+                    for value, tag in self._bpm_rating_lookup.items():
+                        if (
+                            (isinstance(value, str) and value == val) or
+                            (isinstance(value, tuple) and val in value)
+                        ):
+                            self._tracks[tag][track["TrackID"]] = []
+
+        # Build out the lookup for playlists.
+        for playlist_name in playlists:
+            try:
+                playlist = rekordbox_database.find_all(
+                    "NODE", {"Name": playlist_name}
+                )[0]
+            except IndexError:
+                raise LookupError(f"{playlist_name} not found") from LookupError
+
+            self._tracks[f"{{{playlist_name}}}"] = {
+                track["Key"]: [] for track in playlist.children
+                if str(track).strip()
+            }
+
+    def _parse_bpms_and_ratings(
+        self, bpm_rating_match: List[str]
+    ) -> List[Tuple]:
+        """Parses a string match of one or more BPM and / or rating selectors.
+
+        Args:
+            bpm_rating_match: List of BPM or rating strings.
+
+        Returns:
+            Tuple of BPM and rating lists.
+        """
+        bpms, ratings = [], []
+        for bpm_rating in bpm_rating_match:
+            parts = bpm_rating.split(",")
+            for part in parts:
+                number = _range = None
+                # If "part" is a digit, then it's an explicit BPM or rating to
+                # filter for.
+                if part.isdigit():
+                    number = int(part)
+                    if 0 <= number <= 5:
+                        ratings.append(str(number))
+                    elif number > 5:
+                        bpms.append(str(number))
+                    else:
+                        logger.error(
+                            "Bad BPM or rating number: {}".format(number)
+                        )
+                        continue
+                # If "part" is two digits separated by a "-", then it's a range
+                # of BPMs or ratings to filter for.
+                elif (
+                    len(part.split("-")) == 2 and
+                    all(x.isdigit() for x in part.split("-"))
+                ):
+                    _range = list(map(int, part.split("-")))
+                    _range = range(min(_range), max(_range) + 1)
+                    if all(0 <= x <= 5 for x in _range):
+                        ratings.extend(map(str, _range))
+                    elif all(x > 0 for x in _range):
+                        bpms.extend(map(str, _range))
+                    else:
+                        logger.error(
+                            "Bad BPM or rating number range: {}".format(part)
+                        )
+                else:
+                    logger.error(
+                        "Malformed BPM or rating filter part: {}".format(part)
+                    )
+                    continue
+                
+                self._bpm_rating_lookup[
+                    tuple(map(str, _range or [])) or str(number)
+                ] = f"[{part}]"
+                
+        return bpms, ratings
 
     def __call__(
         self, tracks: Dict[str, List[Tuple[str, List[str]]]]
@@ -234,7 +380,7 @@ class Combiner(TagParser):
         Returns:
             Dict mapping boolean expression to a set of track IDs.
         """
-        self._tracks = {k: dict(v) for k, v in tracks.items()}
+        self._tracks.update({k: dict(v) for k, v in tracks.items()})
         playlist_tracks = {
             expression: self._parse_boolean_expression(expression)
             for expression in self.parser_config.get("playlists", [])

@@ -59,7 +59,10 @@ Here is an example `rekordbox_playlists.json`:
             "Minimal House | Techno",
             "(Jungle | Breaks & Techno) | (Garage ~ Tech House)",
             "Wave ~ Trap | Uplifting",
-            "*House ~ Bass House"
+            "*House ~ Bass House",
+            "{All DnB} & Uplifting",
+            "{All Bass} & [137-143]",
+            "Dark & [5]"
         ]
     },
     "MyTagParser": {
@@ -72,7 +75,7 @@ Here is an example `rekordbox_playlists.json`:
                     "Wave"
                 ]
             },
-            "Jazzy",
+            "Dark",
             "Uplifiting"
         ]
     },
