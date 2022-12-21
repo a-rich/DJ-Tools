@@ -53,20 +53,10 @@ def test_track(tmpdir):
     return track
 
 
-# @pytest.fixture
-# def test_rekordbox_playlists():
-#     with open(
-#         "src/test_data/rekordbox_playlists.json", mode="r", encoding="utf-8"
-#     ) as _file:
-#         config = json.load(_file)
-    
-#     return config
-
-
 @pytest.fixture
 def test_config():
     with open(
-        "src/test_data/config.json", mode="r", encoding="utf-8"
+        "src/djtools/configs/config.json", mode="r", encoding="utf-8"
     ) as _file:
         config = json.load(_file)
 

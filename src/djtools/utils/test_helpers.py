@@ -51,6 +51,7 @@ def test_raise_():
 
 
 def test_upload_log(tmpdir, test_config):
+    test_config["AWS_PROFILE"] = "DJ"
     now = datetime.now()
     one_day_ago = now - timedelta(days=1)
     test_log = f'{now.strftime("%Y-%m-%d")}.log'
