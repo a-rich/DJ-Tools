@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import os
-from unittest.mock import patch
+from unittest import mock
 
 import pytest
 
@@ -31,7 +31,7 @@ def test_catch():
 
 @pytest.mark.parametrize("platform", ["posix", "nt"])
 def test_make_dirs(tmpdir, platform):
-    with patch("djtools.utils.helpers.os_name", platform):
+    with mock.patch("djtools.utils.helpers.os_name", platform):
         new_dir = os.path.join(tmpdir, "test_dir").replace(os.sep, "/")
         make_dirs(new_dir)
         # New directory is created as expected.
@@ -51,6 +51,7 @@ def test_raise_():
 
 
 def test_upload_log(tmpdir, test_config):
+    test_config["AWS_PROFILE"] = "DJ"
     now = datetime.now()
     one_day_ago = now - timedelta(days=1)
     test_log = f'{now.strftime("%Y-%m-%d")}.log'

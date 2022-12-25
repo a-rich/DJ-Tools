@@ -1,4 +1,5 @@
 import os
+from unittest import mock
 
 import pytest
 from youtube_dl.utils import DownloadError
@@ -38,10 +39,16 @@ def test_youtube_dl(tmpdir, test_config):
     test_config["YOUTUBE_DL_URL"] = (
         "https://soundcloud.com/aweeeezy_music/sets/test-download"
     )
-    loc = os.path.join(tmpdir, "new_dir").replace(os.sep, "/")
-    test_config["YOUTUBE_DL_LOCATION"] = loc
-    youtube_dl(test_config)
-    assert len(os.listdir(tmpdir)) == 1
+    new_dir = os.path.join(tmpdir, "new_dir")
+    test_config["YOUTUBE_DL_LOCATION"] = new_dir
+    with mock.patch(
+        "youtube_dl.YoutubeDL.download",
+        side_effect=lambda *args, **kwargs: open(
+            os.path.join(new_dir, "file.mp3"), mode="w", encoding="utf-8"
+        ).write("")
+    ) as mock_ytdl:
+        youtube_dl(test_config)
+    assert len(os.listdir(new_dir)) == 1
 
 
 def test_youtube_dl_no_url(test_config):

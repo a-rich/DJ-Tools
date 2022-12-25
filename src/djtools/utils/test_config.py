@@ -1,25 +1,11 @@
 from argparse import Namespace
 import os
-import sys
 from unittest import mock
 
 import pytest
 
 from djtools.utils.config import arg_parse, build_config, parse_json
-
-
-class MockOpen:
-    builtin_open = open
-
-    def __init__(self, file_):
-        self.file = file_
-
-    def open(self, *args, **kwargs):
-        if os.path.basename(args[0]) == self.file:
-            return mock.mock_open(
-                read_data='{"json_valid": false,}'
-            )
-        return self.builtin_open(*args, **kwargs)
+from test_data import MockOpen
 
 
 def test_build_config(tmpdir):
@@ -34,7 +20,7 @@ def test_build_config(tmpdir):
     assert isinstance(config, dict)
 
 
-@mock.patch("builtins.open", MockOpen("config.json").open)
+@mock.patch("builtins.open", MockOpen(_file="config.json").open)
 @mock.patch(
     "argparse.ArgumentParser.parse_args",
     return_value=Namespace(
@@ -106,7 +92,14 @@ def test_build_config_mutually_exclusive_include_exclude_dirs(
     )
 
 
-@mock.patch("builtins.open", MockOpen("registered_users.json").open)
+@mock.patch(
+    "builtins.open",
+    MockOpen(
+        _file="registered_users.json",
+        user_a=("aweeeezy\"", "/Volumes/AWEEEEZY/"),
+        user_b=("other_user", "/other/USB/"),
+    ).open,
+)
 @mock.patch(
     "argparse.ArgumentParser.parse_args",
     return_value=Namespace(

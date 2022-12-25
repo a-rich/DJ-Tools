@@ -1,4 +1,5 @@
 import os
+import subprocess
 from unittest import mock
 
 from bs4 import BeautifulSoup
@@ -7,28 +8,12 @@ import pytest
 from djtools.sync.helpers import (
     parse_sync_command, rewrite_xml, run_sync, webhook
 )
+from test_data import MockOpen
 
 
 pytest_plugins = [
     "test_data",
 ]
-
-
-class MockOpen:
-    builtin_open = open
-
-    def __init__(self, user_a_path, user_b_path, handle_file):
-        self.user_a_path = user_a_path
-        self.user_b_path = user_b_path
-        self.handle_file = handle_file
-
-    def open(self, *args, **kwargs):
-        if os.path.basename(args[0]) == self.handle_file:
-            return mock.mock_open(
-                read_data=f'{{"aweeeezy": "{self.user_a_path}", '
-                    f'"other_user": "{self.user_b_path}"}}'
-            )(*args, **kwargs)
-        return self.builtin_open(*args, **kwargs)
 
 
 @pytest.mark.parametrize("upload", [True, False])
@@ -89,9 +74,9 @@ def test_parse_sync_command(
 @mock.patch(
     "builtins.open",
     MockOpen(
-        user_a_path="/Volumes/AWEEEEZY/",
-        user_b_path="/Volumes/my_beat_stick/",
-        handle_file="registered_users.json",
+        _file="registered_users.json",
+        user_a=("aweeeezy", "/Volumes/AWEEEEZY/"),
+        user_b=("other_user", "/Volumes/my_beat_stick/"),
     ).open
 )
 def test_rewrite_xml(test_config, test_xml):
@@ -142,10 +127,80 @@ def test_rewrite_xml(test_config, test_xml):
             example2 = track["Location"]
 
 
-def test_run_sync():
-    # TODO: figure out how to test "run_sync"
-    pass
+def test_rewrite_xml_no_xml_path(test_config):
+    test_config["XML_PATH"] = ""
+    with pytest.raises(
+        ValueError,
+        match="Using the sync_operations module's download_xml function "
+            "requires the config option XML_PATH"
+    ):
+        rewrite_xml(test_config)
 
 
-def test_webhook():
-    pass
+# class MockedPopen:
+#     def __init__(self, args, **kwargs):
+#         self.args = args
+#         self.returncode = 0
+#         self.stdout = '\n'.join(['hello.txt', 'world.txt'])
+#         self.stderr = None
+
+#     def __enter__(self):
+#         return self
+
+#     def __exit__(self, exc_type, value, traceback):
+#         pass
+
+#     def communicate(self, input=None, timeout=None):
+#         return self.stdout, self.stderr
+
+
+# @mock.patch(
+#     "djtools.sync.helpers.Popen",
+#     MockedPopen,
+# )
+# def test_run_sync_calls_popen(tmpdir):
+#     with open(os.path.join(str(tmpdir), "file.txt"), "w") as _file:
+#         _file.write("")
+
+#     # process_mock = mock.Mock()
+#     # attrs = {"communicate.__enter__.return_value": ("output\noutput2", "error")}
+#     # process_mock.configure_mock(**attrs)
+#     # mock_popen.return_value = process_mock
+
+#     cmd = ["aws", "s3", "sync", str(tmpdir), "s3://dj.beatcloud.com/dj/music/"]
+#     run_sync(cmd)
+
+
+# def test_run_sync(tmpdir):
+#     # TODO(a-rich): Figure out how to mock subprocess.Popen stdout.
+#     cmd = ["aws", "s3", "sync", str(tmpdir), "s3://dj.beatcloud.com/dj/music/"]
+#     ret = run_sync(cmd)
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        "*",
+        "*"*2001,
+        "*"*1900 + "\n" + "*"*99,
+        "*"*1900 + "\n" + "*"*100,
+    ],
+)
+@mock.patch("requests.post", side_effect=lambda *args, **kwargs: None)
+def test_webhook(mock_post, content):
+    url = "https://discord.com/api/webhooks/some-id/"
+    content_size_limit = 2000
+    posts = len(content) // content_size_limit
+    remainder = len(content) % content_size_limit
+    posts = posts + 1 if remainder else posts
+    webhook(url=url, content_size_limit=content_size_limit, content=content)
+    assert mock_post.call_count == max(posts, len(content.split("\n")))
+
+
+def test_webhook_no_content(caplog):
+    caplog.set_level("INFO")
+    url = "https://discord.com/api/webhooks/some-id/"
+    content = ""
+    ret = webhook(url=url, content=content)
+    assert not ret
+    assert caplog.records[0].message == "There's no content"

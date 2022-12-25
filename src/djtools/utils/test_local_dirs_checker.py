@@ -1,9 +1,8 @@
 import os
 
 import pytest
-from unittest.mock import patch
+from unittest import mock
 
-from djtools.spotify.spotify_playlist_checker import get_beatcloud_tracks
 from djtools.utils.local_dirs_checker import check_local_dirs, get_local_tracks
 
 
@@ -18,8 +17,16 @@ pytest_plugins = [
 @pytest.mark.parametrize(
     "local_tracks", [[], ["test_file1", "test_file2"]]
 )
+@mock.patch(
+    "djtools.utils.local_dirs_checker.get_beatcloud_tracks",
+    return_value=["test_file1", "test_file2"],
+)
 def test_check_local_dirs(
-    tmpdir, test_config, caplog, beatcloud_tracks, local_tracks,
+    tmpdir,
+    test_config,
+    caplog,
+    beatcloud_tracks,
+    local_tracks,
 ):
     caplog.set_level("INFO")
     test_config["CHECK_TRACK_OVERLAP_FUZZ_RATIO"] = 100
@@ -53,7 +60,7 @@ def test_check_local_dirs(
             assert any(
                 record.message == f"\t100: {x} | {x}" for x in local_tracks
             )
-        # Each "beatcloud_track" entry should match with 100% similarity.
+        # Each "beatcloud_tracks" entry should match with 100% similarity.
         assert matches == len(local_tracks)
     elif not local_tracks:
         assert not ret

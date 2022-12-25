@@ -20,3 +20,6 @@ src/djtools/_*configs*
 
 # include base configs directory
 !src/djtools/configs/*
+
+# include coverate configuration file
+!.coveragerc

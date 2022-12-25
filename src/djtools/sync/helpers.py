@@ -31,6 +31,7 @@ def run_sync(_cmd: str) -> str:
     Returns:
         Formatted list of uploaded tracks; tracks are grouped by directory.
     """
+    # TODO(a-rich): Figure out how to mock subprocess.Popen stdout.
     tracks = []
     try:
         with Popen(_cmd, stdout=PIPE, universal_newlines=True) as proc:
@@ -175,6 +176,9 @@ def webhook(
     while batch:
         index = content_size_limit - 1
         while True:
+            if index == 0:
+                index = content_size_limit
+                break
             try:
                 if batch[index] == "\n":
                     break
@@ -184,13 +188,10 @@ def webhook(
         remainder = batch[index+1:] + remainder
         batch = batch[:index+1]
 
-        try:
+        if batch:
             requests.post(url, json={"content": batch})
-        except Exception:
-            logger.error(format_exc())
-
-        batch = remainder[:content_size_limit]
-        remainder = remainder[content_size_limit:]
+            batch = remainder[:content_size_limit]
+            remainder = remainder[content_size_limit:]
 
 
 def rewrite_xml(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
@@ -204,13 +205,12 @@ def rewrite_xml(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
     Raises:
         KeyError: "XML_PATH" must be configured.
     """
-    try:
-        xml_path = config["XML_PATH"]
-    except KeyError:
-        raise KeyError(
+    xml_path = config.get("XML_PATH")
+    if not xml_path:
+        raise ValueError(
             "Using the sync_operations module's download_xml function "
             "requires the config option XML_PATH"
-        ) from KeyError
+        )
 
     registered_users_path = os.path.join(
         os.path.dirname(os.path.dirname(__file__)),

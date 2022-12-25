@@ -78,9 +78,11 @@ def get_spotify_tracks(
                 client_secret=config["SPOTIFY_CLIENT_SECRET"],
                 redirect_uri=config["SPOTIFY_REDIRECT_URI"],
                 scope="playlist-modify-public",
-                cache_path=os.path.join(
-                    os.path.dirname(__file__), ".spotify.cache"
-                ).replace(os.sep, "/")
+                cache_handler=spotipy.CacheFileHandler(
+                    cache_path=os.path.join(
+                        os.path.dirname(__file__), ".spotify.cache"
+                    ).replace(os.sep, "/"),
+                ),
             )
         )
     except KeyError:
@@ -108,7 +110,8 @@ def get_spotify_tracks(
 
         logger.info(f'Getting tracks from Spotify playlist "{playlist}"...')
         playlist_tracks[playlist] = get_playlist_tracks(spotify, playlist_id)
-        logger.info(f"Got {len(playlist_tracks[playlist])} tracks")
+        length = len(playlist_tracks[playlist])
+        logger.info(f"Got {length} track{'' if length == 1 else 's'}")
 
         if config.get("VERBOSITY", 0) > 0:
             for track in playlist_tracks[playlist]:
@@ -175,6 +178,7 @@ def get_beatcloud_tracks() -> List[str]:
     Returns:
         Beatcloud track titles and artist names.
     """
+    # TODO(a-rich): Figure out how to mock subprocess call.
     logger.info("Getting tracks from the beatcloud...")
     cmd = "aws s3 ls --recursive s3://dj.beatcloud.com/dj/music/"
     with os.popen(cmd) as proc:

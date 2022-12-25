@@ -35,9 +35,9 @@ def youtube_dl(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
             "YOUTUBE_DL_URL"
         ) from KeyError
 
-    dl_loc = config.get("YOUTUBE_DL_LOCATION", ".")
-
+    dl_loc = config.get("YOUTUBE_DL_LOCATION") or "."
     dl_loc = os.path.join(dl_loc, "").replace(os.sep, "/")
+
     if not os.path.exists(dl_loc):
         make_dirs(dl_loc)
 

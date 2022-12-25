@@ -9,6 +9,7 @@ if the Levenshtein similarity passes a threshold.
 """
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+import inspect
 import json
 import logging
 from operator import itemgetter
@@ -69,6 +70,7 @@ async def async_update_auto_playlists(
         )
         return
 
+    # TODO(a-rich): Figure out how to mock Spotipy OAuth.
     try:
         spotify = spotipy.Spotify(
             auth_manager=SpotifyOAuth(
@@ -204,33 +206,37 @@ async def get_subreddit_posts(
         subreddit: "name", "type", "period", and "limit".
         config: Configuration object.
         praw_cache: Cached praw submissions.
+    
+    Raises:
+        AttributeError: "type" must match a method of the "Subreddit" class.
 
     Returns:
         List of Spotify track ("id", "name") tuples and subreddit config dict.
     """
-    sub = await reddit.subreddit(subreddit["name"])
-    funcs = {
-        "top": sub.top,
-        "hot": sub.hot,
-        "new": sub.new,
-        "rising": sub.rising,
-        "controversial": sub.controversial,
-    }
     sub_limit = config.get("AUTO_PLAYLIST_SUBREDDIT_LIMIT", 500) or None
+    sub = await reddit.subreddit(subreddit["name"])
     try:
+        func = getattr(sub, subreddit["type"])
+    except AttributeError:
+        raise AttributeError(
+            f'Method "{subreddit["type"]}" does not exist in "Subreddit" class'
+        ) from AttributeError
+    # TODO(a-rich): Figure out how to mock the signature of the "Subreddit"
+    # class's "top", "hot", etc. methods.
+    if inspect.signature(func).parameters.get("time_filter"):
         subs = [
             x async for x in catch(
-                funcs[subreddit["type"]],
+                func,
                 handle=lambda exc: raise_(exc)
                     if isinstance(exc, TypeError) else logger.info(exc),
                 limit=sub_limit,
                 time_filter=subreddit["period"],
             )
         ]
-    except TypeError:
+    else:
         subs = [
             x async for x in catch(
-                funcs[subreddit["type"]],
+                func,
                 handle=lambda exc: logger.info(exc),
                 limit=sub_limit,
             )
@@ -355,8 +361,8 @@ def parse_title(title: str) -> Tuple[str]:
         except ValueError:
             return None, None
 
-    title, artist = title.split("(")[0], artist.split("(")[0]
-    title, artist = title.split("[")[0], artist.split("[")[0]
+    title, artist = map(str.strip, [title.split("(")[0], artist.split("(")[0]])
+    title, artist = map(str.strip, [title.split("[")[0], artist.split("[")[0]])
 
     return title, artist
 
