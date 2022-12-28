@@ -56,11 +56,9 @@ def test_check_local_dirs(
             if any(x in record.message for x in check_dirs):
                 continue
             matches += 1
-            # Each log for a match should be for a "local_tracks" entry
             assert any(
                 record.message == f"\t100: {x} | {x}" for x in local_tracks
             )
-        # Each "beatcloud_tracks" entry should match with 100% similarity.
         assert matches == len(local_tracks)
     elif not local_tracks:
         assert not ret
@@ -84,10 +82,7 @@ def test_get_local_tracks(tmpdir, test_config):
         ) as _file:
             _file.write("")
     local_dir_tracks = get_local_tracks(test_config)
-    # All directories being checked had tracks in them.
     assert all(x in local_dir_tracks for x in check_dirs)
-    # The number of directories having tracks in them matches the number of
-    # directories being configured for checking.
     assert len(local_dir_tracks) == len(check_dirs)
 
 

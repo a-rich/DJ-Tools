@@ -221,9 +221,7 @@ async def get_subreddit_posts(
         raise AttributeError(
             f'Method "{subreddit["type"]}" does not exist in "Subreddit" class'
         ) from AttributeError
-    # TODO(a-rich): Figure out how to mock the signature of the "Subreddit"
-    # class's "top", "hot", etc. methods.
-    if inspect.signature(func).parameters.get("time_filter"):
+    if subreddit["type"] == "top":
         subs = [
             x async for x in catch(
                 func,

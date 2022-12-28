@@ -7,19 +7,17 @@
 
 # ignore specific files
 **/.cache
-**/*.coverage
+**/*.coverage*
 **/.DS_store
 **/.python-version
 **/*.code-workspace
 **/*.idea
-src/djtools/configs/registered_users.json
 
 # ignore directories
 **/__pycache__
-src/djtools/_*configs*
 
-# include base configs directory
+# include configs
 !src/djtools/configs/*
 
-# include coverate configuration file
-!.coveragerc
+# ignore registered users
+src/djtools/configs/registered_users.json

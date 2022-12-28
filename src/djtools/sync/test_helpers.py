@@ -52,8 +52,6 @@ def test_parse_sync_command(
     ]
     cmd = ""
     if include_dirs and exclude_dirs:
-        # Including and excluding directories within the same "sync" command is
-        # not allowed.
         with pytest.raises(ValueError):
             cmd = parse_sync_command(partial_cmd, test_config, upload)
     else:
@@ -90,10 +88,8 @@ def test_rewrite_xml(test_config, test_xml):
     other_users_xml = os.path.join(
         os.path.dirname(test_xml), f'{other_user}_rekordbox.xml'
     ).replace(os.sep, "/")
-    # Create dummy "other_user" XML.
     os.rename(test_xml, other_users_xml)
 
-    # Insert the USB path of "other_user" into all the track Locations.
     with open(other_users_xml, mode="r", encoding="utf-8") as _file:
         soup = BeautifulSoup(_file.read(), "xml")
         for track in soup.find_all("TRACK"):
@@ -105,18 +101,13 @@ def test_rewrite_xml(test_config, test_xml):
                 os.path.basename(track["Location"]),
             ).replace(os.sep, "/")
     
-    # Write this XML back to file.
     with open(
         other_users_xml, mode="wb", encoding=soup.orignal_encoding
     ) as _file:
         _file.write(soup.prettify("utf-8"))
         
-    # Rewrite XML to replace the USB path of "other_user" with that of
-    # "test_user".
     rewrite_xml(test_config)
 
-    # Assert that none of the track Location fields contain the USB path of
-    # "other_user" and all of them contain that of "test_user". 
     with open(other_users_xml, mode="r", encoding="utf-8") as _file:
         soup = BeautifulSoup(_file.read(), "xml")
         for track in soup.find_all("TRACK"):

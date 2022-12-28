@@ -99,3 +99,8 @@ def test_config():
         config = json.load(_file)
 
     return config
+
+
+@pytest.fixture
+def test_playlist_config():
+    return "src/djtools/configs/rekordbox_playlists.json"

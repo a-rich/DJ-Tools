@@ -344,12 +344,12 @@ def test_get_subreddit_posts(
         "djtools.spotify.spotify_playlist_builder.praw.Reddit.subreddit",
         new=mock.AsyncMock(),
     ):
-        # TODO(a-rich): Figure out how to mock the signature of the "Subreddit"
-        # class's "top", "hot", etc. methods.
         mock_catch.return_value=aiter(mock_praw_submission, num_subs)
-        asyncio.run(get_subreddit_posts(
-            mock_spotify, mock_praw, subreddit, test_config, praw_cache
-        ))
+        asyncio.run(
+            get_subreddit_posts(
+                mock_spotify, mock_praw, subreddit, test_config, praw_cache
+            )
+        )
     assert caplog.records[0].message == (
         f'Filtering {num_subs} "r/techno" {subreddit_type} posts'
     )

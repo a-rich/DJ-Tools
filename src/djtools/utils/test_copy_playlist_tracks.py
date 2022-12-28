@@ -25,15 +25,12 @@ def test_copy_file(tmpdir, test_track):
     new_file_path = os.path.join(
         dest_dir, os.path.basename(old_track_loc)
     ).replace(os.sep, "/")
-    # New track location must have "file://localhost" prefix and the same
-    # basename with the destination directory in between.
     assert new_track_loc == f"{loc_prefix}{new_file_path}"
-    # New track file must exist at the new location.
     assert os.path.exists(unquote(new_file_path))
 
 
 def test_copy_playlists_tracks(tmpdir, test_config, test_xml):
-    target_playlists = ["Rock", "Pop"]
+    target_playlists = ["Rock", "Dubstep"]
     new_xml = os.path.join(
         os.path.dirname(test_xml), "relocated_rekordbox.xml"
     ).replace(os.sep, "/")
@@ -42,18 +39,14 @@ def test_copy_playlists_tracks(tmpdir, test_config, test_xml):
     test_config["COPY_PLAYLISTS_TRACKS"] = target_playlists
     test_config["COPY_PLAYLISTS_TRACKS_DESTINATION"] = test_output_dir
     copy_playlists_tracks(test_config)
-    # Output directory must contain copied files.
     assert os.listdir(test_output_dir)
-    # New XML must be saved to file.
     assert os.path.exists(new_xml)
     with open(new_xml, mode="r", encoding="utf-8") as _file:
         xml = BeautifulSoup(_file.read(), "xml")
     for track in xml.find_all("TRACK"):
         if not track.get("Location"):
             continue
-        # Only tracks in the target playlist exist in the new XML.
         assert any(x in track["Genre"] for x in target_playlists)
-        # All tracks in the new XML must have their "Location" updated.
         assert test_output_dir in unquote(track["Location"])
         
 
@@ -83,8 +76,9 @@ def test_copy_playlist_tracks_no_playlists_or_destination(
 
 
 def test_copy_playlist_tracks_invalid_playlist(tmpdir, test_config, test_xml):
+    playlist = "invalid_playlist"
     test_config["XML_PATH"] = test_xml
-    test_config["COPY_PLAYLISTS_TRACKS"] = ["invalid_playlist"]
+    test_config["COPY_PLAYLISTS_TRACKS"] = [playlist]
     test_config["COPY_PLAYLISTS_TRACKS_DESTINATION"] = tmpdir
-    with pytest.raises(LookupError):
+    with pytest.raises(LookupError, match=f"{playlist} not found"):
         copy_playlists_tracks(test_config)

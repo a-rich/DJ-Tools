@@ -15,17 +15,13 @@ pytest_plugins = [
 def test_catch():
     x = "test"
     func = lambda x: x
-    # Non-exception case: "catch" returns the same thing as the function it
-    # calls.
     assert catch(func, x) == func(x)
     func = lambda x: x/0
     ret = catch(func, x)
-    # Exception case: "catch" returns None by default.
     assert ret is None
     handler_ret = "some string"
     handler = lambda x: handler_ret
     ret = catch(func, x, handle=handler)
-    # Exception case: "catch" executes provided handler. 
     assert ret == handler_ret
 
 
@@ -34,14 +30,15 @@ def test_make_dirs(tmpdir, platform):
     with mock.patch("djtools.utils.helpers.os_name", platform):
         new_dir = os.path.join(tmpdir, "test_dir").replace(os.sep, "/")
         make_dirs(new_dir)
-        # New directory is created as expected.
         assert os.path.exists(new_dir)
         new_sub_dir = os.path.join(
             tmpdir, "test_dir_2", "sub_dir"
         ).replace(os.sep, "/")
         make_dirs(new_sub_dir)
-        # New directory and sub-directory created as expected.
         assert os.path.exists(new_sub_dir)
+        rel_dir = os.path.join(tmpdir, "relative_dir").replace(os.sep, "/")
+        make_dirs(rel_dir)
+        assert os.path.exists(rel_dir)
 
 
 
@@ -70,7 +67,6 @@ def test_upload_log(tmpdir, test_config):
     upload_log(
         test_config, os.path.join(tmpdir, test_log).replace(os.sep, "/")
     )
-    # Files older than one day are removed; "empty.txt" is not removed.
     assert len(os.listdir(tmpdir)) == len(filenames) - 1
 
 
