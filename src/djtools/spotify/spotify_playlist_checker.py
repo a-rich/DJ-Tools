@@ -178,7 +178,6 @@ def get_beatcloud_tracks() -> List[str]:
     Returns:
         Beatcloud track titles and artist names.
     """
-    # TODO(a-rich): Figure out how to mock subprocess call.
     logger.info("Getting tracks from the beatcloud...")
     cmd = "aws s3 ls --recursive s3://dj.beatcloud.com/dj/music/"
     with os.popen(cmd) as proc:

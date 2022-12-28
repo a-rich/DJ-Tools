@@ -1,5 +1,7 @@
-import pytest
+import os
 from unittest import mock
+
+import pytest
 
 from djtools.spotify.spotify_playlist_checker import (
     add_tracks,
@@ -140,14 +142,25 @@ def test_find_matches(test_config):
     assert [x[1] for x in matches] == expected_matches
 
 
+@pytest.mark.parametrize(
+    "proc_dump",
+    [
+        [],
+        [
+            "aweeeezy/Bass/2022-12-21/track - artist.mp3",
+            "aweeeezy/Techno/2022-12-21/track - artist.mp3",
+        ]
+    ]
+)
 @mock.patch("os.popen")
-def test_get_beatcloud_tracks(mock_os_popen):
-    # TODO(a-rich): Figure out how to mock subprocess call.
+def test_get_beatcloud_tracks(mock_os_popen, proc_dump):
     process = mock_os_popen.return_value.__enter__.return_value
-    process.returncode = 0
-    process.communicate.return_value = (b'output1\noutput2', b'error')
-    get_beatcloud_tracks()
+    process.read.side_effect = lambda: "\n".join(proc_dump)
+    tracks = get_beatcloud_tracks()
     mock_os_popen.assert_called_once()
+    assert len(tracks) == len(proc_dump)
+    for track, line in zip(tracks, proc_dump):
+        assert track == os.path.splitext(os.path.basename(line))[0]
 
 
 @mock.patch("djtools.spotify.spotify_playlist_checker.spotipy.Spotify")

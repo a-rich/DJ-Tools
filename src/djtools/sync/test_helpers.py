@@ -1,5 +1,5 @@
 import os
-import subprocess
+import tempfile
 from unittest import mock
 
 from bs4 import BeautifulSoup
@@ -128,44 +128,61 @@ def test_rewrite_xml_no_xml_path(test_config):
         rewrite_xml(test_config)
 
 
-# class MockedPopen:
-#     def __init__(self, args, **kwargs):
-#         self.args = args
-#         self.returncode = 0
-#         self.stdout = '\n'.join(['hello.txt', 'world.txt'])
-#         self.stderr = None
+@mock.patch("djtools.sync.helpers.Popen")
+def test_run_sync(mock_popen, tmpdir):
+    with open(
+        os.path.join(tmpdir, "track.mp3").replace(os.sep, "/"),
+        mode="w",
+        encoding="utf-8",
+    ) as _file:
+        _file.write("")
+    cmd = ["aws", "s3", "sync", str(tmpdir), "s3://dj.beatcloud.com/dj/music/"]
+    sync_output = (
+        "upload: ../../Volumes/AWEEEEZY/DJ Music/Bass/2022-12-21/track - "
+            "artist.mp3 to s3://dj.beatcloud.com/dj/music/Bass/2022-12-21/"
+            "track - artist.mp3\n"
+        "upload: ../../Volumes/AWEEEEZY/DJ Music/Bass/2O22-12-21/other track "
+            "- other artist.mp3 to s3://dj.beatcloud.com/dj/music/Bass/"
+            "2O22-12-21/other track - other artist.mp3\n"
+        "upload: ../../Volumes/AWEEEEZY/DJ Music/Techno/2022-12-22/last track "
+            "- last artist.mp3 to s3://dj.beatcloud.com/dj/music/Techno/"
+            "2022-12-22/last track - last artist.mp3"
+        "\nirrelevant line"
+    )
+    tmp_file = tempfile.NamedTemporaryFile(mode="w")
+    tmp_file.write(sync_output)
+    tmp_file.seek(0)
+    tmp_file = open(tmp_file.name)
+    process = mock_popen.return_value.__enter__.return_value
+    process.stdout = tmp_file
+    process.wait.return_value = 0
+    ret = run_sync(cmd)
+    expected = (
+        "Bass/2022-12-21: 1\n\ttrack - artist.mp3\nBass/2O22-12-21: 1\n\tother"
+        " track - other artist.mp3\nTechno/2022-12-22: 1\n\tlast track - last "
+        "artist.mp3\n"
+    )
+    assert ret == expected
 
-#     def __enter__(self):
-#         return self
 
-#     def __exit__(self, exc_type, value, traceback):
-#         pass
-
-#     def communicate(self, input=None, timeout=None):
-#         return self.stdout, self.stderr
-
-
-# @mock.patch(
-#     "djtools.sync.helpers.Popen",
-#     MockedPopen,
-# )
-# def test_run_sync_calls_popen(tmpdir):
-#     with open(os.path.join(str(tmpdir), "file.txt"), "w") as _file:
-#         _file.write("")
-
-#     # process_mock = mock.Mock()
-#     # attrs = {"communicate.__enter__.return_value": ("output\noutput2", "error")}
-#     # process_mock.configure_mock(**attrs)
-#     # mock_popen.return_value = process_mock
-
-#     cmd = ["aws", "s3", "sync", str(tmpdir), "s3://dj.beatcloud.com/dj/music/"]
-#     run_sync(cmd)
-
-
-# def test_run_sync(tmpdir):
-#     # TODO(a-rich): Figure out how to mock subprocess.Popen stdout.
-#     cmd = ["aws", "s3", "sync", str(tmpdir), "s3://dj.beatcloud.com/dj/music/"]
-#     ret = run_sync(cmd)
+@mock.patch("djtools.sync.helpers.Popen")
+def test_run_sync_handles_return_code(mock_popen, tmpdir, caplog):
+    caplog.set_level("CRITICAL")
+    cmd = ["aws", "s3", "sync", str(tmpdir), "s3://dj.beatcloud.com/dj/music/"]
+    tmp_file = tempfile.NamedTemporaryFile(mode="w")
+    tmp_file.write("")
+    tmp_file.seek(0)
+    tmp_file = open(tmp_file.name)
+    process = mock_popen.return_value.__enter__.return_value
+    process.stdout = tmp_file
+    process.wait.return_value = 1
+    msg = (
+        f"Failure while syncing: Command '{' '.join(cmd)}' returned "
+        f"non-zero exit status {process.wait.return_value}."
+    )
+    with pytest.raises(Exception, match=msg):
+        run_sync(cmd)
+    assert caplog.records[0].message == msg
 
 
 @pytest.mark.parametrize(

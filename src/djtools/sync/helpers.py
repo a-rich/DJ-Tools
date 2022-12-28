@@ -8,7 +8,6 @@ import json
 import logging
 import os
 from subprocess import Popen, PIPE, CalledProcessError
-from traceback import format_exc
 from typing import Dict, List, Optional, Union
 
 from bs4 import BeautifulSoup
@@ -31,7 +30,6 @@ def run_sync(_cmd: str) -> str:
     Returns:
         Formatted list of uploaded tracks; tracks are grouped by directory.
     """
-    # TODO(a-rich): Figure out how to mock subprocess.Popen stdout.
     tracks = []
     try:
         with Popen(_cmd, stdout=PIPE, universal_newlines=True) as proc:
@@ -53,11 +51,11 @@ def run_sync(_cmd: str) -> str:
             proc.stdout.close()
             return_code = proc.wait()
         if return_code:
-            raise CalledProcessError(return_code, _cmd)
-    except AttributeError:
-        logger.error("No new track")
-    except Exception:
-        logger.error(f"Failure while syncing: {format_exc()}")
+            raise CalledProcessError(return_code, " ".join(_cmd))
+    except Exception as exc:
+        msg = f"Failure while syncing: {exc}"
+        logger.critical(msg)
+        raise Exception(msg)
 
     new_music = ""
     if tracks:

@@ -24,30 +24,32 @@ pytest_plugins = [
 ]
 
 
-# @pytest.mark.parametrize("playlist_subreddits", [[], ["playlist"]])
-# @mock.patch(
-#     "djtools.spotify.spotify_playlist_builder.spotipy.oauth2.SpotifyOAuth"
-# )
-# @mock.patch("djtools.spotify.spotify_playlist_builder.spotipy.Spotify")
-# def test_async_update_auto_playlists(
-#     mock_spotify, mock_spotify_oauth, playlist_subreddits, test_config, caplog
-# ):
-#     # TODO(a-rich): Figure out how to mock Spotipy OAuth.
-#     caplog.set_level("INFO")
-#     test_config["AUTO_PLAYLIST_SUBREDDITS"] = playlist_subreddits
-#     ret = asyncio.run(async_update_auto_playlists(test_config))
-#     if not playlist_subreddits:
-#         assert not ret
-#         assert caplog.records[0].message == (
-#             "Using the spotify_playlist_builder module requires the config "
-#             "option AUTO_PLAYLIST_SUBREDDITS"
-#         )
+@pytest.mark.asyncio
+@pytest.mark.parametrize("playlist_subreddits", [[], ["playlist"]])
+@mock.patch(
+    "djtools.spotify.spotify_playlist_builder.spotipy.oauth2.SpotifyOAuth"
+)
+@mock.patch("djtools.spotify.spotify_playlist_builder.spotipy.Spotify")
+async def test_async_update_auto_playlists(
+    mock_spotify, mock_spotify_oauth, playlist_subreddits, test_config, caplog
+):
+    # TODO(a-rich): Figure out how to mock Spotipy OAuth.
+    caplog.set_level("INFO")
+    test_config["AUTO_PLAYLIST_SUBREDDITS"] = playlist_subreddits
+    ret = await async_update_auto_playlists(test_config)
+    if not playlist_subreddits:
+        assert not ret
+        assert caplog.records[0].message == (
+            "Using the spotify_playlist_builder module requires the config "
+            "option AUTO_PLAYLIST_SUBREDDITS"
+        )
 
 
-def test_async_update_auto_playlists_missing_playlists(test_config, caplog):
+@pytest.mark.asyncio
+async def test_async_update_auto_playlists_missing_playlists(test_config, caplog):
     caplog.set_level("ERROR")
     test_config["AUTO_PLAYLIST_SUBREDDITS"] = ""
-    ret = asyncio.run(async_update_auto_playlists(test_config))
+    ret = await async_update_auto_playlists(test_config)
     assert not ret
     assert caplog.records[0].message == (
         "Using the spotify_playlist_builder module requires the config "
@@ -55,7 +57,8 @@ def test_async_update_auto_playlists_missing_playlists(test_config, caplog):
     )
 
 
-def test_async_update_auto_playlists_handles_missing_spotify_configs(
+@pytest.mark.asyncio
+async def test_async_update_auto_playlists_handles_missing_spotify_configs(
     test_config
 ):
     del test_config["SPOTIFY_CLIENT_ID"]
@@ -66,16 +69,17 @@ def test_async_update_auto_playlists_handles_missing_spotify_configs(
             "following config options: SPOTIFY_CLIENT_ID, "
             "SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI",
     ):
-        asyncio.run(async_update_auto_playlists(test_config))
+        await async_update_auto_playlists(test_config)
         
 
-def test_async_update_auto_playlists_handles_bad_spotify_configs(test_config):
+@pytest.mark.asyncio
+async def test_async_update_auto_playlists_handles_bad_spotify_configs(test_config):
     test_config["AUTO_PLAYLIST_SUBREDDITS"] = ["playlist"]
     with pytest.raises(
         Exception,
         match="Failed to instantiate the Spotify client",
     ):
-        asyncio.run(async_update_auto_playlists(test_config))
+        await async_update_auto_playlists(test_config)
 
 
 @mock.patch(
@@ -313,6 +317,7 @@ async def aiter(obj, num_subs):
         await asyncio.sleep(0.1)
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("subreddit_type", ["hot", "top"])
 @pytest.mark.parametrize("num_subs", [5, 0])
 @mock.patch("djtools.spotify.spotify_playlist_builder.praw.Reddit.close")
@@ -320,7 +325,7 @@ async def aiter(obj, num_subs):
 @mock.patch("djtools.spotify.spotify_playlist_builder.praw.models.Submission")
 @mock.patch("djtools.spotify.spotify_playlist_builder.praw.Reddit")
 @mock.patch("djtools.spotify.spotify_playlist_builder.spotipy.Spotify")
-def test_get_subreddit_posts(
+async def test_get_subreddit_posts(
     mock_spotify,
     mock_praw,
     mock_praw_submission,
@@ -345,10 +350,8 @@ def test_get_subreddit_posts(
         new=mock.AsyncMock(),
     ):
         mock_catch.return_value=aiter(mock_praw_submission, num_subs)
-        asyncio.run(
-            get_subreddit_posts(
-                mock_spotify, mock_praw, subreddit, test_config, praw_cache
-            )
+        await get_subreddit_posts(
+            mock_spotify, mock_praw, subreddit, test_config, praw_cache
         )
     assert caplog.records[0].message == (
         f'Filtering {num_subs} "r/techno" {subreddit_type} posts'
@@ -366,9 +369,10 @@ def test_get_subreddit_posts(
         )
 
 
+@pytest.mark.asyncio
 @mock.patch("djtools.spotify.spotify_playlist_builder.praw.Reddit")
 @mock.patch("djtools.spotify.spotify_playlist_builder.spotipy.Spotify")
-def test_get_subreddit_posts_handle_bad_subreddit_method(
+async def test_get_subreddit_posts_handle_bad_subreddit_method(
     mock_spotify, mock_praw, test_config
 ):
     subreddit_type = "not-a-method"
@@ -390,9 +394,9 @@ def test_get_subreddit_posts_handle_bad_subreddit_method(
                 "class"
             ),
         ):
-            asyncio.run(get_subreddit_posts(
+            await get_subreddit_posts(
                 mock_spotify, mock_praw, subreddit, test_config, praw_cache
-            ))
+            )
 
 
 @pytest.mark.parametrize(
@@ -476,7 +480,6 @@ def test_track_name_too_similar(playlist_track_names, caplog):
 def test_update_auto_playlists(
     mock_async_update_auto_playlists, test_config
 ):
-    # TODO(a-rich): Is there a better way to test asyncio functionality?
     update_auto_playlists(test_config)
 
 
