@@ -5,10 +5,10 @@ on: [push, pull_request]
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     env:
       COVERAGE_SINGLE: 0
-      COVERAGE_TOTAL: 70  # should be 100 but something is wrong with workflow
+      COVERAGE_TOTAL: 100  # should be 100 but something is wrong with workflow
 
     steps:
     - uses: actions/checkout@main
