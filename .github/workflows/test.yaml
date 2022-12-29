@@ -21,7 +21,6 @@ jobs:
         pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-
     - name: pytester-cov
       id: pytester-cov
       uses: programmingwithalex/pytester-cov@main
@@ -29,16 +28,6 @@ jobs:
         pytest-root-dir: '.'
         cov-omit-list: 'src/djtools/**/test_*.py'
         cov-threshold-total: ${{ env.COVERAGE_TOTAL }}
-
-    - name: Coverage total fail - new issue
-      if: ${{ steps.pytester-cov.outputs.cov-threshold-total-fail == 'true' }}
-      uses: nashmaniac/create-issue-action@v1.1
-      with:
-        title: Pytest coverage total falls below minimum ${{ env.COVERAGE_TOTAL }}
-        token: ${{secrets.GITHUB_TOKEN}}
-        assignees: ${{github.actor}}
-        labels: workflow-failed
-        body: ${{ steps.pytester-cov.outputs.output-table }}
 
     - name: Coverage total fail - exit
       if: ${{ steps.pytester-cov.outputs.cov-threshold-total-fail == 'true' }}
