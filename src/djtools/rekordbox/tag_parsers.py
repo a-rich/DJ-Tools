@@ -352,6 +352,7 @@ class Combiner(TagParser):
                         logger.error(
                             "Bad BPM or rating number range: {}".format(part)
                         )
+                        continue
                 else:
                     logger.error(
                         "Malformed BPM or rating filter part: {}".format(part)
@@ -427,3 +428,11 @@ class Combiner(TagParser):
             node.tags.append(tag)
 
         return ""
+
+    def get_combiner_tracks(self) -> Dict[str, Dict[str, List]]:
+        """Returns tag / selector -> tracks mapping.
+
+        Returns:
+            Map of tags / selectors to track_id: list of tracks mapping.
+        """
+        return self._tracks

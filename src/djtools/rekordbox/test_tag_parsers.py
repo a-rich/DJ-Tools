@@ -139,11 +139,18 @@ def test_combiner(test_playlist_config, test_xml, caplog):
     with open(test_xml, mode="r", encoding="utf-8") as _file:
         db = BeautifulSoup(_file.read(), "xml")
     bad_playlist = "Dark & [-1, 5-7, a-5]"
+    selector_playlists = [
+        x for x in playlist_config["Combiner"]["playlists"]
+        if "[" in x or "{" in x
+    ]
     playlist_config["Combiner"]["playlists"].append(bad_playlist)
-    Combiner(
+    combiner_parser = Combiner(
         parser_config=playlist_config["Combiner"],
         rekordbox_database=db,
     )
+    prescan_tag_mapping = combiner_parser.get_combiner_tracks()
+    for selector in prescan_tag_mapping:
+        assert any(selector in playlist for playlist in selector_playlists)
     assert caplog.records[0].message == (
         "Malformed BPM or rating filter part: -1"
     )
