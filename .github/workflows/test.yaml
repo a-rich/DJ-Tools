@@ -26,7 +26,7 @@ jobs:
       uses: programmingwithalex/pytester-cov@main
       with:
         pytest-root-dir: 'src/djtools/'
-        cov-omit-list: 'src/djtools/dj_tools.py, src/djtools/**/test_*.py'
+        cov-omit-list: 'src/djtools/dj_tools.py'
         cov-threshold-total: ${{ env.COVERAGE_TOTAL }}
 
     - name: Coverage total fail - exit
