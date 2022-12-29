@@ -72,7 +72,7 @@ def test_parse_sync_command(
 @mock.patch(
     "builtins.open",
     MockOpen(
-        _file="registered_users.json",
+        files=["registered_users.json"],
         user_a=("aweeeezy", "/Volumes/AWEEEEZY/"),
         user_b=("other_user", "/Volumes/my_beat_stick/"),
     ).open

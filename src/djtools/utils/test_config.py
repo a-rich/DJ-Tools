@@ -8,6 +8,14 @@ from djtools.utils.config import arg_parse, build_config, parse_json
 from test_data import MockOpen
 
 
+@mock.patch(
+    "builtins.open",
+    MockOpen(
+        files=["registered_users.json"],
+        user_a=("aweeeezy", "/Volumes/AWEEEEZY/"),
+        user_b=("other_user", "/other/USB/"),
+    ).open,
+)
 def test_build_config(tmpdir):
     with mock.patch(
         "argparse.ArgumentParser.parse_args",
@@ -20,7 +28,10 @@ def test_build_config(tmpdir):
     assert isinstance(config, dict)
 
 
-@mock.patch("builtins.open", MockOpen(_file="config.json").open)
+@mock.patch("builtins.open", MockOpen(
+    files=["config.json"],
+    content='{"json_valid": false,}',
+).open)
 @mock.patch(
     "argparse.ArgumentParser.parse_args",
     return_value=Namespace(
@@ -50,6 +61,14 @@ def test_build_config_aws_profile_not_set(mock_parse_args, caplog):
     )
 
 
+@mock.patch(
+    "builtins.open",
+    MockOpen(
+        files=["registered_users.json"],
+        user_a=("aweeeezy", "/Volumes/AWEEEEZY/"),
+        user_b=("other_user", "/other/USB/"),
+    ).open,
+)
 @mock.patch(
     "argparse.ArgumentParser.parse_args",
     return_value=Namespace(
@@ -95,7 +114,7 @@ def test_build_config_mutually_exclusive_include_exclude_dirs(
 @mock.patch(
     "builtins.open",
     MockOpen(
-        _file="registered_users.json",
+        files=["registered_users.json"],
         user_a=("aweeeezy\"", "/Volumes/AWEEEEZY/"),
         user_b=("other_user", "/other/USB/"),
     ).open,
@@ -112,7 +131,10 @@ def test_build_config_invalid_registered_users_json(mock_parse_args, caplog):
         config = build_config()
     assert 'Error reading "registered_users.json"' in caplog.records[0].message
 
-
+@mock.patch(
+    "builtins.open",
+    MockOpen(files=["registered_users.json"]).open,
+)
 @mock.patch(
     "argparse.ArgumentParser.parse_args",
     return_value=Namespace(

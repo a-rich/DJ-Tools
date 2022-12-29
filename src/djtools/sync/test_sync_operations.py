@@ -78,7 +78,7 @@ def test_download_xml_no_xml(test_config):
 @mock.patch(
     "builtins.open", 
     MockOpen(
-        _file="registered_users.json",
+        files=["registered_users.json"],
         user_a=("aweeeezy", "/Volumes/AWEEEEZY/"),
         user_b=("test_user", "/test/USB/"),
     ).open,

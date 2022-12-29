@@ -15,9 +15,4 @@
 
 # ignore directories
 **/__pycache__
-
-# include configs
-!src/djtools/configs/*
-
-# ignore registered users
-src/djtools/configs/registered_users.json
+src/djtools/configs/*

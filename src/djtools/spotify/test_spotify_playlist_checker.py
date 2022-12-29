@@ -238,7 +238,10 @@ def test_get_playlist_tracks_handles_spotipy_exception(
 
 
 @pytest.mark.parametrize("verbosity", [0, 1])
-@mock.patch("builtins.open", MockOpen(_file="playlist_checker.json").open)
+@mock.patch("builtins.open", MockOpen(
+    files=["playlist_checker.json"],
+    content='{"r/techno | Top weekly Posts": "5gex4eBgWH9nieoVuV8hDC"}',
+).open)
 @mock.patch(
     "djtools.spotify.spotify_playlist_checker.get_playlist_tracks",
     return_value={"some track - some artist"},

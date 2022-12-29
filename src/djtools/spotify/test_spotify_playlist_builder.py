@@ -1,7 +1,6 @@
 import asyncio
 from unittest import mock
 
-import asyncpraw as praw
 import pytest
 
 from djtools.spotify.spotify_playlist_builder import (
@@ -17,6 +16,7 @@ from djtools.spotify.spotify_playlist_builder import (
     update_auto_playlists,
     update_existing_playlist,
 )
+from test_data import MockOpen
 
 
 pytest_plugins = [
@@ -24,25 +24,98 @@ pytest_plugins = [
 ]
 
 
+async def aiter(obj, num_subs):
+    for i in range(num_subs):
+        yield obj
+        await asyncio.sleep(0.1)
+
+
 @pytest.mark.asyncio
-@pytest.mark.parametrize("playlist_subreddits", [[], ["playlist"]])
+@pytest.mark.parametrize(
+    "playlist_subreddits",
+    [[], [{"name": "jungle", "type": "hot", "period": "week", "limit": 50}]],
+)
+@pytest.mark.parametrize("got_playlist_ids", [True, False])
+@pytest.mark.parametrize("got_tracks", [True, False])
+@mock.patch("os.path.exists", return_value=True)
 @mock.patch(
-    "djtools.spotify.spotify_playlist_builder.spotipy.oauth2.SpotifyOAuth"
+    "djtools.spotify.spotify_playlist_builder.update_existing_playlist",
+    return_value={
+        "name": "test_playlist",
+        "external_urls": {"spotify": "https://test-url.com"},
+        "id": "test-id",
+    },
+)
+@mock.patch(
+    "djtools.spotify.spotify_playlist_builder.build_new_playlist",
+    return_value={
+        "name": "test_playlist",
+        "external_urls": {"spotify": "https://test-url.com"},
+        "id": "test-id",
+    },
+)
+@mock.patch(
+    "djtools.spotify.spotify_playlist_builder.get_subreddit_posts",
+    return_value=[
+        [("track-id", "track name")],
+        {"name": "jungle", "type": "hot", "period": "week", "limit": 50},
+    ],
 )
 @mock.patch("djtools.spotify.spotify_playlist_builder.spotipy.Spotify")
 async def test_async_update_auto_playlists(
-    mock_spotify, mock_spotify_oauth, playlist_subreddits, test_config, caplog
+    mock_spotify,
+    mock_get_subreddit_posts,
+    mock_build_new_playlist,
+    mock_update_existing_playlist,
+    mock_os_path_exists,
+    got_tracks,
+    got_playlist_ids,
+    playlist_subreddits,
+    test_config,
 ):
-    # TODO(a-rich): Figure out how to mock Spotipy OAuth.
-    caplog.set_level("INFO")
+    if not got_tracks:
+        mock_get_subreddit_posts.return_value[0] = []
+    test_config["SPOTIFY_CLIENT_ID"] = "test_client_id"
+    test_config["SPOTIFY_CLIENT_SECRET"] = "test_client_secret"
+    test_config["SPOTIFY_REDIRECT_URI"] = "test_redirect_uri"
     test_config["AUTO_PLAYLIST_SUBREDDITS"] = playlist_subreddits
-    ret = await async_update_auto_playlists(test_config)
-    if not playlist_subreddits:
-        assert not ret
-        assert caplog.records[0].message == (
-            "Using the spotify_playlist_builder module requires the config "
-            "option AUTO_PLAYLIST_SUBREDDITS"
-        )
+    with mock.patch(
+        "builtins.open",
+        MockOpen(
+            files=["playlist_builder.json", ".praw.cache"],
+            content='{"jungle": "some-id"}' if got_playlist_ids else "{}",
+        ).open
+    ):
+        await async_update_auto_playlists(test_config)
+
+
+@pytest.mark.asyncio
+@mock.patch(
+    "djtools.spotify.spotify_playlist_builder.get_subreddit_posts",
+    return_value=(
+        [("track-id", "track name")],
+        {"name": "jungle", "type": "hot", "period": "week", "limit": 50},
+    ),
+)
+@mock.patch("djtools.spotify.spotify_playlist_builder.spotipy.Spotify")
+async def test_async_update_auto_playlists_missing_spotify_username(
+    mock_spotify,
+    mock_get_subreddit_posts,
+    test_config,
+):
+    test_config["SPOTIFY_CLIENT_ID"] = "test_client_id"
+    test_config["SPOTIFY_CLIENT_SECRET"] = "test_client_secret"
+    test_config["SPOTIFY_REDIRECT_URI"] = "test_redirect_uri"
+    test_config["AUTO_PLAYLIST_SUBREDDITS"] = [
+        {"name": "jungle", "type": "hot", "period": "week", "limit": 50}
+    ]
+    del test_config["SPOTIFY_USERNAME"]
+    with pytest.raises(
+        KeyError,
+        match="Building a new playlist in the spotify_playlist_builder "
+            "module requires the config option SPOTIFY_USERNAME"
+    ):
+        await async_update_auto_playlists(test_config)
 
 
 @pytest.mark.asyncio
@@ -78,6 +151,26 @@ async def test_async_update_auto_playlists_handles_bad_spotify_configs(test_conf
     with pytest.raises(
         Exception,
         match="Failed to instantiate the Spotify client",
+    ):
+        await async_update_auto_playlists(test_config)
+
+
+@pytest.mark.asyncio
+@mock.patch("djtools.spotify.spotify_playlist_builder.spotipy.Spotify")
+async def test_async_update_auto_playlists_handles_missing_reddit_configs(
+    mock_spotify,
+    test_config,
+):
+    del test_config["REDDIT_CLIENT_ID"]
+    test_config["SPOTIFY_CLIENT_ID"] = "test_client_id"
+    test_config["SPOTIFY_CLIENT_SECRET"] = "test_client_secret"
+    test_config["SPOTIFY_REDIRECT_URI"] = "test_redirect_uri"
+    test_config["AUTO_PLAYLIST_SUBREDDITS"] = ["playlist"]
+    with pytest.raises(
+        KeyError,
+        match="Using the spotify_playlist_builder module requires the "
+            "following config options: REDDIT_CLIENT_ID, "
+            "REDDIT_CLIENT_SECRET, REDDIT_USER_AGENT"
     ):
         await async_update_auto_playlists(test_config)
 
@@ -311,12 +404,6 @@ def test_fuzzy_match_handles_spotify_exception(
         assert not ret
 
 
-async def aiter(obj, num_subs):
-    for i in range(num_subs):
-        yield obj
-        await asyncio.sleep(0.1)
-
-
 @pytest.mark.asyncio
 @pytest.mark.parametrize("subreddit_type", ["hot", "top"])
 @pytest.mark.parametrize("num_subs", [5, 0])
@@ -382,9 +469,6 @@ async def test_get_subreddit_posts_handle_bad_subreddit_method(
     praw_cache = {}
     with mock.patch(
         "djtools.spotify.spotify_playlist_builder.praw.Reddit.subreddit",
-        # new=mock.AsyncMock(
-        #     side_effect=lambda *args: praw.Reddit.subreddit(subreddit["name"])
-        # ),
         new=mock.AsyncMock(side_effect=lambda *args: None),
     ):
         with pytest.raises(

@@ -70,7 +70,6 @@ async def async_update_auto_playlists(
         )
         return
 
-    # TODO(a-rich): Figure out how to mock Spotipy OAuth.
     try:
         spotify = spotipy.Spotify(
             auth_manager=SpotifyOAuth(
@@ -79,10 +78,11 @@ async def async_update_auto_playlists(
                 redirect_uri=config["SPOTIFY_REDIRECT_URI"],
                 scope="playlist-modify-public",
                 requests_timeout=30,
-                cache_path=os.path.join(
-                    os.path.dirname(__file__),
-                    ".spotify.cache",
-                ).replace(os.sep, "/"),
+                cache_handler=spotipy.CacheFileHandler(
+                    cache_path=os.path.join(
+                        os.path.dirname(__file__), ".spotify.cache"
+                    ).replace(os.sep, "/"),
+                ),
             )
         )
     except KeyError:
@@ -107,8 +107,6 @@ async def async_update_auto_playlists(
             "config options: REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, "
             "REDDIT_USER_AGENT"
         ) from KeyError
-    except Exception as exc:
-        raise Exception(f"Failed to instantiate the Reddit client: {exc}")
 
     subreddit_playlist_ids = {}
     ids_path = os.path.join(

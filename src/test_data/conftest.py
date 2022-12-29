@@ -1,6 +1,7 @@
 import json
 import os
-from typing import Optional, Tuple
+import tempfile
+from typing import List, Optional, Tuple
 from unittest import mock
 from urllib.parse import unquote
 
@@ -13,33 +14,35 @@ class MockOpen:
 
     def __init__(
         self,
-        _file: str,
+        files: List[str],
         user_a: Optional[Tuple[str]] = None,
         user_b: Optional[Tuple[str]] = None,
+        content: Optional[str] = "",
     ):
         self._user_a = user_a 
         self._user_b = user_b 
-        self._file = _file 
+        self._files = files
+        self._content = content
 
     def open(self, *args, **kwargs):
         file_name = os.path.basename(args[0])
-        if file_name == self._file:
-            return self._file_strategy(file_name, *args, **kwargs)
+        if file_name in self._files:
+            if "w" in kwargs.get("mode"):
+                return tempfile.TemporaryFile(mode=kwargs["mode"])
+            else:
+                return self._file_strategy(file_name, *args, **kwargs)
         return self.builtin_open(*args, **kwargs)
     
     def _file_strategy(self, file_name, *args, **kwargs):
-        if file_name == "config.json":
-            data = '{"json_valid": false,}'
+        if self._content:
+            data = self._content
         elif file_name == "registered_users.json":
             data = (
                 f'{{"{self._user_a[0]}": "{self._user_a[1]}", '
                 f'"{self._user_b[0]}": "{self._user_b[1]}"}}'
             )
-        elif file_name == "playlist_checker.json":
-            data = (
-                '{"r/techno | Top weekly Posts": '
-                '"5gex4eBgWH9nieoVuV8hDC"}'
-            )
+        else:
+            data = "{}"
 
         return mock.mock_open(read_data=data)(*args, **kwargs)
 
