@@ -71,7 +71,7 @@ EXTRAS = {
 
 setup(
     name='dj_beatcloud',
-    version='2.3.0-beta7',
+    version='2.3.0-beta8',
     description='DJ Tools is a library for managing a collection of MP3 ' \
                 'and Rekordbox XML files.',
     long_description=LONG_DESCRIPTION,

@@ -26,15 +26,16 @@
     - Reloading tags
     - Exporting to a Device
 # Release Plan
-* 2.2.2
+* 2.3.1
     - `spotify.playlist_builder`
+        - [ ] Make Spotify API calls asynchronous
+        - [ ] Improved Spotify API request stability 
         - [ ] Improved Reddit post parsing and Spotify searching
-* 2.3.0
-    - `rekordbox`
-        - [x] Playlist organization by Rekordbox "My Tags"
-        - [x] boolean algebra for tags ("My Tags" and "Genres")
-    - `utils`
-        - [x] Copying audio files from playlists
+* 2.4.0
+    - `spotify`
+        - [ ] Generate Spotify playlist from "New Music" Discord webhook output
+        - [ ] Format `DOWNLOAD_INCLUDE_DIRS` override using the contents of a Spotify playlist
+        - [ ] Create Spotify playlist from a Rekordbox playlist
 
 # Overview
 `DJ Tools` is a library for managing a Collection of audio files (not necessarily mp3 files, although that is preferred) and Rekordbox XML files.

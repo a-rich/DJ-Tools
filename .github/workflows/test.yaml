@@ -7,7 +7,6 @@ jobs:
 
     runs-on: ubuntu-latest
     env:
-      COVERAGE_SINGLE: 100
       COVERAGE_TOTAL: 100
 
     steps:
@@ -28,24 +27,7 @@ jobs:
       with:
         pytest-root-dir: '.'
         cov-omit-list: 'src/djtools/**/test_*.py'
-        cov-threshold-single: ${{ env.COVERAGE_SINGLE }}
         cov-threshold-total: ${{ env.COVERAGE_TOTAL }}
-
-    - name: Coverage single fail - new issue
-      if: ${{ steps.pytester-cov.outputs.cov-threshold-single-fail == 'true' }}
-      uses: nashmaniac/create-issue-action@v1.1
-      with:
-        title: Pytest coverage single falls below minimum ${{ env.COVERAGE_SINGLE }}
-        token: ${{secrets.GITHUB_TOKEN}}
-        assignees: ${{github.actor}}
-        labels: workflow-failed
-        body: ${{ steps.pytester-cov.outputs.output-table }}
-
-    - name: Coverage single fail - exit
-      if: ${{ steps.pytester-cov.outputs.cov-threshold-single-fail == 'true' }}
-      run: |
-        echo "cov single fail ${{ steps.pytester-cov.outputs.cov-threshold-single-fail }}"
-        exit 1
 
     - name: Coverage total fail - new issue
       if: ${{ steps.pytester-cov.outputs.cov-threshold-total-fail == 'true' }}
@@ -60,7 +42,7 @@ jobs:
     - name: Coverage total fail - exit
       if: ${{ steps.pytester-cov.outputs.cov-threshold-total-fail == 'true' }}
       run: |
-        echo "cov single fail ${{ steps.pytester-cov.outputs.cov-threshold-total-fail }}"
+        echo "cov total fail ${{ steps.pytester-cov.outputs.cov-threshold-total-fail }}"
         exit 1
 
     - name: Commit pytest coverage table

@@ -38,13 +38,23 @@ There is special logic for creating "Pure" genre playlists; for example, say you
 There is additional special logic regarding playlists called "Hip Hop". If a playlist with the name "Hip Hop" appears at the top-level of the playlists structure, then only tracks which have genre tags containing "Hip Hop" or both "Hip Hop" and "R&B" will be added. If the playlist is called "Hip Hop" and does not appear at the top-level of playlists, then only tracks that contain at least one tag which does not contain either "Hip Hop" or "R&B" will be added. The purpose of this is to distinguish between pure hip hop tracks and bass tracks which have hip hop elements.
 
 ### More on the "Combiner"
-Unlike the other auto-playlists, the "Combiner" config does not support the `"_ignore"` or `All <subfolder name>` features as they are not releveant. Additionally, "playlists" must be a flat list of boolean algebra expressions containing only valid tags ("genre" or "My Tags") and the 6 valid characters for boolean algebra:
+Unlike the other auto-playlists, the "Combiner" config does not support the `"_ignore"` or `All <subfolder name>` features as they are not releveant. Additionally, "playlists" must be a flat list of boolean algebra expressions containing only valid tags ("genre" or "My Tags") and these valid characters for boolean algebra:
 
-{ `&`, `|`, `~`, `(`, `)`, `*` }
+{ `&`, `|`, `~`, `(`, `)`, `*` `{`, `}`, `[`, `]`}
 
-These symbols, respectively, are for applying `AND`, `OR`, `NOT`, `OPEN SUBEXPRESSION`, `CLOSE SUBEXPRESSION`, `WILDCARD`.
+These symbols, respectively, are for applying `AND`, `OR`, `NOT`, `OPEN SUBEXPRESSION`, `CLOSE SUBEXPRESSION`, `WILDCARD`, `PLAYLIST SELECTION`, and `BPM / RATING SELECTION`.
 
 A `WILDCARD` is used to catch multiple genres; for example, if you want a playlist with all house genres except for Bass House, this can be expressed with `*HOUSE ~ Bass House`.
+
+`PLAYLIST SELECTION` is done by enclosing the exact name (case-sensative) of a playlist in curly braces like this: `{My Playlist}`.
+
+`BPM / RATING SELECTION` is done by enclosing a BPM and / or rating selections in square brackets. Single BPM / rating selections are supported as are ranges by separting values with a dash. Multiple ranges and / or single values are separated by a comma. Numbers between 0 and 5 inclusive are interpreted as ratings while numbers greater than 5 are interpreted as BPM. 
+
+Here is an example selector:
+
+`[1-3, 5, 138, 142-147, 80-90, 95]`. 
+
+This will select tracks that have a rating between 1 and 3 inclusive and a rating of 5. It will also select tracks with a BPM of 138, 95, and between 142 and 147, as well as between 80 and 90. Note that, when being considered for selection, track BPMs are rounded to the nearest whole number.
 
 More examples of valid boolean algebra expression to be used with the "Combiner" can be seen below.
 
