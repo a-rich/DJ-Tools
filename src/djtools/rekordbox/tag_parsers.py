@@ -47,12 +47,12 @@ class TagParser(ABC):
             track: A track from a Rekordbox database.
 
         Raises:
-            NotImplemented: Implementations must define tag parsing.
+            NotImplementedError: Implementations must define tag parsing.
 
         Returns:
             List of tags.
         """
-        raise NotImplemented(
+        raise NotImplementedError(
             "Classes inheriting from TagParser must override the __call__ method."
         )
 
@@ -325,7 +325,7 @@ class Combiner(TagParser):
         """
         bpms, ratings = [], []
         for bpm_rating in bpm_rating_match:
-            parts = bpm_rating.split(",")
+            parts = map(str.strip, bpm_rating.split(","))
             for part in parts:
                 number = _range = None
                 # If "part" is a digit, then it's an explicit BPM or rating to
@@ -336,11 +336,6 @@ class Combiner(TagParser):
                         ratings.append(str(number))
                     elif number > 5:
                         bpms.append(str(number))
-                    else:
-                        logger.error(
-                            "Bad BPM or rating number: {}".format(number)
-                        )
-                        continue
                 # If "part" is two digits separated by a "-", then it's a range
                 # of BPMs or ratings to filter for.
                 elif (
@@ -351,12 +346,13 @@ class Combiner(TagParser):
                     _range = range(min(_range), max(_range) + 1)
                     if all(0 <= x <= 5 for x in _range):
                         ratings.extend(map(str, _range))
-                    elif all(x > 0 for x in _range):
+                    elif all(x > 5 for x in _range):
                         bpms.extend(map(str, _range))
                     else:
                         logger.error(
                             "Bad BPM or rating number range: {}".format(part)
                         )
+                        continue
                 else:
                     logger.error(
                         "Malformed BPM or rating filter part: {}".format(part)
@@ -432,3 +428,11 @@ class Combiner(TagParser):
             node.tags.append(tag)
 
         return ""
+
+    def get_combiner_tracks(self) -> Dict[str, Dict[str, List]]:
+        """Returns tag / selector -> tracks mapping.
+
+        Returns:
+            Map of tags / selectors to track_id: list of tracks mapping.
+        """
+        return self._tracks

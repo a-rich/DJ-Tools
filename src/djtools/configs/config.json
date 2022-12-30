@@ -12,6 +12,7 @@
     "DISCORD_URL": "",
     "YOUTUBE_DL": false,
     "YOUTUBE_DL_URL": "",
+    "YOUTUBE_DL_LOCATION": "",
     "RANDOMIZE_TRACKS": false,
     "RANDOMIZE_TRACKS_PLAYLISTS": [],
     "COPY_PLAYLISTS_TRACKS": [],

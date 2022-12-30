@@ -26,15 +26,16 @@
     - Reloading tags
     - Exporting to a Device
 # Release Plan
-* 2.2.2
+* 2.3.1
     - `spotify.playlist_builder`
+        - [ ] Make Spotify API calls asynchronous
+        - [ ] Improved Spotify API request stability 
         - [ ] Improved Reddit post parsing and Spotify searching
-* 2.3.0
-    - `rekordbox`
-        - [x] Playlist organization by Rekordbox "My Tags"
-        - [x] boolean algebra for tags ("My Tags" and "Genres")
-    - `utils`
-        - [x] Copying audio files from playlists
+* 2.4.0
+    - `spotify`
+        - [ ] Generate Spotify playlist from "New Music" Discord webhook output
+        - [ ] Format `DOWNLOAD_INCLUDE_DIRS` override using the contents of a Spotify playlist
+        - [ ] Create Spotify playlist from a Rekordbox playlist
 
 # Overview
 `DJ Tools` is a library for managing a Collection of audio files (not necessarily mp3 files, although that is preferred) and Rekordbox XML files.
@@ -219,12 +220,13 @@ Please be sure to checkout the package-level README files regarding the usage of
 
 # Contribution
 If you wish to contribute to `DJ Tools`, please follow these development rules:
-1. Only release branches (`major: 3.0.0`, `minor: 2.3.0`, `patch: 2.2.2`) can be made off of `main`
-2. The only commits to `main` that are allowed are updates to the `Release Plan` portion of this `README`
-3. New features are added to the next minor release branch which will be created and released quarterly (the 1st of January, April, July, and October)
-4. Bug fixes are added to the next patch release branch which will be created whenever the last is published to PyPI
-5. Non-release branches must have a concise name for the feature or bugfix specifically targeted by that branch (e.g. `xml-track-randomization`)
-6. If collaborating on a feature/fix with another user, prefix the feature/fix branch name with `username/`
+1. All development branches must be made off of the appropriate release branch (e.g. `releases/2.4.0` or `releases/2.3.1`)
+2. Development branches must have a concise name for the feature or bugfix specifically targeted by that branch (e.g. `xml-track-randomization` or `improve-spotify-stability`)
+3. PRs should be made from development branches prefixed with your GitHub username (e.g. `a-rich/improve-spotify-stability`)
+4. New features are added to the next minor version (`2.x.0`) which will be released quarterly
+5. Bug fixes are added to the next patch version (`2.3.x`) which will be released as needed
+6. All development branchs should originate from and be linked to an associated Issue
+7. All `push` and `pull_request` events trigger a `pytest-cov` Action; only runs passing with 100% coverage can be merged
 
 # Basic Information
 If you are an advanced Rekordbox user, then the following section is likely not for you. If you are not an advanced Rekordbox user, or are interested in the workflow patterns that accompany this library, read on!

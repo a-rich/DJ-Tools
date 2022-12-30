@@ -1,0 +1,43 @@
+name: pytester-cov workflow
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    env:
+      COVERAGE_SINGLE: 0
+      COVERAGE_TOTAL: 99
+
+    steps:
+    - uses: actions/checkout@main
+    - name: Set up Python 3.9
+      uses: actions/setup-python@main
+      with:
+        python-version: 3.9
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: pytester-cov
+      id: pytester-cov
+      uses: programmingwithalex/pytester-cov@main
+      with:
+        pytest-root-dir: 'src/djtools/'
+        cov-omit-list: 'src/djtools/dj_tools.py, src/djtools/**/test_*'
+        cov-threshold-single: ${{ env.COVERAGE_SINGLE }}
+        cov-threshold-total: ${{ env.COVERAGE_TOTAL }}
+
+    - name: Coverage total fail - exit
+      if: ${{ steps.pytester-cov.outputs.cov-threshold-total-fail == 'true' }}
+      run: |
+        echo "cov total fail ${{ steps.pytester-cov.outputs.cov-threshold-total-fail }}"
+        exit 1
+
+    - name: Commit pytest coverage table
+      uses: peter-evans/commit-comment@main
+      with:
+        body: ${{ steps.pytester-cov.outputs.output-table }}

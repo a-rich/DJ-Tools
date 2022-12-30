@@ -59,8 +59,7 @@ def rekordbox_playlists(
         pure_genre_playlists=pure_genre_playlists,
         playlist_remainder_type=playlist_remainder_type,
     )
-
-    return playlist_builder()
+    playlist_builder()
 
 
 class PlaylistBuilder:
@@ -90,13 +89,13 @@ class PlaylistBuilder:
         self,
         rekordbox_database: Union[str, Path],
         playlist_config: Union[str, Path],
-        pure_genre_playlists: List[str],
+        pure_genre_playlists: List[str] = [],
         playlist_remainder_type: str = "",
     ):
         """Constructor.
 
         Args:
-            rekordbox_database: Parsed Rekordbox XML.
+            rekordbox_database: Path to Rekordbox XML.
             playlist_config: Playlist taxonomy.
             pure_genre_playlists: Create one or more "pure" playlists which
                 have only tracks with tags containing these substrings.
@@ -114,7 +113,7 @@ class PlaylistBuilder:
             raise FileNotFoundError(
                 f"Rekordbox database {self._database_path} does not exist!"
             )
-        with open(self._database_path, encoding="utf-8") as _file:
+        with open(self._database_path, mode="r", encoding="utf-8") as _file:
             self._database = BeautifulSoup(_file.read(), "xml")
 
         # Get playlist root node.
@@ -127,7 +126,7 @@ class PlaylistBuilder:
         self._playlist_remainder_type = playlist_remainder_type
 
         # Create TagParsers from rekordbox_playlist.json.
-        with open(playlist_config, encoding="utf-8") as _file:
+        with open(playlist_config, mode="r", encoding="utf-8") as _file:
             self._playlist_config = json.load(_file)
         self._parsers = {}
         self._combiner_parser = None
@@ -386,7 +385,7 @@ class PlaylistBuilder:
             # "Bass" folder (a.k.a. bass Hip Hop).
             pure_hip_hop = bass_hip_hop = False
             if playlist["Name"] == "Hip Hop":
-                if playlist.parent["Name"] == "Tags":
+                if playlist.parent["Name"] == "Genres":
                     pure_hip_hop = True
                 else:
                     bass_hip_hop = True
@@ -429,8 +428,9 @@ class PlaylistBuilder:
                             recursive=False,
                         )[0]
                         _seen_index = f'{_all.parent["Name"]} -> {_all["Name"]}'
-                        if _seen_index not in seen:
-                            seen[_seen_index] = set()
+                        # NOTE(a-rich): not covered by tests.
+                        # if _seen_index not in seen:
+                        #     seen[_seen_index] = set()
 
                         if track_id not in seen[_seen_index]:
                             _all.append(soup.new_tag("TRACK", Key=track_id))

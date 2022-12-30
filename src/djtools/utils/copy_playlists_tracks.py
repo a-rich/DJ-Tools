@@ -41,10 +41,15 @@ def copy_playlists_tracks(
     rekordbox_database_path = config.get("XML_PATH")
     if not rekordbox_database_path:
         raise KeyError(
-            "Using the copy_playlists_tracks module requires the config option"
+            "Using the copy_playlists_tracks module requires the config option "
             "XML_PATH"
         ) from KeyError
-    with open(rekordbox_database_path) as _file:	
+    if not os.path.exists(rekordbox_database_path):
+        raise FileNotFoundError(
+            "Using the copy_playlists_tracks module requires the config option "
+            "XML_PATH to be a valid rekordbox XML file"
+        )
+    with open(rekordbox_database_path, mode="r", encoding="utf-8") as _file:	
         rekordbox_database = BeautifulSoup(_file.read(), "xml")
 
     # Get playlists with tracks to be copied and destination to copy tracks to.
@@ -101,10 +106,8 @@ def copy_playlists_tracks(
             tracks[track["TrackID"]] = track
 
     # Copy tracks to the destination and update Location for the track.
-    loc_prefix = "file://localhost"
     payload = [
         {tracks[key] for key in flattened_track_keys},
-        [loc_prefix] * len(flattened_track_keys),
         [destination] * len(flattened_track_keys),
     ]
     with ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as executor:
@@ -136,7 +139,7 @@ def copy_playlists_tracks(
     new_rekordbox_database_path = os.path.join(
         os.path.dirname(rekordbox_database_path),
         f"relocated_{os.path.basename(rekordbox_database_path)}"
-    )
+    ).replace(os.sep, "/")
     with open(
         new_rekordbox_database_path,
         mode="wb",
@@ -145,15 +148,21 @@ def copy_playlists_tracks(
         _file.write(rekordbox_database.prettify("utf-8"))
 
 
-def copy_file(track: bs4.element.Tag, loc_prefix: str, destination: str):
+def copy_file(
+    track: bs4.element.Tag,
+    destination: str,
+    loc_prefix: str="file://localhost",
+):
     """Copies tracks to a destination and writes new Location field.
 
     Args:
         track: TRACK node from XML.
-        loc_prefix: Location field prefix.
         destination: Directory to copy tracks to.
+        loc_prefix: Location field prefix.
     """
     loc = unquote(track["Location"]).split(loc_prefix)[-1]
-    new_loc = os.path.join(destination, os.path.basename(loc))
+    new_loc = os.path.join(
+        destination, os.path.basename(loc)
+    ).replace(os.sep, "/")
     shutil.copyfile(loc, new_loc)		
     track["Location"] = f"{loc_prefix}{quote(new_loc)}"

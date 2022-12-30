@@ -28,13 +28,6 @@ def youtube_dl(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
         FileNotFoundError: "USB_PATH" must exist.
     """
     try:
-        usb_path = config["USB_PATH"]
-    except KeyError:
-        raise KeyError(
-            "Using the youtube_dl module requires the config option USB_PATH"
-        ) from KeyError
-    
-    try:
         youtube_dl_url = config["YOUTUBE_DL_URL"]
     except KeyError:
         raise KeyError(
@@ -42,14 +35,11 @@ def youtube_dl(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
             "YOUTUBE_DL_URL"
         ) from KeyError
 
-    if not os.path.exists(usb_path):
-        raise FileNotFoundError(f"{usb_path} does not exist!")
+    dl_loc = config.get("YOUTUBE_DL_LOCATION") or "."
+    dl_loc = os.path.join(dl_loc, "").replace(os.sep, "/")
 
-    dest_path = os.path.join(
-        usb_path, "DJ Music", "New Music", ""
-    ).replace(os.sep, "/")
-    if not os.path.exists(dest_path):
-        make_dirs(dest_path)
+    if not os.path.exists(dl_loc):
+        make_dirs(dl_loc)
 
     ydl_opts = {
         "format": "bestaudio/best",
@@ -58,17 +48,17 @@ def youtube_dl(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
             "preferredcodec": "mp3",
             "preferredquality": "320",
         }],
-        "outtmpl": dest_path + "%(title)s.%(ext)s"
+        "outtmpl": dl_loc + "%(title)s.%(ext)s"
     }
 
     with ytdl.YoutubeDL(ydl_opts) as ydl:
-        logger.info(f"Downloading {youtube_dl_url} to {dest_path}")
+        logger.info(f"Downloading {youtube_dl_url} to {dl_loc}")
         ydl.download([youtube_dl_url])
 
-    for _file in os.listdir(dest_path):
+    for _file in os.listdir(dl_loc):
         os.rename(
-            os.path.join(dest_path, _file).replace(os.sep, "/"),
-            os.path.join(dest_path, fix_up(_file)).replace(os.sep, "/"),
+            os.path.join(dl_loc, _file).replace(os.sep, "/"),
+            os.path.join(dl_loc, fix_up(_file)).replace(os.sep, "/"),
         )
 
 
@@ -81,11 +71,9 @@ def fix_up(_file: str) -> str:
     Returns:
         Cleaned up music file name.
     """
-    name, ext = os.path.splitext(_file)
-    stripped = "".join(
-        re.split(r"(\-\d{1,}\.)", name)[:1] + ["."]
-        + re.split(r"(\-\d{1,}\.)", name)[2:]
-    )
+    _, ext = os.path.splitext(_file)
+    exp = fr"(\-\d{{1,}}(?={ext}))"
+    stripped = os.path.splitext(re.split(exp, _file)[0])[0]
     name = " - ".join(stripped.split(" - ")[-1::-1])
 
     return name + ext

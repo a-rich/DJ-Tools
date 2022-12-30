@@ -9,6 +9,7 @@ if the Levenshtein similarity passes a threshold.
 """
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+import inspect
 import json
 import logging
 from operator import itemgetter
@@ -77,10 +78,11 @@ async def async_update_auto_playlists(
                 redirect_uri=config["SPOTIFY_REDIRECT_URI"],
                 scope="playlist-modify-public",
                 requests_timeout=30,
-                cache_path=os.path.join(
-                    os.path.dirname(__file__),
-                    ".spotify.cache",
-                ).replace(os.sep, "/"),
+                cache_handler=spotipy.CacheFileHandler(
+                    cache_path=os.path.join(
+                        os.path.dirname(__file__), ".spotify.cache"
+                    ).replace(os.sep, "/"),
+                ),
             )
         )
     except KeyError:
@@ -105,8 +107,6 @@ async def async_update_auto_playlists(
             "config options: REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, "
             "REDDIT_USER_AGENT"
         ) from KeyError
-    except Exception as exc:
-        raise Exception(f"Failed to instantiate the Reddit client: {exc}")
 
     subreddit_playlist_ids = {}
     ids_path = os.path.join(
@@ -115,7 +115,7 @@ async def async_update_auto_playlists(
         "playlist_builder.json",
     ).replace(os.sep, "/")
     if os.path.exists(ids_path):
-        with open(ids_path, encoding="utf-8") as _file:
+        with open(ids_path, mode="r", encoding="utf-8") as _file:
             subreddit_playlist_ids = json.load(_file)
     
     praw_cache = {}
@@ -123,7 +123,7 @@ async def async_update_auto_playlists(
         os.path.dirname(__file__), ".praw.cache"
     ).replace(os.sep, "/")
     if os.path.exists(cache_file):
-        with open(cache_file, "r") as _file:
+        with open(cache_file, mode="r", encoding="utf-8") as _file:
             praw_cache = json.load(_file)
     
     tasks = []
@@ -180,10 +180,10 @@ async def async_update_auto_playlists(
     
     await reddit.close()
 
-    with open(ids_path, "w", encoding="utf-8") as _file:
+    with open(ids_path, mode="w", encoding="utf-8") as _file:
         json.dump(subreddit_playlist_ids, _file, indent=2)
 
-    with open(cache_file, "w") as _file:
+    with open(cache_file, mode="w", encoding="utf-8") as _file:
         json.dump(praw_cache, _file)
 
 
@@ -204,33 +204,35 @@ async def get_subreddit_posts(
         subreddit: "name", "type", "period", and "limit".
         config: Configuration object.
         praw_cache: Cached praw submissions.
+    
+    Raises:
+        AttributeError: "type" must match a method of the "Subreddit" class.
 
     Returns:
         List of Spotify track ("id", "name") tuples and subreddit config dict.
     """
-    sub = await reddit.subreddit(subreddit["name"])
-    funcs = {
-        "top": sub.top,
-        "hot": sub.hot,
-        "new": sub.new,
-        "rising": sub.rising,
-        "controversial": sub.controversial,
-    }
     sub_limit = config.get("AUTO_PLAYLIST_SUBREDDIT_LIMIT", 500) or None
+    sub = await reddit.subreddit(subreddit["name"])
     try:
+        func = getattr(sub, subreddit["type"])
+    except AttributeError:
+        raise AttributeError(
+            f'Method "{subreddit["type"]}" does not exist in "Subreddit" class'
+        ) from AttributeError
+    if subreddit["type"] == "top":
         subs = [
             x async for x in catch(
-                funcs[subreddit["type"]],
+                func,
                 handle=lambda exc: raise_(exc)
                     if isinstance(exc, TypeError) else logger.info(exc),
                 limit=sub_limit,
                 time_filter=subreddit["period"],
             )
         ]
-    except TypeError:
+    else:
         subs = [
             x async for x in catch(
-                funcs[subreddit["type"]],
+                func,
                 handle=lambda exc: logger.info(exc),
                 limit=sub_limit,
             )
@@ -355,8 +357,8 @@ def parse_title(title: str) -> Tuple[str]:
         except ValueError:
             return None, None
 
-    title, artist = title.split("(")[0], artist.split("(")[0]
-    title, artist = title.split("[")[0], artist.split("[")[0]
+    title, artist = map(str.strip, [title.split("(")[0], artist.split("(")[0]])
+    title, artist = map(str.strip, [title.split("[")[0], artist.split("[")[0]])
 
     return title, artist
 
