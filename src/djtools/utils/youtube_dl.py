@@ -37,9 +37,7 @@ def youtube_dl(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
 
     dl_loc = config.get("YOUTUBE_DL_LOCATION") or "."
     dl_loc = os.path.join(dl_loc, "").replace(os.sep, "/")
-
-    if not os.path.exists(dl_loc):
-        make_dirs(dl_loc)
+    make_dirs(dl_loc)
 
     ydl_opts = {
         "format": "bestaudio/best",

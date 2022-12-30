@@ -39,16 +39,18 @@ def test_youtube_dl(tmpdir, test_config):
     test_config["YOUTUBE_DL_URL"] = (
         "https://soundcloud.com/aweeeezy_music/sets/test-download"
     )
-    new_dir = os.path.join(tmpdir, "new_dir")
-    test_config["YOUTUBE_DL_LOCATION"] = new_dir
+    test_config["YOUTUBE_DL_LOCATION"] = tmpdir
     with mock.patch(
-        "youtube_dl.YoutubeDL.download",
-        side_effect=lambda *args, **kwargs: open(
-            os.path.join(new_dir, "file.mp3"), mode="w", encoding="utf-8"
-        ).write("")
+        "youtube_dl.YoutubeDL",
     ) as mock_ytdl:
+        context = mock_ytdl.return_value.__enter__.return_value 
+        context.download.side_effect = lambda *args, **kwargs: open(
+            os.path.join(tmpdir, "file.mp3").replace(os.sep, "/"),
+            mode="w",
+            encoding="utf-8",
+        ).write("")
         youtube_dl(test_config)
-    assert len(os.listdir(new_dir)) == 1
+    assert len(os.listdir(tmpdir)) == 1
 
 
 def test_youtube_dl_no_url(test_config):
