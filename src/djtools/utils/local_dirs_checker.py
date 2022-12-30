@@ -9,7 +9,7 @@ from operator import itemgetter
 import os
 from typing import Dict, List, Optional, Union
 
-from djtools.spotify.playlist_checker import get_beatcloud_tracks, find_matches
+from djtools.spotify.spotify_playlist_checker import get_beatcloud_tracks, find_matches
 
 logger = logging.getLogger(__name__)
 
@@ -58,12 +58,19 @@ def get_local_tracks(
 
     Raises:
         KeyError: "LOCAL_CHECK_DIRS" must be configured.
+        ValueError: "LOCAL_CHECK_DIRS" must be configured.
 
     Returns:
         Local file names keyed by parent directory.
     """
-    if not config.get("LOCAL_CHECK_DIRS"):
+    if "LOCAL_CHECK_DIRS" not in config:
         raise KeyError(
+            "Using the local_dirs_checker module requires the config option "
+            "LOCAL_CHECK_DIRS to be set to a list of one or more directories "
+            "containing new tracks"
+        )
+    if not config["LOCAL_CHECK_DIRS"]:
+        raise ValueError(
             "Using the local_dirs_checker module requires the config option "
             "LOCAL_CHECK_DIRS to be set to a list of one or more directories "
             "containing new tracks"

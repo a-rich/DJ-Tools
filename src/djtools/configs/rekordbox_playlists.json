@@ -1,0 +1,78 @@
+{
+    "Combiner": {
+        "name": "Combinations",
+        "playlists": [
+            "(Hard Techno & Acid Techno) | Minimal Techno",
+            "Minimal House | Techno",
+            "(Jungle | Breaks & Techno) | (Garage ~ Tech House)",
+            "Wave ~ Trap | Uplifting",
+            "*House ~ Bass House",
+            "{All DnB} & Uplifting",
+            "{All Bass} & [137-143]",
+            "Dark & [2-5]",
+            "Dark & [5]",
+            "Dark & [140]"
+        ]
+    },
+    "MyTagParser": {
+        "name": "My Tags",
+        "playlists": [
+            {
+                "name": "_ignore",
+                "playlists": [
+                    "Vocal",
+                    "Wave"
+                ]
+            },
+            "Dark",
+            "Uplifiting"
+        ]
+    },
+    "GenreTagParser": {
+        "name": "Genres",
+        "playlists": [
+            {
+                "name": "_ignore",
+                "playlists": [
+                    "Psychedelic Rock",
+                    "Soul"
+                ]
+            },
+            {
+                "name": "Bass",
+                "playlists": [
+                    {
+                        "name": "Breaks",
+                        "playlists": [
+                            "Breakstep",
+                            "Neurobreaks"
+                        ]
+                    },
+                    {
+                        "name": "Hip Hop Beats",
+                        "playlists": [
+                            "Halftime",
+                            "Hip Hop"
+                        ]
+                    },
+                    "Space Bass",
+                    {
+                        "name": "[___] Step",
+                        "playlists": [
+                            "Breakstep",
+                            "Dubstep"
+                        ]
+                    }
+                ]
+            },
+            "Hip Hop",
+            {
+                "name": "Techno",
+                "playlists": [
+                    "Pure Techno",
+                    "Hard Techno"
+                ]
+            }
+        ]
+    }
+}

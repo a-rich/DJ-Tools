@@ -163,6 +163,12 @@ def download_xml(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
             "Using the download_xml function of the sync_operations module "
             "requires the config option XML_PATH"
         ) from KeyError
+    
+    if not os.path.exists(xml_path):
+        raise FileNotFoundError(
+            "Using the download_xml function of the sync_operations module "
+            "requires the config option XML_PATH to be valid."
+        )
 
     logger.info("Syncing remote rekordbox.xml...")
     xml_dir = os.path.dirname(xml_path)

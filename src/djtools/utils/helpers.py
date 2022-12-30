@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from glob import glob
 import logging
 import os
+from os import name as os_name
 from typing import Any, Callable, Dict, List, Optional, Union
 
 
@@ -22,7 +23,7 @@ def upload_log(
         log_file: Path to log file.
     """
     if not config.get("AWS_PROFILE"):
-        logger.warn(
+        logger.warning(
             "Logs cannot be backed up without specifying the config option "
             "AWS_PROFILE"
         )
@@ -41,7 +42,7 @@ def upload_log(
     for _file in glob(f"{os.path.dirname(log_file)}/*"):
         if os.path.basename(_file) == "empty.txt":
             continue
-        if os.path.getctime(_file) < (now - one_day).timestamp():
+        if os.path.getmtime(_file) < (now - one_day).timestamp():
             os.remove(_file)
 
 
@@ -51,9 +52,11 @@ def make_dirs(path: str):
     Args:
         path: Directory path.
     """
-    if os.name == "nt":
+    if os_name == "nt":
         cwd = os.getcwd()
-        path_parts = path.split(os.path.sep)
+        path_parts = path.split(os.sep)
+        if path_parts and not path_parts[0]:
+            path_parts[0] = "/"
         root = path_parts[0]
         path_parts = path_parts[1:]
         os.chdir(root)
