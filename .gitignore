@@ -16,3 +16,6 @@
 # ignore directories
 **/__pycache__
 src/djtools/configs/*
+
+# allow test_data
+!src/test_data/*
