@@ -24,7 +24,7 @@ jobs:
 
     - name: pytester-cov
       id: pytester-cov
-      uses: programmingwithalex/pytester-cov@main
+      uses: a-rich/pytester-cov@main
       with:
         pytest-root-dir: 'src/djtools/'
         cov-omit-list: 'src/djtools/dj_tools.py, src/djtools/**/test_*'
