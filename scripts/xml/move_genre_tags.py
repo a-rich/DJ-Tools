@@ -60,7 +60,34 @@ def move_genre_tags(
     overwrite_tags: bool,
     genre_tag_delimiter: str,
 ):
-    """_summary_
+    """Copies selected tags from the Comments field to the Genre field.
+
+    The provided XML must be an valid XML export:
+        `File > Export Collection in xml format`
+    
+    The provided tags must match exactly the data written to the Comments field
+    (case-sensative). 
+
+    The provided output must be the path to a XML file from which you'll import
+    the adjusted data.
+
+    The overwrite tags argument, if set, will replace whatever existed in the
+    Genre field prior. If this argument is not set, then:
+        * the pre-existing data is split on the genre tag delimiter argument
+            (default is a forward slash)
+        * the tags in the Comments field which match the set provided with the
+            tags argument are unioned with the tags in the Genre field (to
+            deduplicate tags)
+        * and, finally, the reduced set of tags are, again, joined with the
+            genre tag delimiter and written to the Genre field.
+
+    Comments field tags are expected to have the format `/* tag1 / tag2 */`
+    which is the way Rekordbox's "My Tag" system writes the data to the
+    Comments field.
+    
+    Rekordbox's "My Tag" system will write data to the Comments field only if
+    the following setting is enabled:
+        `Preferences > Advanced > Browse > Add "My Tag" to the "Comments"`
 
     Args:
         xml: Path to a Rekordbox XML file.
