@@ -1,7 +1,12 @@
 from .rekordbox import (
     randomize_tracks, REKORDBOX_OPERATIONS, rekordbox_playlists
 )
-from .spotify import check_playlists, SPOTIFY_OPERATIONS, update_auto_playlists
+from .spotify import (
+    check_playlists,
+    playlist_from_upload,
+    SPOTIFY_OPERATIONS,
+    update_auto_playlists,
+)
 from .sync import (
     download_music, download_xml, SYNC_OPERATIONS, upload_music, upload_xml
 )
@@ -22,6 +27,7 @@ __all__ = (
     "copy_playlists_tracks",
     "download_music",
     "download_xml",
+    "playlist_from_upload",
     "randomize_tracks",
     "REKORDBOX_OPERATIONS",
     "rekordbox_playlists",

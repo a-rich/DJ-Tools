@@ -33,7 +33,7 @@
         - [ ] Improved Reddit post parsing and Spotify searching
 * 2.4.0
     - `spotify`
-        - [ ] Generate Spotify playlist from "New Music" Discord webhook output
+        - [x] Generate Spotify playlist from "New Music" Discord webhook output
         - [ ] Format `DOWNLOAD_INCLUDE_DIRS` override using the contents of a Spotify playlist
         - [ ] Create Spotify playlist from a Rekordbox playlist
 
@@ -56,7 +56,8 @@ The core functionality of this library can be broken up into four sub-packages:
 1. `sync`: allows users to push and pull audio and Rekordbox XML files to and from the `beatcloud`
 2. `spotify`: allows users to:
     * compare the tracks of one or more Spotify playlists against the `beatcloud` (to identify redundancies)
-    * update Spotify playlists using the titles / links of Reddit submissions
+    * create / update Spotify playlists using the titles / links of Reddit submissions
+    * create / update Spotify playlists using the Discord webhook output from users' music uploads.
 3. `rekordbox`: operates on an exported XML Rekordbox database file to:
     * automatically generate playlists based on the tags of your Collection
     * emulating a playlist randomization feature which is strangely absent from Rekordbox
@@ -158,6 +159,7 @@ Please be sure to checkout the package-level README files regarding the usage of
     "CHECK_TRACK_OVERLAP": false,
     "CHECK_TRACK_OVERLAP_FUZZ_RATIO": 80,
     "LOCAL_CHECK_DIRS": ["New Music"],
+    "PLAYLIST_FROM_UPLOAD": false,
     "SPOTIFY_CHECK_PLAYLISTS": ["Download", "Maybe Download"],
     "SPOTIFY_CLIENT_ID": "",
     "SPOTIFY_CLIENT_SECRET": "",
@@ -203,6 +205,7 @@ Please be sure to checkout the package-level README files regarding the usage of
 * `CHECK_TRACK_OVERLAP`: boolean flag to trigger checking the contents of Spotify playlists specified in `SPOTIFY_CHECK_PLAYLISTS` and the local files specified in `LOCAL_CHECK_DIRS` against the `beatcloud` (to identify redundancies)
 * `CHECK_TRACK_OVERLAP_FUZZ_RATIO`: the minimum Levenshtein similarity for indicating potential redundancies between Spotify playlists / local directories and the `beatcloud`
 * `LOCAL_CHECK_DIRS`: list of local directories (under "DJ Music") to use with `CHECK_TRACK_OVERLAP`,
+* `PLAYLIST_FROM_UPLOAD`: boolean flag to trigger automatic generation of updating of Spotify playlists from the Discord webhook output of users' music upload (output must be copied to the system clipboard); alternatively, the output can be saved to a file and that file path can be passed instead.
 * `SPOTIFY_CHECK_PLAYLISTS`: list of Spotify playlists to use with `CHECK_TRACK_OVERLAP`
 * `SPOTIFY_CLIENT_ID`: client ID for registered Spotify API application
 * `SPOTIFY_CLIENT_SECRET`: client secret for registered Spotify API application
