@@ -8,11 +8,14 @@ from concurrent.futures import ThreadPoolExecutor
 import logging
 import os
 import random
-from typing import Dict, List, Set, Union
+from typing import Dict, List, Union
 
-import bs4
 from bs4 import BeautifulSoup
 from tqdm import tqdm
+
+from djtools.rekordbox.helpers import (
+    get_playlist_track_locations, set_tag, wrap_playlists
+)
 
 
 logger = logging.getLogger(__name__)
@@ -88,62 +91,3 @@ def randomize_tracks(
         auto_xml_path, mode="wb", encoding=soup.orignal_encoding
     ) as _file:
         _file.write(soup.prettify("utf-8"))
-
-
-def get_playlist_track_locations(
-    soup: BeautifulSoup, _playlist: str, seen_tracks: Set[str]
-) -> List[str]:
-    """Finds playlist in "XML_PATH" that matches "_playlist" and returns a list
-        of the track nodes in that playlist that aren't in "seen_tracks".
-
-    Args:
-        soup: Parsed XML.
-        _playlist: Name of playlist to randomize.
-        seen_tracks: Already seen TrackIDs.
-
-    Raises:
-        LookupError: "_playlist" must exist.
-
-    Returns:
-        TrackIDs.
-    """
-    try:
-        playlist = soup.find_all("NODE", {"Name": _playlist})[0]
-    except IndexError:
-        raise LookupError(f"{_playlist} not found") from LookupError
-
-    playlist_tracks = [
-        track["Key"] for track in playlist.children
-        if str(track).strip() and track["Key"] not in seen_tracks
-    ]
-    seen_tracks.update(playlist_tracks)
-
-    return playlist_tracks
-
-
-def set_tag(track: str, index: int):
-    """Threaded process to set TRACK node's TrackNumber tag.
-
-    Args:
-        track: TRACK node.
-        index: New TrackNumber.
-    """
-    track["TrackNumber"] = index
-
-
-def wrap_playlists(soup: BeautifulSoup, randomized_tracks: List[bs4.element.Tag]):
-    """Creates a playlist called "AUTO_RANDOMIZE", inserts the randomized
-        tracks into it, and then inserts "AUTO_RANDOMIZE" into the root of the
-        "Playlist" folder.
-
-    Args:
-        soup: Parsed XML.
-        randomized_tracks: Track nodes.
-    """
-    playlists_root = soup.find_all("NODE", {"Name": "ROOT", "Type": "0"})[0]
-    new_playlist = soup.new_tag(
-        "NODE", KeyType="0", Name="AUTO_RANDOMIZE", Type="1"
-    )
-    for track in randomized_tracks:
-        new_playlist.append(soup.new_tag("TRACK", Key=track["TrackID"]))
-    playlists_root.insert(0, new_playlist)

@@ -2,13 +2,9 @@ import os
 import tempfile
 from unittest import mock
 
-from bs4 import BeautifulSoup
 import pytest
 
-from djtools.sync.helpers import (
-    parse_sync_command, rewrite_xml, run_sync, webhook
-)
-from test_data import MockOpen
+from djtools.sync.helpers import parse_sync_command, run_sync, webhook
 
 
 pytest_plugins = [
@@ -18,10 +14,10 @@ pytest_plugins = [
 
 @pytest.mark.parametrize("upload", [True, False])
 @pytest.mark.parametrize(
-    "include_dirs", [[], ["path/to/stuff", "path/to/things"]]
+    "include_dirs", [[], ["path/to/stuff", "path/to/things.mp3"]]
 )
 @pytest.mark.parametrize(
-    "exclude_dirs", [[], ["path/to/stuff", "path/to/things"]]
+    "exclude_dirs", [[], ["path/to/stuff", "path/to/things.mp3"]]
 )
 @pytest.mark.parametrize("use_date_modified", [True, False])
 @pytest.mark.parametrize("dryrun", [True, False])
@@ -67,65 +63,6 @@ def test_parse_sync_command(
             assert "--size-only" in cmd
         if dryrun:
             assert "--dryrun" in cmd
-
-
-@mock.patch(
-    "builtins.open",
-    MockOpen(
-        files=["registered_users.json"],
-        user_a=("aweeeezy", "/Volumes/AWEEEEZY/"),
-        user_b=("other_user", "/Volumes/my_beat_stick/"),
-    ).open
-)
-def test_rewrite_xml(test_config, test_xml):
-    user_a_path= "/Volumes/AWEEEEZY/"
-    user_b_path= "/Volumes/my_beat_stick/"
-    test_user = "aweeeezy"
-    other_user = "other_user"
-    test_config["USER"] = test_user
-    test_config["XML_IMPORT_USER"] = other_user
-    test_config["XML_PATH"] = test_xml
-    other_users_xml = os.path.join(
-        os.path.dirname(test_xml), f'{other_user}_rekordbox.xml'
-    ).replace(os.sep, "/")
-    os.rename(test_xml, other_users_xml)
-
-    with open(other_users_xml, mode="r", encoding="utf-8") as _file:
-        soup = BeautifulSoup(_file.read(), "xml")
-        for track in soup.find_all("TRACK"):
-            if not track.get("Location"):
-                continue
-            track["Location"] = os.path.join(
-                os.path.dirname(track["Location"]),
-                user_b_path.strip("/"),
-                os.path.basename(track["Location"]),
-            ).replace(os.sep, "/")
-    
-    with open(
-        other_users_xml, mode="wb", encoding=soup.orignal_encoding
-    ) as _file:
-        _file.write(soup.prettify("utf-8"))
-        
-    rewrite_xml(test_config)
-
-    with open(other_users_xml, mode="r", encoding="utf-8") as _file:
-        soup = BeautifulSoup(_file.read(), "xml")
-        for track in soup.find_all("TRACK"):
-            if not track.get("Location"):
-                continue
-            assert user_a_path in track["Location"]
-            assert user_b_path not in track["Location"]
-            example2 = track["Location"]
-
-
-def test_rewrite_xml_no_xml_path(test_config):
-    test_config["XML_PATH"] = ""
-    with pytest.raises(
-        ValueError,
-        match="Using the sync_operations module's download_xml function "
-            "requires the config option XML_PATH"
-    ):
-        rewrite_xml(test_config)
 
 
 @mock.patch("djtools.sync.helpers.Popen")

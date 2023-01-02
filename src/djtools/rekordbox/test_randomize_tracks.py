@@ -3,36 +3,12 @@ import os
 from bs4 import BeautifulSoup
 import pytest
 
-from djtools.rekordbox.randomize_tracks import (
-    get_playlist_track_locations, randomize_tracks, set_tag, wrap_playlists
-)
+from djtools.rekordbox.randomize_tracks import randomize_tracks
 
 
 pytest_plugins = [
     "test_data",
 ]
-
-
-def test_get_playlist_track_locations(test_xml):
-    playlist = "Darkpsy"
-    seen_tracks = set()
-    with open(test_xml, mode="r", encoding="utf-8") as _file:
-        ret = get_playlist_track_locations(
-            BeautifulSoup(_file.read(), "xml"), playlist, seen_tracks
-        )
-    assert seen_tracks
-    assert ret
-    assert len(ret) == len(seen_tracks)
-
-
-def test_get_playlist_track_locations_no_playlist(test_xml):
-    playlist = "nonexistent playlist"
-    seen_tracks = set()
-    with open(test_xml, mode="r", encoding="utf-8") as _file:
-        with pytest.raises(LookupError, match=f"{playlist} not found"):
-            get_playlist_track_locations(
-                BeautifulSoup(_file.read(), "xml"), playlist, seen_tracks
-            )
 
 
 def test_randomize_tracks(test_config, test_xml, caplog):
@@ -107,22 +83,3 @@ def test_randomize_tracks_missing_playlist(test_config, test_xml, caplog):
     assert caplog.records[0].message == (
         f"{playlist} not found"
     )
-
-
-@pytest.mark.parametrize("index", [0, 5, 9])
-def test_set_tag(index, test_track):
-    set_tag(test_track, index)
-    assert test_track.get("TrackNumber") == index
-
-
-def test_wrap_playlists(test_xml, test_track):
-    randomized_tracks = [test_track]
-    with open(test_xml, mode="r", encoding="utf-8") as _file:
-        db = BeautifulSoup(_file.read(), "xml")
-    try:
-        wrap_playlists(db, randomized_tracks)
-        db.find_all(
-            "NODE", {"Name": "AUTO_RANDOMIZE", "Type": "1"}
-        )[0]
-    except Exception:
-        assert False

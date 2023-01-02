@@ -3,20 +3,22 @@
 Rekordbox operations:
     * RANDOMIZE_TRACKS (randomize_tracks.py): Set ID3 tags of tracks in
         playlists sequentially (after shuffling) to randomize.
-    * REKORDBOX_PLAYLISTS (rekordbox_playlist_builder.py): Automatically
+    * REKORDBOX_PLAYLISTS (rekordbox.playlist_builder.py): Automatically
         create a playlist structure based on the tags present in an XML.
 
 Spotify operations:
-    * CHECK_TRACK_OVERLAP (spotify_playlist_checker.py): Identify overlap
-        between Spotify playlist(s) and beatcloud.
-    * AUTO_PLAYLIST_UPDATE (spotify_playlist_builder.py): Creating and updating
+    * AUTO_PLAYLIST_UPDATE (spotify.playlist_builder.py): Creating and updating
         Spotify playlists using subreddit top posts.
+    * PLAYLISTS_FROM_UPLOAD (spotify.playlist_builder.py): Creating and
+        updating Spotify playlists using the Discord webhook output from users
+        uploading music.
 
 Utils operations:
-    * CHECK_TRACK_OVERLAP (local_dirs_checker.py): Identify overlap between
-        local directories and beatcloud.
-    * GET_GENRES (get_genres.py): Display track counts for all genres using the
-        ID3 tag field of local mp3 files.
+    * CHECK_TRACK_OVERLAP (check_track_overlap.py): Identify overlap between
+        Spotify playlists and / or local directories and and the Beatcloud.
+    * COPY_PLAYLISTS_TRACKS (copy_playlists_tracks.py): Copy audio files from
+        playlists to a new location and generate a new XML with updated
+        Location fields.
     * YOUTUBE_DL (youtube_dl.py): Download tracks from a URL (e.g. Soundcloud
         playlist).
 
@@ -96,8 +98,10 @@ def main():
                 continue
             try:
                 logger.info(f"Beginning {operation}...")
-                if operation == "CHECK_TRACK_OVERLAP":
-                    beatcloud_cache = func(config, beatcloud_tracks=beatcloud_cache)
+                if operation in ["CHECK_TRACK_OVERLAP", "DOWNLOAD_MUSIC"]:
+                    beatcloud_cache = func(
+                        config, beatcloud_tracks=beatcloud_cache
+                    )
                 else:
                     func(config)
             except Exception as exc:

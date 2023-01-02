@@ -33,8 +33,8 @@
         - [ ] Improved Reddit post parsing and Spotify searching
 * 2.4.0
     - `spotify`
-        - [ ] Generate Spotify playlist from "New Music" Discord webhook output
-        - [ ] Format `DOWNLOAD_INCLUDE_DIRS` override using the contents of a Spotify playlist
+        - [x] Generate Spotify playlist from "New Music" Discord webhook output
+        - [x] Format `DOWNLOAD_INCLUDE_DIRS` override using the contents of a Spotify playlist
         - [ ] Create Spotify playlist from a Rekordbox playlist
 
 # Overview
@@ -55,14 +55,15 @@ To take full advantage of this library, users must:
 The core functionality of this library can be broken up into four sub-packages:
 1. `sync`: allows users to push and pull audio and Rekordbox XML files to and from the `beatcloud`
 2. `spotify`: allows users to:
-    * compare the tracks of one or more Spotify playlists against the `beatcloud` (to identify redundancies)
-    * update Spotify playlists using the titles / links of Reddit submissions
+    * create / update Spotify playlists using the titles / links of Reddit submissions
+    * create / update Spotify playlists using the Discord webhook output from users' music uploads.
+    * get tracks from Spotify playlists for analysis
 3. `rekordbox`: operates on an exported XML Rekordbox database file to:
     * automatically generate playlists based on the tags of your Collection
     * emulating a playlist randomization feature which is strangely absent from Rekordbox
 4. `utils`: contains a variety of utilities for things such as:
-    * downloading mp3 files from a URL (e.g. Soundcloud...don't use YouTube because that's some highly compressed garbage)
-    * copmare the tracks of one or more local directories against the `beatcloud` (to identify redundancies)
+    * downloading mp3 files from a URL (e.g. Soundcloud)
+    * compare the tracks of Spotify playlists and / or local directories against the `beatcloud` (to identify redundancies)
     * copy audio files from a given playlist to a new location and generate a new XML for those files (for backups and ensuring you can play a preparation on non-Pioneer setups)
 
 For usage details relating to the individual packages of `DJ Tools`, checkout the README files that are [collocated with those packages](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools).
@@ -80,7 +81,7 @@ For usage details relating to the individual packages of `DJ Tools`, checkout th
     - if you want to restrict the version being installed to not include, say, the next minor version's beta release then you can do so like `pip install "dj-beatcloud[levenshtein]<2.3.0" --pre`
     - note that installing with the `--pre` flag will also install pre-release versions for all dependencies which may cause breakage
 
-`NOTE`: operations that involve computing the similarity between track names (both modules in the `spotify` package, the `utils.local_dirs_checker` module, and the `swap_title_artist` repair script) can be made much faster by installing the `python-Levenshtein` package; Windows users may find it more cumbersome to install `DJ Tools` this way though since they may not have the required C++ binaries to run the Levenshtein operations...if this applies to you, then ommit the `[levenshtein]` part:
+`NOTE`: operations that involve computing the similarity between track names can be made much faster by installing the `python-Levenshtein` package; Windows users may find it more cumbersome to install `DJ Tools` this way though since they may not have the required C++ binaries to run the Levenshtein operations...if this applies to you, then ommit the `[levenshtein]` part:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`pip install dj-beatcloud`
 
@@ -117,8 +118,7 @@ After running this command, base templates for all config files used by `djtools
 
 Please be sure to checkout the package-level README files regarding the usage of the other config files which must also be stored in the same location as `config.json`:
 * `spotify`
-    - [playlist_builder.json](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/spotify)
-    - [playlist_checker.json](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/spotify)
+    - [spotify_playlists.json](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/spotify)
 * `sync`
     - [registered_users.json](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/sync)
 * `rekordbox`
@@ -139,14 +139,14 @@ Please be sure to checkout the package-level README files regarding the usage of
     "UPLOAD_EXCLUDE_DIRS": ["New Music"],
     "DOWNLOAD_INCLUDE_DIRS": [],
     "DOWNLOAD_EXCLUDE_DIRS": [],
+    "DOWNLOAD_FROM_SPOTIFY": "",
     "AWS_USE_DATE_MODIFIED": false,
     "XML_IMPORT_USER": "myfriend",
     "XML_PATH": "/path/to/xmls/my_rekordbox.xml",
     "USER": "",
     "DISCORD_URL": "https://discord.com/api/webhooks/some/url",
-    "YOUTUBE_DL": false,
     "YOUTUBE_DL_URL": "https://soundcloud.com/me/sets/to-download",
-    "RANDOMIZE_TRACKS": false,
+    "YOUTUBE_DL_LOCATION": "/Volumes/My_DJ_USB/New_Music/",
     "RANDOMIZE_TRACKS_PLAYLISTS": ["Halftime", "Trip Hop"],
     "DOWNLOAD_MUSIC": false,
     "DOWNLOAD_XML": false,
@@ -157,12 +157,9 @@ Please be sure to checkout the package-level README files regarding the usage of
     "GENRE_PLAYLISTS_PURE": [],
     "CHECK_TRACK_OVERLAP": false,
     "CHECK_TRACK_OVERLAP_FUZZ_RATIO": 80,
-    "LOCAL_CHECK_DIRS": ["New Music"],
-    "SPOTIFY_CHECK_PLAYLISTS": ["Download", "Maybe Download"],
-    "SPOTIFY_CLIENT_ID": "",
-    "SPOTIFY_CLIENT_SECRET": "",
-    "SPOTIFY_REDIRECT_URI": "",
-    "SPOTIFY_USERNAME": "",
+    "CHECK_LOCAL_DIRS": ["New Music"],
+    "CHECK_SPOTIFY_PLAYLISTS": ["Download", "Maybe Download"],
+    "PLAYLIST_FROM_UPLOAD": false,
     "AUTO_PLAYLIST_UPDATE": false,
     "AUTO_PLAYLIST_SUBREDDITS": [
         {"name": "HalftimeDnB", "type": "hot", "period": "week", "limit": 50},
@@ -170,6 +167,10 @@ Please be sure to checkout the package-level README files regarding the usage of
     ],
     "AUTO_PLAYLIST_FUZZ_RATIO": 50,
     "AUTO_PLAYLIST_SUBREDDIT_LIMIT": 500,
+    "SPOTIFY_CLIENT_ID": "",
+    "SPOTIFY_CLIENT_SECRET": "",
+    "SPOTIFY_REDIRECT_URI": "",
+    "SPOTIFY_USERNAME": "",
     "REDDIT_CLIENT_ID": "",
     "REDDIT_CLIENT_SECRET": "",
     "REDDIT_USER_AGENT": "",
@@ -184,14 +185,14 @@ Please be sure to checkout the package-level README files regarding the usage of
 * `UPLOAD_EXCLUDE_DIRS`: the list of paths to folders (relative to the `DJ Music` folder on your `USB_PATH`) that should NOT be uploaded to the `beatcloud` when running the `upload_music` sync operation
 * `DOWNLOAD_INCLUDE_DIRS`: the list of paths to folders (relative to the `DJ Music` folder on your `USB_PATH`) that should exclusively be downloaded from the `beatcloud` when running the `download_music` sync operation
 * `DOWNLOAD_EXCLUDE_DIRS`: the list of paths to folders (relative to the `DJ Music` folder on your `USB_PATH`) that should NOT be downloaded from the `beatcloud` when running the `download_music` sync operation
+* `DOWNLOAD_FROM_SPOTIFY`: if this is set to the name of a playlist (present in `spotify_playlists.json`), then the only Beatcloud tracks present in this playlist will be downloaded
 * `AWS_USE_DATE_MODIFIED`: up/download files that already exist at the destination if the date modified field at the source is after that of the destination (i.e. the ID3 tags have been changed)...BE SURE THAT ALL USERS OF THIS `BEATCLOUD` INSTANCE ARE ON BOARD BEFORE UPLOADING WITH THIS FLAG SET!
 * `XML_IMPORT_USER`: the username of a fellow `beatcloud` user (as present in `registered_users.json`) from whose Rekordbox XML you are importing tracks
 * `XML_PATH`: the full path to your Rekordbox XML file which should contain an up-to-date export of your Collection...the directory where this points to is also where all other XMLs generated or utilized by this library will exist
 * `USER`: this is the username that will be entered into `registered_users.json`...if left as an empty string, then your operating system username will be used...it's recommended that you only override this if your username changes from what other users of your `beatcloud` instance are expecting (to ensure consistency)
 * `DISCORD_URL`: webhook URL for messaging a Discord server's channel when new music has been uploaded to the `beatcloud`
-* `YOUTUBE_DL`: boolean flag to trigger the downloading of files from `YOUTUBE_DL_URL` into the `DJ Music` -> `New Music` folder on your `USB_PATH`
 * `YOUTUBE_DL_URL`: URL from which music files should be downloaded (i.e. a Soundcloud playlist)
-* `RANDOMIZE_TRACKS`: boolean flag to trigger the emulated playlist shuffling feature on each playlist in `RANDOMIZE_TRACKS_PLAYLISTS`
+* `YOUTUBE_DL_LOCATION`: path to download files to
 * `RANDOMIZE_TRACKS_PLAYLISTS`: list of playlist names (must exist in `XML_PATH`) that should have their tracks shuffled
 * `DOWNLOAD_MUSIC`: sync remote beatcloud to "DJ Music" folder
 * `DOWNLOAD_XML`: sync remote XML of `XML_IMPORT_USER` to parent of `XML_PATH`
@@ -200,10 +201,11 @@ Please be sure to checkout the package-level README files regarding the usage of
 * `REKORDBOX_PLAYLISTS`: boolean flag to trigger the generation of a playlist structure (as informed by `rekordbox_playlists.json`) using the tags in `XML_PATH`...the resulting XML file is `XML_PATH` prefixed with "`auto_`"
 * `REKORDBOX_PLAYLISTS_REMAINDER`: whether tracks of remainder tags (those not specified in `rekordbox_playlists.json`) will be placed in a `folder` called "Other" with individual tag playlists or a `playlist` called "Other"
 * `GENRE_PLAYLISTS_PURE`: list of genre tags (case-sensitive) which will each have a "Pure" playlist generated for...each item must be accompanied with a "Pure \<genre>" entry in `rekordbox_playlists.json`,
-* `CHECK_TRACK_OVERLAP`: boolean flag to trigger checking the contents of Spotify playlists specified in `SPOTIFY_CHECK_PLAYLISTS` and the local files specified in `LOCAL_CHECK_DIRS` against the `beatcloud` (to identify redundancies)
+* `CHECK_TRACK_OVERLAP`: boolean flag to trigger checking the contents of Spotify playlists specified in `CHECK_SPOTIFY_PLAYLISTS` and the local files specified in `CHECK_LOCAL_DIRS` against the `beatcloud` (to identify redundancies)
 * `CHECK_TRACK_OVERLAP_FUZZ_RATIO`: the minimum Levenshtein similarity for indicating potential redundancies between Spotify playlists / local directories and the `beatcloud`
-* `LOCAL_CHECK_DIRS`: list of local directories (under "DJ Music") to use with `CHECK_TRACK_OVERLAP`,
-* `SPOTIFY_CHECK_PLAYLISTS`: list of Spotify playlists to use with `CHECK_TRACK_OVERLAP`
+* `CHECK_LOCAL_DIRS`: list of local directories (under "DJ Music") to use with `CHECK_TRACK_OVERLAP`,
+* `CHECK_SPOTIFY_PLAYLISTS`: list of Spotify playlists to use with `CHECK_TRACK_OVERLAP`
+* `PLAYLIST_FROM_UPLOAD`: boolean flag to trigger automatic generation of updating of Spotify playlists from the Discord webhook output of users' music upload (output must be copied to the system clipboard)
 * `SPOTIFY_CLIENT_ID`: client ID for registered Spotify API application
 * `SPOTIFY_CLIENT_SECRET`: client secret for registered Spotify API application
 * `SPOTIFY_REDIRECT_URI`: redirect URI for registered Spotify API application
@@ -261,15 +263,15 @@ Out[4]: "Track_Title (Artist2 Remix) ['Things' & Stuff!] - Artist1, Artist2.mp3"
 
 In general:
 * keep the filenames as close as possible to the `Title (Artist2 Remix) - Artist1, Artist2` format
-* ensure there is only one instances of a hyphen with spaces on each side; title / artist splitting for `spotify.playlist_checker` and `utils.local_dirs_checker` will not work properly without this
+* ensure there is only one instances of a hyphen with spaces on each side; title / artist splitting which is needed for `utils.helpers.compare_tracks` will not work properly without this
 * if the source is Spotify, try to match the fields as close as possible; e.g. if the title includes `(Radio Edit)` then you should name the track accordingly
-    - this is to ensure that `spotify.playlist_checker` and `utils.local_dirs_checker` work properly since the similarity of filenames are checked against Spotify API query results
+    - this is to ensure that `utils.helpers.compare_tracks` works properly since the similarity of filenames are checked against Spotify API query results
 * don't use accent marks, any of the explicitly listed characters disallowed by Windows, or any other weird / non-standard characters
 
 #### Standardization
 To ensure Collection consistency and successful operation of `DJ Tools`, the following properties should be maintained for all music files. **Users of my beatcloud _must_ complete a minimum of (1), (2), and (3) prior to uploading**. Since track title, artist names, and melodic key are objective, and populating these tags prior to uploading saves every other user from repeating these efforts, it is greatly appreciated if users also complete (4) and (5). Futhermore, it is advised that users complete (6) through (11) as well, although users should expect to redo these themselves when integrating others' tracks since they are mostly subjective (with the exception of `beatgrid` and, to some extent, `color`):
 
-`NOTE`: obviously the manner in which any tags are used is up to the user; this is especially true for `comment` and `color` tags. However, `genre` and `My Tags` should be used for their intended purpose otherwise users won't be able to use the `rekordbox.rekordbox_playlist_builder` module.
+`NOTE`: obviously the manner in which any tags are used is up to the user; this is especially true for `comment` and `color` tags. However, `genre` and `My Tags` should be used for their intended purpose otherwise users won't be able to use the `rekordbox.playlist_builder` module.
 
 1. MP3 file format
 2. minimum 256 kbps bitrate (320 kbps preferred)

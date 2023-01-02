@@ -1,4 +1,4 @@
-from .conftest import (
+from test_data.conftest import (
     MockOpen,
     test_config,
     test_playlist_config,
