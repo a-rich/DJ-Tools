@@ -12,9 +12,9 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from fuzzywuzzy import fuzz
 import spotipy
-from spotipy.oauth2 import SpotifyOAuth
 from tqdm import tqdm
 
+from djtools.spotify.helpers import get_playlist_ids, get_spotify_client
 
 logger = logging.getLogger(__name__)
 
@@ -64,46 +64,14 @@ def get_spotify_tracks(
     Args:
         config: Configuration object.
     
-    Raises:
-        KeyError: "SPOTIFY_CLIENT_ID", "SPOTIFY_CLIENT_SECRET", and
-            "SPOTIFY_REDIRECT_URI" must be configured.
-
     Returns:
         Spotify track titles and artist names keyed by playlist name.
     """
-    try:
-        spotify = spotipy.Spotify(
-            auth_manager=SpotifyOAuth(
-                client_id=config["SPOTIFY_CLIENT_ID"],
-                client_secret=config["SPOTIFY_CLIENT_SECRET"],
-                redirect_uri=config["SPOTIFY_REDIRECT_URI"],
-                scope="playlist-modify-public",
-                cache_handler=spotipy.CacheFileHandler(
-                    cache_path=os.path.join(
-                        os.path.dirname(__file__), ".spotify.cache"
-                    ).replace(os.sep, "/"),
-                ),
-            )
-        )
-    except KeyError:
-        raise KeyError(
-            "Using the playlist_checker module requires the following config "
-            "options: SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, "
-            "SPOTIFY_REDIRECT_URI"
-        ) from KeyError 
-
-    playlist_ids_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)),
-        "configs",
-        "playlist_checker.json",
-    ).replace(os.sep, "/")
-    with open(playlist_ids_path, mode="r", encoding="utf-8") as _file:
-        playlist_ids = {
-            key.lower(): value for key, value in json.load(_file).items()
-        }
+    spotify = get_spotify_client(config)
+    playlist_ids = get_playlist_ids("playlist_checker.json")
     playlist_tracks = {}
     for playlist in config.get("SPOTIFY_CHECK_PLAYLISTS", []):
-        playlist_id = playlist_ids.get(playlist.lower())
+        playlist_id = playlist_ids.get(playlist)
         if not playlist_id:
             logger.error(f"{playlist} not in playlist_checker.json")
             continue

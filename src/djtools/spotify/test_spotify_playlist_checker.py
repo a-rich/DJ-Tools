@@ -277,7 +277,7 @@ def test_get_spotify_tracks_no_spotify_creds(test_config):
     del test_config["SPOTIFY_REDIRECT_URI"]
     with pytest.raises(
         KeyError,
-        match="Using the playlist_checker module requires the following "
+        match="Using the spotify_playlist_builder module requires the following "
             "config options: SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, "
             "SPOTIFY_REDIRECT_URI"
     ):

@@ -27,9 +27,9 @@ import asyncpraw as praw
 from fuzzywuzzy import fuzz
 import pyperclip
 import spotipy
-from spotipy.oauth2 import SpotifyOAuth
 from tqdm import tqdm
 
+from djtools.spotify.helpers import get_playlist_ids, get_spotify_client
 from djtools.utils.helpers import catch, raise_
 
 
@@ -41,48 +41,6 @@ logging.getLogger("asyncio").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 
-
-def get_spotify_client(
-    config: Dict[str, Union[List, Dict, str, bool, int, float]]
-) -> spotipy.Spotify:
-    """Instantiate a Spotify API client.
-
-    Args:
-        config: Configuration object.
-
-    Raises:
-        KeyError: "SPOTIFY_CLIENT_ID", "SPOTIFY_CLIENT_SECRET", and
-            "SPOTIFY_REDIRECT_URI" must be configured.
-        Exception: Spotify client must be instantiated.
-
-    Returns:
-        Spotify API client.
-    """
-    try:
-        spotify = spotipy.Spotify(
-            auth_manager=SpotifyOAuth(
-                client_id=config["SPOTIFY_CLIENT_ID"],
-                client_secret=config["SPOTIFY_CLIENT_SECRET"],
-                redirect_uri=config["SPOTIFY_REDIRECT_URI"],
-                scope="playlist-modify-public",
-                requests_timeout=30,
-                cache_handler=spotipy.CacheFileHandler(
-                    cache_path=os.path.join(
-                        os.path.dirname(__file__), ".spotify.cache"
-                    ).replace(os.sep, "/"),
-                ),
-            )
-        )
-    except KeyError:
-        raise KeyError(
-            "Using the spotify_playlist_builder module requires the following "
-            "config options: SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, "
-            "SPOTIFY_REDIRECT_URI"
-        ) from KeyError 
-    except Exception as exc:
-        raise Exception(f"Failed to instantiate the Spotify client: {exc}")
-    
-    return spotify
 
 
 def get_reddit_client(
@@ -115,25 +73,6 @@ def get_reddit_client(
         ) from KeyError
     
     return reddit
-
-
-def get_playlist_ids() -> Dict[str, str]:
-    """Load Spotify playlist names -> IDs lookup.
-
-    Returns:
-        Dictionary of Spotify playlist names mapped to playlist IDs. 
-    """
-    playlist_ids = {}
-    ids_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)),
-        "configs",
-        "playlist_builder.json",
-    ).replace(os.sep, "/")
-    if os.path.exists(ids_path):
-        with open(ids_path, mode="r", encoding="utf-8") as _file:
-            playlist_ids = json.load(_file)
-    
-    return playlist_ids
 
 
 def write_playlist_ids(playlist_ids: Dict[str, str]):
@@ -224,7 +163,7 @@ async def async_update_auto_playlists(
 
     spotify = get_spotify_client(config)
     reddit = get_reddit_client(config)
-    playlist_ids = get_playlist_ids()
+    playlist_ids = get_playlist_ids(config_file="playlist_builder.json")
     
     praw_cache = {}
     cache_file = os.path.join(
@@ -408,9 +347,13 @@ def fuzzy_match(
     if not (title and artist):
         return
 
+    query = (
+        f'{title.replace(" ", "+")}+'
+        f'{artist.replace(" ", "+").replace(",", "")}'
+    )
     try:
         results = spotify.search(
-            q=f'{title.replace(" ", "+")}+{artist.replace(" ", "+")}',
+            q=query,
             type="track",
             limit=50,
         )
@@ -722,7 +665,7 @@ def playlist_from_upload(
         ) from KeyError
 
     spotify = get_spotify_client(config)
-    playlist_ids = get_playlist_ids()
+    playlist_ids = get_playlist_ids(config_file="playlist_builder.json")
 
     # Get (track title, artist name) tuples from file uploads.
     user = ""
