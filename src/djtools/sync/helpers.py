@@ -123,12 +123,12 @@ def parse_sync_command(
         for _dir in config.get(
             f'{"UP" if upload else "DOWN"}LOAD_INCLUDE_DIRS', []
         ):
-            _cmd.extend(
-                [
-                    "--include",
-                    os.path.join(_dir, "*").replace(os.sep, "/"),
-                ]
-            )
+            path, ext = os.path.splitext(_dir)
+            if not ext:
+                path = os.path.join(_dir, "*").replace(os.sep, "/")
+            else:
+                path = path + ext
+            _cmd.extend(["--include", path])
     if (
         config.get("UPLOAD_EXCLUDE_DIRS")
         or config.get("DOWNLOAD_EXCLUDE_DIRS")
@@ -137,12 +137,12 @@ def parse_sync_command(
         for _dir in config.get(
             f'{"UP" if upload else "DOWN"}LOAD_EXCLUDE_DIRS', []
         ):
-            _cmd.extend(
-                [
-                    "--exclude",
-                    os.path.join(_dir, "*").replace(os.sep, "/"),
-                ]
-            )
+            path, ext = os.path.splitext(_dir)
+            if not ext:
+                path = os.path.join(_dir, "*").replace(os.sep, "/")
+            else:
+                path = path + ext
+            _cmd.extend(["--exclude", path])
     if not config.get("AWS_USE_DATE_MODIFIED"):
         _cmd.append("--size-only")
     if config.get("DRYRUN"):

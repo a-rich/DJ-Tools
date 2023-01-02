@@ -6,7 +6,7 @@
 **/*.xml
 
 # ignore specific files
-**/.cache
+**/*.cache
 **/*.coverage*
 **/.DS_store
 **/.python-version

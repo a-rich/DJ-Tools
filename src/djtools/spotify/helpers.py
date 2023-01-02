@@ -1,14 +1,12 @@
-"""This module is responsible for identifying any potential overlap between
-tracks in one or more Spotify playlists with all the tracks already in the
-beatcloud.
-"""
+"""This module contains helper functions used by the "spotify" module. Helper
+functions include getting a Spotipy API client and loading configuration files
+with Spotify playlist names and IDs."""
 from concurrent.futures import ThreadPoolExecutor
-from itertools import groupby, product
+from itertools import product
 import json
 import logging
-from operator import itemgetter
 import os
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Set, Tuple, Union
 
 from fuzzywuzzy import fuzz
 import spotipy
@@ -19,40 +17,65 @@ from tqdm import tqdm
 logger = logging.getLogger(__name__)
 
 
-def check_playlists(
-    config: Dict[str, Union[List, Dict, str, bool, int, float]],
-    beatcloud_tracks: List[str] = [],
-) -> Optional[List[str]]:
-    """Gets track titles and artists from both Spotify playlist(s) and
-        beatcloud and computes the Levenshtein similarity between their product
-        in order to identify any overlapping tracks.
+def get_spotify_client(
+    config: Dict[str, Union[List, Dict, str, bool, int, float]]
+) -> spotipy.Spotify:
+    """Instantiate a Spotify API client.
 
     Args:
         config: Configuration object.
-        beatcloud_tracks: List of track artist - titles from S3.
+
+    Raises:
+        KeyError: "SPOTIFY_CLIENT_ID", "SPOTIFY_CLIENT_SECRET", and
+            "SPOTIFY_REDIRECT_URI" must be configured.
+        Exception: Spotify client must be instantiated.
 
     Returns:
-        List of track artist - titles from S3.
+        Spotify API client.
     """
-    spotify_tracks = get_spotify_tracks(config)
-    if not spotify_tracks:
-        logger.warning(
-            "There are no Spotify tracks; make sure SPOTIFY_CHECK_PLAYLISTS "
-            "has one or more keys from playlist_checker.json"
+    try:
+        spotify = spotipy.Spotify(
+            auth_manager=SpotifyOAuth(
+                client_id=config["SPOTIFY_CLIENT_ID"],
+                client_secret=config["SPOTIFY_CLIENT_SECRET"],
+                redirect_uri=config["SPOTIFY_REDIRECT_URI"],
+                scope="playlist-modify-public",
+                requests_timeout=30,
+                cache_handler=spotipy.CacheFileHandler(
+                    cache_path=os.path.join(
+                        os.path.dirname(__file__), ".spotify.cache"
+                    ).replace(os.sep, "/"),
+                ),
+            )
         )
-        return
-    if not beatcloud_tracks:
-        beatcloud_tracks = get_beatcloud_tracks()
-    matches = find_matches(spotify_tracks, beatcloud_tracks, config)
-    logger.info(f"Spotify playlist(s) / beatcloud matches: {len(matches)}")
-    for playlist, matches in groupby(
-        sorted(matches, key=itemgetter(0)), key=itemgetter(0)
-    ):
-        logger.info(f"{playlist}:")
-        for _, spotify_track, beatcloud_track, fuzz_ratio in matches:
-            logger.info(f"\t{fuzz_ratio}: {spotify_track} | {beatcloud_track}")
+    except KeyError:
+        raise KeyError(
+            "Using the spotify package requires the following config options: "
+            "SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI"
+        ) from KeyError 
+    except Exception as exc:
+        raise Exception(f"Failed to instantiate the Spotify client: {exc}")
     
-    return beatcloud_tracks
+    return spotify
+
+
+def get_playlist_ids() -> Dict[str, str]:
+    """Load Spotify playlist names -> IDs lookup.
+
+    Returns:
+        Dictionary of Spotify playlist names mapped to playlist IDs. 
+    """
+    playlist_ids = {}
+    ids_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        "configs",
+        "spotify_playlists.json",
+    ).replace(os.sep, "/")
+    if os.path.exists(ids_path):
+        with open(ids_path, mode="r", encoding="utf-8") as _file:
+            playlist_ids = json.load(_file)
+    
+    return playlist_ids
 
 
 def get_spotify_tracks(
@@ -64,48 +87,16 @@ def get_spotify_tracks(
     Args:
         config: Configuration object.
     
-    Raises:
-        KeyError: "SPOTIFY_CLIENT_ID", "SPOTIFY_CLIENT_SECRET", and
-            "SPOTIFY_REDIRECT_URI" must be configured.
-
     Returns:
         Spotify track titles and artist names keyed by playlist name.
     """
-    try:
-        spotify = spotipy.Spotify(
-            auth_manager=SpotifyOAuth(
-                client_id=config["SPOTIFY_CLIENT_ID"],
-                client_secret=config["SPOTIFY_CLIENT_SECRET"],
-                redirect_uri=config["SPOTIFY_REDIRECT_URI"],
-                scope="playlist-modify-public",
-                cache_handler=spotipy.CacheFileHandler(
-                    cache_path=os.path.join(
-                        os.path.dirname(__file__), ".spotify.cache"
-                    ).replace(os.sep, "/"),
-                ),
-            )
-        )
-    except KeyError:
-        raise KeyError(
-            "Using the playlist_checker module requires the following config "
-            "options: SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, "
-            "SPOTIFY_REDIRECT_URI"
-        ) from KeyError 
-
-    playlist_ids_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)),
-        "configs",
-        "playlist_checker.json",
-    ).replace(os.sep, "/")
-    with open(playlist_ids_path, mode="r", encoding="utf-8") as _file:
-        playlist_ids = {
-            key.lower(): value for key, value in json.load(_file).items()
-        }
+    spotify = get_spotify_client(config)
+    playlist_ids = get_playlist_ids()
     playlist_tracks = {}
     for playlist in config.get("SPOTIFY_CHECK_PLAYLISTS", []):
-        playlist_id = playlist_ids.get(playlist.lower())
+        playlist_id = playlist_ids.get(playlist)
         if not playlist_id:
-            logger.error(f"{playlist} not in playlist_checker.json")
+            logger.error(f"{playlist} not in spotify_playlists.json")
             continue
 
         logger.info(f'Getting tracks from Spotify playlist "{playlist}"...')
@@ -167,26 +158,6 @@ def add_tracks(result: Dict[str, Any]) -> List[str]:
         title = track["track"]["name"]
         artists = ", ".join([y["name"] for y in track["track"]["artists"]])
         tracks.append(f"{title} - {artists}")
-
-    return tracks
-
-
-def get_beatcloud_tracks() -> List[str]:
-    """Lists all the music files in S3 and parses out the track titles and
-        artist names.
-
-    Returns:
-        Beatcloud track titles and artist names.
-    """
-    logger.info("Getting tracks from the beatcloud...")
-    cmd = "aws s3 ls --recursive s3://dj.beatcloud.com/dj/music/"
-    with os.popen(cmd) as proc:
-        output = proc.read().split("\n")
-    tracks = [
-        os.path.splitext(os.path.basename(track))[0]
-        for track in output if track
-    ]
-    logger.info(f"Got {len(tracks)} tracks")
 
     return tracks
 
