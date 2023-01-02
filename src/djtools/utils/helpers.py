@@ -3,11 +3,14 @@
 """
 from datetime import datetime, timedelta
 from glob import glob
+from itertools import groupby
 import logging
+from operator import itemgetter
 import os
 from os import name as os_name
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
+from djtools.spotify.helpers import find_matches, get_spotify_tracks
 
 logger = logging.getLogger(__name__)
 
@@ -99,3 +102,138 @@ def raise_(exc: Exception):
         Arbitrary exception.
     """
     raise exc
+
+
+def get_local_tracks(
+    config: Dict[str, Union[List, Dict, str, bool, int, float]],
+) -> Dict[str, List[str]]:
+    """Aggregates the files from one or more local directories in a dictionary
+        mapped with parent directories.
+
+    Args:
+        config: Configuration object.
+
+    Raises:
+        KeyError: "LOCAL_CHECK_DIRS" must be configured.
+        ValueError: "LOCAL_CHECK_DIRS" must be configured.
+
+    Returns:
+        Local file names keyed by parent directory.
+    """
+    if "LOCAL_CHECK_DIRS" not in config:
+        raise KeyError(
+            "Using the local_dirs_checker module requires the config option "
+            "LOCAL_CHECK_DIRS to be set to a list of one or more directories "
+            "containing new tracks"
+        )
+    if not config["LOCAL_CHECK_DIRS"]:
+        raise ValueError(
+            "Using the local_dirs_checker module requires the config option "
+            "LOCAL_CHECK_DIRS to be set to a list of one or more directories "
+            "containing new tracks"
+        )
+
+    local_dir_tracks = {}
+    for _dir in config["LOCAL_CHECK_DIRS"]:
+        path = _dir.replace(os.sep, "/")
+        if not os.path.exists(path):
+            logger.warning(
+                f"{path} does not exist; will not be able to check its "
+                "contents against the beatcloud"
+            )
+            continue
+        files = glob(
+            os.path.join(path, "**", "*.*").replace(os.sep, "/"),
+            recursive=True,
+        )
+        if files:
+            local_dir_tracks[_dir] = [
+                os.path.splitext(os.path.basename(x))[0] for x in files
+            ]
+
+    return local_dir_tracks
+
+
+def compare_tracks(
+    config: Dict[str, Union[List, Dict, str, bool, int, float]],
+    beatcloud_tracks: Optional[List[str]] = [],
+) -> Tuple[List[str], List[str]]:
+    """Compares tracks from Spotify / local with Beatcloud tracks.
+    
+    Gets track titles and artists from Spotify playlist(s) and / or file names
+    from local directories, and get file names from the beatcloud. Then compute
+    the Levenshtein similarity between their product in order to identify any
+    overlapping tracks.
+
+    Args:
+        config: Configuration object.
+        beatcloud_tracks: Cached list of tracks from S3.
+
+    Returns:
+        List of all tracks and list of full paths to matching Beatcloud tracks.
+    """
+    track_sets = []
+    beatcloud_matches = []
+    if config.get("SPOTIFY_CHECK_PLAYLISTS"):
+        tracks = get_spotify_tracks(config)
+        if not tracks:
+            logger.warning(
+                "There are no Spotify tracks; make sure "
+                "SPOTIFY_CHECK_PLAYLISTS has one or more keys from "
+                "spotify_playlists.json"
+            )
+        else:
+            track_sets.append((tracks, "Spotify Playlist Tracks"))
+    if config.get("LOCAL_CHECK_DIRS"):
+        tracks = get_local_tracks(config)
+        if not tracks:
+            logger.warning(
+                "There are no local tracks; make sure LOCAL_CHECK_DIRS has "
+                'one or more directories containing one or more tracks'
+            )
+        else:
+            track_sets.append((tracks, "Local Directory Tracks"))
+
+    if not track_sets:
+        return beatcloud_tracks, beatcloud_matches
+
+    if not beatcloud_tracks:
+        beatcloud_tracks = get_beatcloud_tracks()
+    
+    path_lookup = {
+        os.path.splitext(os.path.basename(x))[0]: x for x in beatcloud_tracks
+    }
+    
+    for tracks, track_type in track_sets:
+        matches = find_matches(
+            tracks,
+            path_lookup.keys(),
+            config,
+        )
+        logger.info(f"\n{track_type} / Beatcloud Matches: {len(matches)}")
+        for loc, matches in groupby(
+            sorted(matches, key=itemgetter(0)), key=itemgetter(0)
+        ):
+            logger.info(f"{loc}:")
+            for _, track, beatcloud_track, fuzz_ratio in matches:
+                beatcloud_matches.append(path_lookup[beatcloud_track])
+                logger.info(f"\t{fuzz_ratio}: {track} | {beatcloud_track}")
+    
+    return beatcloud_tracks, beatcloud_matches
+
+
+def get_beatcloud_tracks() -> List[str]:
+    """Lists all the music files in S3 and parses out the track titles and
+        artist names.
+    
+    Returns:
+        Beatcloud track titles and artist names.
+    """
+    logger.info("Getting tracks from the beatcloud...")
+    cmd = "aws s3 ls --recursive s3://dj.beatcloud.com/dj/music/"
+    with os.popen(cmd) as proc:
+        output = proc.read().split("\n")
+    tracks = [track for track in output if track]
+    logger.info(f"Got {len(tracks)} tracks")
+
+    return tracks

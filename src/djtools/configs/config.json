@@ -5,6 +5,7 @@
     "UPLOAD_EXCLUDE_DIRS": [],
     "DOWNLOAD_INCLUDE_DIRS": [],
     "DOWNLOAD_EXCLUDE_DIRS": [],
+    "DOWNLOAD_INCLUDE_SPOTIFY": "",
     "AWS_USE_DATE_MODIFIED": false,
     "XML_IMPORT_USER": "",
     "XML_PATH": "",

@@ -18,10 +18,10 @@ pytest_plugins = [
 
 @pytest.mark.parametrize("upload", [True, False])
 @pytest.mark.parametrize(
-    "include_dirs", [[], ["path/to/stuff", "path/to/things"]]
+    "include_dirs", [[], ["path/to/stuff", "path/to/things.mp3"]]
 )
 @pytest.mark.parametrize(
-    "exclude_dirs", [[], ["path/to/stuff", "path/to/things"]]
+    "exclude_dirs", [[], ["path/to/stuff", "path/to/things.mp3"]]
 )
 @pytest.mark.parametrize("use_date_modified", [True, False])
 @pytest.mark.parametrize("dryrun", [True, False])

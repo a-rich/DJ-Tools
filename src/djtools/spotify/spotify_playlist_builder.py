@@ -85,7 +85,7 @@ def write_playlist_ids(playlist_ids: Dict[str, str]):
     ids_path = os.path.join(
         os.path.dirname(os.path.dirname(__file__)),
         "configs",
-        "playlists.json",
+        "spotify_playlists.json",
     ).replace(os.sep, "/")
     with open(ids_path, mode="w", encoding="utf-8") as _file:
         json.dump(playlist_ids, _file, indent=2)
