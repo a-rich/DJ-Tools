@@ -125,7 +125,7 @@ class PlaylistBuilder:
         # "Other" "folder" or "playlist".
         self._playlist_remainder_type = playlist_remainder_type
 
-        # Create TagParsers from rekordbox_playlist.json.
+        # Create TagParsers from rekordbox_playlists.json.
         with open(playlist_config, mode="r", encoding="utf-8") as _file:
             self._playlist_config = json.load(_file)
         self._parsers = {}

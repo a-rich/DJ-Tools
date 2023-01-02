@@ -1,28 +1,35 @@
-"""This module is responsible for creating or updating Spotify playlists by
-querying subreddit posts. Posts are first checked to see if they are direct
-links to a Spotify track. If this is not the case, then the post title is
-parsed in an attempt to interpret it as either 'ARTIST NAME - TRACK TITLE' or
-'TRACK TITLE - ARTIST NAME'. These components are then used to search the
-Spotify API for tracks. The resulting tracks have their title and artist fields
-compared with the reddit post title and are added to the respective playlist
-if the Levenshtein similarity passes a threshold.
+"""This module is responsible for creating or updating Spotify playlists. This
+can be done in a couple of ways.
+
+The first way is by using the posted output from
+`djtools.sync.sync_operations.upload_music`. When another user uploads music to
+the Beatcloud, you may want to generate a Spotify playlist from those tracks so
+they may be previewed before you decide whether or not to download thos tracks.
+
+The second way is by querying subreddit posts. Posts are first checked to see
+if they are direct links to a Spotify track. If this is not the case, then the
+post title is parsed in an attempt to interpret it as either
+'ARTIST NAME - TRACK TITLE' or 'TRACK TITLE - ARTIST NAME'. These components
+are then used to search the Spotify API for tracks. The resulting tracks have
+their title and artist fields compared with the reddit post title and are added
+to the respective playlist if the Levenshtein similarity passes a threshold.
 """
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-import inspect
 import json
 import logging
 from operator import itemgetter
 import os
-from traceback import format_exc
+import sys
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import asyncpraw as praw
 from fuzzywuzzy import fuzz
+import pyperclip
 import spotipy
-from spotipy.oauth2 import SpotifyOAuth
 from tqdm import tqdm
 
+from djtools.spotify.helpers import get_playlist_ids, get_spotify_client
 from djtools.utils.helpers import catch, raise_
 
 
@@ -33,6 +40,94 @@ for logger in ["asyncprawcore", "spotipy", "urllib3"]:
 logging.getLogger("asyncio").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
+
+
+
+def get_reddit_client(
+    config: Dict[str, Union[List, Dict, str, bool, int, float]]
+) -> praw.Reddit:
+    """Instantiate a Reddit API client.
+
+    Args:
+        config: Configuration object.
+
+    Raises:
+        KeyError: "REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET", and
+            "REDDIT_USER_AGENT" must be configured.
+
+    Returns:
+        Reddit API client.
+    """
+    try:
+        reddit = praw.Reddit(
+            client_id=config["REDDIT_CLIENT_ID"],
+            client_secret=config["REDDIT_CLIENT_SECRET"],
+            user_agent=config["REDDIT_USER_AGENT"],
+            timeout=30,
+        )
+    except KeyError:
+        raise KeyError(
+            "Using the spotify_playlist_builder module requires the following "
+            "config options: REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, "
+            "REDDIT_USER_AGENT"
+        ) from KeyError
+    
+    return reddit
+
+
+def write_playlist_ids(playlist_ids: Dict[str, str]):
+    """Write playlist IDs to file.
+
+    Args:
+        playlist_ids: Dictionary of Spotify playlist names mapped to playlist
+            IDs. 
+    """
+    ids_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        "configs",
+        "spotify_playlists.json",
+    ).replace(os.sep, "/")
+    with open(ids_path, mode="w", encoding="utf-8") as _file:
+        json.dump(playlist_ids, _file, indent=2)
+
+
+def populate_playlist(
+    playlist_name: str,
+    playlist_ids: Dict[str, str],
+    spotify_username: str,
+    spotify: spotipy.Spotify,
+    tracks: List[Tuple[str]], 
+    playlist_limit: Optional[int] = sys.maxsize,
+    verbosity: Optional[int] = 0,
+):
+    playlist_id = playlist_ids.get(playlist_name)
+    playlist = None
+    if playlist_id and tracks:
+        playlist = update_existing_playlist(
+            spotify,
+            playlist_id,
+            tracks,
+            playlist_limit,
+            verbosity,
+        )
+    elif tracks:
+        logger.warning(
+            f'Unable to get ID for {playlist_name}...creating a new '
+            "playlist"
+        )
+        playlist = build_new_playlist(
+            spotify, spotify_username, playlist_name, tracks
+        )
+        playlist_ids[playlist_name] = playlist["id"]
+    elif playlist_id:
+        playlist = spotify.playlist(playlist_id)
+    if playlist:
+        logger.info(
+            f'"{playlist["name"]}": '
+            f'{playlist["external_urls"].get("spotify")}'
+        )
+    
+    return playlist_ids
 
 
 def update_auto_playlists(
@@ -57,10 +152,6 @@ async def async_update_auto_playlists(
         config: Configuration object.
     
     Raises:
-        KeyError: "SPOTIFY_CLIENT_ID", "SPOTIFY_CLIENT_SECRET", and
-            "SPOTIFY_REDIRECT_URI" must be configured.
-        KeyError: "REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET", and
-            "REDDIT_USER_AGENT" must be configured.
         KeyError: "SPOTIFY_USERNAME" must be configured.
     """
     if not config.get("AUTO_PLAYLIST_SUBREDDITS"):
@@ -70,53 +161,9 @@ async def async_update_auto_playlists(
         )
         return
 
-    try:
-        spotify = spotipy.Spotify(
-            auth_manager=SpotifyOAuth(
-                client_id=config["SPOTIFY_CLIENT_ID"],
-                client_secret=config["SPOTIFY_CLIENT_SECRET"],
-                redirect_uri=config["SPOTIFY_REDIRECT_URI"],
-                scope="playlist-modify-public",
-                requests_timeout=30,
-                cache_handler=spotipy.CacheFileHandler(
-                    cache_path=os.path.join(
-                        os.path.dirname(__file__), ".spotify.cache"
-                    ).replace(os.sep, "/"),
-                ),
-            )
-        )
-    except KeyError:
-        raise KeyError(
-            "Using the spotify_playlist_builder module requires the following "
-            "config options: SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, "
-            "SPOTIFY_REDIRECT_URI"
-        ) from KeyError 
-    except Exception as exc:
-        raise Exception(f"Failed to instantiate the Spotify client: {exc}")
-
-    try:
-        reddit = praw.Reddit(
-            client_id=config["REDDIT_CLIENT_ID"],
-            client_secret=config["REDDIT_CLIENT_SECRET"],
-            user_agent=config["REDDIT_USER_AGENT"],
-            timeout=30,
-        )
-    except KeyError:
-        raise KeyError(
-            "Using the spotify_playlist_builder module requires the following "
-            "config options: REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, "
-            "REDDIT_USER_AGENT"
-        ) from KeyError
-
-    subreddit_playlist_ids = {}
-    ids_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)),
-        "configs",
-        "playlist_builder.json",
-    ).replace(os.sep, "/")
-    if os.path.exists(ids_path):
-        with open(ids_path, mode="r", encoding="utf-8") as _file:
-            subreddit_playlist_ids = json.load(_file)
+    spotify = get_spotify_client(config)
+    reddit = get_reddit_client(config)
+    playlist_ids = get_playlist_ids()
     
     praw_cache = {}
     cache_file = os.path.join(
@@ -126,62 +173,42 @@ async def async_update_auto_playlists(
         with open(cache_file, mode="r", encoding="utf-8") as _file:
             praw_cache = json.load(_file)
     
-    tasks = []
-    for subreddit in config["AUTO_PLAYLIST_SUBREDDITS"]:
-        playlist_id = subreddit_playlist_ids.get(subreddit["name"])
-        if not playlist_id:
-            try:
-                username = config["SPOTIFY_USERNAME"]
-            except KeyError:
-                raise KeyError(
-                    "Building a new playlist in the spotify_playlist_builder "
-                    "module requires the config option SPOTIFY_USERNAME"
-                ) from KeyError
-        tasks.append(
-            asyncio.create_task(
-                get_subreddit_posts(
-                    spotify,
-                    reddit,
-                    subreddit,
-                    config,
-                    praw_cache,
-                )
+    try:
+        username = config["SPOTIFY_USERNAME"]
+    except KeyError:
+        raise KeyError(
+            "The spotify_playlist_builder module requires the config option "
+            "SPOTIFY_USERNAME"
+        ) from KeyError
+
+    tasks = [
+        asyncio.create_task(
+            get_subreddit_posts(
+                spotify,
+                reddit,
+                subreddit,
+                config,
+                praw_cache,
             )
         )
+        for subreddit in config["AUTO_PLAYLIST_SUBREDDITS"]
+    ]
 
     for task in asyncio.as_completed(tasks):
         tracks, subreddit = await task
-        playlist_id = subreddit_playlist_ids.get(subreddit["name"])
-        playlist = None
-        if playlist_id and tracks:
-            playlist = update_existing_playlist(
-                spotify,
-                playlist_id,
-                tracks,
-                subreddit["limit"],
-                config.get("VERBOSITY", 0),
-            )
-        elif tracks:
-            logger.warning(
-                f'Unable to get ID for {subreddit["name"]}...creating a new '
-                "playlist"
-            )
-            playlist = build_new_playlist(
-                spotify, username, subreddit["name"], tracks
-            )
-            subreddit_playlist_ids[subreddit["name"]] = playlist["id"]
-        elif playlist_id:
-            playlist = spotify.playlist(playlist_id)
-        if playlist:
-            logger.info(
-                f'"{playlist["name"]}": '
-                f'{playlist["external_urls"].get("spotify")}'
-            )
+        playlist_ids = populate_playlist(
+            playlist_name=subreddit["name"],
+            playlist_ids=playlist_ids,
+            spotify_username=username,
+            spotify=spotify,
+            tracks=tracks,
+            playlist_limit=subreddit["limit"],
+            verbosity=config.get("VERBOSITY", 0),
+        )
     
     await reddit.close()
 
-    with open(ids_path, mode="w", encoding="utf-8") as _file:
-        json.dump(subreddit_playlist_ids, _file, indent=2)
+    write_playlist_ids(playlist_ids)
 
     with open(cache_file, mode="w", encoding="utf-8") as _file:
         json.dump(praw_cache, _file)
@@ -320,9 +347,13 @@ def fuzzy_match(
     if not (title and artist):
         return
 
+    query = (
+        f'{title.replace(" ", "+")}+'
+        f'{artist.replace(" ", "+").replace(",", "")}'
+    )
     try:
         results = spotify.search(
-            q=f'{title.replace(" ", "+")}+{artist.replace(" ", "+")}',
+            q=query,
             type="track",
             limit=50,
         )
@@ -359,6 +390,7 @@ def parse_title(title: str) -> Tuple[str]:
 
     title, artist = map(str.strip, [title.split("(")[0], artist.split("(")[0]])
     title, artist = map(str.strip, [title.split("[")[0], artist.split("[")[0]])
+    artist = ", ".join(sorted([x.strip() for x in artist.split(",")]))
 
     return title, artist
 
@@ -390,7 +422,7 @@ def filter_results(
         try:
             results = spotify.next(results["tracks"])
         except Exception:
-            logger.warning(f"Failed to get next tracks: {format_exc()}")
+            logger.warning(f"Failed to get next tracks for {title, artist}")
             break
         tracks.extend(
             filter_tracks(results["tracks"]["items"], threshold, title, artist)
@@ -420,7 +452,7 @@ def filter_tracks(
     """
     results = []
     for track in tracks:
-        artists = {x["name"].lower() for x in track["artists"]}
+        artists = sorted({x["name"].lower() for x in track["artists"]})
         title_match = max(
             fuzz.ratio(track["name"].lower(), title.lower()),
             fuzz.ratio(track["name"].lower(), artist.lower())
@@ -428,7 +460,8 @@ def filter_tracks(
         if title_match >= threshold:
             if any(
                 fuzz.ratio(a, part) >= threshold
-                for part in [title.lower(), artist.lower()] for a in artists
+                for part in [title.lower(), artist.lower()]
+                for a in artists + [", ".join(artists)]
             ):
                 results.append((track, title_match))
 
@@ -564,8 +597,124 @@ def build_new_playlist(
     """
     ids = list(zip(*new_tracks))[0]
     playlist = spotify.user_playlist_create(
-        username, name=f"r/{subreddit.title()}"
+        username, name=f"{subreddit.title()}"
     )
     spotify.playlist_add_items(playlist["id"], ids, position=None)
 
     return playlist
+
+
+def playlist_from_upload(
+    config: Dict[str, Union[List, Dict, str, bool, int, float]],
+):
+    """Generates a Spotify playlist using a Discord webhook output.
+
+    If "upload_output", a path to a text file containing the pasted output of
+    the upload_music Discord webhook output, is provided, this is used to
+    generate a Spotify playlist of those uploaded tracks. If this is not
+    provided, then the clipboard contents are used instead.
+
+    Args:
+        config: Configuration object.
+
+    Raises:
+        KeyError: "PLAYLIST_FROM_UPLOAD" must be configured.
+        FileNotFoundError: If "upload_output" is provided as a text file, that
+            file must exist.
+        RuntimeError: If not providing "upload_output" as a text file, it must
+            be provided as system clipboard data.
+        ValueError: "PLAYLIST_FROM_UPLOAD" must be either a file or boolean.
+        KeyError: "SPOTIFY_USERNAME" must be provided to buld a new playlist.
+    """
+    try:
+        upload_output = config["PLAYLIST_FROM_UPLOAD"]
+    except KeyError:
+        raise KeyError(
+            "Using the playlist_from_upload function of the "
+            "spotify_playlist_builder module requires the "
+            "PLAYLIST_FROM_UPLOAD config option"
+        ) from KeyError 
+
+    # Load upload output from a text file.
+    if isinstance(upload_output, str):
+        if not os.path.exists(upload_output):
+            raise FileNotFoundError(f"{upload_output} does not exit")
+        with open(upload_output, mode="r", encoding="utf-8") as _file:
+            data = _file.read()
+    # Load upload output from the system's clipboard.
+    elif isinstance(upload_output, bool):
+        data = pyperclip.paste()
+        if not data:
+            raise RuntimeError(
+                "Generating a Spotify playlist from an upload requires either "
+                '"upload_output", a path to the upload_music Discord webhook '
+                "output, or that output to be copied to the system's clipboard"
+            )
+    else:
+        raise ValueError(
+            "Config option PLAYLIST_FROM_UPLOAD must be either a path to a "
+            f'file or a boolean, but got "{upload_output}"'
+        )
+
+    try:
+        username = config["SPOTIFY_USERNAME"]
+    except KeyError:
+        raise KeyError(
+            "The spotify_playlist_builder module requires the config option "
+            "SPOTIFY_USERNAME"
+        ) from KeyError
+
+    spotify = get_spotify_client(config)
+    playlist_ids = get_playlist_ids()
+
+    # Get (track title, artist name) tuples from file uploads.
+    user = ""
+    files = []
+    for line in data.split("\n"):
+        if not line.startswith(" "):
+            if not user:
+                user = line.split("/")[0]
+            continue
+        file_, _ = os.path.splitext(line)
+        try:
+            track, artist = file_.strip().split(" - ")
+        except ValueError:
+            logger.warning(f'{line} is not a valid file')
+            continue
+        files.append((track, artist))
+    files = list(filter(lambda x: len(x) == 2, files))
+
+    # Query Spotify for files in upload output.
+    threshold = config.get("AUTO_PLAYLIST_FUZZ_RATIO", 50)
+    tracks = []
+    for title, artist in files:
+        artist = ", ".join(sorted([x.strip() for x in artist.split(",")]))
+        query = (
+            f'{title.replace(" ", "+")}+'
+            f'{artist.replace(" ", "+").replace(",", "")}'
+        )
+        try:
+            results = spotify.search(q=query, type="track", limit=50)
+        except Exception as exc:
+            logger.error(f'Error searching for "{title} - {artist}": {exc}')
+            continue
+
+        match = filter_results(spotify, results, threshold, title, artist)
+        if match:
+            artists = ", ".join([y["name"] for y in match["artists"]])
+            logger.info(f"Matched {match['name']} - {artists} to {title} - {artist}")
+        else:
+            logger.warning(f"Could not find a match for {title} - {artist}")
+            continue
+        tracks.append((match["id"], f'{match["name"]} - {artists}'))
+    
+    playlist_ids = populate_playlist(
+        playlist_name=f"{user} Uploads",
+        playlist_ids=playlist_ids,
+        spotify_username=username,
+        spotify=spotify,
+        tracks=tracks,
+        verbosity=config.get("VERBOSITY", 0),
+    )
+
+    write_playlist_ids(playlist_ids)

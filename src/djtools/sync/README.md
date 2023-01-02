@@ -27,4 +27,6 @@ The setup required for all these operations is having `awscli` installed and con
 # Usage
 To run any of the four sync operations {`DOWNLOAD_XML`, `DOWNLOAD_MUSIC`, `UPLOAD_XML`, `UPLOAD_MUSIC`}, just set the corresponding config option to true. If running `DOWNLOAD_XML` make sure `XML_IMPORT_USER` is set to the proper `beatcloud` user. Before uploading / after downloading, you can follow any of the prescribed workflows specified under the main README's "Basic Information" section to ensure consistency both in your local library and in the `beatcloud`.
 
+If the `DOWNLOAD_INCLUDE_SPOTIFY` options is set to the name of a Spotify playlist that exists in your `spotify_playlists.json` config, only tracks appearing in that playlist will be downloaded from the Beatcloud.
+
 `NOTE`: you can run `UPLOAD_MUSIC` and / or `DOWNLOAD_MUSIC` with the `--dryrun` flag to inspect the result of the same sync operations without actually performing them.

@@ -1,14 +1,13 @@
-import os
 from unittest import mock
 
 import pytest
 
-from djtools.spotify.spotify_playlist_checker import (
+from djtools.spotify.helpers import (
     add_tracks,
-    check_playlists,
     compute_distance,
+    get_playlist_ids,
+    get_spotify_client,
     find_matches,
-    get_beatcloud_tracks,
     get_playlist_tracks,
     get_spotify_tracks,
 )
@@ -18,6 +17,38 @@ from test_data import MockOpen
 pytest_plugins = [
     "test_data",
 ]
+
+
+@mock.patch("djtools.spotify.spotify_playlist_builder.spotipy.Spotify")
+def test_get_spotify_client(test_config):
+    test_config["SPOTIFY_CLIENT_ID"] = "test_client_id"
+    test_config["SPOTIFY_CLIENT_SECRET"] = "test_client_secret"
+    test_config["SPOTIFY_REDIRECT_URI"] = "test_redirect_uri"
+    get_spotify_client(test_config)
+
+
+def test_get_spotify_clientmissing_spotify_configs(test_config):
+    del test_config["SPOTIFY_CLIENT_ID"]
+    with pytest.raises(
+        KeyError,
+        match="Using the spotify package requires the following config "
+            "options: SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, "
+            "SPOTIFY_REDIRECT_URI"
+    ):
+        get_spotify_client(test_config)
+        
+
+def test_get_spotify_client_bad_spotify_configs(test_config):
+    with pytest.raises(
+        Exception,
+        match="Failed to instantiate the Spotify client",
+    ):
+        get_spotify_client(test_config)
+
+
+def test_get_playlist_ids():
+    playlist_ids = get_playlist_ids()
+    assert isinstance(playlist_ids, dict)
 
 
 def test_add_tracks():
@@ -48,52 +79,6 @@ def test_add_tracks():
     ]
     output = add_tracks(test_input)
     assert output == expected
-
-
-@pytest.mark.parametrize("get_spotify_tracks_flag", [True, False])
-@pytest.mark.parametrize(
-    "beatcloud_tracks", [[], ["track title - artist name"]]
-)
-@mock.patch(
-    "djtools.spotify.spotify_playlist_checker.get_beatcloud_tracks",
-    return_value=["track title - artist name"],
-)
-@mock.patch(
-    "djtools.spotify.spotify_playlist_checker.get_spotify_tracks",
-    return_value={"playlist": ["track title - artist name"]},
-)
-def test_check_playlists(
-    mock_get_spotify_tracks,
-    mock_get_beatcloud_tracks,
-    test_config,
-    get_spotify_tracks_flag,
-    beatcloud_tracks,
-    caplog,
-):
-    caplog.set_level("INFO")
-    if not get_spotify_tracks_flag:
-        mock_get_spotify_tracks.return_value = []
-    ret_beatcloud_tracks = check_playlists(test_config, beatcloud_tracks)
-    if not get_spotify_tracks_flag:
-        record = caplog.records.pop(0)
-        assert record.message == (
-            "There are no Spotify tracks; make sure SPOTIFY_CHECK_PLAYLISTS "
-            "has one or more keys from playlist_checker.json"
-        )
-    else:
-        if not beatcloud_tracks:
-            assert (
-                ret_beatcloud_tracks ==
-                mock_get_beatcloud_tracks.return_value
-            )
-        assert caplog.records[0].message == (
-            "Spotify playlist(s) / beatcloud matches: "
-            f"{len(mock_get_spotify_tracks.return_value)}"
-        )
-        assert caplog.records[1].message == "playlist:"
-        assert caplog.records[2].message == (
-            "\t100: track title - artist name | track title - artist name"
-        )
 
 
 @pytest.mark.parametrize("track_a", ["some track", "another track"])
@@ -142,30 +127,9 @@ def test_find_matches(test_config):
     assert [x[1] for x in matches] == expected_matches
 
 
-@pytest.mark.parametrize(
-    "proc_dump",
-    [
-        [],
-        [
-            "aweeeezy/Bass/2022-12-21/track - artist.mp3",
-            "aweeeezy/Techno/2022-12-21/track - artist.mp3",
-        ]
-    ]
-)
-@mock.patch("os.popen")
-def test_get_beatcloud_tracks(mock_os_popen, proc_dump):
-    process = mock_os_popen.return_value.__enter__.return_value
-    process.read.side_effect = lambda: "\n".join(proc_dump)
-    tracks = get_beatcloud_tracks()
-    mock_os_popen.assert_called_once()
-    assert len(tracks) == len(proc_dump)
-    for track, line in zip(tracks, proc_dump):
-        assert track == os.path.splitext(os.path.basename(line))[0]
-
-
-@mock.patch("djtools.spotify.spotify_playlist_checker.spotipy.Spotify")
+@mock.patch("djtools.spotify.helpers.spotipy.Spotify")
 @mock.patch(
-    "djtools.spotify.spotify_playlist_checker.spotipy.Spotify.next",
+    "djtools.spotify.helpers.spotipy.Spotify.next",
     return_value={
         "items": [
             {
@@ -181,7 +145,7 @@ def test_get_beatcloud_tracks(mock_os_popen, proc_dump):
     },
 )
 @mock.patch(
-    "djtools.spotify.spotify_playlist_checker.spotipy.Spotify.playlist",
+    "djtools.spotify.helpers.spotipy.Spotify.playlist",
     return_value={
         "tracks": {
             "items": [
@@ -221,9 +185,9 @@ def test_get_playlist_tracks(
     assert tracks == expected
 
 
-@mock.patch("djtools.spotify.spotify_playlist_checker.spotipy.Spotify")
+@mock.patch("djtools.spotify.helpers.spotipy.Spotify")
 @mock.patch(
-    "djtools.spotify.spotify_playlist_checker.spotipy.Spotify.playlist",
+    "djtools.spotify.helpers.spotipy.Spotify.playlist",
     side_effect=Exception()
 )
 def test_get_playlist_tracks_handles_spotipy_exception(
@@ -239,11 +203,11 @@ def test_get_playlist_tracks_handles_spotipy_exception(
 
 @pytest.mark.parametrize("verbosity", [0, 1])
 @mock.patch("builtins.open", MockOpen(
-    files=["playlist_checker.json"],
+    files=["spotify_playlists.json"],
     content='{"r/techno | Top weekly Posts": "5gex4eBgWH9nieoVuV8hDC"}',
 ).open)
 @mock.patch(
-    "djtools.spotify.spotify_playlist_checker.get_playlist_tracks",
+    "djtools.spotify.helpers.get_playlist_tracks",
     return_value={"some track - some artist"},
 )
 def test_get_spotify_tracks(
@@ -260,7 +224,7 @@ def test_get_spotify_tracks(
     tracks = get_spotify_tracks(test_config)
     assert isinstance(tracks, dict)
     assert caplog.records[0].message == (
-        "playlist A not in playlist_checker.json"
+        "playlist A not in spotify_playlists.json"
     )
     assert caplog.records[1].message == (
         'Getting tracks from Spotify playlist "r/techno | Top weekly Posts"...'
@@ -277,8 +241,8 @@ def test_get_spotify_tracks_no_spotify_creds(test_config):
     del test_config["SPOTIFY_REDIRECT_URI"]
     with pytest.raises(
         KeyError,
-        match="Using the playlist_checker module requires the following "
-            "config options: SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, "
+        match="Using the spotify package requires the following config "
+            "options: SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, "
             "SPOTIFY_REDIRECT_URI"
     ):
         get_spotify_tracks(test_config)

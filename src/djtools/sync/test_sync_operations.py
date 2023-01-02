@@ -26,9 +26,20 @@ def test_download_music_no_usb_path(test_config):
         download_music(test_config)
 
 
-def test_download_music(test_config, tmpdir, caplog):
+@pytest.mark.parametrize("playlist_name", ["", "playlist Uploads"])
+@mock.patch(
+    "djtools.sync.sync_operations.compare_tracks",
+    return_value=(
+        ["file.mp3"],
+        ["playlist/file.mp3"],
+    ),
+)
+def test_download_music(
+    mock_compare_tracks, playlist_name, test_config, tmpdir, caplog
+):
     caplog.set_level("INFO")
     test_config["USB_PATH"] = tmpdir
+    test_config["DOWNLOAD_INCLUDE_SPOTIFY"] = playlist_name
     write_path = os.path.join(
         tmpdir, "DJ Music", "file.mp3"
     ).replace(os.sep, "/")
@@ -38,8 +49,10 @@ def test_download_music(test_config, tmpdir, caplog):
         "sync",
         "s3://dj.beatcloud.com/dj/music/",
         os.path.dirname(write_path),
-        "--size-only",
     ]
+    if playlist_name:
+        cmd += ["--exclude", "*", "--include", "playlist/file.mp3"]
+    cmd += ["--size-only"]
     with mock.patch(
         "djtools.sync.sync_operations.run_sync",
         side_effect=lambda *args, **kwargs: open(

@@ -11,7 +11,7 @@ from typing import Dict, List, Union
 
 from djtools.sync.helpers import parse_sync_command, rewrite_xml, run_sync, \
                                  webhook
-from djtools.utils.helpers import make_dirs
+from djtools.utils.helpers import compare_tracks, make_dirs
 
 
 logger = logging.getLogger(__name__)
@@ -94,14 +94,19 @@ def upload_xml(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
     os.system(cmd)
 
 
-def download_music(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
+def download_music(
+    config: Dict[str, Union[List, Dict, str, bool, int, float]],
+    beatcloud_tracks: List[str] = [],
+):
     """This function syncs tracks from the beatcloud to "USB_PATH".
-        "AWS_USE_DATE_MODIFIED" can be used in order to redownload tracks that
-        already exist in "USB_PATH" but have been modified since the last time
-        they were downloaded (i.e. ID3 tags have been altered).
+
+    If "DOWNLOAD_INCLUDE_SPOTIFY" is set to a playlist name that exists in
+    "spotify_playlists.json", then "DOWNLOAD_INCLUDE_DIRS" will be populated
+    with tracks in that playlist that match Beatcloud tracks.
 
     Args:
         config: Configuration object.
+        beatcloud_tracks: List of track artist - titles from S3.
 
     Raises:
         KeyError: "USB_PATH" must be configured.
@@ -117,6 +122,27 @@ def download_music(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
     
     if not os.path.exists(usb_path):
         raise FileNotFoundError(f'USB_PATH "{usb_path}" does not exist!')
+    
+    playlist_name = config.get("DOWNLOAD_INCLUDE_SPOTIFY")
+    if playlist_name:
+        user = playlist_name.split("Uploads")[0].strip()
+        cached_playlists = config.get("SPOTIFY_CHECK_PLAYLISTS", [])
+        cached_local_dirs = config.get("LOCAL_CHECK_DIRS", [])
+        config["SPOTIFY_CHECK_PLAYLISTS"] = [playlist_name]
+        config["LOCAL_CHECK_DIRS"] = []
+        beatcloud_tracks, beatcloud_matches = compare_tracks(
+            config, beatcloud_tracks=beatcloud_tracks
+        )
+        config["DOWNLOAD_INCLUDE_DIRS"] = [
+            os.path.join(
+                user,
+                path.split(os.path.join(user, "").replace(os.sep, "/"))[-1]
+            )
+            for path in beatcloud_matches
+        ]
+        config["DOWNLOAD_EXCLUDE_DIRS"] = []
+        config["SPOTIFY_CHECK_PLAYLISTS"] = cached_playlists
+        config["LOCAL_CHECK_DIRS"] = cached_local_dirs
 
     dest = os.path.join(usb_path, "DJ Music").replace(os.sep, "/")
     glob_path = Path(dest)
@@ -142,6 +168,8 @@ def download_music(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
         logger.info(f"Found {len(difference)} new files")
         for diff in difference:
             logger.info(f"\t{diff}")
+    
+    return beatcloud_tracks
 
 
 def download_xml(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
