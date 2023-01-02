@@ -118,8 +118,7 @@ After running this command, base templates for all config files used by `djtools
 
 Please be sure to checkout the package-level README files regarding the usage of the other config files which must also be stored in the same location as `config.json`:
 * `spotify`
-    - [playlist_builder.json](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/spotify)
-    - [playlist_checker.json](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/spotify)
+    - [playlists.json](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/spotify)
 * `sync`
     - [registered_users.json](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/sync)
 * `rekordbox`

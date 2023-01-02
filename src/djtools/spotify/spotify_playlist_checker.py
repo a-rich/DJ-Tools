@@ -38,7 +38,7 @@ def check_playlists(
     if not spotify_tracks:
         logger.warning(
             "There are no Spotify tracks; make sure SPOTIFY_CHECK_PLAYLISTS "
-            "has one or more keys from playlist_checker.json"
+            "has one or more keys from playlists.json"
         )
         return
     if not beatcloud_tracks:
@@ -68,12 +68,12 @@ def get_spotify_tracks(
         Spotify track titles and artist names keyed by playlist name.
     """
     spotify = get_spotify_client(config)
-    playlist_ids = get_playlist_ids("playlist_checker.json")
+    playlist_ids = get_playlist_ids()
     playlist_tracks = {}
     for playlist in config.get("SPOTIFY_CHECK_PLAYLISTS", []):
         playlist_id = playlist_ids.get(playlist)
         if not playlist_id:
-            logger.error(f"{playlist} not in playlist_checker.json")
+            logger.error(f"{playlist} not in playlists.json")
             continue
 
         logger.info(f'Getting tracks from Spotify playlist "{playlist}"...')

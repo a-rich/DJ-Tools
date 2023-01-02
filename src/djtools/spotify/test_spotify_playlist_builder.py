@@ -97,7 +97,7 @@ async def test_async_update_auto_playlists(
     with mock.patch(
         "builtins.open",
         MockOpen(
-            files=["playlist_builder.json", ".praw.cache"],
+            files=["playlists.json", ".praw.cache"],
             content='{"jungle": "some-id"}' if got_playlist_ids else "{}",
         ).open
     ):
@@ -688,7 +688,7 @@ def test_playlist_from_upload(
         test_config["PLAYLIST_FROM_UPLOAD"] = path
     with mock.patch(
         "builtins.open",
-        MockOpen(files=["playlist_builder.json"], content="{}").open
+        MockOpen(files=["playlists.json"], content="{}").open
     ):
         playlist_from_upload(test_config)
 
@@ -771,7 +771,7 @@ def test_playlist_from_upload_handles_spotify_exception(
     test_config["SPOTIFY_REDIRECT_URI"] = "test_redirect_uri"
     with mock.patch(
         "builtins.open",
-        MockOpen(files=["playlist_builder.json"], content="{}").open
+        MockOpen(files=["playlists.json"], content="{}").open
     ):
         playlist_from_upload(test_config)
     assert caplog.records[0].message.startswith(
@@ -796,7 +796,7 @@ def test_playlist_from_upload_handles_non_match(
     test_config["PLAYLIST_FROM_UPLOAD"] = True
     with mock.patch(
         "builtins.open",
-        MockOpen(files=["playlist_builder.json"], content="{}").open
+        MockOpen(files=["playlists.json"], content="{}").open
     ):
         playlist_from_upload(test_config)
     assert caplog.records[0].message == (

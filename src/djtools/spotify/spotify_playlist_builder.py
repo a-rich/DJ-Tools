@@ -85,7 +85,7 @@ def write_playlist_ids(playlist_ids: Dict[str, str]):
     ids_path = os.path.join(
         os.path.dirname(os.path.dirname(__file__)),
         "configs",
-        "playlist_builder.json",
+        "playlists.json",
     ).replace(os.sep, "/")
     with open(ids_path, mode="w", encoding="utf-8") as _file:
         json.dump(playlist_ids, _file, indent=2)
@@ -163,7 +163,7 @@ async def async_update_auto_playlists(
 
     spotify = get_spotify_client(config)
     reddit = get_reddit_client(config)
-    playlist_ids = get_playlist_ids(config_file="playlist_builder.json")
+    playlist_ids = get_playlist_ids()
     
     praw_cache = {}
     cache_file = os.path.join(
@@ -665,7 +665,7 @@ def playlist_from_upload(
         ) from KeyError
 
     spotify = get_spotify_client(config)
-    playlist_ids = get_playlist_ids(config_file="playlist_builder.json")
+    playlist_ids = get_playlist_ids()
 
     # Get (track title, artist name) tuples from file uploads.
     user = ""

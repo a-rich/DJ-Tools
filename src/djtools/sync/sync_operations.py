@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 from typing import Dict, List, Union
 
+from djtools.spotify.helpers import get_playlist_ids, get_spotify_client
 from djtools.sync.helpers import parse_sync_command, rewrite_xml, run_sync, \
                                  webhook
 from djtools.utils.helpers import make_dirs
@@ -117,6 +118,10 @@ def download_music(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
     
     if not os.path.exists(usb_path):
         raise FileNotFoundError(f'USB_PATH "{usb_path}" does not exist!')
+    
+    playlist_name = config.get("DOWNLOAD_INCLUDE_SPOTIFY")
+    if playlist_name:
+        playlist_ids = get
 
     dest = os.path.join(usb_path, "DJ Music").replace(os.sep, "/")
     glob_path = Path(dest)

@@ -17,9 +17,9 @@ def test_get_spotify_clientmissing_spotify_configs(test_config):
     del test_config["SPOTIFY_CLIENT_ID"]
     with pytest.raises(
         KeyError,
-        match="Using the spotify_playlist_builder module requires the "
-            "following config options: SPOTIFY_CLIENT_ID, "
-            "SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI",
+        match="Using the spotify package requires the following config "
+            "options: SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, "
+            "SPOTIFY_REDIRECT_URI"
     ):
         get_spotify_client(test_config)
         
@@ -32,10 +32,6 @@ def test_get_spotify_client_bad_spotify_configs(test_config):
         get_spotify_client(test_config)
 
 
-@pytest.mark.parametrize(
-    "config_file",
-    ["playlist_builder.json", "playlist_checker.json", "nonexistent.json"],
-)
-def test_get_playlist_ids(config_file):
-    playlist_ids = get_playlist_ids(config_file=config_file)
+def test_get_playlist_ids():
+    playlist_ids = get_playlist_ids()
     assert isinstance(playlist_ids, dict)

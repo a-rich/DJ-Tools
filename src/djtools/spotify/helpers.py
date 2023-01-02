@@ -42,9 +42,8 @@ def get_spotify_client(
         )
     except KeyError:
         raise KeyError(
-            "Using the spotify_playlist_builder module requires the following "
-            "config options: SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, "
-            "SPOTIFY_REDIRECT_URI"
+            "Using the spotify package requires the following config options: "
+            "SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI"
         ) from KeyError 
     except Exception as exc:
         raise Exception(f"Failed to instantiate the Spotify client: {exc}")
@@ -52,11 +51,8 @@ def get_spotify_client(
     return spotify
 
 
-def get_playlist_ids(config_file: str) -> Dict[str, str]:
+def get_playlist_ids() -> Dict[str, str]:
     """Load Spotify playlist names -> IDs lookup.
-    
-    Args:
-        config_file: JSON with Spotify playlist names and IDs.
 
     Returns:
         Dictionary of Spotify playlist names mapped to playlist IDs. 
@@ -65,7 +61,7 @@ def get_playlist_ids(config_file: str) -> Dict[str, str]:
     ids_path = os.path.join(
         os.path.dirname(os.path.dirname(__file__)),
         "configs",
-        config_file,
+        "playlists.json",
     ).replace(os.sep, "/")
     if os.path.exists(ids_path):
         with open(ids_path, mode="r", encoding="utf-8") as _file:

@@ -78,7 +78,7 @@ def test_check_playlists(
         record = caplog.records.pop(0)
         assert record.message == (
             "There are no Spotify tracks; make sure SPOTIFY_CHECK_PLAYLISTS "
-            "has one or more keys from playlist_checker.json"
+            "has one or more keys from playlists.json"
         )
     else:
         if not beatcloud_tracks:
@@ -239,7 +239,7 @@ def test_get_playlist_tracks_handles_spotipy_exception(
 
 @pytest.mark.parametrize("verbosity", [0, 1])
 @mock.patch("builtins.open", MockOpen(
-    files=["playlist_checker.json"],
+    files=["playlists.json"],
     content='{"r/techno | Top weekly Posts": "5gex4eBgWH9nieoVuV8hDC"}',
 ).open)
 @mock.patch(
@@ -260,7 +260,7 @@ def test_get_spotify_tracks(
     tracks = get_spotify_tracks(test_config)
     assert isinstance(tracks, dict)
     assert caplog.records[0].message == (
-        "playlist A not in playlist_checker.json"
+        "playlist A not in playlists.json"
     )
     assert caplog.records[1].message == (
         'Getting tracks from Spotify playlist "r/techno | Top weekly Posts"...'
@@ -277,8 +277,8 @@ def test_get_spotify_tracks_no_spotify_creds(test_config):
     del test_config["SPOTIFY_REDIRECT_URI"]
     with pytest.raises(
         KeyError,
-        match="Using the spotify_playlist_builder module requires the following "
-            "config options: SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, "
+        match="Using the spotify package requires the following config "
+            "options: SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, "
             "SPOTIFY_REDIRECT_URI"
     ):
         get_spotify_tracks(test_config)
