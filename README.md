@@ -273,7 +273,7 @@ In general:
 #### Standardization
 To ensure Collection consistency and successful operation of `DJ Tools`, the following properties should be maintained for all music files. **Users of my beatcloud _must_ complete a minimum of (1), (2), and (3) prior to uploading**. Since track title, artist names, and melodic key are objective, and populating these tags prior to uploading saves every other user from repeating these efforts, it is greatly appreciated if users also complete (4) and (5). Futhermore, it is advised that users complete (6) through (11) as well, although users should expect to redo these themselves when integrating others' tracks since they are mostly subjective (with the exception of `beatgrid` and, to some extent, `color`):
 
-`NOTE`: obviously the manner in which any tags are used is up to the user; this is especially true for `comment` and `color` tags. However, `genre` and `My Tags` should be used for their intended purpose otherwise users won't be able to use the `rekordbox.rekordbox_playlist_builder` module.
+`NOTE`: obviously the manner in which any tags are used is up to the user; this is especially true for `comment` and `color` tags. However, `genre` and `My Tags` should be used for their intended purpose otherwise users won't be able to use the `rekordbox.playlist_builder` module.
 
 1. MP3 file format
 2. minimum 256 kbps bitrate (320 kbps preferred)
