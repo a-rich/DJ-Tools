@@ -7,42 +7,21 @@ with open('README.md', encoding='utf-8') as _file:
     LONG_DESCRIPTION = _file.read()
 
 REQUIREMENTS = [
-    "asyncpraw>=7.5.0",
+    "asyncpraw==7.6.1",
     "awscli>=1.22.27",
-    "beautifulsoup4>=4.10.0",
-    "botocore>=1.23.27",
-    "bs4>=0.0.1",
-    "certifi>=2021.10.8",
-    "charset-normalizer>=2.0.9",
-    "colorama>=0.4.3",
-    "coverage>=5.5",
-    "deprecation>=2.1.0",
-    "docutils>=0.15.2",
-    "eyed3>=0.9.6",
-    "filetype>=1.0.9",
-    "fuzzywuzzy>=0.18.0",
-    "idna>=3.3",
-    "jmespath>=0.10.0",
-    "lxml>=4.7.1",
-    "packaging>=21.3",
-    "praw>=7.5.0",
-    "prawcore>=2.3.0",
-    "pyasn1>=0.4.8",
-    "pyparsing>=3.0.6",
-    "python-dateutil>=2.8.2",
-    "PyYAML>=5.4.1",
-    "requests>=2.27.0",
-    "rsa>=4.7.2",
-    "s3transfer>=0.5.0",
-    "six>=1.16.0",
-    "soupsieve>=2.3.1",
-    "spotipy>=2.19.0",
-    "toml>=0.10.2",
-    "tqdm>=4.62.3",
-    "update-checker>=0.18.0",
-    "urllib3>=1.26.7",
-    "websocket-client>=1.2.3",
-    "youtube-dl>=2021.12.17"
+    "beautifulsoup4==4.11.1",
+    "eyed3==0.9.7",
+    "fuzzywuzzy==0.18.0",
+    "lxml==4.9.2",
+    "pyperclip==1.8.2",
+    "pytest==7.2.0",
+    "pytest-asyncio==0.20.3",
+    "pytest-cov==4.0.0",
+    "requests==2.28.0",
+    "setuptools==58.1.0",
+    "spotipy==2.21.0",
+    "tqdm==4.64.0",
+    "youtube-dl==2021.12.17",
 ]
 
 CLASSIFIERS = [
@@ -66,12 +45,12 @@ CLASSIFIERS = [
 ]
 
 EXTRAS = {
-        'levenshtein': ['python-Levenshtein>=0.12.2']
+        'levenshtein': ['python-Levenshtein==0.12.2']
 }
 
 setup(
     name='dj_beatcloud',
-    version='2.3.0',
+    version='2.4.0-beta.5',
     description='DJ Tools is a library for managing a collection of MP3 ' \
                 'and Rekordbox XML files.',
     long_description=LONG_DESCRIPTION,
