@@ -98,7 +98,7 @@ def main():
                 continue
             try:
                 logger.info(f"Beginning {operation}...")
-                if operation == "CHECK_TRACK_OVERLAP" or "DOWNLOAD_MUSIC":
+                if operation in ["CHECK_TRACK_OVERLAP", "DOWNLOAD_MUSIC"]:
                     beatcloud_cache = func(
                         config, beatcloud_tracks=beatcloud_cache
                     )
