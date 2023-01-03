@@ -55,8 +55,8 @@ def parse_sync_command(
         logger.critical(msg)
         raise ValueError(msg)
     if (
-        config.get("UPLOAD_INCLUDE_DIRS")
-        or config.get("DOWNLOAD_INCLUDE_DIRS")
+        (upload and config.get("UPLOAD_INCLUDE_DIRS"))
+        or (not upload and config.get("DOWNLOAD_INCLUDE_DIRS"))
     ):
         _cmd.extend(["--exclude", "*"])
         for _dir in config.get(
@@ -69,8 +69,8 @@ def parse_sync_command(
                 path = path + ext
             _cmd.extend(["--include", path])
     if (
-        config.get("UPLOAD_EXCLUDE_DIRS")
-        or config.get("DOWNLOAD_EXCLUDE_DIRS")
+        (upload and config.get("UPLOAD_EXCLUDE_DIRS"))
+        or (not upload and config.get("DOWNLOAD_EXCLUDE_DIRS"))
     ):
         _cmd.extend(["--include", "*"])
         for _dir in config.get(
