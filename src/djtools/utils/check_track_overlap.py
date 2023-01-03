@@ -35,21 +35,21 @@ def compare_tracks(
     """
     track_sets = []
     beatcloud_matches = []
-    if config.get("SPOTIFY_CHECK_PLAYLISTS"):
+    if config.get("CHECK_SPOTIFY_PLAYLISTS"):
         tracks = get_spotify_tracks(config)
         if not tracks:
             logger.warning(
                 "There are no Spotify tracks; make sure "
-                "SPOTIFY_CHECK_PLAYLISTS has one or more keys from "
+                "CHECK_SPOTIFY_PLAYLISTS has one or more keys from "
                 "spotify_playlists.json"
             )
         else:
             track_sets.append((tracks, "Spotify Playlist Tracks"))
-    if config.get("LOCAL_CHECK_DIRS"):
+    if config.get("CHECK_LOCAL_DIRS"):
         tracks = get_local_tracks(config)
         if not tracks:
             logger.warning(
-                "There are no local tracks; make sure LOCAL_CHECK_DIRS has "
+                "There are no local tracks; make sure CHECK_LOCAL_DIRS has "
                 'one or more directories containing one or more tracks'
             )
         else:

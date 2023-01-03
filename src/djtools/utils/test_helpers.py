@@ -121,7 +121,7 @@ def test_get_local_tracks(tmpdir, test_config):
         path = os.path.join(tmpdir, dir).replace(os.sep, "/")
         os.makedirs(path)
         check_dirs.append(path)
-    test_config["LOCAL_CHECK_DIRS"] = check_dirs + ["nonexistent_dir"]
+    test_config["CHECK_LOCAL_DIRS"] = check_dirs + ["nonexistent_dir"]
     beatcloud_tracks = ["test_file1.mp3", "test_file2.mp3"]
     for index, track in enumerate(beatcloud_tracks):
         with open(
@@ -138,12 +138,12 @@ def test_get_local_tracks(tmpdir, test_config):
 
 
 def test_get_local_tracks_no_dirs_key(test_config):
-    del test_config["LOCAL_CHECK_DIRS"]
+    del test_config["CHECK_LOCAL_DIRS"]
     with pytest.raises(KeyError):
         get_local_tracks(test_config)
 
 def test_get_local_tracks_no_dirs(test_config):
-    test_config["LOCAL_CHECK_DIRS"] = ""
+    test_config["CHECK_LOCAL_DIRS"] = ""
     with pytest.raises(ValueError):
         get_local_tracks(test_config)
 
@@ -314,7 +314,7 @@ def test_get_spotify_tracks(
     test_config["SPOTIFY_CLIENT_ID"] = "spotify client ID"
     test_config["SPOTIFY_CLIENT_SECRET"] = "spotify client secret"
     test_config["SPOTIFY_REDIRECT_URI"] = "spotify redirect uri"
-    test_config["SPOTIFY_CHECK_PLAYLISTS"] = [
+    test_config["CHECK_SPOTIFY_PLAYLISTS"] = [
         "playlist A", "r/techno | Top weekly Posts"
     ]
     test_config["VERBOSITY"] = verbosity

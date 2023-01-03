@@ -18,7 +18,7 @@ from djtools.utils.youtube_dl import youtube_dl
 UTILS_OPERATIONS = {
     "CHECK_TRACK_OVERLAP": compare_tracks,
     "COPY_PLAYLISTS_TRACKS": copy_playlists_tracks,
-    "YOUTUBE_DL": youtube_dl,
+    "YOUTUBE_DL_URL": youtube_dl,
 }
 
 __all__ = (

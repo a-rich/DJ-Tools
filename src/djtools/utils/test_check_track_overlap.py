@@ -32,8 +32,8 @@ def test_compare_tracks(
 ):
     caplog.set_level("INFO")
     playlist_name = "playlist"
-    test_config["SPOTIFY_CHECK_PLAYLISTS"] = [playlist_name]
-    test_config["LOCAL_CHECK_DIRS"] = [str(tmpdir)]
+    test_config["CHECK_SPOTIFY_PLAYLISTS"] = [playlist_name]
+    test_config["CHECK_LOCAL_DIRS"] = [str(tmpdir)]
     if get_spotify_tracks_flag:
         mock_get_spotify_tracks.return_value = {"playlist": ["track - artist"]}
     if get_local_tracks_flag:
@@ -43,12 +43,12 @@ def test_compare_tracks(
     )
     if not get_spotify_tracks_flag:
         assert caplog.records.pop(0).message == (
-            "There are no Spotify tracks; make sure SPOTIFY_CHECK_PLAYLISTS "
+            "There are no Spotify tracks; make sure CHECK_SPOTIFY_PLAYLISTS "
             "has one or more keys from spotify_playlists.json"
         )
     if not get_local_tracks_flag:
         assert caplog.records.pop(0).message == (
-            "There are no local tracks; make sure LOCAL_CHECK_DIRS has "
+            "There are no local tracks; make sure CHECK_LOCAL_DIRS has "
             'one or more directories containing one or more tracks'
         )
     if not beatcloud_tracks and (

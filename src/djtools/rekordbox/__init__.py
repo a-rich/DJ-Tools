@@ -13,7 +13,7 @@ from djtools.rekordbox.randomize_tracks import randomize_tracks
 
 
 REKORDBOX_OPERATIONS = {
-    "RANDOMIZE_TRACKS": randomize_tracks,
+    "RANDOMIZE_TRACKS_PLAYLISTS": randomize_tracks,
     "REKORDBOX_PLAYLISTS": rekordbox_playlists
 }
 

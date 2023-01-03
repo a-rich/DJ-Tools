@@ -24,7 +24,7 @@ def download_music(
 ):
     """This function syncs tracks from the beatcloud to "USB_PATH".
 
-    If "DOWNLOAD_INCLUDE_SPOTIFY" is set to a playlist name that exists in
+    If "DOWNLOAD_FROM_SPOTIFY" is set to a playlist name that exists in
     "spotify_playlists.json", then "DOWNLOAD_INCLUDE_DIRS" will be populated
     with tracks in that playlist that match Beatcloud tracks.
 
@@ -47,13 +47,13 @@ def download_music(
     if not os.path.exists(usb_path):
         raise FileNotFoundError(f'USB_PATH "{usb_path}" does not exist!')
     
-    playlist_name = config.get("DOWNLOAD_INCLUDE_SPOTIFY")
+    playlist_name = config.get("DOWNLOAD_FROM_SPOTIFY")
     if playlist_name:
         user = playlist_name.split("Uploads")[0].strip()
-        cached_playlists = config.get("SPOTIFY_CHECK_PLAYLISTS", [])
-        cached_local_dirs = config.get("LOCAL_CHECK_DIRS", [])
-        config["SPOTIFY_CHECK_PLAYLISTS"] = [playlist_name]
-        config["LOCAL_CHECK_DIRS"] = []
+        cached_playlists = config.get("CHECK_SPOTIFY_PLAYLISTS", [])
+        cached_local_dirs = config.get("CHECK_LOCAL_DIRS", [])
+        config["CHECK_SPOTIFY_PLAYLISTS"] = [playlist_name]
+        config["CHECK_LOCAL_DIRS"] = []
         beatcloud_tracks, beatcloud_matches = compare_tracks(
             config, beatcloud_tracks=beatcloud_tracks
         )
@@ -65,8 +65,8 @@ def download_music(
             for path in beatcloud_matches
         ]
         config["DOWNLOAD_EXCLUDE_DIRS"] = []
-        config["SPOTIFY_CHECK_PLAYLISTS"] = cached_playlists
-        config["LOCAL_CHECK_DIRS"] = cached_local_dirs
+        config["CHECK_SPOTIFY_PLAYLISTS"] = cached_playlists
+        config["CHECK_LOCAL_DIRS"] = cached_local_dirs
 
     dest = os.path.join(usb_path, "DJ Music").replace(os.sep, "/")
     glob_path = Path(dest)

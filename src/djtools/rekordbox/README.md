@@ -139,4 +139,4 @@ The above structure generates a set of auto-playlists like this:
 ![alt text](https://raw.githubusercontent.com/a-rich/DJ-Tools/images/Pioneer_Auto_Playlist.png "Automatic Genre Playlist")
 
 ## randomize_tracks
-To trigger the `randomize_tracks` module, set `RANDOMIZE_TRACKS: true`. Once the operation has completed, you'll need to open Rekordbox and reimport the `AUTO_RANDOMIZE` playlist containing the set of tracks with updated `TrackNumber` fields.
+To trigger the `randomize_tracks` module, set `RANDOMIZE_TRACKS_PLAYLISTS` to a list of playlists that exist in `XML_PATH`. Once the operation has completed, you'll need to open Rekordbox and reimport the `AUTO_RANDOMIZE` playlist containing the set of tracks with updated `TrackNumber` fields.

@@ -118,27 +118,27 @@ def get_local_tracks(
         config: Configuration object.
 
     Raises:
-        KeyError: "LOCAL_CHECK_DIRS" must be configured.
-        ValueError: "LOCAL_CHECK_DIRS" must be configured.
+        KeyError: "CHECK_LOCAL_DIRS" must be configured.
+        ValueError: "CHECK_LOCAL_DIRS" must be configured.
 
     Returns:
         Local file names keyed by parent directory.
     """
-    if "LOCAL_CHECK_DIRS" not in config:
+    if "CHECK_LOCAL_DIRS" not in config:
         raise KeyError(
             "Using the local_dirs_checker module requires the config option "
-            "LOCAL_CHECK_DIRS to be set to a list of one or more directories "
+            "CHECK_LOCAL_DIRS to be set to a list of one or more directories "
             "containing new tracks"
         )
-    if not config["LOCAL_CHECK_DIRS"]:
+    if not config["CHECK_LOCAL_DIRS"]:
         raise ValueError(
             "Using the local_dirs_checker module requires the config option "
-            "LOCAL_CHECK_DIRS to be set to a list of one or more directories "
+            "CHECK_LOCAL_DIRS to be set to a list of one or more directories "
             "containing new tracks"
         )
 
     local_dir_tracks = {}
-    for _dir in config["LOCAL_CHECK_DIRS"]:
+    for _dir in config["CHECK_LOCAL_DIRS"]:
         path = _dir.replace(os.sep, "/")
         if not os.path.exists(path):
             logger.warning(
@@ -174,7 +174,7 @@ def get_spotify_tracks(
     playlist_ids = get_playlist_ids()
 
     playlist_tracks = {}
-    for playlist in config.get("SPOTIFY_CHECK_PLAYLISTS", []):
+    for playlist in config.get("CHECK_SPOTIFY_PLAYLISTS", []):
         playlist_id = playlist_ids.get(playlist)
         if not playlist_id:
             logger.error(f"{playlist} not in spotify_playlists.json")

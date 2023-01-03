@@ -3,9 +3,7 @@ import os
 from bs4 import BeautifulSoup
 import pytest
 
-from djtools.rekordbox.randomize_tracks import (
-    get_playlist_track_locations, randomize_tracks, set_tag, wrap_playlists
-)
+from djtools.rekordbox.randomize_tracks import randomize_tracks
 
 
 pytest_plugins = [

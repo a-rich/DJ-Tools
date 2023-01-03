@@ -28,7 +28,7 @@ def test_download_music(
 ):
     caplog.set_level("INFO")
     test_config["USB_PATH"] = tmpdir
-    test_config["DOWNLOAD_INCLUDE_SPOTIFY"] = playlist_name
+    test_config["DOWNLOAD_FROM_SPOTIFY"] = playlist_name
     write_path = os.path.join(
         tmpdir, "DJ Music", "file.mp3"
     ).replace(os.sep, "/")
