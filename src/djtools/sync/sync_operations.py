@@ -9,9 +9,8 @@ import os
 from pathlib import Path
 from typing import Dict, List, Union
 
-from djtools.sync.helpers import (
-    parse_sync_command, rewrite_xml, run_sync, webhook
-)
+from djtools.rekordbox.helpers import rewrite_xml
+from djtools.sync.helpers import parse_sync_command, run_sync, webhook
 from djtools.utils.check_track_overlap import compare_tracks
 from djtools.utils.helpers import make_dirs
 

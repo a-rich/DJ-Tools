@@ -91,51 +91,6 @@ def parse_sync_command(
     return _cmd
 
 
-def rewrite_xml(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
-    """This function modifies the "Location" field of track tags in a
-        downloaded Rekordbox XML replacing the "USB_PATH" written by
-        "XML_IMPORT_USER" with the "USB_PATH" in "config.json".
-
-    Args:
-        config: Configuration object.
-
-    Raises:
-        KeyError: "XML_PATH" must be configured.
-    """
-    xml_path = config.get("XML_PATH")
-    if not xml_path:
-        raise ValueError(
-            "Using the sync_operations module's download_xml function "
-            "requires the config option XML_PATH"
-        )
-
-    registered_users_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)),
-        "configs",
-        "registered_users.json",
-    ).replace(os.sep, "/")
-
-    with open(registered_users_path, mode="r", encoding="utf-8") as _file:
-        registered_users = json.load(_file)
-        src = registered_users[config["XML_IMPORT_USER"]].strip("/")
-        dst = registered_users[config["USER"]].strip("/")
-
-    xml_path = os.path.join(
-        os.path.dirname(xml_path),
-        f'{config["XML_IMPORT_USER"]}_rekordbox.xml',
-    ).replace(os.sep, "/")
-
-    with open(xml_path, mode="r", encoding="utf-8") as _file:
-        soup = BeautifulSoup(_file.read(), "xml")
-        for track in soup.find_all("TRACK"):
-            if not track.get("Location"):
-                continue
-            track["Location"] = track["Location"].replace(src, dst)
-
-    with open(xml_path, mode="wb", encoding=soup.orignal_encoding) as _file:
-        _file.write(soup.prettify("utf-8"))
-
-
 def run_sync(_cmd: str) -> str:
     """Runs subprocess for "aws s3 sync" command. Output is collected and
         formatted such that uploaded tracks are grouped by their directories.

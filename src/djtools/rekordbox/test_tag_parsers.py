@@ -5,63 +5,13 @@ from bs4 import BeautifulSoup
 import pytest
 
 from djtools.rekordbox.tag_parsers import (
-    BooleanNode, Combiner, GenreTagParser, MyTagParser, TagParser
+    Combiner, GenreTagParser, MyTagParser, TagParser
 )
 
 
 pytest_plugins = [
     "test_data",
 ]
-
-
-@pytest.mark.parametrize(
-    "node_attributes",
-    [
-        (
-            [set.intersection, set.union, set.difference],
-            ["Jungle", "Breaks", "Techno", "Tech House"],
-            {11,12},
-        ),
-        ([set.difference], ["*House", "Bass House"], {3,5,6,7,8}),
-        ([set.intersection], ["{All DnB}", "Dark"], {2}),
-    ],
-)
-def test_booleannode(node_attributes):
-    operators, tags, expected = node_attributes
-    tracks = {
-        "{All DnB}": [1,2,3],
-        "Acid House": [7,8],
-        "Bass House": [9,10],
-        "Breaks": [3,4],
-        "Dark": [2,11],
-        "Jungle": [1,3],
-        "Tech House": [3,5,6],
-        "Techno": [11,12],
-    }
-    for key, value in tracks.items():
-        tracks[key] = {k: None for k in value}
-    node = BooleanNode()
-    node.operators = operators
-    node.tags = tags
-    result = node(tracks)
-    assert result == expected
-
-
-def test_booleannode_raises_runtime_eror():
-    node = BooleanNode()
-    node.operators = [set.union] 
-    node.tags = ["tag"]
-    with pytest.raises(
-        RuntimeError,
-        match=(
-            re.escape(
-                f"Invalid boolean expression: track sets: {len(node.tracks)}, "
-            ) +
-            re.escape(f"tags: {node.tags}, operators: ") +
-            re.escape(f"{[x.__name__ for x in node.operators]}")
-        ),
-    ):
-        node({})
 
 
 def test_tagparser_raises_type_error():
