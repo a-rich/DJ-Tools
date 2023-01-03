@@ -24,109 +24,6 @@ from bs4 import BeautifulSoup
 logger = logging.getLogger(__name__)
 
 
-class TagParser(ABC):
-    """Abstract base class for parsing tags from a Rekordbox database."""
-
-    def __init__(
-        self,
-        parser_config: Dict[str, Union[str, List[Union[str, Dict]]]],
-        **kwargs,
-    ):
-        """Constructor.
-
-        Args:
-            parser_config: JSON playlist structure.
-        """
-        self.parser_config = parser_config
-
-    @abstractmethod
-    def __call__(self, track: bs4.element.Tag) -> List[str]:
-        """Produces a list of tags from a track.
-
-        Args:
-            track: A track from a Rekordbox database.
-
-        Raises:
-            NotImplementedError: Implementations must define tag parsing.
-
-        Returns:
-            List of tags.
-        """
-        raise NotImplementedError(
-            "Classes inheriting from TagParser must override the __call__ method."
-        )
-
-
-class GenreTagParser(TagParser):
-    """Parses the "Genre" field of a track to produce tags."""
-
-    def __init__(
-        self,
-        parser_config: Dict[str, Union[str, List[Union[str, Dict]]]],
-        pure_genre_playlists: Optional[List[str]] = list(),
-        **kwargs,
-    ):
-        """Constructor.
-
-        Args:
-            parser_config: JSON playlist structure.
-            pure_genre_playlists: List of genre tags from which "pure"
-                playlists will be generated. A "pure" playlist is one in which
-                every track has genre tags which all contain a corresponding
-                element in this list.
-        """
-        super().__init__(parser_config)
-        self._pure_playlists = pure_genre_playlists
-
-    def __call__(self, track: bs4.element.Tag) -> List[str]:
-        """Produces a list of genre tags from a track.
-
-        Args:
-            track: A track from a Rekordbox database.
-
-        Returns:
-            List of genre tags.
-        """
-        tags = [x.strip() for x in track["Genre"].split("/")]
-        for genre in self._pure_playlists:
-            if all(genre.lower() in x.lower() for x in tags):
-                tags.append(f"Pure {genre}")
-        
-        return tags
-
-
-class MyTagParser(TagParser):
-    """Parses the "Comments" field of a track to produce tags."""
-
-    def __init__(
-        self,
-        parser_config: Dict[str, Union[str, List[Union[str, Dict]]]],
-        **kwargs,
-    ):
-        """Constructor.
-
-        Args:
-            parser_config: JSON playlist structure.
-        """
-        super().__init__(parser_config, **kwargs)
-        self._regex = re.compile(r"(?<=\/\*).*(?=\*\/)")
-
-    def __call__(self, track: bs4.element.Tag) -> List[str]:
-        """Produces a list of "My Tags" tags from a track.
-
-        Args:
-            track: A track from a Rekordbox database.
-
-        Returns:
-            List of "My Tags" tags.
-        """
-        tags = re.search(self._regex, track.get("Comments"))
-        if not tags:
-            return []
-
-        return [x.strip() for x in tags.group().split("/")]
-
-
 class BooleanNode:
     """Node that contains boolean logic for a subexpression."""
 
@@ -208,6 +105,39 @@ class BooleanNode:
             return set(tracks.get(tag, {}).keys())
 
 
+class TagParser(ABC):
+    """Abstract base class for parsing tags from a Rekordbox database."""
+
+    def __init__(
+        self,
+        parser_config: Dict[str, Union[str, List[Union[str, Dict]]]],
+        **kwargs,
+    ):
+        """Constructor.
+
+        Args:
+            parser_config: JSON playlist structure.
+        """
+        self.parser_config = parser_config
+
+    @abstractmethod
+    def __call__(self, track: bs4.element.Tag) -> List[str]:
+        """Produces a list of tags from a track.
+
+        Args:
+            track: A track from a Rekordbox database.
+
+        Raises:
+            NotImplementedError: Implementations must define tag parsing.
+
+        Returns:
+            List of tags.
+        """
+        raise NotImplementedError(
+            "Classes inheriting from TagParser must override the __call__ method."
+        )
+
+
 class Combiner(TagParser):
     """Parses a boolean algebra expression to combine tag playlists."""
 
@@ -231,7 +161,132 @@ class Combiner(TagParser):
             "|": set.union,
             "~": set.difference,
         }
+
+    def __call__(
+        self, tracks: Dict[str, List[Tuple[str, List[str]]]]
+    ) -> Dict[str, Set[str]]:
+        """Evaluates boolean expressions creating playlists that combine tags.
+
+        Args:
+            tracks: Map of tags to lists of (track_id, tags) tuples.
+
+        Returns:
+            Dict mapping boolean expression to a set of track IDs.
+        """
+        self._tracks.update({k: dict(v) for k, v in tracks.items()})
+        playlist_tracks = {
+            expression: self._parse_boolean_expression(expression)
+            for expression in self.parser_config.get("playlists", [])
+        }
+        
+        return playlist_tracks
     
+    def _add_tag(self, tag: str, node: BooleanNode) -> str:
+        """Strips whitespace off of a tag and, if non-empty, adds it to a node.
+
+        Args:
+            tag: Potentially assembled tag string.
+            node: BooleanNode to potentially have tag added to it.
+
+        Returns:
+            Empty tag string.
+        """
+        tag = tag.strip()
+        if tag:
+            node.tags.append(tag)
+
+        return ""
+
+    def get_combiner_tracks(self) -> Dict[str, Dict[str, List]]:
+        """Returns tag / selector -> tracks mapping.
+
+        Returns:
+            Map of tags / selectors to track_id: list of tracks mapping.
+        """
+        return self._tracks
+
+    def _parse_boolean_expression(self, expression: str) -> Set[str]:
+        """Parses a boolean algebra expression by constructing a tree.
+
+        Args:
+            expression: String representing boolean algebra expression.
+
+        Returns:
+            Set of track IDs reduced from the evaulation of the expression.
+        """
+        node = BooleanNode()
+        tag = ""
+        for char in expression:
+            if char == "(":
+                node = BooleanNode(parent=node)
+            elif char in self._operators:
+                tag = self._add_tag(tag, node)
+                node.operators.append(self._operators[char])
+            elif char == ")":
+                tag = self._add_tag(tag, node)
+                tracks = node(self._tracks)
+                node = node.parent
+                if tracks:
+                    node.tracks.append(tracks)
+            else:
+                tag += char
+        tag = self._add_tag(tag, node)
+
+        return node(self._tracks)
+    
+    def _parse_bpms_and_ratings(
+        self, bpm_rating_match: List[str]
+    ) -> List[Tuple]:
+        """Parses a string match of one or more BPM and / or rating selectors.
+
+        Args:
+            bpm_rating_match: List of BPM or rating strings.
+
+        Returns:
+            Tuple of BPM and rating lists.
+        """
+        bpms, ratings = [], []
+        for bpm_rating in bpm_rating_match:
+            parts = map(str.strip, bpm_rating.split(","))
+            for part in parts:
+                number = _range = None
+                # If "part" is a digit, then it's an explicit BPM or rating to
+                # filter for.
+                if part.isdigit():
+                    number = int(part)
+                    if 0 <= number <= 5:
+                        ratings.append(str(number))
+                    elif number > 5:
+                        bpms.append(str(number))
+                # If "part" is two digits separated by a "-", then it's a range
+                # of BPMs or ratings to filter for.
+                elif (
+                    len(part.split("-")) == 2 and
+                    all(x.isdigit() for x in part.split("-"))
+                ):
+                    _range = list(map(int, part.split("-")))
+                    _range = range(min(_range), max(_range) + 1)
+                    if all(0 <= x <= 5 for x in _range):
+                        ratings.extend(map(str, _range))
+                    elif all(x > 5 for x in _range):
+                        bpms.extend(map(str, _range))
+                    else:
+                        logger.error(
+                            "Bad BPM or rating number range: {}".format(part)
+                        )
+                        continue
+                else:
+                    logger.error(
+                        "Malformed BPM or rating filter part: {}".format(part)
+                    )
+                    continue
+                
+                self._bpm_rating_lookup[
+                    tuple(map(str, _range or [])) or str(number)
+                ] = f"[{part}]"
+                
+        return bpms, ratings
+
     def _prescan(self, rekordbox_database: BeautifulSoup):
         """Populates track lookup using BPM, rating, and playlist selectors.
 
@@ -312,127 +367,73 @@ class Combiner(TagParser):
                 if str(track).strip()
             }
 
-    def _parse_bpms_and_ratings(
-        self, bpm_rating_match: List[str]
-    ) -> List[Tuple]:
-        """Parses a string match of one or more BPM and / or rating selectors.
+
+class GenreTagParser(TagParser):
+    """Parses the "Genre" field of a track to produce tags."""
+
+    def __init__(
+        self,
+        parser_config: Dict[str, Union[str, List[Union[str, Dict]]]],
+        pure_genre_playlists: Optional[List[str]] = list(),
+        **kwargs,
+    ):
+        """Constructor.
 
         Args:
-            bpm_rating_match: List of BPM or rating strings.
-
-        Returns:
-            Tuple of BPM and rating lists.
+            parser_config: JSON playlist structure.
+            pure_genre_playlists: List of genre tags from which "pure"
+                playlists will be generated. A "pure" playlist is one in which
+                every track has genre tags which all contain a corresponding
+                element in this list.
         """
-        bpms, ratings = [], []
-        for bpm_rating in bpm_rating_match:
-            parts = map(str.strip, bpm_rating.split(","))
-            for part in parts:
-                number = _range = None
-                # If "part" is a digit, then it's an explicit BPM or rating to
-                # filter for.
-                if part.isdigit():
-                    number = int(part)
-                    if 0 <= number <= 5:
-                        ratings.append(str(number))
-                    elif number > 5:
-                        bpms.append(str(number))
-                # If "part" is two digits separated by a "-", then it's a range
-                # of BPMs or ratings to filter for.
-                elif (
-                    len(part.split("-")) == 2 and
-                    all(x.isdigit() for x in part.split("-"))
-                ):
-                    _range = list(map(int, part.split("-")))
-                    _range = range(min(_range), max(_range) + 1)
-                    if all(0 <= x <= 5 for x in _range):
-                        ratings.extend(map(str, _range))
-                    elif all(x > 5 for x in _range):
-                        bpms.extend(map(str, _range))
-                    else:
-                        logger.error(
-                            "Bad BPM or rating number range: {}".format(part)
-                        )
-                        continue
-                else:
-                    logger.error(
-                        "Malformed BPM or rating filter part: {}".format(part)
-                    )
-                    continue
-                
-                self._bpm_rating_lookup[
-                    tuple(map(str, _range or [])) or str(number)
-                ] = f"[{part}]"
-                
-        return bpms, ratings
+        super().__init__(parser_config)
+        self._pure_playlists = pure_genre_playlists
 
-    def __call__(
-        self, tracks: Dict[str, List[Tuple[str, List[str]]]]
-    ) -> Dict[str, Set[str]]:
-        """Evaluates boolean expressions creating playlists that combine tags.
+    def __call__(self, track: bs4.element.Tag) -> List[str]:
+        """Produces a list of genre tags from a track.
 
         Args:
-            tracks: Map of tags to lists of (track_id, tags) tuples.
+            track: A track from a Rekordbox database.
 
         Returns:
-            Dict mapping boolean expression to a set of track IDs.
+            List of genre tags.
         """
-        self._tracks.update({k: dict(v) for k, v in tracks.items()})
-        playlist_tracks = {
-            expression: self._parse_boolean_expression(expression)
-            for expression in self.parser_config.get("playlists", [])
-        }
+        tags = [x.strip() for x in track["Genre"].split("/")]
+        for genre in self._pure_playlists:
+            if all(genre.lower() in x.lower() for x in tags):
+                tags.append(f"Pure {genre}")
         
-        return playlist_tracks
+        return tags
 
-    def _parse_boolean_expression(self, expression: str) -> Set[str]:
-        """Parses a boolean algebra expression by constructing a tree.
 
-        Args:
-            expression: String representing boolean algebra expression.
+class MyTagParser(TagParser):
+    """Parses the "Comments" field of a track to produce tags."""
 
-        Returns:
-            Set of track IDs reduced from the evaulation of the expression.
-        """
-        node = BooleanNode()
-        tag = ""
-        for char in expression:
-            if char == "(":
-                node = BooleanNode(parent=node)
-            elif char in self._operators:
-                tag = self._add_tag(tag, node)
-                node.operators.append(self._operators[char])
-            elif char == ")":
-                tag = self._add_tag(tag, node)
-                tracks = node(self._tracks)
-                node = node.parent
-                if tracks:
-                    node.tracks.append(tracks)
-            else:
-                tag += char
-        tag = self._add_tag(tag, node)
-
-        return node(self._tracks)
-    
-    def _add_tag(self, tag: str, node: BooleanNode) -> str:
-        """Strips whitespace off of a tag and, if non-empty, adds it to a node.
+    def __init__(
+        self,
+        parser_config: Dict[str, Union[str, List[Union[str, Dict]]]],
+        **kwargs,
+    ):
+        """Constructor.
 
         Args:
-            tag: Potentially assembled tag string.
-            node: BooleanNode to potentially have tag added to it.
+            parser_config: JSON playlist structure.
+        """
+        super().__init__(parser_config, **kwargs)
+        self._regex = re.compile(r"(?<=\/\*).*(?=\*\/)")
+
+    def __call__(self, track: bs4.element.Tag) -> List[str]:
+        """Produces a list of "My Tags" tags from a track.
+
+        Args:
+            track: A track from a Rekordbox database.
 
         Returns:
-            Empty tag string.
+            List of "My Tags" tags.
         """
-        tag = tag.strip()
-        if tag:
-            node.tags.append(tag)
+        tags = re.search(self._regex, track.get("Comments"))
+        if not tags:
+            return []
 
-        return ""
+        return [x.strip() for x in tags.group().split("/")]
 
-    def get_combiner_tracks(self) -> Dict[str, Dict[str, List]]:
-        """Returns tag / selector -> tracks mapping.
-
-        Returns:
-            Map of tags / selectors to track_id: list of tracks mapping.
-        """
-        return self._tracks

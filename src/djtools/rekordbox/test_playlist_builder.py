@@ -4,7 +4,7 @@ import shutil
 
 import pytest
 
-from djtools.rekordbox.rekordbox_playlist_builder import (
+from djtools.rekordbox.playlist_builder import (
     PlaylistBuilder, rekordbox_playlists    
 )
 
@@ -95,7 +95,7 @@ def test_rekordbox_playlists_no_xml(test_config):
     test_config["XML_PATH"] = ""
     with pytest.raises(
         KeyError,
-        match="Using the rekordbox_playlist_builder module requires the "
+        match="Using the rekordbox.playlist_builder module requires the "
             "config option XML_PATH",
     ):
         rekordbox_playlists(test_config)

@@ -17,67 +17,6 @@ import requests
 logger = logging.getLogger(__name__)
 
 
-def run_sync(_cmd: str) -> str:
-    """Runs subprocess for "aws s3 sync" command. Output is collected and
-        formatted such that uploaded tracks are grouped by their directories.
-
-    Args:
-        _cmd: "aws s3 sync" command.
-
-    Raises:
-        CalledProcessError: raised if "aws s3 sync" command fails.
-
-    Returns:
-        Formatted list of uploaded tracks; tracks are grouped by directory.
-    """
-    tracks = []
-    try:
-        with Popen(_cmd, stdout=PIPE, universal_newlines=True) as proc:
-            while True:
-                line = proc.stdout.readline()
-                if line == "" and proc.poll() is not None:
-                    break
-                if "upload: " in line:
-                    print(line.strip(), flush=True)
-                    tracks.append(
-                        line.strip().split(
-                            " to s3://dj.beatcloud.com/dj/music/"
-                        )[-1]
-                    )
-                else:
-                    print(f"{line.strip()}                                  " \
-                          "                        ", end="\r", flush=True)
-
-            proc.stdout.close()
-            return_code = proc.wait()
-        if return_code:
-            raise CalledProcessError(return_code, " ".join(_cmd))
-    except Exception as exc:
-        msg = f"Failure while syncing: {exc}"
-        logger.critical(msg)
-        raise Exception(msg)
-
-    new_music = ""
-    if tracks:
-        logger.info(
-            f'Successfully {"down" if "s3://" in _cmd[3] else "up"}loaded the '
-            "following tracks:"
-        )
-    for group_id, group in groupby(
-        sorted(tracks, key=lambda x: "/".join(x.split("/")[:-1])),
-        key=lambda x: "/".join(x.split("/")[:-1]),
-    ):
-        group = sorted(group)
-        new_music += f"{group_id}: {len(group)}\n"
-        for track in group:
-            track = track.split("/")[-1]
-            new_music += f"\t{track}\n"
-    if new_music:
-        logger.info(new_music)
-
-    return new_music
-
-
 def parse_sync_command(
     _cmd: str,
     config: Dict[str, Union[List, Dict, str, bool, int, float]],
@@ -152,46 +91,6 @@ def parse_sync_command(
     return _cmd
 
 
-def webhook(
-    url: str, content_size_limit: int = 2000, content: Optional[str] = None
-):
-    """Post track list of newly uploaded tracks to Discord channel associated
-        with "url". Track list is split across multiple messages if the
-        character limit exceed "content_size_limit".
-
-    Args:
-        url (str): Discord URL for webhook.
-        content_size_limit: Character limit for Discord message; if content is
-            larger, then multiple messages are sent.
-        content: Uploaded tracks (if any).
-    """
-    if not content:
-        logger.info("There's no content")
-        return
-
-    batch = content[:content_size_limit]
-    remainder = content[content_size_limit:]
-    while batch:
-        index = content_size_limit - 1
-        while True:
-            if index == 0:
-                index = content_size_limit
-                break
-            try:
-                if batch[index] == "\n":
-                    break
-            except IndexError:
-                break
-            index -= 1
-        remainder = batch[index+1:] + remainder
-        batch = batch[:index+1]
-
-        if batch:
-            requests.post(url, json={"content": batch})
-            batch = remainder[:content_size_limit]
-            remainder = remainder[content_size_limit:]
-
-
 def rewrite_xml(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
     """This function modifies the "Location" field of track tags in a
         downloaded Rekordbox XML replacing the "USB_PATH" written by
@@ -235,3 +134,104 @@ def rewrite_xml(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
 
     with open(xml_path, mode="wb", encoding=soup.orignal_encoding) as _file:
         _file.write(soup.prettify("utf-8"))
+
+
+def run_sync(_cmd: str) -> str:
+    """Runs subprocess for "aws s3 sync" command. Output is collected and
+        formatted such that uploaded tracks are grouped by their directories.
+
+    Args:
+        _cmd: "aws s3 sync" command.
+
+    Raises:
+        CalledProcessError: raised if "aws s3 sync" command fails.
+
+    Returns:
+        Formatted list of uploaded tracks; tracks are grouped by directory.
+    """
+    tracks = []
+    try:
+        with Popen(_cmd, stdout=PIPE, universal_newlines=True) as proc:
+            while True:
+                line = proc.stdout.readline()
+                if line == "" and proc.poll() is not None:
+                    break
+                if "upload: " in line:
+                    print(line.strip(), flush=True)
+                    tracks.append(
+                        line.strip().split(
+                            " to s3://dj.beatcloud.com/dj/music/"
+                        )[-1]
+                    )
+                else:
+                    print(f"{line.strip()}                                  " \
+                          "                        ", end="\r", flush=True)
+
+            proc.stdout.close()
+            return_code = proc.wait()
+        if return_code:
+            raise CalledProcessError(return_code, " ".join(_cmd))
+    except Exception as exc:
+        msg = f"Failure while syncing: {exc}"
+        logger.critical(msg)
+        raise Exception(msg)
+
+    new_music = ""
+    if tracks:
+        logger.info(
+            f'Successfully {"down" if "s3://" in _cmd[3] else "up"}loaded the '
+            "following tracks:"
+        )
+    for group_id, group in groupby(
+        sorted(tracks, key=lambda x: "/".join(x.split("/")[:-1])),
+        key=lambda x: "/".join(x.split("/")[:-1]),
+    ):
+        group = sorted(group)
+        new_music += f"{group_id}: {len(group)}\n"
+        for track in group:
+            track = track.split("/")[-1]
+            new_music += f"\t{track}\n"
+    if new_music:
+        logger.info(new_music)
+
+    return new_music
+
+
+def webhook(
+    url: str, content_size_limit: int = 2000, content: Optional[str] = None
+):
+    """Post track list of newly uploaded tracks to Discord channel associated
+        with "url". Track list is split across multiple messages if the
+        character limit exceed "content_size_limit".
+
+    Args:
+        url (str): Discord URL for webhook.
+        content_size_limit: Character limit for Discord message; if content is
+            larger, then multiple messages are sent.
+        content: Uploaded tracks (if any).
+    """
+    if not content:
+        logger.info("There's no content")
+        return
+
+    batch = content[:content_size_limit]
+    remainder = content[content_size_limit:]
+    while batch:
+        index = content_size_limit - 1
+        while True:
+            if index == 0:
+                index = content_size_limit
+                break
+            try:
+                if batch[index] == "\n":
+                    break
+            except IndexError:
+                break
+            index -= 1
+        remainder = batch[index+1:] + remainder
+        batch = batch[:index+1]
+
+        if batch:
+            requests.post(url, json={"content": batch})
+            batch = remainder[:content_size_limit]
+            remainder = remainder[content_size_limit:]

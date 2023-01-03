@@ -1,7 +1,8 @@
 import os
-import pytest
 import shutil
 from unittest import mock
+
+import pytest
 
 from djtools.sync.sync_operations import (
     download_music, download_xml, upload_music, upload_xml
@@ -12,18 +13,6 @@ from test_data import MockOpen
 pytest_plugins = [
     "test_data",
 ]
-
-
-def test_download_music_no_usb(test_config):
-    del test_config["USB_PATH"]
-    with pytest.raises(KeyError):
-        download_music(test_config)
-
-
-def test_download_music_no_usb_path(test_config):
-    test_config["USB_PATH"] = "/noexistent/path/to/USB/"
-    with pytest.raises(FileNotFoundError):
-        download_music(test_config)
 
 
 @pytest.mark.parametrize("playlist_name", ["", "playlist Uploads"])
@@ -68,24 +57,16 @@ def test_download_music(
     assert os.path.basename(caplog.records[4].message) == "file.mp3"
 
 
-def test_download_xml_no_xml_path(test_config):
-    del test_config["XML_PATH"]
-    with pytest.raises(
-        KeyError,
-        match="Using the download_xml function of the sync_operations module "
-            "requires the config option XML_PATH",
-    ):
-        download_xml(test_config)
+def test_download_music_no_usb(test_config):
+    del test_config["USB_PATH"]
+    with pytest.raises(KeyError):
+        download_music(test_config)
 
 
-def test_download_xml_no_xml(test_config):
-    test_config["XML_PATH"] = ""
-    with pytest.raises(
-        FileNotFoundError,
-        match="Using the download_xml function of the sync_operations module "
-            "requires the config option XML_PATH to be valid",
-    ):
-        download_xml(test_config)
+def test_download_music_no_usb_path(test_config):
+    test_config["USB_PATH"] = "/noexistent/path/to/USB/"
+    with pytest.raises(FileNotFoundError):
+        download_music(test_config)
 
 
 @mock.patch(
@@ -120,23 +101,24 @@ def test_download_xml(test_config, test_xml, caplog):
     assert os.path.exists(new_xml)
 
 
-def test_upload_music_no_usb(test_config):
-    del test_config["USB_PATH"]
+def test_download_xml_no_xml_path(test_config):
+    del test_config["XML_PATH"]
     with pytest.raises(
         KeyError,
-        match="Using the upload_music function of the sync_operations module "
-            "requires the config option USB_PATH",
+        match="Using the download_xml function of the sync_operations module "
+            "requires the config option XML_PATH",
     ):
-        upload_music(test_config)
+        download_xml(test_config)
 
 
-def test_upload_music_no_usb_path(test_config):
-    test_config["USB_PATH"] = "/nonexistent/USB"
+def test_download_xml_no_xml(test_config):
+    test_config["XML_PATH"] = ""
     with pytest.raises(
         FileNotFoundError,
-        match=f'USB_PATH "{test_config["USB_PATH"]}" does not exist!'
+        match="Using the download_xml function of the sync_operations module "
+            "requires the config option XML_PATH to be valid",
     ):
-        upload_music(test_config)
+        download_xml(test_config)
 
 
 @pytest.mark.parametrize(
@@ -180,6 +162,40 @@ def test_upload_music(
         )
 
 
+def test_upload_music_no_usb(test_config):
+    del test_config["USB_PATH"]
+    with pytest.raises(
+        KeyError,
+        match="Using the upload_music function of the sync_operations module "
+            "requires the config option USB_PATH",
+    ):
+        upload_music(test_config)
+
+
+def test_upload_music_no_usb_path(test_config):
+    test_config["USB_PATH"] = "/nonexistent/USB"
+    with pytest.raises(
+        FileNotFoundError,
+        match=f'USB_PATH "{test_config["USB_PATH"]}" does not exist!'
+    ):
+        upload_music(test_config)
+
+
+def test_upload_xml(test_config, test_xml, caplog):
+    caplog.set_level("INFO")
+    test_user = "test_user"
+    test_config["USER"] = test_user
+    test_config["XML_PATH"] = test_xml
+    cmd = f"aws s3 cp {test_xml} s3://dj.beatcloud.com/dj/xml/{test_user}/"
+    with mock.patch("os.system", return_value=None) as mock_os_system:
+        upload_xml(test_config)
+        mock_os_system.assert_called_with(cmd)
+        assert caplog.records[0].message == (
+            f"Uploading {test_user}'s rekordbox.xml..."
+        )
+        assert caplog.records[1].message == cmd
+
+
 def test_upload_xml_no_xml_path(test_config):
     del test_config["XML_PATH"]
     with pytest.raises(
@@ -197,18 +213,3 @@ def test_upload_xml_no_xml(test_config):
         match=f'XML_PATH "{test_config["XML_PATH"]}" does not exist!'
     ):
         upload_xml(test_config)
-
-
-def test_upload_xml(test_config, test_xml, caplog):
-    caplog.set_level("INFO")
-    test_user = "test_user"
-    test_config["USER"] = test_user
-    test_config["XML_PATH"] = test_xml
-    cmd = f"aws s3 cp {test_xml} s3://dj.beatcloud.com/dj/xml/{test_user}/"
-    with mock.patch("os.system", return_value=None) as mock_os_system:
-        upload_xml(test_config)
-        mock_os_system.assert_called_with(cmd)
-        assert caplog.records[0].message == (
-            f"Uploading {test_user}'s rekordbox.xml..."
-        )
-        assert caplog.records[1].message == cmd

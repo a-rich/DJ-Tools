@@ -17,7 +17,7 @@ import bs4
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-from .helpers import make_dirs
+from djtools.utils.helpers import make_dirs
 
 
 def copy_playlists_tracks(

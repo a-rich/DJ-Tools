@@ -1,9 +1,8 @@
-"""The "spotify" package contains a module for checking Spotify playlists for
-tracks that overlap with those already in the beatcloud. It also contains a
-module for constructing / updating Spotify playlists from subreddit posts or
-the Discord webhook output from music uploads.
+"""The "spotify" package contains a module for constructing / updating Spotify
+playlists from subreddit posts and / or the Discord webhook output from music
+uploads.
 """
-from .spotify_playlist_builder import (
+from djtools.spotify.playlist_builder import (
     playlist_from_upload, update_auto_playlists
 )
 

@@ -1,15 +1,15 @@
-from .rekordbox import (
+from djtools.rekordbox import (
     randomize_tracks, REKORDBOX_OPERATIONS, rekordbox_playlists
 )
-from .spotify import (
+from djtools.spotify import (
     playlist_from_upload,
     SPOTIFY_OPERATIONS,
     update_auto_playlists,
 )
-from .sync import (
+from djtools.sync import (
     download_music, download_xml, SYNC_OPERATIONS, upload_music, upload_xml
 )
-from .utils import (
+from djtools.utils import (
     build_config,
     compare_tracks,
     copy_playlists_tracks,

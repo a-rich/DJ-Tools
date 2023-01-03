@@ -18,6 +18,37 @@ from tqdm import tqdm
 logger = logging.getLogger(__name__)
 
 
+def get_playlist_track_locations(
+    soup: BeautifulSoup, _playlist: str, seen_tracks: Set[str]
+) -> List[str]:
+    """Finds playlist in "XML_PATH" that matches "_playlist" and returns a list
+        of the track nodes in that playlist that aren't in "seen_tracks".
+
+    Args:
+        soup: Parsed XML.
+        _playlist: Name of playlist to randomize.
+        seen_tracks: Already seen TrackIDs.
+
+    Raises:
+        LookupError: "_playlist" must exist.
+
+    Returns:
+        TrackIDs.
+    """
+    try:
+        playlist = soup.find_all("NODE", {"Name": _playlist})[0]
+    except IndexError:
+        raise LookupError(f"{_playlist} not found") from LookupError
+
+    playlist_tracks = [
+        track["Key"] for track in playlist.children
+        if str(track).strip() and track["Key"] not in seen_tracks
+    ]
+    seen_tracks.update(playlist_tracks)
+
+    return playlist_tracks
+
+
 def randomize_tracks(
     config: Dict[str, Union[List, Dict, str, bool, int, float]]
 ):
@@ -88,37 +119,6 @@ def randomize_tracks(
         auto_xml_path, mode="wb", encoding=soup.orignal_encoding
     ) as _file:
         _file.write(soup.prettify("utf-8"))
-
-
-def get_playlist_track_locations(
-    soup: BeautifulSoup, _playlist: str, seen_tracks: Set[str]
-) -> List[str]:
-    """Finds playlist in "XML_PATH" that matches "_playlist" and returns a list
-        of the track nodes in that playlist that aren't in "seen_tracks".
-
-    Args:
-        soup: Parsed XML.
-        _playlist: Name of playlist to randomize.
-        seen_tracks: Already seen TrackIDs.
-
-    Raises:
-        LookupError: "_playlist" must exist.
-
-    Returns:
-        TrackIDs.
-    """
-    try:
-        playlist = soup.find_all("NODE", {"Name": _playlist})[0]
-    except IndexError:
-        raise LookupError(f"{_playlist} not found") from LookupError
-
-    playlist_tracks = [
-        track["Key"] for track in playlist.children
-        if str(track).strip() and track["Key"] not in seen_tracks
-    ]
-    seen_tracks.update(playlist_tracks)
-
-    return playlist_tracks
 
 
 def set_tag(track: str, index: int):
