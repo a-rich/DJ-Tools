@@ -9,8 +9,8 @@
     - AWS
 * Usage
     - Linking configs
-    - Populating `config.json`
-        * Example `config.json`
+    - Populating `config.yaml`
+        * Example `config.yaml`
         * Explanation of configuration options
 * Contribution
 * Basic Information
@@ -108,75 +108,92 @@ You can always install the necessary package to accelerate computing at a later 
 
 # Usage
 ## Linking configs
-You should now be able to run `djtools` from anywhere, although nothing will work until you've populated the required `config.json`.
+You should now be able to run `djtools` from anywhere, although nothing will work until you've populated the required `config.yaml`.
 
-Because this `config.json` file (and all other JSON files used by this library) live next to the package code (somewhere not user-friendly), it's recommended that you choose a non-existent directory (e.g. `djtools_configs`) and run this command first to establish a user-friendly location where you can create and modify your config files:
+Because this `config.yaml` file (and all other YAML files used by this library) live next to the package code (somewhere not user-friendly), it's recommended that you choose a non-existent directory (e.g. `djtools_configs`) and run this command first to establish a user-friendly location where you can create and modify your config files:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`djtools --link_configs /path/to/djtools_configs/`
 
-After running this command, base templates for all config files used by `djtools` will be symlinked allowing you to navigate to that directory and open `config.json` (and all other config files) with your favorite text editor and configure the library for your needs.
+After running this command, base templates for all config files used by `djtools` will be symlinked allowing you to navigate to that directory and open `config.yaml` (and all other config files) with your favorite text editor and configure the library for your needs.
 
-Please be sure to checkout the package-level README files regarding the usage of the other config files which must also be stored in the same location as `config.json`:
+Please be sure to checkout the package-level README files regarding the usage of the other config files which must also be stored in the same location as `config.yaml`:
 * `spotify`
-    - [spotify_playlists.json](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/spotify)
+    - [spotify_playlists.yaml](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/spotify)
 * `sync`
-    - [registered_users.json](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/sync)
+    - [registered_users.yaml](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/sync)
 * `rekordbox`
-    - [rekordbox_playlists.json](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/rekordbox)
+    - [rekordbox_playlists.yaml](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/rekordbox)
 
-## Populating `config.json`
-`DJ Tools` contains quite a bit of functionality, but all of it is configurable via `config.json`. You may decide to not use `config.json` at all and, instead, opt to use the corollary command-line arguments; all configuration options may be overridden via command-line arguments of the same name but in lowercase. Example:
+## Populating `config.yaml`
+`DJ Tools` contains quite a bit of functionality, but all of it is configurable via `config.yaml`. You may decide to not use `config.yaml` at all and, instead, opt to use the corollary command-line arguments; all configuration options may be overridden via command-line arguments of the same name but in lowercase. Example:
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`djtools --download_xml --xml_import_user bob --aws_profile DJ`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`djtools --download_xml --import_user bob --aws_profile DJ`
 
 
-### Example `config.json`:
+### Example `config.yaml`:
 ```
-{
-    "USB_PATH": "/Volumes/My_DJ_USB/",
-    "AWS_PROFILE": "DJ",
-    "UPLOAD_INCLUDE_DIRS": [],
-    "UPLOAD_EXCLUDE_DIRS": ["New Music"],
-    "DOWNLOAD_INCLUDE_DIRS": [],
-    "DOWNLOAD_EXCLUDE_DIRS": [],
-    "DOWNLOAD_FROM_SPOTIFY": "",
-    "AWS_USE_DATE_MODIFIED": false,
-    "XML_IMPORT_USER": "myfriend",
-    "XML_PATH": "/path/to/xmls/my_rekordbox.xml",
-    "USER": "",
-    "DISCORD_URL": "https://discord.com/api/webhooks/some/url",
-    "YOUTUBE_DL_URL": "https://soundcloud.com/me/sets/to-download",
-    "YOUTUBE_DL_LOCATION": "/Volumes/My_DJ_USB/New_Music/",
-    "RANDOMIZE_TRACKS_PLAYLISTS": ["Halftime", "Trip Hop"],
-    "DOWNLOAD_MUSIC": false,
-    "DOWNLOAD_XML": false,
-    "UPLOAD_MUSIC": false,
-    "UPLOAD_XML": false,
-    "REKORDBOX_PLAYLISTS": false,
-    "REKORDBOX_PLAYLISTS_REMAINDER": "folder",
-    "GENRE_PLAYLISTS_PURE": [],
-    "CHECK_TRACK_OVERLAP": false,
-    "CHECK_TRACK_OVERLAP_FUZZ_RATIO": 80,
-    "CHECK_LOCAL_DIRS": ["New Music"],
-    "CHECK_SPOTIFY_PLAYLISTS": ["Download", "Maybe Download"],
-    "PLAYLIST_FROM_UPLOAD": false,
-    "AUTO_PLAYLIST_UPDATE": false,
-    "AUTO_PLAYLIST_SUBREDDITS": [
-        {"name": "HalftimeDnB", "type": "hot", "period": "week", "limit": 50},
-        {"name": "spacebass", "type": "top", "period": "week", "limit": 50}
-    ],
-    "AUTO_PLAYLIST_FUZZ_RATIO": 50,
-    "AUTO_PLAYLIST_SUBREDDIT_LIMIT": 500,
-    "SPOTIFY_CLIENT_ID": "",
-    "SPOTIFY_CLIENT_SECRET": "",
-    "SPOTIFY_REDIRECT_URI": "",
-    "SPOTIFY_USERNAME": "",
-    "REDDIT_CLIENT_ID": "",
-    "REDDIT_CLIENT_SECRET": "",
-    "REDDIT_USER_AGENT": "",
-    "VERBOSITY": 0,
-    "LOG_LEVEL": "INFO"
-}
+general:
+  AWS_PROFILE: DJ
+  LOG_LEVEL: INFO
+  USER: ""
+  VERBOSITY: 0
+  XML_PATH: /path/to/xmls/my_rekordbox.xml
+rekordbox:
+  COPY_TRACKS_PLAYLISTS: []
+  COPY_TRACKS_PLAYLISTS_DESTINATION: ""
+  GENRE_PLAYLISTS_PURE: []
+  RANDOMIZE_TRACKS_PLAYLISTS:
+    - Halftime
+    - Trip Hop
+  REKORDBOX_PLAYLISTS: false
+  REKORDBOX_PLAYLISTS_REMAINDER: folder
+spotify:
+  AUTO_PLAYLIST_FUZZ_RATIO: 70
+  AUTO_PLAYLIST_DEFAULT_LIMIT: 50
+  AUTO_PLAYLIST_DEFAULT_PERIOD: week
+  AUTO_PLAYLIST_DEFAULT_TYPE: hot
+  AUTO_PLAYLIST_POST_LIMIT: 100
+  AUTO_PLAYLIST_SUBREDDITS:
+    - name: HalftimeDnB
+    - name: spacebass
+      type: top
+      period: day
+      limit: 100
+  AUTO_PLAYLIST_UPDATE: false
+  PLAYLIST_FROM_UPLOAD: false
+  REDDIT_CLIENT_ID: ""
+  REDDIT_CLIENT_SECRET: ""
+  REDDIT_USER_AGENT: ""
+  SPOTIFY_CLIENT_ID: ""
+  SPOTIFY_CLIENT_SECRET: ""
+  SPOTIFY_REDIRECT_URI: ""
+  SPOTIFY_USERNAME: ""
+sync:
+  AWS_USE_DATE_MODIFIED: false
+  DISCORD_URL: https://discord.com/api/webhooks/some/url
+  DOWNLOAD_EXCLUDE_DIRS: []
+  DOWNLOAD_INCLUDE_DIRS: []
+  DOWNLOAD_MUSIC: false
+  DOWNLOAD_SPOTIFY: myfriend Uploads
+  DOWNLOAD_XML: false
+  DRYRUN false
+  IMPORT_USER: myfriend
+  UPLOAD_EXCLUDE_DIRS:
+   - New Music
+  UPLOAD_INCLUDE_DIRS: []
+  UPLOAD_MUSIC: false
+  UPLOAD_XML: false
+  USB_PATH: /Volumes/My_DJ_USB/
+utils:
+  CHECK_TRACKS_LOCAL_DIRS:
+    - New Music
+  CHECK_TRACKS_SPOTIFY_PLAYLISTS:
+    - Download
+    - Maybe Download
+  CHECK_TRACKS: false
+  CHECK_TRACKS_FUZZ_RATIO: 80
+  YOUTUBE_DL_LOCATION: /Volumes/My_DJ_USB/DJ Music/New Music
+  YOUTUBE_DL_URL: https://soundcloud.com/me/sets/to-download
 ```
 ### Explanation of configuration options
 * `USB_PATH`: the full path to the USB drive which contains all your music files
@@ -185,26 +202,29 @@ Please be sure to checkout the package-level README files regarding the usage of
 * `UPLOAD_EXCLUDE_DIRS`: the list of paths to folders (relative to the `DJ Music` folder on your `USB_PATH`) that should NOT be uploaded to the `beatcloud` when running the `upload_music` sync operation
 * `DOWNLOAD_INCLUDE_DIRS`: the list of paths to folders (relative to the `DJ Music` folder on your `USB_PATH`) that should exclusively be downloaded from the `beatcloud` when running the `download_music` sync operation
 * `DOWNLOAD_EXCLUDE_DIRS`: the list of paths to folders (relative to the `DJ Music` folder on your `USB_PATH`) that should NOT be downloaded from the `beatcloud` when running the `download_music` sync operation
-* `DOWNLOAD_FROM_SPOTIFY`: if this is set to the name of a playlist (present in `spotify_playlists.json`), then the only Beatcloud tracks present in this playlist will be downloaded
+* `DOWNLOAD_SPOTIFY`: if this is set to the name of a playlist (present in `spotify_playlists.yaml`), then the only Beatcloud tracks present in this playlist will be downloaded
 * `AWS_USE_DATE_MODIFIED`: up/download files that already exist at the destination if the date modified field at the source is after that of the destination (i.e. the ID3 tags have been changed)...BE SURE THAT ALL USERS OF THIS `BEATCLOUD` INSTANCE ARE ON BOARD BEFORE UPLOADING WITH THIS FLAG SET!
-* `XML_IMPORT_USER`: the username of a fellow `beatcloud` user (as present in `registered_users.json`) from whose Rekordbox XML you are importing tracks
+* `IMPORT_USER`: the username of a fellow `beatcloud` user (as present in `registered_users.yaml`) from whose Rekordbox XML you are importing tracks
 * `XML_PATH`: the full path to your Rekordbox XML file which should contain an up-to-date export of your Collection...the directory where this points to is also where all other XMLs generated or utilized by this library will exist
-* `USER`: this is the username that will be entered into `registered_users.json`...if left as an empty string, then your operating system username will be used...it's recommended that you only override this if your username changes from what other users of your `beatcloud` instance are expecting (to ensure consistency)
+* `USER`: this is the username that will be entered into `registered_users.yaml`...if left as an empty string, then your operating system username will be used...it's recommended that you only override this if your username changes from what other users of your `beatcloud` instance are expecting (to ensure consistency)
 * `DISCORD_URL`: webhook URL for messaging a Discord server's channel when new music has been uploaded to the `beatcloud`
 * `YOUTUBE_DL_URL`: URL from which music files should be downloaded (i.e. a Soundcloud playlist)
 * `YOUTUBE_DL_LOCATION`: path to download files to
 * `RANDOMIZE_TRACKS_PLAYLISTS`: list of playlist names (must exist in `XML_PATH`) that should have their tracks shuffled
 * `DOWNLOAD_MUSIC`: sync remote beatcloud to "DJ Music" folder
-* `DOWNLOAD_XML`: sync remote XML of `XML_IMPORT_USER` to parent of `XML_PATH`
+* `DOWNLOAD_XML`: sync remote XML of `IMPORT_USER` to parent of `XML_PATH`
+* `DRYRUN`: show `aws s3 sync` command output without running
 * `UPLOAD_MUSIC`: sync local "DJ Music" folder to the beatcloud
 * `UPLOAD_XML`: sync local `XML_PATH` to the beatcloud
-* `REKORDBOX_PLAYLISTS`: boolean flag to trigger the generation of a playlist structure (as informed by `rekordbox_playlists.json`) using the tags in `XML_PATH`...the resulting XML file is `XML_PATH` prefixed with "`auto_`"
-* `REKORDBOX_PLAYLISTS_REMAINDER`: whether tracks of remainder tags (those not specified in `rekordbox_playlists.json`) will be placed in a `folder` called "Other" with individual tag playlists or a `playlist` called "Other"
-* `GENRE_PLAYLISTS_PURE`: list of genre tags (case-sensitive) which will each have a "Pure" playlist generated for...each item must be accompanied with a "Pure \<genre>" entry in `rekordbox_playlists.json`,
-* `CHECK_TRACK_OVERLAP`: boolean flag to trigger checking the contents of Spotify playlists specified in `CHECK_SPOTIFY_PLAYLISTS` and the local files specified in `CHECK_LOCAL_DIRS` against the `beatcloud` (to identify redundancies)
-* `CHECK_TRACK_OVERLAP_FUZZ_RATIO`: the minimum Levenshtein similarity for indicating potential redundancies between Spotify playlists / local directories and the `beatcloud`
-* `CHECK_LOCAL_DIRS`: list of local directories (under "DJ Music") to use with `CHECK_TRACK_OVERLAP`,
-* `CHECK_SPOTIFY_PLAYLISTS`: list of Spotify playlists to use with `CHECK_TRACK_OVERLAP`
+* `REKORDBOX_PLAYLISTS`: boolean flag to trigger the generation of a playlist structure (as informed by `rekordbox_playlists.yaml`) using the tags in `XML_PATH`...the resulting XML file is `XML_PATH` prefixed with "`auto_`"
+* `REKORDBOX_PLAYLISTS_REMAINDER`: whether tracks of remainder tags (those not specified in `rekordbox_playlists.yaml`) will be placed in a `folder` called "Other" with individual tag playlists or a `playlist` called "Other"
+* `GENRE_PLAYLISTS_PURE`: list of genre tags (case-sensitive) which will each have a "Pure" playlist generated for...each item must be accompanied with a "Pure \<genre>" entry in `rekordbox_playlists.yaml`,
+* `COPY_TRACKS_PLAYLISTS`: list of playlists in `XML_PATH` to (a) copy audio files to `COPY_TRACKS_PLAYLISTS_DESTINATION` and (b) write to a new XML with updated Location fields.
+* `COPY_TRACKS_PLAYLISTS_DESTINATION`: path to copy audio files to.
+* `CHECK_TRACKS`: boolean flag to trigger checking the contents of Spotify playlists specified in `CHECK_TRACKS_SPOTIFY_PLAYLISTS` and the local files specified in `CHECK_TRACKS_LOCAL_DIRS` against the `beatcloud` (to identify redundancies)
+* `CHECK_TRACKS_FUZZ_RATIO`: the minimum Levenshtein similarity for indicating potential redundancies between Spotify playlists / local directories and the `beatcloud`
+* `CHECK_TRACKS_LOCAL_DIRS`: list of local directories (under "DJ Music") to use with `CHECK_TRACKS`,
+* `CHECK_TRACKS_SPOTIFY_PLAYLISTS`: list of Spotify playlists to use with `CHECK_TRACKS`
 * `PLAYLIST_FROM_UPLOAD`: boolean flag to trigger automatic generation of updating of Spotify playlists from the Discord webhook output of users' music upload (output must be copied to the system clipboard)
 * `SPOTIFY_CLIENT_ID`: client ID for registered Spotify API application
 * `SPOTIFY_CLIENT_SECRET`: client secret for registered Spotify API application
@@ -212,8 +232,11 @@ Please be sure to checkout the package-level README files regarding the usage of
 * `AUTO_PLAYLIST_UPDATE`: boolean flag to trigger the automatic generation or updating of Spotify playlists from subreddits
 * `SPOTIFY_USERNAME`: Spotify username that will keep playlists automatically generated
 * `AUTO_PLAYLIST_SUBREDDITS`: list of subreddits from which tracks should be added to Spotify auto-playlist; each element is a dictionary with keys for subreddit's "name", "type", "period", and "limit"
+* `AUTO_PLAYLIST_DEFAULT_LIMIT`: default number of tracks for a Spotify playlist
+* `AUTO_PLAYLIST_DEFAULT_PERIOD`: default subreddit period for a Spotify playlist
+* `AUTO_PLAYLIST_DEFAULT_TYPE`: default subreddit filter type for a Spotify playlist
 * `AUTO_PLAYLIST_FUZZ_RATIO`: the minimum Levenshtein similarity between a Spotify API track search result and a subreddit post title (if post is not directly a Spotify URL) to trigger the addition of that track to the corresponding Spotify auto-playlist
-* `AUTO_PLAYLIST_SUBREDDIT_LIMIT`: the maximum number of posts to retrieve from a subreddit
+* `AUTO_PLAYLIST_POST_LIMIT`: the maximum number of posts to retrieve from a subreddit
 * `REDDIT_CLIENT_ID`: client ID for registered Reddit API application
 * `REDDIT_CLIENT_SECRET`: client secret for registered Reddit API application
 * `REDDIT_USER_AGENT`: user-agent for registered Reddit API application
@@ -263,9 +286,9 @@ Out[4]: "Track_Title (Artist2 Remix) ['Things' & Stuff!] - Artist1, Artist2.mp3"
 
 In general:
 * keep the filenames as close as possible to the `Title (Artist2 Remix) - Artist1, Artist2` format
-* ensure there is only one instances of a hyphen with spaces on each side; title / artist splitting which is needed for `utils.helpers.compare_tracks` will not work properly without this
+* ensure there is only one instances of a hyphen with spaces on each side; title / artist splitting which is needed for `utils.check_tracks.compare_tracks` will not work properly without this
 * if the source is Spotify, try to match the fields as close as possible; e.g. if the title includes `(Radio Edit)` then you should name the track accordingly
-    - this is to ensure that `utils.helpers.compare_tracks` works properly since the similarity of filenames are checked against Spotify API query results
+    - this is to ensure that `utils.check_tracks.compare_tracks` works properly since the similarity of filenames are checked against Spotify API query results
 * don't use accent marks, any of the explicitly listed characters disallowed by Windows, or any other weird / non-standard characters
 
 #### Standardization

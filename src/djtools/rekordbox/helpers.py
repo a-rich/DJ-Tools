@@ -1,8 +1,9 @@
 """This module contains helpers for the rekordbox package."""
-import json
 import os
 import re
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+import shutil
+from typing import Any, Dict, List, Optional, Set, Tuple 
+from urllib.parse import quote, unquote
 
 import bs4
 from bs4 import BeautifulSoup
@@ -89,6 +90,26 @@ class BooleanNode:
             return set(tracks.get(tag, {}).keys())
 
 
+def copy_file(
+    track: bs4.element.Tag,
+    destination: str,
+    loc_prefix: str="file://localhost",
+):
+    """Copies tracks to a destination and writes new Location field.
+
+    Args:
+        track: TRACK node from XML.
+        destination: Directory to copy tracks to.
+        loc_prefix: Location field prefix.
+    """
+    loc = unquote(track["Location"]).split(loc_prefix)[-1]
+    new_loc = os.path.join(
+        destination, os.path.basename(loc)
+    ).replace(os.sep, "/")
+    shutil.copyfile(loc, new_loc)		
+    track["Location"] = f"{loc_prefix}{quote(new_loc)}"
+
+
 def get_playlist_track_locations(
     soup: BeautifulSoup, _playlist: str, seen_tracks: Set[str]
 ) -> List[str]:
@@ -120,51 +141,6 @@ def get_playlist_track_locations(
     return playlist_tracks
 
 
-def rewrite_xml(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
-    """This function modifies the "Location" field of track tags in a
-        downloaded Rekordbox XML replacing the "USB_PATH" written by
-        "XML_IMPORT_USER" with the "USB_PATH" in "config.json".
-
-    Args:
-        config: Configuration object.
-
-    Raises:
-        KeyError: "XML_PATH" must be configured.
-    """
-    xml_path = config.get("XML_PATH")
-    if not xml_path:
-        raise ValueError(
-            "Using the sync_operations module's download_xml function "
-            "requires the config option XML_PATH"
-        )
-
-    registered_users_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)),
-        "configs",
-        "registered_users.json",
-    ).replace(os.sep, "/")
-
-    with open(registered_users_path, mode="r", encoding="utf-8") as _file:
-        registered_users = json.load(_file)
-        src = registered_users[config["XML_IMPORT_USER"]].strip("/")
-        dst = registered_users[config["USER"]].strip("/")
-
-    xml_path = os.path.join(
-        os.path.dirname(xml_path),
-        f'{config["XML_IMPORT_USER"]}_rekordbox.xml',
-    ).replace(os.sep, "/")
-
-    with open(xml_path, mode="r", encoding="utf-8") as _file:
-        soup = BeautifulSoup(_file.read(), "xml")
-        for track in soup.find_all("TRACK"):
-            if not track.get("Location"):
-                continue
-            track["Location"] = track["Location"].replace(src, dst)
-
-    with open(xml_path, mode="wb", encoding=soup.orignal_encoding) as _file:
-        _file.write(soup.prettify("utf-8"))
-
-
 def set_tag(track: str, index: int):
     """Threaded process to set TRACK node's TrackNumber tag.
 
@@ -177,8 +153,8 @@ def set_tag(track: str, index: int):
 
 def wrap_playlists(soup: BeautifulSoup, randomized_tracks: List[bs4.element.Tag]):
     """Creates a playlist called "AUTO_RANDOMIZE", inserts the randomized
-        tracks into it, and then inserts "AUTO_RANDOMIZE" into the root of the
-        "Playlist" folder.
+    tracks into it, and then inserts "AUTO_RANDOMIZE" into the root of the
+    "Playlist" folder.
 
     Args:
         soup: Parsed XML.

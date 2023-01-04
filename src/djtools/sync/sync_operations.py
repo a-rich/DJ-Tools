@@ -1,74 +1,54 @@
 """This module is responsible for syncing tracks between "USB_PATH" and the
 beatcloud (upload and download). It also handles uploading the Rekordbox XML
 located at "XML_PATH" and downloading the Rekordbox XML uploaded to the
-beatcloud by "XML_IMPORT_USER" before modifying it to point to track locations
-at "USB_PATH".
+beatcloud by "IMPORT_USER" before modifying it to point to track locations at
+"USB_PATH".
 """
 import logging
 import os
 from pathlib import Path
 from typing import Dict, List, Union
 
-from djtools.rekordbox.helpers import rewrite_xml
-from djtools.sync.helpers import parse_sync_command, run_sync, webhook
-from djtools.utils.check_track_overlap import compare_tracks
+from djtools.sync.config import SyncConfig
+from djtools.sync.helpers import (
+    parse_sync_command, rewrite_xml, run_sync, webhook
+)
+from djtools.utils.check_tracks import compare_tracks
 from djtools.utils.helpers import make_dirs
 
 
 logger = logging.getLogger(__name__)
 
 
-def download_music(
-    config: Dict[str, Union[List, Dict, str, bool, int, float]],
-    beatcloud_tracks: List[str] = [],
-):
+def download_music(config: SyncConfig, beatcloud_tracks: List[str] = []):
     """This function syncs tracks from the beatcloud to "USB_PATH".
 
-    If "DOWNLOAD_FROM_SPOTIFY" is set to a playlist name that exists in
-    "spotify_playlists.json", then "DOWNLOAD_INCLUDE_DIRS" will be populated
+    If "DOWNLOAD_SPOTIFY" is set to a playlist name that exists in
+    "spotify_playlists.yaml", then "DOWNLOAD_INCLUDE_DIRS" will be populated
     with tracks in that playlist that match Beatcloud tracks.
 
     Args:
         config: Configuration object.
         beatcloud_tracks: List of track artist - titles from S3.
-
-    Raises:
-        KeyError: "USB_PATH" must be configured.
-        FileNotFoundError: "USB_PATH" must exist.
     """
-    try:
-        usb_path = config["USB_PATH"]
-    except KeyError:
-        raise KeyError(
-            "Using the download_music function of the sync_operations module "
-            "requires the config option USB_PATH"
-        ) from KeyError
-    
-    if not os.path.exists(usb_path):
-        raise FileNotFoundError(f'USB_PATH "{usb_path}" does not exist!')
-    
-    playlist_name = config.get("DOWNLOAD_FROM_SPOTIFY")
+    playlist_name = config.DOWNLOAD_SPOTIFY
     if playlist_name:
         user = playlist_name.split("Uploads")[0].strip()
-        cached_playlists = config.get("CHECK_SPOTIFY_PLAYLISTS", [])
-        cached_local_dirs = config.get("CHECK_LOCAL_DIRS", [])
-        config["CHECK_SPOTIFY_PLAYLISTS"] = [playlist_name]
-        config["CHECK_LOCAL_DIRS"] = []
         beatcloud_tracks, beatcloud_matches = compare_tracks(
-            config, beatcloud_tracks=beatcloud_tracks
+            config,
+            beatcloud_tracks=beatcloud_tracks,
+            download_spotify_playlist=playlist_name,
         )
-        config["DOWNLOAD_INCLUDE_DIRS"] = [
+        config.DOWNLOAD_INCLUDE_DIRS = [
             os.path.join(
                 user,
                 path.split(os.path.join(user, "").replace(os.sep, "/"))[-1]
             )
             for path in beatcloud_matches
         ]
-        config["DOWNLOAD_EXCLUDE_DIRS"] = []
-        config["CHECK_SPOTIFY_PLAYLISTS"] = cached_playlists
-        config["CHECK_LOCAL_DIRS"] = cached_local_dirs
+        config.DOWNLOAD_EXCLUDE_DIRS = []
 
-    dest = os.path.join(usb_path, "DJ Music").replace(os.sep, "/")
+    dest = os.path.join(config.USB_PATH, "DJ Music").replace(os.sep, "/")
     glob_path = Path(dest)
     old = {
         str(p) for p in glob_path.rglob(
@@ -96,47 +76,30 @@ def download_music(
     return beatcloud_tracks
 
 
-def download_xml(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
-    """This function downloads the beatcloud XML of "XML_IMPORT_USER" and
-        modifies the "Location" field of all the tracks so that it points to 
-        USER's "USB_PATH".
+def download_xml(config: SyncConfig):
+    """This function downloads the beatcloud XML of "IMPORT_USER" and modifies
+        the "Location" field of all the tracks so that it points to USER's
+        "USB_PATH".
 
     Args:
         config: Configuration object.
-
-    Raises:
-        KeyError: "XML_PATH" must be configured.
-        FileNotFoundError: XML destination directory must exist.
     """
-    try:
-        xml_path = config["XML_PATH"]
-    except KeyError:
-        raise KeyError(
-            "Using the download_xml function of the sync_operations module "
-            "requires the config option XML_PATH"
-        ) from KeyError
-    
-    if not os.path.exists(xml_path):
-        raise FileNotFoundError(
-            "Using the download_xml function of the sync_operations module "
-            "requires the config option XML_PATH to be valid."
-        )
-
     logger.info("Syncing remote rekordbox.xml...")
-    xml_dir = os.path.dirname(xml_path)
+    xml_dir = os.path.dirname(config.XML_PATH)
     make_dirs(xml_dir)
-    _file = f'{config["XML_IMPORT_USER"]}_rekordbox.xml'
+    _file = f'{config.IMPORT_USER}_rekordbox.xml'
     _file = os.path.join(xml_dir, _file).replace(os.sep, "/")
     cmd = (
         "aws s3 cp s3://dj.beatcloud.com/dj/xml/"
-        f'{config["XML_IMPORT_USER"]}/rekordbox.xml {_file}'
+        f'{config.IMPORT_USER}/rekordbox.xml {_file}'
     )
     logger.info(cmd)
     os.system(cmd)
-    rewrite_xml(config)
+    if config.USER != config.IMPORT_USER:
+        rewrite_xml(config)
 
 
-def upload_music(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
+def upload_music(config: SyncConfig):
     """This function syncs tracks from "USB_PATH" to the beatcloud.
         "AWS_USE_DATE_MODIFIED" can be used in order to reupload tracks that
         already exist in the beatcloud but have been modified since the last
@@ -144,23 +107,10 @@ def upload_music(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
 
     Args:
         config: Configuration object.
-
-    Raises:
-        KeyError: "USB_PATH" must be configured.
-        FileNotFoundError: "USB_PATH" must exist.
     """
-    try:
-        usb_path = config["USB_PATH"]
-    except KeyError:
-        raise KeyError(
-            "Using the upload_music function of the sync_operations module "
-            "requires the config option USB_PATH"
-        ) from KeyError
-
-    if not os.path.exists(usb_path):
-        raise FileNotFoundError(f'USB_PATH "{usb_path}" does not exist!')
-
-    glob_path = Path(os.path.join(usb_path, "DJ Music").replace(os.sep, "/"))
+    glob_path = Path(
+        os.path.join(config.USB_PATH, "DJ Music").replace(os.sep, "/")
+    )
     hidden_files = {
         str(p) for p in glob_path.rglob(
             os.path.join("**", ".*.*").replace(os.sep, "/")
@@ -173,41 +123,26 @@ def upload_music(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
             os.remove(_file)
 
     logger.info("Syncing track collection...")
-    src = os.path.join(usb_path, "DJ Music").replace(os.sep, "/")
+    src = os.path.join(config.USB_PATH, "DJ Music").replace(os.sep, "/")
     cmd = ["aws", "s3", "sync", src, "s3://dj.beatcloud.com/dj/music/"]
 
-    if config.get("DISCORD_URL") and not config.get("DRYRUN"):
+    if config.DISCORD_URL and not config.DRYRUN:
         webhook(
-            config["DISCORD_URL"],
+            config.DISCORD_URL,
             content=run_sync(parse_sync_command(cmd, config, upload=True)),
         )
     else:
         run_sync(parse_sync_command(cmd, config, upload=True))
 
 
-def upload_xml(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
+def upload_xml(config: SyncConfig):
     """This function uploads "XML_PATH" to beatcloud.
 
     Args:
         config: Configuration object.
-
-    Raises:
-        KeyError: "XML_PATH" must be configured.
-        FileNotFoundError: "XML_PATH" file must exist.
     """
-    try:
-        xml_path = config["XML_PATH"]
-    except KeyError:
-        raise KeyError(
-            "Using the upload_xml function of the sync_operations module "
-            "requires the config option XML_PATH"
-        ) from KeyError
-
-    if not os.path.exists(xml_path):
-        raise FileNotFoundError(f'XML_PATH "{xml_path}" does not exist!')
-
-    logger.info(f"Uploading {config['USER']}'s rekordbox.xml...")
-    dst = f's3://dj.beatcloud.com/dj/xml/{config["USER"]}/'
-    cmd = f"aws s3 cp {xml_path} {dst}"
+    logger.info(f"Uploading {config.USER}'s rekordbox.xml...")
+    dst = f"s3://dj.beatcloud.com/dj/xml/{config.USER}/"
+    cmd = f"aws s3 cp {config.XML_PATH} {dst}"
     logger.info(cmd)
     os.system(cmd)

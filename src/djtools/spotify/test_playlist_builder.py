@@ -62,14 +62,14 @@ async def test_async_update_auto_playlists(
 ):
     if not got_tracks:
         mock_get_subreddit_posts.return_value[0] = []
-    test_config["SPOTIFY_CLIENT_ID"] = "test_client_id"
-    test_config["SPOTIFY_CLIENT_SECRET"] = "test_client_secret"
-    test_config["SPOTIFY_REDIRECT_URI"] = "test_redirect_uri"
-    test_config["AUTO_PLAYLIST_SUBREDDITS"] = playlist_subreddits
+    test_config.SPOTIFY_CLIENT_ID = "test_client_id"
+    test_config.SPOTIFY_CLIENT_SECRET = "test_client_secret"
+    test_config.SPOTIFY_REDIRECT_URI = "test_redirect_uri"
+    test_config.AUTO_PLAYLIST_SUBREDDITS = playlist_subreddits
     with mock.patch(
         "builtins.open",
         MockOpen(
-            files=["spotify_playlists.json", ".praw.cache"],
+            files=["spotify_playlists.yaml", ".praw.cache"],
             content='{"jungle": "some-id"}' if got_playlist_ids else "{}",
         ).open
     ):
@@ -77,44 +77,16 @@ async def test_async_update_auto_playlists(
 
 
 @pytest.mark.asyncio
-@mock.patch(
-    "djtools.spotify.playlist_builder.get_subreddit_posts",
-    return_value=(
-        [("track-id", "track name")],
-        {"name": "jungle", "type": "hot", "period": "week", "limit": 50},
-    ),
-)
-@mock.patch("djtools.spotify.playlist_builder.get_spotify_client")
-async def test_async_update_auto_playlists_missing_spotify_username(
-    mock_spotify,
-    mock_get_subreddit_posts,
+async def test_async_update_auto_playlists_missing_subreddit_name(
     test_config,
 ):
-    test_config["SPOTIFY_CLIENT_ID"] = "test_client_id"
-    test_config["SPOTIFY_CLIENT_SECRET"] = "test_client_secret"
-    test_config["SPOTIFY_REDIRECT_URI"] = "test_redirect_uri"
-    test_config["AUTO_PLAYLIST_SUBREDDITS"] = [
-        {"name": "jungle", "type": "hot", "period": "week", "limit": 50}
+    test_config.AUTO_PLAYLIST_SUBREDDITS = [
+        {"type": "hot", "period": "week", "limit": 50}
     ]
-    del test_config["SPOTIFY_USERNAME"]
     with pytest.raises(
-        KeyError,
-        match="The spotify.playlist_builder module requires the config option "
-            "SPOTIFY_USERNAME"
+        ValueError, match="Subreddit configs must include a name."
     ):
         await async_update_auto_playlists(test_config)
-
-
-@pytest.mark.asyncio
-async def test_async_update_auto_playlists_missing_playlists(test_config, caplog):
-    caplog.set_level("ERROR")
-    test_config["AUTO_PLAYLIST_SUBREDDITS"] = ""
-    ret = await async_update_auto_playlists(test_config)
-    assert not ret
-    assert caplog.records[0].message == (
-        "Using the spotify.playlist_builder module requires the config "
-        "option AUTO_PLAYLIST_SUBREDDITS"
-    )
 
 
 @pytest.mark.parametrize("input_", [True, "test.txt"])
@@ -141,9 +113,9 @@ def test_playlist_from_upload(
     test_config,
     tmpdir,
 ):
-    test_config["SPOTIFY_CLIENT_ID"] = "test_client_id"
-    test_config["SPOTIFY_CLIENT_SECRET"] = "test_client_secret"
-    test_config["SPOTIFY_REDIRECT_URI"] = "test_redirect_uri"
+    test_config.SPOTIFY_CLIENT_ID = "test_client_id"
+    test_config.SPOTIFY_CLIENT_SECRET = "test_client_secret"
+    test_config.SPOTIFY_REDIRECT_URI = "test_redirect_uri"
     content = """aweeeezy/Bass/2022-09-03: 5
                    Brazil - A.M.C.mp3
                    Endless Haze - Koherent.mp3
@@ -155,72 +127,42 @@ def test_playlist_from_upload(
                    UNKNOWN - 1 - Unknown Artist.mp3"""
     if isinstance(input_, bool):
         pyperclip.copy(content)
-        test_config["PLAYLIST_FROM_UPLOAD"] = True
+        test_config.PLAYLIST_FROM_UPLOAD = True
     else:
         path = os.path.join(tmpdir, input_).replace(os.sep, "/")
         with open(path, mode="w", encoding="utf-8",) as _file:
             _file.write(content)
-        test_config["PLAYLIST_FROM_UPLOAD"] = path
+        test_config.PLAYLIST_FROM_UPLOAD = path
     with mock.patch(
         "builtins.open",
-        MockOpen(files=["spotify_playlists.json"], content="{}").open
+        MockOpen(files=["spotify_playlists.yaml"], content="{}").open
     ):
         playlist_from_upload(test_config)
 
 
-def test_playlist_from_upload_raises_playlist_from_upload_keyerror(
-    test_config
+@mock.patch(
+    "djtools.spotify.playlist_builder.filter_results",
+    return_value={},
+)
+@mock.patch("djtools.spotify.playlist_builder.get_spotify_client")
+def test_playlist_from_upload_handles_non_match(
+    mock_spotify, mock_filter_results, test_config, caplog
 ):
-    del test_config["PLAYLIST_FROM_UPLOAD"]
-    with pytest.raises(
-        KeyError,
-        match="Using the playlist_from_upload function of the "
-            "spotify.playlist_builder module requires the "
-            "PLAYLIST_FROM_UPLOAD config option",
+    caplog.set_level("WARNING")
+    title = "Under Pressure"
+    artist = "Alix Perez, T-Man"
+    content = f"""aweeeezy/Bass/2022-09-03: 5
+                   {title} - {artist}.mp3"""
+    pyperclip.copy(content)
+    test_config.PLAYLIST_FROM_UPLOAD = True
+    with mock.patch(
+        "builtins.open",
+        MockOpen(files=["spotify_playlists.yaml"], content="{}").open
     ):
         playlist_from_upload(test_config)
-
-
-def test_playlist_from_upload_raises_filenotfounderror(test_config):
-    file_ = "nonexistent.txt"
-    test_config["PLAYLIST_FROM_UPLOAD"] = file_
-    with pytest.raises(FileNotFoundError, match=f"{file_} does not exit"):
-        playlist_from_upload(test_config)
-
-
-def test_playlist_from_upload_raises_runtimeerror(test_config):
-    pyperclip.copy("")
-    test_config["PLAYLIST_FROM_UPLOAD"] = True
-    with pytest.raises(
-        RuntimeError,
-        match="Generating a Spotify playlist from an upload requires either "
-            '"upload_output", a path to the upload_music Discord webhook '
-            "output, or that output to be copied to the system's clipboard"
-    ):
-        playlist_from_upload(test_config)
-
-
-def test_playlist_from_upload_raises_username_keyerror(test_config):
-    del test_config["SPOTIFY_USERNAME"]
-    test_config["PLAYLIST_FROM_UPLOAD"] = True
-    pyperclip.copy(" ")
-    with pytest.raises(
-        KeyError,
-        match="The spotify.playlist_builder module requires the config option "
-            "SPOTIFY_USERNAME"
-    ):
-        playlist_from_upload(test_config)
-
-
-def test_playlist_from_upload_raises_valueerror(test_config):
-    upload_output = 1
-    test_config["PLAYLIST_FROM_UPLOAD"] = upload_output
-    with pytest.raises(
-        ValueError,
-        match="Config option PLAYLIST_FROM_UPLOAD must be either a path to a "
-            f'file or a boolean, but got "{upload_output}"'
-    ):
-        playlist_from_upload(test_config)
+    assert caplog.records[0].message == (
+        f"Could not find a match for {title} - {artist}"
+    )
 
 
 @mock.patch("djtools.spotify.helpers.get_spotify_client")
@@ -240,13 +182,13 @@ def test_playlist_from_upload_handles_spotify_exception(
     content = f"""aweeeezy/Bass/2022-09-03: 5
                    {title} - {artist}.mp3"""
     pyperclip.copy(content)
-    test_config["PLAYLIST_FROM_UPLOAD"] = True
-    test_config["SPOTIFY_CLIENT_ID"] = "test_client_id"
-    test_config["SPOTIFY_CLIENT_SECRET"] = "test_client_secret"
-    test_config["SPOTIFY_REDIRECT_URI"] = "test_redirect_uri"
+    test_config.PLAYLIST_FROM_UPLOAD = True
+    test_config.SPOTIFY_CLIENT_ID = "test_client_id"
+    test_config.SPOTIFY_CLIENT_SECRET = "test_client_secret"
+    test_config.SPOTIFY_REDIRECT_URI = "test_redirect_uri"
     with mock.patch(
         "builtins.open",
-        MockOpen(files=["spotify_playlists.json"], content="{}").open
+        MockOpen(files=["spotify_playlists.yaml"], content="{}").open
     ):
         playlist_from_upload(test_config)
     assert caplog.records[0].message.startswith(
@@ -254,29 +196,16 @@ def test_playlist_from_upload_handles_spotify_exception(
     )
 
 
-@mock.patch(
-    "djtools.spotify.playlist_builder.filter_results",
-    return_value={},
-)
-@mock.patch("djtools.spotify.playlist_builder.get_spotify_client")
-def test_playlist_from_upload_handles_non_match(
-    mock_spotify, mock_filter_results, test_config, caplog
-):
-    caplog.set_level("WARNING")
-    title = "Under Pressure"
-    artist = "Alix Perez, T-Man"
-    content = f"""aweeeezy/Bass/2022-09-03: 5
-                   {title} - {artist}.mp3"""
-    pyperclip.copy(content)
-    test_config["PLAYLIST_FROM_UPLOAD"] = True
-    with mock.patch(
-        "builtins.open",
-        MockOpen(files=["spotify_playlists.json"], content="{}").open
+def test_playlist_from_upload_raises_runtimeerror(test_config):
+    pyperclip.copy("")
+    test_config.PLAYLIST_FROM_UPLOAD = True
+    with pytest.raises(
+        RuntimeError,
+        match="Generating a Spotify playlist from an upload requires output "
+            "from an upload_music Discord webhook to be copied to the "
+            "system's clipboard"
     ):
         playlist_from_upload(test_config)
-    assert caplog.records[0].message == (
-        f"Could not find a match for {title} - {artist}"
-    )
 
 
 @mock.patch(

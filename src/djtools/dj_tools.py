@@ -1,6 +1,9 @@
 """This is the entry point for the DJ Tools library.
 
 Rekordbox operations:
+    * COPY_TRACKS_PLAYLISTS (copy_tracks_playlists.py): Copy audio files from
+        playlists to a new location and generate a new XML with updated
+        Location fields.
     * RANDOMIZE_TRACKS (randomize_tracks.py): Set ID3 tags of tracks in
         playlists sequentially (after shuffling) to randomize.
     * REKORDBOX_PLAYLISTS (rekordbox.playlist_builder.py): Automatically
@@ -14,18 +17,15 @@ Spotify operations:
         uploading music.
 
 Utils operations:
-    * CHECK_TRACK_OVERLAP (check_track_overlap.py): Identify overlap between
-        Spotify playlists and / or local directories and and the Beatcloud.
-    * COPY_PLAYLISTS_TRACKS (copy_playlists_tracks.py): Copy audio files from
-        playlists to a new location and generate a new XML with updated
-        Location fields.
+    * CHECK_TRACKS (check_tracks.py): Identify overlap between Spotify 
+        playlists and / or local directories and and the Beatcloud.
     * YOUTUBE_DL (youtube_dl.py): Download tracks from a URL (e.g. Soundcloud
         playlist).
 
 Sync operations:
     * DOWNLOAD_MUSIC: Sync tracks from beatcloud to USB_PATH.
-    * DOWNLOAD_XML: Sync XML_IMPORT_USER's beatcloud XML to
-        XML_PATH's parent folder.
+    * DOWNLOAD_XML: Sync IMPORT_USER's beatcloud XML to XML_PATH's parent
+        folder.
     * UPLOAD_MUSIC: Sync tracks from USB_PATH to beatcloud.
     * UPLOAD_XML: Sync XML_PATH to USER's beatcloud XML folder.
 """
@@ -69,12 +69,10 @@ except ImportError:
         '`pip install "dj-beatcloud[levenshtein]"`'
     )
 
-# Load "config.json", override with any command-line arguments, and
-# validate the final config.
+# Load "config.yaml".
 try:
     config = build_config()
-    if config.get("LOG_LEVEL"):
-        logger.setLevel(config["LOG_LEVEL"])
+    logger.setLevel(config["configs"].LOG_LEVEL)
 except Exception as exc:
     msg = f"Failed to load config: {exc}"
     logger.critical(msg)
@@ -94,21 +92,27 @@ def main():
         SYNC_OPERATIONS,
     ]:
         for operation, func in package.items():
-            if not config.get(operation):
+            pkg_name = func.__module__.split(".")[1]
+            pkg_cfg = config.get(pkg_name)
+            if not pkg_cfg:
+                raise RuntimeError(
+                    f"config doesn't have options for the '{pkg_name}' package"
+                )
+            if not getattr(pkg_cfg, operation):
                 continue
             try:
                 logger.info(f"Beginning {operation}...")
-                if operation in ["CHECK_TRACK_OVERLAP", "DOWNLOAD_MUSIC"]:
+                if operation in ["CHECK_TRACKS", "DOWNLOAD_MUSIC"]:
                     beatcloud_cache = func(
-                        config, beatcloud_tracks=beatcloud_cache
+                        pkg_cfg, beatcloud_tracks=beatcloud_cache
                     )
                 else:
-                    func(config)
+                    func(pkg_cfg)
             except Exception as exc:
                 logger.error(f"{operation} failed: {exc}\n{format_exc()}")
 
-    # Attempt uploading today's log file.
-    upload_log(config, log_file)
+    # Attempt uploading log file.
+    upload_log(config["sync"], log_file)
 
 
 if __name__ == "__main__":

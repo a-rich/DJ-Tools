@@ -1,7 +1,9 @@
 import asyncio
 from unittest import mock
 
+import asyncpraw
 import pytest
+import spotipy
 
 from djtools.spotify.helpers import (
     build_new_playlist,
@@ -262,47 +264,32 @@ def test_fuzzy_match_handles_spotify_exception(
         assert not ret
 
 
+@mock.patch(
+    "builtins.open",
+    MockOpen(
+        files=["spotify_playlists.yaml"],
+        content="playlist: playlist-id",
+    ).open
+)
 def test_get_playlist_ids():
     playlist_ids = get_playlist_ids()
     assert isinstance(playlist_ids, dict)
 
 
-def test_get_reddit_client_missing_reddit_configs(test_config,):
-    del test_config["REDDIT_CLIENT_ID"]
-    with pytest.raises(
-        KeyError,
-        match="Using the spotify.playlist_builder module requires the "
-            "following config options: REDDIT_CLIENT_ID, "
-            "REDDIT_CLIENT_SECRET, REDDIT_USER_AGENT"
-    ):
-        get_reddit_client(test_config)
+@mock.patch("djtools.spotify.helpers.praw.Reddit")
+def test_get_reddit_client(test_config):
+    test_config.REDDIT_CLIENT_ID = "test_client_id"
+    test_config.REDDIT_CLIENT_SECRET = "test_client_secret"
+    test_config.REDDIT_USER_AGENT = "test_user_agent"
+    get_reddit_client(test_config)
 
 
 @mock.patch("djtools.spotify.helpers.spotipy.Spotify")
 def test_get_spotify_client(test_config):
-    test_config["SPOTIFY_CLIENT_ID"] = "test_client_id"
-    test_config["SPOTIFY_CLIENT_SECRET"] = "test_client_secret"
-    test_config["SPOTIFY_REDIRECT_URI"] = "test_redirect_uri"
+    test_config.SPOTIFY_CLIENT_ID = "test_client_id"
+    test_config.SPOTIFY_CLIENT_SECRET = "test_client_secret"
+    test_config.SPOTIFY_REDIRECT_URI = "test_redirect_uri"
     get_spotify_client(test_config)
-
-
-def test_get_spotify_client_missing_spotify_configs(test_config):
-    del test_config["SPOTIFY_CLIENT_ID"]
-    with pytest.raises(
-        KeyError,
-        match="Using the spotify package requires the following config "
-            "options: SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, "
-            "SPOTIFY_REDIRECT_URI"
-    ):
-        get_spotify_client(test_config)
-        
-
-def test_get_spotify_client_bad_spotify_configs(test_config):
-    with pytest.raises(
-        Exception,
-        match="Failed to instantiate the Spotify client",
-    ):
-        get_spotify_client(test_config)
 
 
 @pytest.mark.asyncio
@@ -622,8 +609,8 @@ def test_update_existing_playlist(
     )
 
 
+@mock.patch(
+    "builtins.open", MockOpen(files=["spotify_playlists.yaml"]).open
+)
 def test_write_playlist_ids():
-    with mock.patch(
-        "builtins.open", MockOpen(files=["spotify_playlists.json"]).open
-    ) as mock_file:
         write_playlist_ids({})
