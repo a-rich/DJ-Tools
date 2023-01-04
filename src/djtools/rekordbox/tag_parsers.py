@@ -37,7 +37,7 @@ class TagParser(ABC):
         """Constructor.
 
         Args:
-            parser_config: JSON playlist structure.
+            parser_config: YAML playlist structure.
         """
         self.parser_config = parser_config
 
@@ -71,7 +71,7 @@ class Combiner(TagParser):
         """Constructor.
 
         Args:
-            parser_config: JSON playlist structure.
+            parser_config: YAML playlist structure.
         """
         super().__init__(parser_config, **kwargs)
         self._tracks = defaultdict(lambda: defaultdict(list))
@@ -301,7 +301,7 @@ class GenreTagParser(TagParser):
         """Constructor.
 
         Args:
-            parser_config: JSON playlist structure.
+            parser_config: YAML playlist structure.
             pure_genre_playlists: List of genre tags from which "pure"
                 playlists will be generated. A "pure" playlist is one in which
                 every track has genre tags which all contain a corresponding
@@ -338,7 +338,7 @@ class MyTagParser(TagParser):
         """Constructor.
 
         Args:
-            parser_config: JSON playlist structure.
+            parser_config: YAML playlist structure.
         """
         super().__init__(parser_config, **kwargs)
         self._regex = re.compile(r"(?<=\/\*).*(?=\*\/)")
@@ -357,4 +357,3 @@ class MyTagParser(TagParser):
             return []
 
         return [x.strip() for x in tags.group().split("/")]
-

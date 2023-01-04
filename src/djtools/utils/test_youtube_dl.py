@@ -36,10 +36,10 @@ def test_fix_up(test_assets):
 
 
 def test_youtube_dl(tmpdir, test_config):
-    test_config["YOUTUBE_DL_URL"] = (
+    test_config.YOUTUBE_DL_URL = (
         "https://soundcloud.com/aweeeezy_music/sets/test-download"
     )
-    test_config["YOUTUBE_DL_LOCATION"] = tmpdir
+    test_config.YOUTUBE_DL_LOCATION = tmpdir
     with mock.patch(
         "youtube_dl.YoutubeDL",
     ) as mock_ytdl:
@@ -53,13 +53,7 @@ def test_youtube_dl(tmpdir, test_config):
     assert len(os.listdir(tmpdir)) == 1
 
 
-def test_youtube_dl_no_url(test_config):
-    del test_config["YOUTUBE_DL_URL"]
-    with pytest.raises(KeyError):
-        youtube_dl(test_config)
-    
-
 def test_youtube_dl_invalid_url(test_config):
-    test_config["YOUTUBE_DL_URL"] = ""
+    test_config.YOUTUBE_DL_URL = ""
     with pytest.raises(DownloadError):
         youtube_dl(test_config)

@@ -2,7 +2,6 @@
 particular subpackage of this library.
 """
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timedelta
 from glob import glob
 from itertools import product
 import logging
@@ -15,9 +14,50 @@ import spotipy
 from tqdm import tqdm
 
 from djtools.spotify.helpers import get_playlist_ids, get_spotify_client
+from djtools.utils.config import UtilsConfig
 
 
 logger = logging.getLogger(__name__)
+
+
+def add_tracks(result: Dict[str, Any]) -> List[str]:
+    """Parses a page of Spotify API result tracks and returns a list of the
+        track titles and artist names.
+
+    Args:
+        result: Paged result of Spotify tracks.
+
+    Returns:
+        Spotify track titles and artist names.
+    """
+    tracks = []
+    for track in result["items"]:
+        title = track["track"]["name"]
+        artists = ", ".join([y["name"] for y in track["track"]["artists"]])
+        tracks.append(f"{title} - {artists}")
+
+    return tracks
+
+
+def catch(
+    func: Callable,
+    *args,
+    handle: Optional[Callable] = lambda e: None,
+    **kwargs,
+):  
+    """This function permits one-line try/except logic for comprehensions.
+
+    Args:
+        func: Function to try.
+        handle: Handler function.
+
+    Returns:
+        Callable to handle exception.
+    """
+    try:
+        return func(*args, **kwargs)
+    except Exception as exc:
+        return handle(exc)
 
 
 def compute_distance(
@@ -47,7 +87,7 @@ def compute_distance(
 def find_matches(
     spotify_tracks: Dict[str, Set[str]],
     beatcloud_tracks: List[str],
-    config: Dict[str, Union[List, Dict, str, bool, int, float]],
+    config: UtilsConfig,
 ) -> List[Tuple[str, float]]:
     """Computes the Levenshtein similarity between the product of all beatcloud
         tracks with all the tracks in the given Spotify playlist(s) and returns
@@ -69,7 +109,7 @@ def find_matches(
     _product = list(product(spotify_tracks, beatcloud_tracks))
     _temp, beatcloud_tracks = zip(*_product)
     spotify_playlists, spotify_tracks = zip(*_temp)
-    fuzz_ratio = config.get("CHECK_TRACK_OVERLAP_FUZZ_RATIO", 80)
+    fuzz_ratio = config.CHECK_TRACKS_FUZZ_RATIO
     payload = [
         spotify_playlists,
         spotify_tracks,
@@ -108,37 +148,18 @@ def get_beatcloud_tracks() -> List[str]:
     return tracks
 
 
-def get_local_tracks(
-    config: Dict[str, Union[List, Dict, str, bool, int, float]],
-) -> Dict[str, List[str]]:
+def get_local_tracks(config: UtilsConfig) -> Dict[str, List[str]]:
     """Aggregates the files from one or more local directories in a dictionary
         mapped with parent directories.
 
     Args:
         config: Configuration object.
 
-    Raises:
-        KeyError: "CHECK_LOCAL_DIRS" must be configured.
-        ValueError: "CHECK_LOCAL_DIRS" must be configured.
-
     Returns:
         Local file names keyed by parent directory.
     """
-    if "CHECK_LOCAL_DIRS" not in config:
-        raise KeyError(
-            "Using the local_dirs_checker module requires the config option "
-            "CHECK_LOCAL_DIRS to be set to a list of one or more directories "
-            "containing new tracks"
-        )
-    if not config["CHECK_LOCAL_DIRS"]:
-        raise ValueError(
-            "Using the local_dirs_checker module requires the config option "
-            "CHECK_LOCAL_DIRS to be set to a list of one or more directories "
-            "containing new tracks"
-        )
-
     local_dir_tracks = {}
-    for _dir in config["CHECK_LOCAL_DIRS"]:
+    for _dir in config.CHECK_TRACKS_LOCAL_DIRS:
         path = _dir.replace(os.sep, "/")
         if not os.path.exists(path):
             logger.warning(
@@ -158,40 +179,6 @@ def get_local_tracks(
     return local_dir_tracks
 
 
-def get_spotify_tracks(
-    config: Dict[str, Union[List, Dict, str, bool, int, float]]
-) -> Dict[str, Set[str]]:
-    """Aggregates the tracks from one or more Spotify playlists into a
-        dictionary mapped with playlist names.
-
-    Args:
-        config: Configuration object.
-    
-    Returns:
-        Spotify track titles and artist names keyed by playlist name.
-    """
-    spotify = get_spotify_client(config)
-    playlist_ids = get_playlist_ids()
-
-    playlist_tracks = {}
-    for playlist in config.get("CHECK_SPOTIFY_PLAYLISTS", []):
-        playlist_id = playlist_ids.get(playlist)
-        if not playlist_id:
-            logger.error(f"{playlist} not in spotify_playlists.json")
-            continue
-
-        logger.info(f'Getting tracks from Spotify playlist "{playlist}"...')
-        playlist_tracks[playlist] = get_playlist_tracks(spotify, playlist_id)
-        length = len(playlist_tracks[playlist])
-        logger.info(f"Got {length} track{'' if length == 1 else 's'}")
-
-        if config.get("VERBOSITY", 0) > 0:
-            for track in playlist_tracks[playlist]:
-                logger.info(f"\t{track}")
-
-    return playlist_tracks
-
-
 def get_playlist_tracks(
     spotify: spotipy.Spotify, playlist_id: str
 ) -> Set[str]:
@@ -202,7 +189,7 @@ def get_playlist_tracks(
         playlist_id: Playlist ID of Spotify playlist to pull tracks from.
 
     Raises:
-        Exception: Playlist_id must correspond with a valid Spotify playlist.
+        RuntimeError: Playlist_id must correspond with a valid Spotify playlist.
 
     Returns:
         Spotify track titles and artist names from a given playlist.
@@ -210,7 +197,7 @@ def get_playlist_tracks(
     try:
         playlist = spotify.playlist(playlist_id)
     except Exception:
-        raise Exception(
+        raise RuntimeError(
             f"Failed to get playlist with ID {playlist_id}"
         ) from Exception
 
@@ -224,57 +211,36 @@ def get_playlist_tracks(
     return set(tracks)
 
 
-def add_tracks(result: Dict[str, Any]) -> List[str]:
-    """Parses a page of Spotify API result tracks and returns a list of the
-        track titles and artist names.
-
-    Args:
-        result: Paged result of Spotify tracks.
-
-    Returns:
-        Spotify track titles and artist names.
-    """
-    tracks = []
-    for track in result["items"]:
-        title = track["track"]["name"]
-        artists = ", ".join([y["name"] for y in track["track"]["artists"]])
-        tracks.append(f"{title} - {artists}")
-
-    return tracks
-
-
-def upload_log(
-    config: Dict[str, Union[List, Dict, str, bool, int, float]], log_file: str
-):
-    """This function uploads "log_file" to the "USER" logs folder in S3. It
-        then deletes all files created more than one day ago.
+def get_spotify_tracks(config: UtilsConfig) -> Dict[str, Set[str]]:
+    """Aggregates the tracks from one or more Spotify playlists into a
+        dictionary mapped with playlist names.
 
     Args:
         config: Configuration object.
-        log_file: Path to log file.
+    
+    Returns:
+        Spotify track titles and artist names keyed by playlist name.
     """
-    if not config.get("AWS_PROFILE"):
-        logger.warning(
-            "Logs cannot be backed up without specifying the config option "
-            "AWS_PROFILE"
-        )
-        return
+    spotify = get_spotify_client(config)
+    playlist_ids = get_playlist_ids()
 
-    dst = (
-        "s3://dj.beatcloud.com/dj/logs/"
-        f'{config["USER"]}/{os.path.basename(log_file)}'
-    )
-    cmd = f"aws s3 cp {log_file} {dst}"
-    logger.info(cmd)
-    os.system(cmd)
-
-    now = datetime.now()
-    one_day = timedelta(days=1)
-    for _file in glob(f"{os.path.dirname(log_file)}/*"):
-        if os.path.basename(_file) == "empty.txt":
+    playlist_tracks = {}
+    for playlist in config.CHECK_TRACKS_SPOTIFY_PLAYLISTS:
+        playlist_id = playlist_ids.get(playlist)
+        if not playlist_id:
+            logger.error(f"{playlist} not in spotify_playlists.yaml")
             continue
-        if os.path.getmtime(_file) < (now - one_day).timestamp():
-            os.remove(_file)
+
+        logger.info(f'Getting tracks from Spotify playlist "{playlist}"...')
+        playlist_tracks[playlist] = get_playlist_tracks(spotify, playlist_id)
+        length = len(playlist_tracks[playlist])
+        logger.info(f"Got {length} track{'' if length == 1 else 's'}")
+
+        if config.VERBOSITY > 0:
+            for track in playlist_tracks[playlist]:
+                logger.info(f"\t{track}")
+
+    return playlist_tracks
 
 
 def make_dirs(path: str):
@@ -297,27 +263,6 @@ def make_dirs(path: str):
         os.chdir(cwd)
     else:
         os.makedirs(path, exist_ok=True)
-
-
-def catch(
-    func: Callable,
-    *args,
-    handle: Optional[Callable] = lambda e: None,
-    **kwargs,
-):  
-    """This function permits one-line try/except logic for comprehensions.
-
-    Args:
-        func: Function to try.
-        handle: Handler function.
-
-    Returns:
-        Callable to handle exception.
-    """
-    try:
-        return func(*args, **kwargs)
-    except Exception as exc:
-        return handle(exc)
 
 
 def raise_(exc: Exception):

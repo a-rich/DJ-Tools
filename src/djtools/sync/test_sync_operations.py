@@ -24,11 +24,11 @@ pytest_plugins = [
     ),
 )
 def test_download_music(
-    mock_compare_tracks, playlist_name, test_config, tmpdir, caplog
+    mock_compare_tracks, playlist_name, test_sync_config, tmpdir, caplog
 ):
     caplog.set_level("INFO")
-    test_config["USB_PATH"] = tmpdir
-    test_config["DOWNLOAD_FROM_SPOTIFY"] = playlist_name
+    test_sync_config.USB_PATH = tmpdir
+    test_sync_config.DOWNLOAD_SPOTIFY = playlist_name
     write_path = os.path.join(
         tmpdir, "DJ Music", "file.mp3"
     ).replace(os.sep, "/")
@@ -48,7 +48,7 @@ def test_download_music(
             write_path, mode="w", encoding="utf-8",
         ).write("") 
     ) as mock_run_sync:
-        download_music(test_config)
+        download_music(test_sync_config)
         mock_run_sync.assert_called_with(cmd)
     assert caplog.records[0].message == "Found 0 files"
     assert caplog.records[1].message == "Syncing remote track collection..."
@@ -57,27 +57,15 @@ def test_download_music(
     assert os.path.basename(caplog.records[4].message) == "file.mp3"
 
 
-def test_download_music_no_usb(test_config):
-    del test_config["USB_PATH"]
-    with pytest.raises(KeyError):
-        download_music(test_config)
-
-
-def test_download_music_no_usb_path(test_config):
-    test_config["USB_PATH"] = "/noexistent/path/to/USB/"
-    with pytest.raises(FileNotFoundError):
-        download_music(test_config)
-
-
 @mock.patch(
     "builtins.open", 
     MockOpen(
-        files=["registered_users.json"],
+        files=["registered_users.yaml"],
         user_a=("aweeeezy", "/Volumes/AWEEEEZY/"),
         user_b=("test_user", "/test/USB/"),
     ).open,
 )
-def test_download_xml(test_config, test_xml, caplog):
+def test_download_xml(test_sync_config, test_xml, caplog):
     caplog.set_level("INFO")
     test_user = "test_user"
     other_user = "aweeeezy"
@@ -85,10 +73,10 @@ def test_download_xml(test_config, test_xml, caplog):
         os.path.dirname(test_xml), f"{other_user}_rekordbox.xml"
     ).replace(os.sep, "/")
     shutil.copyfile(test_xml, new_xml)
-    test_config["USER"] = test_user
-    test_config["XML_IMPORT_USER"] = other_user
-    test_config["XML_PATH"] = test_xml
-    download_xml(test_config)
+    test_sync_config.USER = test_user
+    test_sync_config.IMPORT_USER = other_user
+    test_sync_config.XML_PATH = test_xml
+    download_xml(test_sync_config)
     cmd = [
         "aws",
         "s3",
@@ -101,37 +89,17 @@ def test_download_xml(test_config, test_xml, caplog):
     assert os.path.exists(new_xml)
 
 
-def test_download_xml_no_xml_path(test_config):
-    del test_config["XML_PATH"]
-    with pytest.raises(
-        KeyError,
-        match="Using the download_xml function of the sync_operations module "
-            "requires the config option XML_PATH",
-    ):
-        download_xml(test_config)
-
-
-def test_download_xml_no_xml(test_config):
-    test_config["XML_PATH"] = ""
-    with pytest.raises(
-        FileNotFoundError,
-        match="Using the download_xml function of the sync_operations module "
-            "requires the config option XML_PATH to be valid",
-    ):
-        download_xml(test_config)
-
-
 @pytest.mark.parametrize(
     "discord_url", ["", "https://discord.com/api/webhooks/some-id/"]
 )
 @mock.patch("djtools.sync.sync_operations.run_sync", return_value=None)
 @mock.patch("djtools.sync.sync_operations.webhook", return_value=None)
 def test_upload_music(
-    mock_webhook, mock_run_sync, discord_url, tmpdir, test_config, caplog
+    mock_webhook, mock_run_sync, discord_url, tmpdir, test_sync_config, caplog
 ):
     caplog.set_level("INFO")
-    test_config["USB_PATH"] = tmpdir
-    test_config["DISCORD_URL"] = discord_url
+    test_sync_config.USB_PATH = tmpdir
+    test_sync_config.DISCORD_URL = discord_url
     test_dir = os.path.join(tmpdir, "DJ Music").replace(os.sep, "/") 
     make_dirs(test_dir)
     for file_name in [".test_file.mp3", "test_file.mp3"]:
@@ -141,7 +109,7 @@ def test_upload_music(
             encoding="utf-8",
         ) as file_:
             file_.write("")
-    upload_music(test_config)
+    upload_music(test_sync_config)
     cmd = [
         "aws",
         "s3",
@@ -162,54 +130,16 @@ def test_upload_music(
         )
 
 
-def test_upload_music_no_usb(test_config):
-    del test_config["USB_PATH"]
-    with pytest.raises(
-        KeyError,
-        match="Using the upload_music function of the sync_operations module "
-            "requires the config option USB_PATH",
-    ):
-        upload_music(test_config)
-
-
-def test_upload_music_no_usb_path(test_config):
-    test_config["USB_PATH"] = "/nonexistent/USB"
-    with pytest.raises(
-        FileNotFoundError,
-        match=f'USB_PATH "{test_config["USB_PATH"]}" does not exist!'
-    ):
-        upload_music(test_config)
-
-
-def test_upload_xml(test_config, test_xml, caplog):
+def test_upload_xml(test_sync_config, test_xml, caplog):
     caplog.set_level("INFO")
     test_user = "test_user"
-    test_config["USER"] = test_user
-    test_config["XML_PATH"] = test_xml
+    test_sync_config.USER = test_user
+    test_sync_config.XML_PATH = test_xml
     cmd = f"aws s3 cp {test_xml} s3://dj.beatcloud.com/dj/xml/{test_user}/"
     with mock.patch("os.system", return_value=None) as mock_os_system:
-        upload_xml(test_config)
+        upload_xml(test_sync_config)
         mock_os_system.assert_called_with(cmd)
         assert caplog.records[0].message == (
             f"Uploading {test_user}'s rekordbox.xml..."
         )
         assert caplog.records[1].message == cmd
-
-
-def test_upload_xml_no_xml_path(test_config):
-    del test_config["XML_PATH"]
-    with pytest.raises(
-        KeyError,
-        match="Using the upload_xml function of the sync_operations module "
-            "requires the config option XML_PATH",
-    ):
-        upload_xml(test_config)
-
-
-def test_upload_xml_no_xml(test_config):
-    test_config["XML_PATH"] = "/nonexistent/USB"
-    with pytest.raises(
-        FileNotFoundError,
-        match=f'XML_PATH "{test_config["XML_PATH"]}" does not exist!'
-    ):
-        upload_xml(test_config)

@@ -1,6 +1,5 @@
 """This module contains helper functions used by the "spotify" module."""
 from concurrent.futures import ThreadPoolExecutor
-import json
 import logging
 from operator import itemgetter
 import os
@@ -12,6 +11,10 @@ from fuzzywuzzy import fuzz
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from tqdm import tqdm
+import yaml
+
+from djtools.configs.config import BaseConfig
+from djtools.spotify.config import SpotifyConfig
 
 
 logger = logging.getLogger(__name__)
@@ -167,85 +170,59 @@ def get_playlist_ids() -> Dict[str, str]:
     ids_path = os.path.join(
         os.path.dirname(os.path.dirname(__file__)),
         "configs",
-        "spotify_playlists.json",
+        "spotify_playlists.yaml",
     ).replace(os.sep, "/")
     if os.path.exists(ids_path):
         with open(ids_path, mode="r", encoding="utf-8") as _file:
-            playlist_ids = json.load(_file)
+            playlist_ids = yaml.load(_file, Loader=yaml.FullLoader) or {}
     
     return playlist_ids
 
 
-def get_reddit_client(
-    config: Dict[str, Union[List, Dict, str, bool, int, float]]
-) -> praw.Reddit:
+def get_reddit_client(config: SpotifyConfig) -> praw.Reddit:
     """Instantiate a Reddit API client.
 
     Args:
         config: Configuration object.
 
-    Raises:
-        KeyError: "REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET", and
-            "REDDIT_USER_AGENT" must be configured.
-
     Returns:
         Reddit API client.
     """
-    try:
-        reddit = praw.Reddit(
-            client_id=config["REDDIT_CLIENT_ID"],
-            client_secret=config["REDDIT_CLIENT_SECRET"],
-            user_agent=config["REDDIT_USER_AGENT"],
-            timeout=30,
-        )
-    except KeyError:
-        raise KeyError(
-            "Using the spotify.playlist_builder module requires the following "
-            "config options: REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, "
-            "REDDIT_USER_AGENT"
-        ) from KeyError
+    reddit = praw.Reddit(
+        client_id=config.REDDIT_CLIENT_ID,
+        client_secret=config.REDDIT_CLIENT_SECRET,
+        user_agent=config.REDDIT_USER_AGENT,
+        timeout=30,
+    )
     
     return reddit
 
 
 def get_spotify_client(
-    config: Dict[str, Union[List, Dict, str, bool, int, float]]
+    config: Union[BaseConfig, SpotifyConfig]
 ) -> spotipy.Spotify:
     """Instantiate a Spotify API client.
 
     Args:
         config: Configuration object.
 
-    Raises:
-        KeyError: "SPOTIFY_CLIENT_ID", "SPOTIFY_CLIENT_SECRET", and
-            "SPOTIFY_REDIRECT_URI" must be configured.
-        Exception: Spotify client must be instantiated.
-
     Returns:
         Spotify API client.
     """
-    try:
-        spotify = spotipy.Spotify(
-            auth_manager=SpotifyOAuth(
-                client_id=config["SPOTIFY_CLIENT_ID"],
-                client_secret=config["SPOTIFY_CLIENT_SECRET"],
-                redirect_uri=config["SPOTIFY_REDIRECT_URI"],
-                scope="playlist-modify-public",
-                requests_timeout=30,
-                cache_handler=spotipy.CacheFileHandler(
-                    cache_path=os.path.join(
-                        os.path.dirname(__file__), ".spotify.cache"
-                    ).replace(os.sep, "/"),
-                ),
-            )
+    spotify = spotipy.Spotify(
+        auth_manager=SpotifyOAuth(
+            client_id=config.SPOTIFY_CLIENT_ID,
+            client_secret=config.SPOTIFY_CLIENT_SECRET,
+            redirect_uri=config.SPOTIFY_REDIRECT_URI,
+            scope="playlist-modify-public",
+            requests_timeout=30,
+            cache_handler=spotipy.CacheFileHandler(
+                cache_path=os.path.join(
+                    os.path.dirname(__file__), ".spotify.cache"
+                ).replace(os.sep, "/"),
+            ),
         )
-    except KeyError:
-        raise KeyError(
-            "Using the spotify package requires the following config options: "
-            "SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI"
-        ) from KeyError 
-    except Exception as exc:
-        raise Exception(f"Failed to instantiate the Spotify client: {exc}")
+    )
     
     return spotify
 
@@ -254,7 +231,7 @@ async def get_subreddit_posts(
     spotify: spotipy.Spotify,
     reddit: praw.Reddit,
     subreddit: Dict[str, Union[str, int]],
-    config: Dict[str, Union[List, Dict, str, bool, int, float]],
+    config: SpotifyConfig,
     praw_cache: Dict[str, bool],
 ) -> Tuple[List[Tuple[str]], Dict[str, Union[str, int]]]:
     """Filters the submissions for the provided subreddit and tries to resolve
@@ -277,7 +254,7 @@ async def get_subreddit_posts(
     # TODO(a-rich): find another way to resolve cicular import
     from djtools.utils.helpers import catch, raise_
 
-    sub_limit = config.get("AUTO_PLAYLIST_SUBREDDIT_LIMIT", 500) or None
+    sub_limit = config.AUTO_PLAYLIST_POST_LIMIT
     sub = await reddit.subreddit(subreddit["name"])
     try:
         func = getattr(sub, subreddit["type"])
@@ -324,7 +301,7 @@ async def get_subreddit_posts(
         payload = [
             submissions,
             [spotify] * len(submissions),
-            [config.get("AUTO_PLAYLIST_FUZZ_RATIO", 50)] * len(submissions)
+            [config.AUTO_PLAYLIST_FUZZ_RATIO] * len(submissions)
         ]
         with ThreadPoolExecutor(max_workers=8) as executor:
             new_tracks = list(
@@ -552,7 +529,7 @@ def write_playlist_ids(playlist_ids: Dict[str, str]):
     ids_path = os.path.join(
         os.path.dirname(os.path.dirname(__file__)),
         "configs",
-        "spotify_playlists.json",
+        "spotify_playlists.yaml",
     ).replace(os.sep, "/")
     with open(ids_path, mode="w", encoding="utf-8") as _file:
-        json.dump(playlist_ids, _file, indent=2)
+        yaml.dump(playlist_ids, _file)

@@ -15,13 +15,13 @@ their title and artist fields compared with the reddit post title and are added
 to the respective playlist if the Levenshtein similarity passes a threshold.
 """
 import asyncio
-import json
 import logging
 import os
-from typing import Dict, List, Union
 
 import pyperclip
+import yaml
 
+from djtools.spotify.config import SpotifyConfig
 from djtools.spotify.helpers import (
     filter_results,
     get_playlist_ids,
@@ -42,9 +42,7 @@ logging.getLogger("asyncio").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
-async def async_update_auto_playlists(
-    config: Dict[str, Union[List, Dict, str, bool, int, float]]
-):
+async def async_update_auto_playlists(config: SpotifyConfig):
     """This function updates the contents of one or more Spotify playlists with
         the posts of one or more subreddits (currently only supports one
         subreddit per playlist).
@@ -53,14 +51,17 @@ async def async_update_auto_playlists(
         config: Configuration object.
     
     Raises:
-        KeyError: "SPOTIFY_USERNAME" must be configured.
+        ValueError: Subreddit configs must include a name.
     """
-    if not config.get("AUTO_PLAYLIST_SUBREDDITS"):
-        logger.error(
-            "Using the spotify.playlist_builder module requires the config "
-            "option AUTO_PLAYLIST_SUBREDDITS"
-        )
-        return
+    required_subreddit_keys = {"type", "period", "limit"}
+    for subreddit in config.AUTO_PLAYLIST_SUBREDDITS:
+        if "name" not in subreddit:
+            raise ValueError("Subreddit configs must include a name.")
+        for key in required_subreddit_keys:
+            subreddit[key] = subreddit.get(
+                key,
+                getattr(config, f"AUTO_PLAYLIST_DEFAULT_{key.upper()}")
+            )
 
     spotify = get_spotify_client(config)
     reddit = get_reddit_client(config)
@@ -72,16 +73,8 @@ async def async_update_auto_playlists(
     ).replace(os.sep, "/")
     if os.path.exists(cache_file):
         with open(cache_file, mode="r", encoding="utf-8") as _file:
-            praw_cache = json.load(_file)
+            praw_cache = yaml.load(_file, Loader=yaml.FullLoader) or {}
     
-    try:
-        username = config["SPOTIFY_USERNAME"]
-    except KeyError:
-        raise KeyError(
-            "The spotify.playlist_builder module requires the config option "
-            "SPOTIFY_USERNAME"
-        ) from KeyError
-
     tasks = [
         asyncio.create_task(
             get_subreddit_posts(
@@ -92,7 +85,7 @@ async def async_update_auto_playlists(
                 praw_cache,
             )
         )
-        for subreddit in config["AUTO_PLAYLIST_SUBREDDITS"]
+        for subreddit in config.AUTO_PLAYLIST_SUBREDDITS
     ]
 
     for task in asyncio.as_completed(tasks):
@@ -100,11 +93,11 @@ async def async_update_auto_playlists(
         playlist_ids = populate_playlist(
             playlist_name=subreddit["name"],
             playlist_ids=playlist_ids,
-            spotify_username=username,
+            spotify_username=config.SPOTIFY_USERNAME,
             spotify=spotify,
             tracks=tracks,
             playlist_limit=subreddit["limit"],
-            verbosity=config.get("VERBOSITY", 0),
+            verbosity=config.VERBOSITY,
         )
     
     await reddit.close()
@@ -112,12 +105,10 @@ async def async_update_auto_playlists(
     write_playlist_ids(playlist_ids)
 
     with open(cache_file, mode="w", encoding="utf-8") as _file:
-        json.dump(praw_cache, _file)
+        yaml.dump(praw_cache, _file)
 
 
-def playlist_from_upload(
-    config: Dict[str, Union[List, Dict, str, bool, int, float]],
-):
+def playlist_from_upload(config: SpotifyConfig):
     """Generates a Spotify playlist using a Discord webhook output.
 
     If "upload_output", a path to a text file containing the pasted output of
@@ -129,51 +120,17 @@ def playlist_from_upload(
         config: Configuration object.
 
     Raises:
-        KeyError: "PLAYLIST_FROM_UPLOAD" must be configured.
-        FileNotFoundError: If "upload_output" is provided as a text file, that
-            file must exist.
-        RuntimeError: If not providing "upload_output" as a text file, it must
-            be provided as system clipboard data.
-        ValueError: "PLAYLIST_FROM_UPLOAD" must be either a file or boolean.
-        KeyError: "SPOTIFY_USERNAME" must be provided to buld a new playlist.
+        RuntimeError: Output from an upload_music Discord webhook must be
+            copied to the system's clipboard
     """
-    try:
-        upload_output = config["PLAYLIST_FROM_UPLOAD"]
-    except KeyError:
-        raise KeyError(
-            "Using the playlist_from_upload function of the "
-            "spotify.playlist_builder module requires the "
-            "PLAYLIST_FROM_UPLOAD config option"
-        ) from KeyError 
-
-    # Load upload output from a text file.
-    if isinstance(upload_output, str):
-        if not os.path.exists(upload_output):
-            raise FileNotFoundError(f"{upload_output} does not exit")
-        with open(upload_output, mode="r", encoding="utf-8") as _file:
-            data = _file.read()
     # Load upload output from the system's clipboard.
-    elif isinstance(upload_output, bool):
-        data = pyperclip.paste()
-        if not data:
-            raise RuntimeError(
-                "Generating a Spotify playlist from an upload requires either "
-                '"upload_output", a path to the upload_music Discord webhook '
-                "output, or that output to be copied to the system's clipboard"
-            )
-    else:
-        raise ValueError(
-            "Config option PLAYLIST_FROM_UPLOAD must be either a path to a "
-            f'file or a boolean, but got "{upload_output}"'
+    data = pyperclip.paste()
+    if not data:
+        raise RuntimeError(
+            "Generating a Spotify playlist from an upload requires output "
+            "from an upload_music Discord webhook to be copied to the "
+            "system's clipboard"
         )
-
-    try:
-        username = config["SPOTIFY_USERNAME"]
-    except KeyError:
-        raise KeyError(
-            "The spotify.playlist_builder module requires the config option "
-            "SPOTIFY_USERNAME"
-        ) from KeyError
 
     spotify = get_spotify_client(config)
     playlist_ids = get_playlist_ids()
@@ -196,7 +153,7 @@ def playlist_from_upload(
     files = list(filter(lambda x: len(x) == 2, files))
 
     # Query Spotify for files in upload output.
-    threshold = config.get("CHECK_TRACK_OVERLAP_FUZZ_RATIO", 50)
+    threshold = config.AUTO_PLAYLIST_FUZZ_RATIO
     tracks = []
     for title, artist in files:
         artist = ", ".join(sorted([x.strip() for x in artist.split(",")]))
@@ -222,18 +179,16 @@ def playlist_from_upload(
     playlist_ids = populate_playlist(
         playlist_name=f"{user} Uploads",
         playlist_ids=playlist_ids,
-        spotify_username=username,
+        spotify_username=config.SPOTIFY_USERNAME,
         spotify=spotify,
         tracks=tracks,
-        verbosity=config.get("VERBOSITY", 0),
+        verbosity=config.VERBOSITY,
     )
 
     write_playlist_ids(playlist_ids)
 
 
-def update_auto_playlists(
-    config: Dict[str, Union[List, Dict, str, bool, int, float]]
-):
+def update_auto_playlists(config: SpotifyConfig):
     """This function asynchronously updates Spotify playlists.
 
     Args:
