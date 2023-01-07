@@ -1,14 +1,18 @@
+import inspect
 import os
 import re
-from unittest import mock
+from urllib.parse import unquote
 
 from bs4 import BeautifulSoup
 import pytest
 
 from djtools.rekordbox.helpers import (
-    BooleanNode, get_playlist_track_locations, rewrite_xml, set_tag, wrap_playlists
+    BooleanNode,
+    copy_file,
+    get_playlist_track_locations,
+    set_tag,
+    wrap_playlists,
 )
-from test_data import MockOpen
 
 pytest_plugins = [
     "test_data",
@@ -65,6 +69,22 @@ def test_booleannode_raises_runtime_eror():
         node({})
 
 
+def test_copy_file(tmpdir, test_track):
+    dest_dir = os.path.join(tmpdir, "output").replace(os.sep, "/")
+    os.makedirs(dest_dir)
+    old_track_loc = test_track["Location"]
+    copy_file(track=test_track, destination=dest_dir)
+    new_track_loc = test_track["Location"]
+    loc_prefix = inspect.signature(
+        copy_file
+    ).parameters.get("loc_prefix").default
+    new_file_path = os.path.join(
+        dest_dir, os.path.basename(old_track_loc)
+    ).replace(os.sep, "/")
+    assert new_track_loc == f"{loc_prefix}{new_file_path}"
+    assert os.path.exists(unquote(new_file_path))
+
+
 def test_get_playlist_track_locations(test_xml):
     playlist = "Darkpsy"
     seen_tracks = set()
@@ -85,65 +105,6 @@ def test_get_playlist_track_locations_no_playlist(test_xml):
             get_playlist_track_locations(
                 BeautifulSoup(_file.read(), "xml"), playlist, seen_tracks
             )
-
-
-@mock.patch(
-    "builtins.open",
-    MockOpen(
-        files=["registered_users.json"],
-        user_a=("aweeeezy", "/Volumes/AWEEEEZY/"),
-        user_b=("other_user", "/Volumes/my_beat_stick/"),
-    ).open
-)
-def test_rewrite_xml(test_config, test_xml):
-    user_a_path= "/Volumes/AWEEEEZY/"
-    user_b_path= "/Volumes/my_beat_stick/"
-    test_user = "aweeeezy"
-    other_user = "other_user"
-    test_config["USER"] = test_user
-    test_config["XML_IMPORT_USER"] = other_user
-    test_config["XML_PATH"] = test_xml
-    other_users_xml = os.path.join(
-        os.path.dirname(test_xml), f'{other_user}_rekordbox.xml'
-    ).replace(os.sep, "/")
-    os.rename(test_xml, other_users_xml)
-
-    with open(other_users_xml, mode="r", encoding="utf-8") as _file:
-        soup = BeautifulSoup(_file.read(), "xml")
-        for track in soup.find_all("TRACK"):
-            if not track.get("Location"):
-                continue
-            track["Location"] = os.path.join(
-                os.path.dirname(track["Location"]),
-                user_b_path.strip("/"),
-                os.path.basename(track["Location"]),
-            ).replace(os.sep, "/")
-    
-    with open(
-        other_users_xml, mode="wb", encoding=soup.orignal_encoding
-    ) as _file:
-        _file.write(soup.prettify("utf-8"))
-        
-    rewrite_xml(test_config)
-
-    with open(other_users_xml, mode="r", encoding="utf-8") as _file:
-        soup = BeautifulSoup(_file.read(), "xml")
-        for track in soup.find_all("TRACK"):
-            if not track.get("Location"):
-                continue
-            assert user_a_path in track["Location"]
-            assert user_b_path not in track["Location"]
-            example2 = track["Location"]
-
-
-def test_rewrite_xml_no_xml_path(test_config):
-    test_config["XML_PATH"] = ""
-    with pytest.raises(
-        ValueError,
-        match="Using the sync_operations module's download_xml function "
-            "requires the config option XML_PATH"
-    ):
-        rewrite_xml(test_config)
 
 
 @pytest.mark.parametrize("index", [0, 5, 9])

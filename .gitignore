@@ -1,9 +1,6 @@
 # ignore file types
-**/*.json
 **/*.log
-**/*.mp3
 **/*.pyc
-**/*.xml
 
 # ignore specific files
 **/*.cache
@@ -15,7 +12,6 @@
 
 # ignore directories
 **/__pycache__
-src/djtools/configs/*
 
 # allow test_data
 !src/test_data/*
