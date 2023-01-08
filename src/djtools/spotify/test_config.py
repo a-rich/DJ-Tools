@@ -42,3 +42,4 @@ def test_spotifyconfig_no_reddit_credentials(mock_get_spotify_client):
         ),
     ):
         SpotifyConfig(**cfg)
+        
