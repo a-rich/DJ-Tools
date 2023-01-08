@@ -28,10 +28,7 @@ def test_syncconfig_bad_registered_users():
         SyncConfig()
 
 
-@mock.patch("djtools.configs.config.Popen")
-def test_syncconfig_download_without_import_user(mock_popen):
-    proc = mock_popen.return_value
-    proc.communicate.return_value = (b"", b"")
+def test_syncconfig_download_without_import_user():
     cfg = {
         "DOWNLOAD_XML": True,
         "AWS_PROFILE": "myprofile",

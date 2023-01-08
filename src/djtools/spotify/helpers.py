@@ -251,7 +251,7 @@ async def get_subreddit_posts(
     Returns:
         List of Spotify track ("id", "name") tuples and subreddit config dict.
     """
-    # TODO(a-rich): find another way to resolve cicular import
+    # TODO(a-rich): Find another way to resolve cicular import.
     from djtools.utils.helpers import catch, raise_
 
     sub_limit = config.AUTO_PLAYLIST_POST_LIMIT
