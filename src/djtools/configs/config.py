@@ -4,7 +4,6 @@ apply to multiple packages. The attributes of this configuration object
 correspond with the "configs" key of config.yaml."""
 import logging
 import os
-from subprocess import PIPE, Popen
 from typing_extensions import Literal
 
 from pydantic import BaseModel, NonNegativeInt
@@ -38,6 +37,8 @@ class BaseConfig(BaseModel):
         """
         super().__init__(*args, **kwargs)
         logger.info(repr(self))
+        if self.__class__.__name__ != "BaseConfig":
+            return
 
         if not self.AWS_PROFILE:
             logger.warning(
@@ -48,7 +49,7 @@ class BaseConfig(BaseModel):
             )
         else:
             os.environ["AWS_PROFILE"] = self.AWS_PROFILE
-            # TODO(a-rich): Figure out why this fails in the test runner.
+            # TODO(a-rich): Figure out why awscli fails in the test runner.
             # cmd = "aws s3 ls s3://dj.beatcloud.com/"
             # try:
             #     proc = Popen(cmd.split(), stdout=PIPE, stderr=PIPE)

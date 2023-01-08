@@ -22,7 +22,7 @@ def test_baseconfig_aws_profile_not_set(caplog):
     )
 
 
-# TODO(a-rich): Figure out why this fails in the test runner.
+# TODO(a-rich): Figure out why awscli fails in the test runner.
 # def test_baseconfig_aws_profile_invalid():
 #     cfg = {"AWS_PROFILE": "definitely not a real AWS profile"}
 #     with pytest.raises(
@@ -31,7 +31,6 @@ def test_baseconfig_aws_profile_not_set(caplog):
 #         BaseConfig(**cfg)
 
  
-# TODO(a-rich): Figure out why this fails in the test runner.
 # @mock.patch("djtools.configs.config.Popen", side_effect=Exception())
 # def test_baseconfig_awscli_not_installed(mock_popen):
 #     cfg = {"AWS_PROFILE": "definitely not a real AWS profile"}
