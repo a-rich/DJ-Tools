@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import os
+import shutil
 import tempfile
 from unittest import mock
 
@@ -73,7 +74,7 @@ def test_parse_sync_command(
         user_b=("other_user", "/Volumes/my_beat_stick/"),
     ).open
 )
-def test_rewrite_xml(test_config, test_xml):
+def test_rewrite_xml(test_config, test_xml, xml):
     user_a_path= "/Volumes/AWEEEEZY/"
     user_b_path= "/Volumes/my_beat_stick/"
     test_user = "aweeeezy"
@@ -84,23 +85,21 @@ def test_rewrite_xml(test_config, test_xml):
     other_users_xml = os.path.join(
         os.path.dirname(test_xml), f'{other_user}_rekordbox.xml'
     ).replace(os.sep, "/")
-    os.rename(test_xml, other_users_xml)
+    shutil.copyfile(test_xml, other_users_xml)
 
-    with open(other_users_xml, mode="r", encoding="utf-8") as _file:
-        soup = BeautifulSoup(_file.read(), "xml")
-        for track in soup.find_all("TRACK"):
-            if not track.get("Location"):
-                continue
-            track["Location"] = os.path.join(
-                os.path.dirname(track["Location"]),
-                user_b_path.strip("/"),
-                os.path.basename(track["Location"]),
-            ).replace(os.sep, "/")
+    for track in xml.find_all("TRACK"):
+        if not track.get("Location"):
+            continue
+        track["Location"] = os.path.join(
+            os.path.dirname(track["Location"]),
+            user_b_path.strip("/"),
+            os.path.basename(track["Location"]),
+        ).replace(os.sep, "/")
     
     with open(
-        other_users_xml, mode="wb", encoding=soup.orignal_encoding
+        other_users_xml, mode="wb", encoding=xml.orignal_encoding
     ) as _file:
-        _file.write(soup.prettify("utf-8"))
+        _file.write(xml.prettify("utf-8"))
         
     rewrite_xml(test_config)
 
@@ -170,7 +169,8 @@ def test_run_sync_handles_return_code(mock_popen, tmpdir, caplog):
     assert caplog.records[0].message == msg
 
 
-def test_upload_log(tmpdir, test_config):
+@mock.patch("os.system")
+def test_upload_log(mock_os_system, tmpdir, test_config):
     test_config.AWS_PROFILE = "DJ"
     now = datetime.now()
     one_day_ago = now - timedelta(days=1)

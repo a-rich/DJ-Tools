@@ -65,7 +65,9 @@ def test_download_music(
         user_b=("test_user", "/test/USB/"),
     ).open,
 )
-def test_download_xml(test_config, test_xml, caplog):
+@mock.patch("djtools.sync.sync_operations.rewrite_xml")
+@mock.patch("os.system")
+def test_download_xml(mock_os_system, mock_rewrite_xml, test_config, test_xml, caplog):
     caplog.set_level("INFO")
     test_user = "test_user"
     other_user = "aweeeezy"
@@ -86,7 +88,7 @@ def test_download_xml(test_config, test_xml, caplog):
     ] 
     assert caplog.records[0].message == "Syncing remote rekordbox.xml..."
     assert caplog.records[1].message == " ".join(cmd)
-    assert os.path.exists(new_xml)
+    mock_rewrite_xml.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -130,16 +132,16 @@ def test_upload_music(
         )
 
 
-def test_upload_xml(test_config, test_xml, caplog):
+@mock.patch("os.system")
+def test_upload_xml(mock_os_system, test_config, test_xml, caplog):
     caplog.set_level("INFO")
     test_user = "test_user"
     test_config.USER = test_user
     test_config.XML_PATH = test_xml
     cmd = f"aws s3 cp {test_xml} s3://dj.beatcloud.com/dj/xml/{test_user}/"
-    with mock.patch("os.system", return_value=None) as mock_os_system:
-        upload_xml(test_config)
-        mock_os_system.assert_called_with(cmd)
-        assert caplog.records[0].message == (
-            f"Uploading {test_user}'s rekordbox.xml..."
-        )
-        assert caplog.records[1].message == cmd
+    upload_xml(test_config)
+    mock_os_system.assert_called_with(cmd)
+    assert caplog.records[0].message == (
+        f"Uploading {test_user}'s rekordbox.xml..."
+    )
+    assert caplog.records[1].message == cmd
