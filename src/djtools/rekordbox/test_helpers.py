@@ -85,26 +85,20 @@ def test_copy_file(tmpdir, test_track):
     assert os.path.exists(unquote(new_file_path))
 
 
-def test_get_playlist_track_locations(test_xml):
-    playlist = "Darkpsy"
+def test_get_playlist_track_locations(xml):
+    playlist = "Dubstep"
     seen_tracks = set()
-    with open(test_xml, mode="r", encoding="utf-8") as _file:
-        ret = get_playlist_track_locations(
-            BeautifulSoup(_file.read(), "xml"), playlist, seen_tracks
-        )
+    ret = get_playlist_track_locations(xml, playlist, seen_tracks)
     assert seen_tracks
     assert ret
     assert len(ret) == len(seen_tracks)
 
 
-def test_get_playlist_track_locations_no_playlist(test_xml):
+def test_get_playlist_track_locations_no_playlist(xml):
     playlist = "nonexistent playlist"
     seen_tracks = set()
-    with open(test_xml, mode="r", encoding="utf-8") as _file:
-        with pytest.raises(LookupError, match=f"{playlist} not found"):
-            get_playlist_track_locations(
-                BeautifulSoup(_file.read(), "xml"), playlist, seen_tracks
-            )
+    with pytest.raises(LookupError, match=f"{playlist} not found"):
+        get_playlist_track_locations(xml, playlist, seen_tracks)
 
 
 @pytest.mark.parametrize("index", [0, 5, 9])
@@ -113,13 +107,11 @@ def test_set_tag(index, test_track):
     assert test_track.get("TrackNumber") == index
 
 
-def test_wrap_playlists(test_xml, test_track):
+def test_wrap_playlists(xml, test_track):
     randomized_tracks = [test_track]
-    with open(test_xml, mode="r", encoding="utf-8") as _file:
-        db = BeautifulSoup(_file.read(), "xml")
     try:
-        wrap_playlists(db, randomized_tracks)
-        db.find_all(
+        wrap_playlists(xml, randomized_tracks)
+        xml.find_all(
             "NODE", {"Name": "AUTO_RANDOMIZE", "Type": "1"}
         )[0]
     except Exception:
