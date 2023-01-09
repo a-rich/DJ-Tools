@@ -140,8 +140,11 @@ def run_sync(_cmd: str) -> str:
                         )[-1]
                     )
                 else:
-                    print(f"{line.strip()}                                  " \
-                          "                        ", end="\r", flush=True)
+                    print(
+                        f"{line.strip()}                                  "
+                        "                        ",
+                        end="\r", flush=True
+                    )
 
             proc.stdout.close()
             return_code = proc.wait()

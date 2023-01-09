@@ -42,31 +42,26 @@ def arg_parse() -> argparse.Namespace:
     parser.add_argument(
         "--auto-playlist-default-limit",
         type=int,
-        default=50,
         help="Default number of tracks for a Spotify auto-playlist",
     )
     parser.add_argument(
         "--auto-playlist-default-period",
         type=str,
-        default="week",
         help="Default Subreddit time filter for a Spotify auto-playlist",
     )
     parser.add_argument(
         "--auto-playlist-default-type",
         type=str,
-        default="hot",
         help="Default Subreddit post filter for a Spotify auto-playlist",
     )
     parser.add_argument(
         "--auto-playlist-fuzz-ratio",
         type=int,
-        default=70,
         help="Minimum similarity to add track to an auto-playlist",
     )
     parser.add_argument(
         "--auto-playlist-post-limit",
         type=int,
-        default=100,
         help="Maximum Subreddit posts to query for each auto-playlist",
     )
     parser.add_argument(
@@ -85,7 +80,6 @@ def arg_parse() -> argparse.Namespace:
     parser.add_argument(
         "--aws-profile",
         type=str,
-        default="",
         help="AWS config profile",
     )
     parser.add_argument(
@@ -108,7 +102,6 @@ def arg_parse() -> argparse.Namespace:
     parser.add_argument(
         "--check-tracks-fuzz-ratio",
         type=int,
-        default=80,
         help=(
             "Minimum similarity to indicate overlap between Beatcloud and "
             "Spotify / local tracks"
@@ -135,7 +128,6 @@ def arg_parse() -> argparse.Namespace:
     parser.add_argument(
         "--copy-tracks-playlists-destination",
         type=str,
-        default="",
         help="Location to copy Rekordbox playlists' audio files to",
     )
     parser.add_argument(

@@ -4,6 +4,7 @@ from unittest import mock
 import pyperclip
 import pytest
 
+from djtools.spotify.config import SubredditConfig
 from djtools.spotify.playlist_builder import (
     async_update_auto_playlists,
     playlist_from_upload,
@@ -19,8 +20,7 @@ pytest_plugins = [
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "playlist_subreddits",
-    [[], [{"name": "jungle", "type": "hot", "period": "week", "limit": 50}]],
+    "playlist_subreddits", [[], [SubredditConfig(name="jungle")]],
 )
 @pytest.mark.parametrize("got_playlist_ids", [True, False])
 @pytest.mark.parametrize("got_tracks", [True, False])
@@ -44,9 +44,7 @@ pytest_plugins = [
 @mock.patch(
     "djtools.spotify.playlist_builder.get_subreddit_posts",
     return_value=[
-        [("track-id", "track name")],
-        {"name": "jungle", "type": "hot", "period": "week", "limit": 50},
-    ],
+        [("track-id", "track name")], SubredditConfig(name="jungle")],
 )
 @mock.patch("djtools.spotify.playlist_builder.get_spotify_client")
 async def test_async_update_auto_playlists(
@@ -72,19 +70,6 @@ async def test_async_update_auto_playlists(
             files=["spotify_playlists.yaml", ".praw.cache"],
             content='{"jungle": "some-id"}' if got_playlist_ids else "{}",
         ).open
-    ):
-        await async_update_auto_playlists(test_config)
-
-
-@pytest.mark.asyncio
-async def test_async_update_auto_playlists_missing_subreddit_name(
-    test_config,
-):
-    test_config.AUTO_PLAYLIST_SUBREDDITS = [
-        {"type": "hot", "period": "week", "limit": 50}
-    ]
-    with pytest.raises(
-        ValueError, match="Subreddit configs must include a name."
     ):
         await async_update_auto_playlists(test_config)
 

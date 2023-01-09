@@ -307,20 +307,15 @@ class PlaylistBuilder:
                 # NOTE: Special logic to distinguish between the general "Hip Hop"
                 # playlist (a.k.a. pure Hip Hop) and the "Hip Hop" playlist under
                 # the "Bass" folder (a.k.a. bass Hip Hop)
-                skip_add = False
-                if pure_hip_hop and \
-                        any(
-                            "r&b" not in x.lower() and "hip hop" not in x.lower()
-                            for x in tags
-                        ):
-                    skip_add = True
-                if bass_hip_hop and \
-                        all(
-                            "r&b" in x.lower() or "hip hop" in x.lower()
-                            for x in tags
-                        ):
-                    skip_add = True
-                if skip_add:
+                if (pure_hip_hop and any(
+                        "r&b" not in x.lower() and "hip hop" not in x.lower()
+                        for x in tags
+                    )
+                ) or (bass_hip_hop and all(
+                        "r&b" in x.lower() or "hip hop" in x.lower()
+                        for x in tags
+                    )
+                ):
                     continue
 
                 if track_id not in seen[seen_index]:
