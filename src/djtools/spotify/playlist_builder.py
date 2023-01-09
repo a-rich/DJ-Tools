@@ -49,20 +49,7 @@ async def async_update_auto_playlists(config: SpotifyConfig):
 
     Args:
         config: Configuration object.
-    
-    Raises:
-        ValueError: Subreddit configs must include a name.
     """
-    required_subreddit_keys = {"type", "period", "limit"}
-    for subreddit in config.AUTO_PLAYLIST_SUBREDDITS:
-        if "name" not in subreddit:
-            raise ValueError("Subreddit configs must include a name.")
-        for key in required_subreddit_keys:
-            subreddit[key] = subreddit.get(
-                key,
-                getattr(config, f"AUTO_PLAYLIST_DEFAULT_{key.upper()}")
-            )
-
     spotify = get_spotify_client(config)
     reddit = get_reddit_client(config)
     playlist_ids = get_playlist_ids()
@@ -91,12 +78,12 @@ async def async_update_auto_playlists(config: SpotifyConfig):
     for task in asyncio.as_completed(tasks):
         tracks, subreddit = await task
         playlist_ids = populate_playlist(
-            playlist_name=subreddit["name"],
+            playlist_name=subreddit.name,
             playlist_ids=playlist_ids,
             spotify_username=config.SPOTIFY_USERNAME,
             spotify=spotify,
             tracks=tracks,
-            playlist_limit=subreddit["limit"],
+            playlist_limit=subreddit.limit,
             verbosity=config.VERBOSITY,
         )
     

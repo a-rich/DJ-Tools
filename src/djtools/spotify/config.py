@@ -24,7 +24,7 @@ class SubredditConfig(BaseModel):
     ] = "week"
     type: Literal [
         "controversial", "hot", "new", "rising", "top"
-    ]= "hot"
+    ] = "hot"
 
 
 class SpotifyConfig(BaseConfig):

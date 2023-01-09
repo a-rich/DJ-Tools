@@ -5,6 +5,7 @@ import asyncpraw
 import pytest
 import spotipy
 
+from djtools.spotify.config import SubredditConfig
 from djtools.spotify.helpers import (
     build_new_playlist,
     filter_results,
@@ -312,9 +313,7 @@ async def test_get_subreddit_posts(
     caplog,
 ):
     caplog.set_level("INFO")
-    subreddit = {
-        "name": "techno", "type": subreddit_type, "period": "week", "limit": 50
-    }
+    subreddit = SubredditConfig(name="techno", type=subreddit_type)
     praw_cache = {}
     mock_praw_submission.id = "test_id"
     mock_process.return_value = "track - artist"
@@ -342,33 +341,6 @@ async def test_get_subreddit_posts(
         assert caplog.records[2].message == (
             'Got 1 Spotify track(s) from new "r/techno" posts'
         )
-
-
-@pytest.mark.asyncio
-@mock.patch("djtools.spotify.helpers.praw.Reddit")
-@mock.patch("djtools.spotify.helpers.get_spotify_client")
-async def test_get_subreddit_posts_handle_bad_subreddit_method(
-    mock_spotify, mock_praw, test_config
-):
-    subreddit_type = "not-a-method"
-    subreddit = {
-        "name": "techno", "type": subreddit_type, "period": "week", "limit": 50
-    }
-    praw_cache = {}
-    with mock.patch(
-        "djtools.spotify.helpers.praw.Reddit.subreddit",
-        new=mock.AsyncMock(side_effect=lambda *args: None),
-    ):
-        with pytest.raises(
-            AttributeError,
-            match=(
-                f'Method "{subreddit_type}" does not exist in "Subreddit" '
-                "class"
-            ),
-        ):
-            await get_subreddit_posts(
-                mock_spotify, mock_praw, subreddit, test_config, praw_cache
-            )
 
 
 @pytest.mark.parametrize(

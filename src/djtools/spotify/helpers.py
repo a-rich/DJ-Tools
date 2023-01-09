@@ -14,7 +14,7 @@ from tqdm import tqdm
 import yaml
 
 from djtools.configs.config import BaseConfig
-from djtools.spotify.config import SpotifyConfig
+from djtools.spotify.config import SpotifyConfig, SubredditConfig
 
 
 logger = logging.getLogger(__name__)
@@ -23,13 +23,14 @@ logger = logging.getLogger(__name__)
 def build_new_playlist(
     spotify: spotipy.Spotify,
     username: str,
-    subreddit: Dict[str, Union[str, int]],
+    subreddit: str,
     new_tracks: List[Tuple[str]],
 ) -> Dict[str, Any]:
     """Creates a new playlist from a list of track IDs / URLs.
 
     Args:
         spotify: Spotify client.
+        username: Spotify username.
         subreddit: Subreddit name to filter.
         new_tracks: List of Spotify track ("id", "name") tuples.
 
@@ -230,7 +231,7 @@ def get_spotify_client(
 async def get_subreddit_posts(
     spotify: spotipy.Spotify,
     reddit: praw.Reddit,
-    subreddit: Dict[str, Union[str, int]],
+    subreddit: SubredditConfig,
     config: SpotifyConfig,
     praw_cache: Dict[str, bool],
 ) -> Tuple[List[Tuple[str]], Dict[str, Union[str, int]]]:
@@ -241,35 +242,27 @@ async def get_subreddit_posts(
     Args:
         spotify: Spotify client.
         reddit: Reddit client.
-        subreddit: "name", "type", "period", and "limit".
+        subreddit: SubredditConfig object.
         config: Configuration object.
         praw_cache: Cached praw submissions.
-    
-    Raises:
-        AttributeError: "type" must match a method of the "Subreddit" class.
 
     Returns:
-        List of Spotify track ("id", "name") tuples and subreddit config dict.
+        List of Spotify track ("id", "name") tuples and SubredditConfig.
     """
     # TODO(a-rich): Find another way to resolve cicular import.
     from djtools.utils.helpers import catch, raise_
 
     sub_limit = config.AUTO_PLAYLIST_POST_LIMIT
-    sub = await reddit.subreddit(subreddit["name"])
-    try:
-        func = getattr(sub, subreddit["type"])
-    except AttributeError:
-        raise AttributeError(
-            f'Method "{subreddit["type"]}" does not exist in "Subreddit" class'
-        ) from AttributeError
-    if subreddit["type"] == "top":
+    sub = await reddit.subreddit(subreddit.name)
+    func = getattr(sub, subreddit.type)
+    if subreddit.type == "top":
         subs = [
             x async for x in catch(
                 func,
                 handle=lambda exc: raise_(exc)
                     if isinstance(exc, TypeError) else logger.info(exc),
                 limit=sub_limit,
-                time_filter=subreddit["period"],
+                time_filter=subreddit.period,
             )
         ]
     else:
@@ -280,10 +273,7 @@ async def get_subreddit_posts(
                 limit=sub_limit,
             )
         ]
-    msg = (
-        f'Filtering {len(subs)} "r/{subreddit["name"]}" {subreddit["type"]} '
-        "posts"
-    )
+    msg = f'Filtering {len(subs)} "r/{subreddit.name}" {subreddit.type} posts'
     logger.info(msg)
     submissions = []
     for submission in tqdm(subs, desc=msg):
@@ -295,7 +285,7 @@ async def get_subreddit_posts(
     if len(submissions):
         msg = (
             f"Searching Spotify for {len(submissions)} new submission(s) from "
-            f'"r/{subreddit["name"]}"'
+            f'"r/{subreddit.name}"'
         )
         logger.info(msg)
         payload = [
@@ -314,10 +304,10 @@ async def get_subreddit_posts(
         new_tracks = [track for track in new_tracks if track]
         logger.info(
             f"Got {len(new_tracks)} Spotify track(s) from new "
-            f'"r/{subreddit["name"]}" posts'
+            f'"r/{subreddit.name}" posts'
         )
     else:
-        logger.info(f'No new submissions from "r/{subreddit["name"]}"')
+        logger.info(f'No new submissions from "r/{subreddit.name}"')
 
     return new_tracks, subreddit
 
