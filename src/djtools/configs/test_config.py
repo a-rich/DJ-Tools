@@ -45,6 +45,7 @@ def test_baseconfig_aws_profile_not_set(caplog):
 
 
 def test_baseconfig_no_spotify_credentials(caplog):
+    caplog.set_level("WARNING")
     cfg = {"AWS_PROFILE": "default", "SPOTIFY_CLIENT_ID": ""}
     BaseConfig(**cfg)
     assert caplog.records[0].message == (

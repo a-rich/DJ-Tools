@@ -1,5 +1,4 @@
 from djtools.configs import build_config
-
 from djtools.rekordbox import (
     copy_tracks_playlists,
     randomize_tracks,
@@ -21,6 +20,7 @@ from djtools.sync import (
 )
 from djtools.utils import (
     compare_tracks,
+    initialize_logger,
     UTILS_OPERATIONS,
     youtube_dl,
 )
@@ -32,6 +32,7 @@ __all__ = (
     "copy_tracks_playlists",
     "download_music",
     "download_xml",
+    "initialize_logger",
     "playlist_from_upload",
     "randomize_tracks",
     "REKORDBOX_OPERATIONS",
