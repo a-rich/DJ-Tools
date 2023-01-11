@@ -10,12 +10,13 @@ pytest_plugins = [
 ]
 
 
+@mock.patch("djtools.spotify.helpers.get_spotify_client")
 @mock.patch(
     "builtins.open",
     MockOpen(files=["registered_users.yaml"], write_only=True).open
 )
 @mock.patch("argparse.ArgumentParser.parse_args")
-def test_main(mock_parse_args, test_xml):
+def test_main(mock_parse_args, mock_get_spotify_client, test_xml):
     mock_parse_args.return_value = Namespace(
         link_configs="",
         log_level="INFO",

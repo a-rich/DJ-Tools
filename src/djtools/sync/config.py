@@ -23,6 +23,7 @@ class SyncConfig(BaseConfig):
     DOWNLOAD_EXCLUDE_DIRS: List[str] = []
     DOWNLOAD_INCLUDE_DIRS: List[str] = []
     DOWNLOAD_MUSIC: bool = False 
+    DOWNLOAD_SPOTIFY: str = ""
     DOWNLOAD_XML: bool = False 
     DRYRUN: bool = False
     IMPORT_USER: str = ""

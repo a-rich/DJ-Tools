@@ -13,12 +13,12 @@ import os
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-from djtools.rekordbox.config import RekordboxConfig
+from djtools.configs.config import BaseConfig
 from djtools.rekordbox.helpers import copy_file
 from djtools.utils.helpers import make_dirs
 
 
-def copy_tracks_playlists(config: RekordboxConfig):
+def copy_tracks_playlists(config: BaseConfig):
     """Copies tracks from provided playlists to a destination.
 
     Writes a new XML with these playlists and updated Location fields.

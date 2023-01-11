@@ -313,7 +313,7 @@ async def test_get_subreddit_posts(
     caplog,
 ):
     caplog.set_level("INFO")
-    subreddit = SubredditConfig(name="techno", type=subreddit_type)
+    subreddit = SubredditConfig(name="techno", type=subreddit_type).dict()
     praw_cache = {}
     mock_praw_submission.id = "test_id"
     mock_process.return_value = "track - artist"

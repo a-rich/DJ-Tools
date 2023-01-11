@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 
-from djtools.rekordbox.config import RekordboxConfig
+from djtools.configs.config import BaseConfig
 from djtools.rekordbox.helpers import (
     get_playlist_track_locations, set_tag, wrap_playlists
 )
@@ -22,7 +22,7 @@ from djtools.rekordbox.helpers import (
 logger = logging.getLogger(__name__)
 
 
-def randomize_tracks(config: RekordboxConfig):
+def randomize_tracks(config: BaseConfig):
     """For each playlist in "RANDOMIZE_TRACKS_PLAYLISTS", shuffle the tracks
     and sequentially set the TrackNumber tag to a number to emulate track
     randomization.

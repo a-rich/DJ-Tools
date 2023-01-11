@@ -9,7 +9,7 @@ import re
 
 import youtube_dl as ytdl
 
-from djtools.utils.config import UtilsConfig
+from djtools.configs.config import BaseConfig
 from djtools.utils.helpers import make_dirs
 
 
@@ -33,7 +33,7 @@ def fix_up(_file: str) -> str:
     return name + ext
 
 
-def youtube_dl(config: UtilsConfig):
+def youtube_dl(config: BaseConfig):
     """Downloads music files from a provided URL using the youtube-dl package.
 
     Args:

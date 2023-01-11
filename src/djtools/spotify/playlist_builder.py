@@ -21,7 +21,7 @@ import os
 import pyperclip
 import yaml
 
-from djtools.spotify.config import SpotifyConfig
+from djtools.configs.config import BaseConfig
 from djtools.spotify.helpers import (
     filter_results,
     get_playlist_ids,
@@ -42,7 +42,7 @@ logging.getLogger("asyncio").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
-async def async_update_auto_playlists(config: SpotifyConfig):
+async def async_update_auto_playlists(config: BaseConfig):
     """This function updates the contents of one or more Spotify playlists with
         the posts of one or more subreddits (currently only supports one
         subreddit per playlist).
@@ -78,12 +78,12 @@ async def async_update_auto_playlists(config: SpotifyConfig):
     for task in asyncio.as_completed(tasks):
         tracks, subreddit = await task
         playlist_ids = populate_playlist(
-            playlist_name=subreddit.name,
+            playlist_name=subreddit["name"],
             playlist_ids=playlist_ids,
             spotify_username=config.SPOTIFY_USERNAME,
             spotify=spotify,
             tracks=tracks,
-            playlist_limit=subreddit.limit,
+            playlist_limit=subreddit["limit"],
             verbosity=config.VERBOSITY,
         )
     
@@ -95,7 +95,7 @@ async def async_update_auto_playlists(config: SpotifyConfig):
         yaml.dump(praw_cache, _file)
 
 
-def playlist_from_upload(config: SpotifyConfig):
+def playlist_from_upload(config: BaseConfig):
     """Generates a Spotify playlist using a Discord webhook output.
 
     If "upload_output", a path to a text file containing the pasted output of
@@ -175,7 +175,7 @@ def playlist_from_upload(config: SpotifyConfig):
     write_playlist_ids(playlist_ids)
 
 
-def update_auto_playlists(config: SpotifyConfig):
+def update_auto_playlists(config: BaseConfig):
     """This function asynchronously updates Spotify playlists.
 
     Args:

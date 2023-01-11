@@ -28,7 +28,7 @@ pytest_plugins = [
 @pytest.mark.parametrize("dryrun", [True, False])
 def test_parse_sync_command(
     tmpdir,
-    test_sync_config,
+    test_config,
     upload,
     include_dirs,
     exclude_dirs,
@@ -37,13 +37,13 @@ def test_parse_sync_command(
 ):
     tmpdir = str(tmpdir)
     if upload:
-        test_sync_config.UPLOAD_INCLUDE_DIRS = include_dirs
-        test_sync_config.UPLOAD_EXCLUDE_DIRS = exclude_dirs
+        test_config.UPLOAD_INCLUDE_DIRS = include_dirs
+        test_config.UPLOAD_EXCLUDE_DIRS = exclude_dirs
     else:
-        test_sync_config.DOWNLOAD_INCLUDE_DIRS = include_dirs
-        test_sync_config.DOWNLOAD_EXCLUDE_DIRS = exclude_dirs
-    test_sync_config.AWS_USE_DATE_MODIFIED = not use_date_modified
-    test_sync_config.DRYRUN = dryrun
+        test_config.DOWNLOAD_INCLUDE_DIRS = include_dirs
+        test_config.DOWNLOAD_EXCLUDE_DIRS = exclude_dirs
+    test_config.AWS_USE_DATE_MODIFIED = not use_date_modified
+    test_config.DRYRUN = dryrun
     partial_cmd = [
         "aws",
         "s3",
@@ -51,7 +51,7 @@ def test_parse_sync_command(
         tmpdir if upload else "s3://dj.beatcloud.com/dj/music/",
         "s3://dj.beatcloud.com/dj/music/" if upload else tmpdir,
     ]
-    cmd = parse_sync_command(partial_cmd, test_sync_config, upload)
+    cmd = parse_sync_command(partial_cmd, test_config, upload)
     cmd = " ".join(cmd)
     if include_dirs:
         assert all(f"--include {x}" in cmd for x in include_dirs)
@@ -73,14 +73,14 @@ def test_parse_sync_command(
         user_b=("other_user", "/Volumes/my_beat_stick/"),
     ).open
 )
-def test_rewrite_xml(test_sync_config, test_xml):
+def test_rewrite_xml(test_config, test_xml):
     user_a_path= "/Volumes/AWEEEEZY/"
     user_b_path= "/Volumes/my_beat_stick/"
     test_user = "aweeeezy"
     other_user = "other_user"
-    test_sync_config.USER = test_user
-    test_sync_config.IMPORT_USER = other_user
-    test_sync_config.XML_PATH = test_xml
+    test_config.USER = test_user
+    test_config.IMPORT_USER = other_user
+    test_config.XML_PATH = test_xml
     other_users_xml = os.path.join(
         os.path.dirname(test_xml), f'{other_user}_rekordbox.xml'
     ).replace(os.sep, "/")
@@ -102,7 +102,7 @@ def test_rewrite_xml(test_sync_config, test_xml):
     ) as _file:
         _file.write(soup.prettify("utf-8"))
         
-    rewrite_xml(test_sync_config)
+    rewrite_xml(test_config)
 
     with open(other_users_xml, mode="r", encoding="utf-8") as _file:
         soup = BeautifulSoup(_file.read(), "xml")
@@ -170,8 +170,8 @@ def test_run_sync_handles_return_code(mock_popen, tmpdir, caplog):
     assert caplog.records[0].message == msg
 
 
-def test_upload_log(tmpdir, test_sync_config):
-    test_sync_config.AWS_PROFILE = "DJ"
+def test_upload_log(tmpdir, test_config):
+    test_config.AWS_PROFILE = "DJ"
     now = datetime.now()
     one_day_ago = now - timedelta(days=1)
     test_log = f'{now.strftime("%Y-%m-%d")}.log'
@@ -188,15 +188,15 @@ def test_upload_log(tmpdir, test_sync_config):
         if filename != test_log: 
             os.utime(file_path, (ctime, ctime))
     upload_log(
-        test_sync_config, os.path.join(tmpdir, test_log).replace(os.sep, "/")
+        test_config, os.path.join(tmpdir, test_log).replace(os.sep, "/")
     )
     assert len(os.listdir(tmpdir)) == len(filenames) - 1
 
 
-def test_upload_log_no_aws_profile(test_sync_config, caplog):
+def test_upload_log_no_aws_profile(test_config, caplog):
     caplog.set_level("WARNING")
-    test_sync_config.AWS_PROFILE = ""
-    ret = upload_log(test_sync_config, "some_file.txt")
+    test_config.AWS_PROFILE = ""
+    ret = upload_log(test_config, "some_file.txt")
     assert ret is None
     assert (
         caplog.records[0].message == "Logs cannot be backed up without "

@@ -15,14 +15,14 @@ from bs4 import BeautifulSoup
 import requests
 import yaml
 
-from djtools.sync.config import SyncConfig
+from djtools.configs.config import BaseConfig
 
 
 logger = logging.getLogger(__name__)
 
 
 def parse_sync_command(
-    _cmd: str, config: SyncConfig, upload: Optional[bool] = False,
+    _cmd: str, config: BaseConfig, upload: Optional[bool] = False,
 ) -> str:
     """Appends flags to "aws s3 sync" command. If "*_INCLUDE_DIRS" is
         specified, all directories are ignored except those specified. If
@@ -78,7 +78,7 @@ def parse_sync_command(
     return _cmd
 
 
-def rewrite_xml(config: SyncConfig):
+def rewrite_xml(config: BaseConfig):
     """This function modifies the "Location" field of track tags in a
         downloaded Rekordbox XML replacing the "USB_PATH" written by
         "IMPORT_USER" with the "USB_PATH" in "config.yaml".
@@ -176,7 +176,7 @@ def run_sync(_cmd: str) -> str:
     return new_music
 
 
-def upload_log(config: SyncConfig, log_file: str):
+def upload_log(config: BaseConfig, log_file: str):
     """This function uploads "log_file" to the "USER" logs folder in S3. It
         then deletes all files created more than one day ago.
 

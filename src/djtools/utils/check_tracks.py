@@ -5,9 +5,9 @@ from itertools import groupby
 import logging
 from operator import itemgetter
 import os
-from typing import Dict, List, Optional, Tuple, Union
+from typing import List, Optional, Tuple
 
-from djtools.utils.config import UtilsConfig
+from djtools.configs.config import BaseConfig
 from djtools.utils.helpers import (
     find_matches, get_spotify_tracks, get_beatcloud_tracks, get_local_tracks
 )
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 def compare_tracks(
-    config: UtilsConfig,
+    config: BaseConfig,
     beatcloud_tracks: Optional[List[str]] = [],
     download_spotify_playlist: Optional[str] = "",
 ) -> Tuple[List[str], List[str]]:

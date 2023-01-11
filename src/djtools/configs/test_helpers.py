@@ -4,7 +4,10 @@ from unittest import mock
 
 import pytest
 
-from djtools.configs.helpers import arg_parse, build_config, parse_yaml
+from djtools.configs.config import BaseConfig
+from djtools.configs.helpers import (
+    arg_parse, build_config, filter_dict, parse_yaml, pkg_cfg
+)
 from test_data import MockOpen
 
 
@@ -61,7 +64,7 @@ def test_build_config(mock_get_spotify_client, tmpdir):
             link_configs="", log_level="INFO"
         )
         config = build_config()
-    assert isinstance(config, dict)
+    assert isinstance(config, BaseConfig)
 
 
 @mock.patch("builtins.open", MockOpen(
@@ -75,12 +78,13 @@ def test_build_config_invalid_config_yaml(caplog):
     assert 'Error reading "config.yaml"' in caplog.records[0].message
 
 
+@mock.patch("djtools.spotify.helpers.get_spotify_client")
 @mock.patch(
     "builtins.open",
     MockOpen(files=["registered_users.yaml", "config.yaml"]).open
 )
 @mock.patch("argparse.ArgumentParser.parse_args")
-def test_build_config_no_config_yaml(mock_parse_args):
+def test_build_config_no_config_yaml(mock_parse_args, mock_spotify_client):
     mock_parse_args.return_value = Namespace(
         link_configs="", log_level="INFO"
     )
@@ -92,6 +96,25 @@ def test_build_config_no_config_yaml(mock_parse_args):
         assert not os.path.exists(config_file)
         config = build_config()
     assert os.path.exists(config_file)
+
+
+@pytest.mark.parametrize("config", [cfg for cfg in pkg_cfg.values()])
+@mock.patch("djtools.spotify.helpers.get_spotify_client")
+@mock.patch(
+    "builtins.open",
+    MockOpen(files=["registered_users.yaml"], write_only=True).open
+)
+def test_filter_dict(mock_get_spotify_client, config):
+    super_config = BaseConfig()
+    sub_config = config(**dict(super_config))
+    result = filter_dict(sub_config)
+    super_keys = set(super_config.dict())
+    sub_keys = set(sub_config.dict())
+    result_keys = set(result)
+    assert len(result_keys) + len(super_keys) == len(sub_keys)
+    assert result_keys.union(super_keys) == sub_keys
+    assert sub_keys.difference(result_keys) == super_keys
+    assert sub_keys.difference(super_keys) == result_keys
 
 
 def test_parse_yaml():
