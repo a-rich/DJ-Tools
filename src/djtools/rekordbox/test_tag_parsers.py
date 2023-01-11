@@ -105,8 +105,7 @@ def test_tagparser_raises_type_error():
     with pytest.raises(
         TypeError,
         match=(
-            "Can't instantiate abstract class TagParser with abstract methods "
-            "__call__"
+            "Can't instantiate abstract class TagParser with abstract method"
         ),
     ):
         TagParser()

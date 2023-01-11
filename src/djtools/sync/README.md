@@ -25,6 +25,13 @@ The setup required for all these operations is having `awscli` installed and con
 
 `download_xml` also requires that the `IMPORT_USER:USB_PATH` mapping exists in `registered_users.yaml`.
 
+An example `registered_users.yaml` might look something like this:
+```
+macuser: /Volumes/MyUSB
+windowsuser: "F:"
+anothernixfriend: /mnt/TheirUSB
+```
+
 # Usage
 To run any of the four sync operations {`DOWNLOAD_XML`, `DOWNLOAD_MUSIC`, `UPLOAD_XML`, `UPLOAD_MUSIC`}, just set the corresponding config option to true. If running `DOWNLOAD_XML` make sure `IMPORT_USER` is set to the proper Beatcloud user. Before uploading / after downloading, you can follow any of the prescribed workflows specified under the main README's "Basic Information" section to ensure consistency both in your local library and in the Beatcloud.
 
