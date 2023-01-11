@@ -1,4 +1,6 @@
+from datetime import datetime
 import os
+import logging
 from unittest import mock
 
 import pytest
@@ -8,6 +10,7 @@ from djtools.utils.helpers import (
     compute_distance,
     catch,
     find_matches,
+    initialize_logger,
     get_beatcloud_tracks,
     get_local_tracks,
     get_playlist_tracks,
@@ -261,6 +264,13 @@ def test_get_spotify_tracks(
     if verbosity:
         assert caplog.records[3].message == "\tsome track - some artist"
     mock_get_playlist_tracks.assert_called_once()
+
+
+def test_initialize_logger():
+    today = f'{datetime.now().strftime("%Y-%m-%d")}.log'
+    logger, log_file = initialize_logger()
+    assert isinstance(logger, logging.Logger)
+    assert os.path.basename(log_file) == today
 
 
 @pytest.mark.parametrize("platform", ["posix", "nt"])

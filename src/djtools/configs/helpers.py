@@ -4,7 +4,6 @@ overrides the corresponding configuration options with these arguments.
 """
 import argparse
 from argparse import ArgumentParser
-from collections import defaultdict
 import logging
 import os
 
@@ -359,7 +358,7 @@ def build_config():
             logger.critical(msg)
             raise RuntimeError(msg) from Exception
     else:
-        config = defaultdict(dict)
+        config = {}
 
     # Update config using command-line arguments.
     args = {k.upper(): v for k, v in arg_parse().items() if v}
@@ -372,7 +371,10 @@ def build_config():
                 args_subset = {
                     k: v for k, v in args.items() if k in args_intersection
                 }
-                config[pkg].update(args_subset)
+                if pkg in config:
+                    config[pkg].update(args_subset)
+                else:
+                    config[pkg] = args_subset
     
     # Dump YAML to file with 
     if not config_exists:

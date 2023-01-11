@@ -2,12 +2,14 @@
 particular subpackage of this library.
 """
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 from glob import glob
 from itertools import product
 import logging
+import logging.config
 import os
 from os import name as os_name
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from fuzzywuzzy import fuzz
 import spotipy
@@ -241,6 +243,29 @@ def get_spotify_tracks(config: UtilsConfig) -> Dict[str, Set[str]]:
                 logger.info(f"\t{track}")
 
     return playlist_tracks
+
+
+def initialize_logger() -> Tuple[logging.Logger, str]:
+    """Initializes logger from configuration.
+
+    Returns:
+        Tuple containing Logger and associated log file.
+    """
+    log_file = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        "logs",
+        f'{datetime.now().strftime("%Y-%m-%d")}.log',
+    ).replace(os.sep, "/")
+    log_conf = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "configs", "logging.conf"
+    ).replace(os.sep, "/")
+    logging.config.fileConfig(
+        fname=log_conf,
+        defaults={"logfilename": log_file},
+        disable_existing_loggers=False,
+    )
+
+    return logging.getLogger(__name__), log_file
 
 
 def make_dirs(path: str):
