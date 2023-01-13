@@ -14,7 +14,6 @@ from tqdm import tqdm
 import yaml
 
 from djtools.configs.config import BaseConfig
-from djtools.spotify.config import SpotifyConfig, SubredditConfig
 
 
 logger = logging.getLogger(__name__)
@@ -180,7 +179,7 @@ def get_playlist_ids() -> Dict[str, str]:
     return playlist_ids
 
 
-def get_reddit_client(config: SpotifyConfig) -> praw.Reddit:
+def get_reddit_client(config: BaseConfig) -> praw.Reddit:
     """Instantiate a Reddit API client.
 
     Args:
@@ -199,9 +198,7 @@ def get_reddit_client(config: SpotifyConfig) -> praw.Reddit:
     return reddit
 
 
-def get_spotify_client(
-    config: Union[BaseConfig, SpotifyConfig]
-) -> spotipy.Spotify:
+def get_spotify_client(config: BaseConfig) -> spotipy.Spotify:
     """Instantiate a Spotify API client.
 
     Args:
@@ -231,8 +228,8 @@ def get_spotify_client(
 async def get_subreddit_posts(
     spotify: spotipy.Spotify,
     reddit: praw.Reddit,
-    subreddit: SubredditConfig,
-    config: SpotifyConfig,
+    subreddit: Dict[str, Union[str, int]],
+    config: BaseConfig,
     praw_cache: Dict[str, bool],
 ) -> Tuple[List[Tuple[str]], Dict[str, Union[str, int]]]:
     """Filters the submissions for the provided subreddit and tries to resolve
@@ -242,27 +239,27 @@ async def get_subreddit_posts(
     Args:
         spotify: Spotify client.
         reddit: Reddit client.
-        subreddit: SubredditConfig object.
+        subreddit: SubredditConfig object as a dictionary.
         config: Configuration object.
         praw_cache: Cached praw submissions.
 
     Returns:
-        List of Spotify track ("id", "name") tuples and SubredditConfig.
+        List of Spotify track ("id", "name") tuples and SubredditConfig as a
+            dictionary.
     """
-    # TODO(a-rich): Find another way to resolve cicular import.
     from djtools.utils.helpers import catch, raise_
 
     sub_limit = config.AUTO_PLAYLIST_POST_LIMIT
-    sub = await reddit.subreddit(subreddit.name)
-    func = getattr(sub, subreddit.type)
-    if subreddit.type == "top":
+    sub = await reddit.subreddit(subreddit["name"])
+    func = getattr(sub, subreddit["type"])
+    if subreddit["type"]== "top":
         subs = [
             x async for x in catch(
                 func,
                 handle=lambda exc: raise_(exc)
                     if isinstance(exc, TypeError) else logger.info(exc),
                 limit=sub_limit,
-                time_filter=subreddit.period,
+                time_filter=subreddit["period"],
             )
         ]
     else:
@@ -273,7 +270,7 @@ async def get_subreddit_posts(
                 limit=sub_limit,
             )
         ]
-    msg = f'Filtering {len(subs)} "r/{subreddit.name}" {subreddit.type} posts'
+    msg = f'Filtering {len(subs)} "r/{subreddit["name"]}" {subreddit["type"]} posts'
     logger.info(msg)
     submissions = []
     for submission in tqdm(subs, desc=msg):
@@ -285,7 +282,7 @@ async def get_subreddit_posts(
     if len(submissions):
         msg = (
             f"Searching Spotify for {len(submissions)} new submission(s) from "
-            f'"r/{subreddit.name}"'
+            f'"r/{subreddit["name"]}"'
         )
         logger.info(msg)
         payload = [
@@ -304,10 +301,10 @@ async def get_subreddit_posts(
         new_tracks = [track for track in new_tracks if track]
         logger.info(
             f"Got {len(new_tracks)} Spotify track(s) from new "
-            f'"r/{subreddit.name}" posts'
+            f'"r/{subreddit["name"]}" posts'
         )
     else:
-        logger.info(f'No new submissions from "r/{subreddit.name}"')
+        logger.info(f'No new submissions from "r/{subreddit["name"]}"')
 
     return new_tracks, subreddit
 

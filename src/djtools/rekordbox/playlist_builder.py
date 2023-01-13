@@ -22,8 +22,8 @@ import bs4
 from bs4 import BeautifulSoup
 import yaml
 
+from djtools.configs.config import BaseConfig
 from djtools.rekordbox import tag_parsers
-from djtools.rekordbox.config import RekordboxConfig
 from djtools.rekordbox.tag_parsers import Combiner
 
 
@@ -402,7 +402,7 @@ class PlaylistBuilder:
             )
 
 
-def rekordbox_playlists(config: RekordboxConfig):
+def rekordbox_playlists(config: BaseConfig):
     """Runs the PlaylistBuilder.
 
     Args:

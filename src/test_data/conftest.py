@@ -8,7 +8,8 @@ from bs4 import BeautifulSoup
 import pytest
 import yaml
 
-from djtools.configs.helpers import pkg_cfg
+from djtools.configs.config import BaseConfig
+from djtools.configs.helpers import filter_dict, pkg_cfg
 
 
 class MockExists:
@@ -113,20 +114,21 @@ def test_track(tmpdir):
 
 
 @pytest.fixture
-def test_config(request):
-    pkg_name = request.module.__name__.split(".")[1]
-    config = pkg_cfg[pkg_name]()
-
-    return config
-
-
-@pytest.fixture
+@mock.patch("djtools.spotify.helpers.get_spotify_client")
 @mock.patch(
     "builtins.open",
     MockOpen(files=["registered_users.yaml"], write_only=True).open,
 )
-def test_sync_config(request):
-    return pkg_cfg["sync"]()
+def test_config(mock_get_spotify_client):
+    configs = {pkg: cfg() for pkg, cfg in pkg_cfg.items() if pkg != "configs"}
+    joined_config = BaseConfig(
+        **{
+            k: v for cfg in configs.values()
+            for k, v in filter_dict(cfg).items()
+        }
+    )
+
+    return joined_config
 
 
 @pytest.fixture

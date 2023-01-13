@@ -6,6 +6,7 @@ import argparse
 from argparse import ArgumentParser
 import logging
 import os
+from typing import Any, Dict, Union
 
 import yaml
 
@@ -341,15 +342,14 @@ def build_config():
         RuntimeError: config.yaml must be a valid YAML.
 
     Returns:
-        Dictionary mapping package names to their configuration objects.
+        Global configuration object.
     """
     # Load "config.yaml".
     config_dir = os.path.join(
         os.path.dirname(os.path.dirname(__file__)), "configs"
     ).replace(os.sep, "/")
     config_file = os.path.join(config_dir, "config.yaml").replace(os.sep, "/")
-    config_exists = os.path.exists(config_file)
-    if config_exists:
+    if os.path.exists(config_file):
         try:
             with open(config_file, mode="r", encoding="utf-8") as _file:
                 config = yaml.load(_file, Loader=yaml.FullLoader) or {}
@@ -359,6 +359,16 @@ def build_config():
             raise RuntimeError(msg) from Exception
     else:
         config = {}
+        base_config_fields = BaseConfig.__fields__
+        initial_config = {
+            pkg: {
+                k: v.default for k, v in cfg.__fields__.items()
+                if pkg == "configs" or k not in base_config_fields
+            }
+            for pkg, cfg in pkg_cfg.items()
+        }
+        with open(config_file, mode="w", encoding="utf-8") as _file:
+            yaml.dump(initial_config, _file)
 
     # Update config using command-line arguments.
     args = {k.upper(): v for k, v in arg_parse().items() if v}
@@ -375,31 +385,39 @@ def build_config():
                     config[pkg].update(args_subset)
                 else:
                     config[pkg] = args_subset
-    
-    # Dump YAML to file with 
-    if not config_exists:
-        base_config_fields = BaseConfig.__fields__
-        initial_config = {
-            pkg: {
-                k: v.default for k, v in cfg.__fields__.items()
-                if pkg == "configs" or k not in base_config_fields
-            }
-            for pkg, cfg in pkg_cfg.items()
-        }
-        with open(config_file, mode="w", encoding="utf-8") as _file:
-            yaml.dump(initial_config, _file)
 
     # Instantiate Pydantic models.
-    base_cfg = BaseConfig(**(config["configs"] if config else {}))
+    base_cfg_options = config["configs"] if config else {}
     configs = {
-        pkg: (
-            pkg_cfg[pkg](**{**dict(base_cfg), **config.get(pkg, {})})
-            if pkg != "configs" else base_cfg
-        )
-        for pkg in pkg_cfg
+        pkg: cfg(**{**base_cfg_options, **config.get(pkg, {})})
+        for pkg, cfg in pkg_cfg.items() if pkg != "configs"
     }
+    joined_config = BaseConfig(
+        **base_cfg_options,
+        **{
+            k: v for cfg in configs.values()
+            for k, v in filter_dict(cfg).items()
+        }
+    )
 
-    return configs
+    return joined_config
+
+
+def filter_dict(
+    sub_config: Union[RekordboxConfig, SpotifyConfig, SyncConfig, UtilsConfig],
+) -> Dict[Any, Any]:
+    """Filters out the superclass key: value pairs of a subclass.
+
+    Args:
+        sub_config: Instance of any subclass of BaseConfig.
+
+    Returns:
+        Dictionary containing just the keys unique to `sub_config`.
+    """
+    super_keys = set(BaseConfig.__fields__)
+    return {
+        k: v for k, v in sub_config.dict().items() if k not in super_keys
+    }
 
 
 def parse_yaml(_yaml: str):

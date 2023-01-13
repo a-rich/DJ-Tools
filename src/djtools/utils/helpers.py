@@ -15,8 +15,8 @@ from fuzzywuzzy import fuzz
 import spotipy
 from tqdm import tqdm
 
+from djtools.configs.config import BaseConfig
 from djtools.spotify.helpers import get_playlist_ids, get_spotify_client
-from djtools.utils.config import UtilsConfig
 
 
 logger = logging.getLogger(__name__)
@@ -89,7 +89,7 @@ def compute_distance(
 def find_matches(
     spotify_tracks: Dict[str, Set[str]],
     beatcloud_tracks: List[str],
-    config: UtilsConfig,
+    config: BaseConfig,
 ) -> List[Tuple[str, float]]:
     """Computes the Levenshtein similarity between the product of all beatcloud
         tracks with all the tracks in the given Spotify playlist(s) and returns
@@ -150,7 +150,7 @@ def get_beatcloud_tracks() -> List[str]:
     return tracks
 
 
-def get_local_tracks(config: UtilsConfig) -> Dict[str, List[str]]:
+def get_local_tracks(config: BaseConfig) -> Dict[str, List[str]]:
     """Aggregates the files from one or more local directories in a dictionary
         mapped with parent directories.
 
@@ -213,7 +213,7 @@ def get_playlist_tracks(
     return set(tracks)
 
 
-def get_spotify_tracks(config: UtilsConfig) -> Dict[str, Set[str]]:
+def get_spotify_tracks(config: BaseConfig) -> Dict[str, Set[str]]:
     """Aggregates the tracks from one or more Spotify playlists into a
         dictionary mapped with playlist names.
 

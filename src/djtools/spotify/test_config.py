@@ -5,8 +5,23 @@ import pytest
 from djtools.spotify.config import SpotifyConfig
 
 
-def test_spotifyconfig():
+@mock.patch("djtools.spotify.helpers.get_spotify_client")
+def test_spotifyconfig(mock_get_spotify_client):
     SpotifyConfig()
+
+
+@mock.patch("djtools.spotify.helpers.get_spotify_client")
+def test_baseconfig_invalid_spotify_credentials(mock_spotify):
+    mock_spotify.return_value.current_user.side_effect = Exception()
+    cfg = {
+        "PLAYLIST_FROM_UPLOAD": True,
+        "SPOTIFY_CLIENT_ID": "not a real ID",
+        "SPOTIFY_CLIENT_SECRET": "not a real secret",
+        "SPOTIFY_REDIRECT_URI": "not a real URI",
+        "SPOTIFY_USERNAME": "not a real username",
+    }
+    with pytest.raises(RuntimeError, match="Spotify credentials are invalid!"):
+        SpotifyConfig(**cfg)
 
 
 def test_spotifyconfig_no_spotify_credentials():

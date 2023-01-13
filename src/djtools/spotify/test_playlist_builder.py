@@ -20,7 +20,7 @@ pytest_plugins = [
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "playlist_subreddits", [[], [SubredditConfig(name="jungle")]],
+    "playlist_subreddits", [[], [SubredditConfig(name="jungle").dict()]],
 )
 @pytest.mark.parametrize("got_playlist_ids", [True, False])
 @pytest.mark.parametrize("got_tracks", [True, False])
@@ -44,7 +44,7 @@ pytest_plugins = [
 @mock.patch(
     "djtools.spotify.playlist_builder.get_subreddit_posts",
     return_value=[
-        [("track-id", "track name")], SubredditConfig(name="jungle")],
+        [("track-id", "track name")], SubredditConfig(name="jungle").dict()],
 )
 @mock.patch("djtools.spotify.playlist_builder.get_spotify_client")
 async def test_async_update_auto_playlists(

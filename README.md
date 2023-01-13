@@ -134,11 +134,7 @@ Please be sure to checkout the package-level README files regarding the usage of
 ```
 general:
   AWS_PROFILE: DJ
-  DOWNLOAD_SPOTIFY: myfriend Uploads
   LOG_LEVEL: INFO
-  SPOTIFY_CLIENT_ID: ""
-  SPOTIFY_CLIENT_SECRET: ""
-  SPOTIFY_REDIRECT_URI: ""
   VERBOSITY: 0
   XML_PATH: /path/to/xmls/my_rekordbox.xml
 rekordbox:
@@ -167,6 +163,9 @@ spotify:
   REDDIT_CLIENT_ID: ""
   REDDIT_CLIENT_SECRET: ""
   REDDIT_USER_AGENT: ""
+  SPOTIFY_CLIENT_ID: ""
+  SPOTIFY_CLIENT_SECRET: ""
+  SPOTIFY_REDIRECT_URI: ""
   SPOTIFY_USERNAME: ""
 sync:
   AWS_USE_DATE_MODIFIED: false
@@ -174,6 +173,7 @@ sync:
   DOWNLOAD_EXCLUDE_DIRS: []
   DOWNLOAD_INCLUDE_DIRS: []
   DOWNLOAD_MUSIC: false
+  DOWNLOAD_SPOTIFY: myfriend Uploads
   DOWNLOAD_XML: false
   DRYRUN false
   IMPORT_USER: myfriend
@@ -198,11 +198,7 @@ utils:
 ### Explanation of configuration options
 #### General "configs" options:
 * `AWS_PROFILE`: the name of the profile used when running `aws configure --profile`
-* `DOWNLOAD_SPOTIFY`: if this is set to the name of a playlist (present in `spotify_playlists.yaml`), then the only Beatcloud tracks present in this playlist will be downloaded
 * `LOG_LEVEL`: logger log level
-* `SPOTIFY_CLIENT_ID`: client ID for registered Spotify API application
-* `SPOTIFY_CLIENT_SECRET`: client secret for registered Spotify API application
-* `SPOTIFY_REDIRECT_URI`: redirect URI for registered Spotify API application
 * `VERBOSITY`: verbosity level for logging messages
 * `XML_PATH`: the full path to your Rekordbox XML file which should contain an up-to-date export of your Collection...the directory where this points to is also where all other XMLs generated or utilized by this library will exist
 #### "rekordbox" options:
@@ -224,6 +220,9 @@ utils:
 * `REDDIT_CLIENT_ID`: client ID for registered Reddit API application
 * `REDDIT_CLIENT_SECRET`: client secret for registered Reddit API application
 * `REDDIT_USER_AGENT`: user-agent for registered Reddit API application
+* `SPOTIFY_CLIENT_ID`: client ID for registered Spotify API application
+* `SPOTIFY_CLIENT_SECRET`: client secret for registered Spotify API application
+* `SPOTIFY_REDIRECT_URI`: redirect URI for registered Spotify API application
 * `SPOTIFY_USERNAME`: Spotify username that will keep playlists automatically generated
 #### "sync" options:
 * `AWS_USE_DATE_MODIFIED`: up/download files that already exist at the destination if the date modified field at the source is after that of the destination (i.e. the ID3 tags have been changed)...BE SURE THAT ALL USERS OF THIS `BEATCLOUD` INSTANCE ARE ON BOARD BEFORE UPLOADING WITH THIS FLAG SET!
@@ -231,6 +230,7 @@ utils:
 * `DOWNLOAD_EXCLUDE_DIRS`: the list of paths to folders (relative to the `DJ Music` folder on your `USB_PATH`) that should NOT be downloaded from the `beatcloud` when running the `download_music` sync operation
 * `DOWNLOAD_INCLUDE_DIRS`: the list of paths to folders (relative to the `DJ Music` folder on your `USB_PATH`) that should exclusively be downloaded from the `beatcloud` when running the `download_music` sync operation
 * `DOWNLOAD_MUSIC`: sync remote beatcloud to "DJ Music" folder
+* `DOWNLOAD_SPOTIFY`: if this is set to the name of a playlist (present in `spotify_playlists.yaml`), then the only Beatcloud tracks present in this playlist will be downloaded
 * `DOWNLOAD_XML`: sync remote XML of `IMPORT_USER` to parent of `XML_PATH`
 * `DRYRUN`: show `aws s3 sync` command output without running
 * `IMPORT_USER`: the username of a fellow `beatcloud` user (as present in `registered_users.yaml`) from whose Rekordbox XML you are importing tracks

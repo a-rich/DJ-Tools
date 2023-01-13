@@ -41,6 +41,9 @@ class SpotifyConfig(BaseConfig):
     REDDIT_CLIENT_ID: str = ""
     REDDIT_CLIENT_SECRET: str = ""
     REDDIT_USER_AGENT: str = ""
+    SPOTIFY_CLIENT_ID: str = ""
+    SPOTIFY_CLIENT_SECRET: str = ""
+    SPOTIFY_REDIRECT_URI: str = ""
     SPOTIFY_USERNAME: str  = ""
 
     def __init__(self, *args, **kwargs):
@@ -48,11 +51,8 @@ class SpotifyConfig(BaseConfig):
 
         Raises:
             RuntimeError: Spotify API credentials must exit.
+            RuntimeError: Spotify API credentials must be valid.
             RuntimeError: Reddit API credentials must exist.
-            ValueError: Subreddit config must have a string name.
-            ValueError: Subreddit config must have a valid period.
-            ValueError: Subreddit config must have a valid type.
-            ValueError: Subreddit config must have a non-negative limit.
         """
         super().__init__(*args, **kwargs)
 
@@ -73,6 +73,13 @@ class SpotifyConfig(BaseConfig):
                 "SPOTIFY_USERNAME set to valid values, you cannot use "
                 "AUTO_PLAYLIST_UPDATE or PLAYLIST_FROM_UPLOAD"
             )
+        elif self.AUTO_PLAYLIST_UPDATE or self.PLAYLIST_FROM_UPLOAD:
+            from djtools.spotify.helpers import get_spotify_client
+            spotify = get_spotify_client(self)
+            try:
+                spotify.current_user()
+            except Exception:
+                raise RuntimeError("Spotify credentials are invalid!")
         
         if self.AUTO_PLAYLIST_UPDATE and not all(
             [

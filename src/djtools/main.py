@@ -24,7 +24,7 @@ def main():
 
     logger, log_file = initialize_logger()
     config = build_config()
-    logger.setLevel(config["configs"].LOG_LEVEL)
+    logger.setLevel(config.LOG_LEVEL)
 
     # Run "rekordbox", "spotify", "sync", and "utils" package operations if any
     # of the flags to do so are present in the config.
@@ -36,16 +36,14 @@ def main():
         SYNC_OPERATIONS,
     ]:
         for operation, func in package.items():
-            pkg_name = func.__module__.split(".")[1]
-            pkg_cfg = config.get(pkg_name)
-            if not getattr(pkg_cfg, operation):
+            if not getattr(config, operation):
                 continue
             logger.info(f"{operation}")
             if operation in ["CHECK_TRACKS", "DOWNLOAD_MUSIC"]:
                 beatcloud_cache = func(
-                    pkg_cfg, beatcloud_tracks=beatcloud_cache
+                    config, beatcloud_tracks=beatcloud_cache
                 )
             else:
-                func(pkg_cfg)
+                func(config)
 
-    upload_log(config["sync"], log_file)
+    upload_log(config, log_file)

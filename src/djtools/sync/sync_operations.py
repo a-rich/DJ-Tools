@@ -7,9 +7,9 @@ beatcloud by "IMPORT_USER" before modifying it to point to track locations at
 import logging
 import os
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import List
 
-from djtools.sync.config import SyncConfig
+from djtools.configs.config import BaseConfig
 from djtools.sync.helpers import (
     parse_sync_command, rewrite_xml, run_sync, webhook
 )
@@ -20,7 +20,7 @@ from djtools.utils.helpers import make_dirs
 logger = logging.getLogger(__name__)
 
 
-def download_music(config: SyncConfig, beatcloud_tracks: List[str] = []):
+def download_music(config: BaseConfig, beatcloud_tracks: List[str] = []):
     """This function syncs tracks from the beatcloud to "USB_PATH".
 
     If "DOWNLOAD_SPOTIFY" is set to a playlist name that exists in
@@ -31,13 +31,12 @@ def download_music(config: SyncConfig, beatcloud_tracks: List[str] = []):
         config: Configuration object.
         beatcloud_tracks: List of track artist - titles from S3.
     """
-    playlist_name = config.DOWNLOAD_SPOTIFY
-    if playlist_name:
-        user = playlist_name.split("Uploads")[0].strip()
+    if config.DOWNLOAD_SPOTIFY:
+        user = config.DOWNLOAD_SPOTIFY.split("Uploads")[0].strip()
         beatcloud_tracks, beatcloud_matches = compare_tracks(
             config,
             beatcloud_tracks=beatcloud_tracks,
-            download_spotify_playlist=playlist_name,
+            download_spotify_playlist=config.DOWNLOAD_SPOTIFY,
         )
         config.DOWNLOAD_INCLUDE_DIRS = [
             os.path.join(
@@ -76,7 +75,7 @@ def download_music(config: SyncConfig, beatcloud_tracks: List[str] = []):
     return beatcloud_tracks
 
 
-def download_xml(config: SyncConfig):
+def download_xml(config: BaseConfig):
     """This function downloads the beatcloud XML of "IMPORT_USER" and modifies
         the "Location" field of all the tracks so that it points to USER's
         "USB_PATH".
@@ -99,7 +98,7 @@ def download_xml(config: SyncConfig):
         rewrite_xml(config)
 
 
-def upload_music(config: SyncConfig):
+def upload_music(config: BaseConfig):
     """This function syncs tracks from "USB_PATH" to the beatcloud.
         "AWS_USE_DATE_MODIFIED" can be used in order to reupload tracks that
         already exist in the beatcloud but have been modified since the last
@@ -135,7 +134,7 @@ def upload_music(config: SyncConfig):
         run_sync(parse_sync_command(cmd, config, upload=True))
 
 
-def upload_xml(config: SyncConfig):
+def upload_xml(config: BaseConfig):
     """This function uploads "XML_PATH" to beatcloud.
 
     Args:

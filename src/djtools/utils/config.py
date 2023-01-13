@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class UtilsConfig(BaseConfig):
+    """Configuration object for the utils package."""
 
     CHECK_TRACKS: bool = False 
     CHECK_TRACKS_FUZZ_RATIO: NonNegativeInt = 80
@@ -19,22 +20,19 @@ class UtilsConfig(BaseConfig):
     YOUTUBE_DL_URL: str = ""
 
     def __init__(self, *args, **kwargs):
+        """Constructor.
+
+        Raises:
+            ValueError: AWS_PROFILE must be set for CHECK_TRACKS.
+        """
+
         super().__init__(*args, **kwargs)
         if self.CHECK_TRACKS:
             if not self.AWS_PROFILE:
                 msg = "Config must include AWS_PROFILE for CHECK_TRACKS"
                 logger.critical(msg)
                 raise ValueError(msg)
-
-            if self.CHECK_TRACKS_SPOTIFY_PLAYLISTS and not all(
-                [
-                    self.SPOTIFY_CLIENT_ID,
-                    self.SPOTIFY_CLIENT_SECRET,
-                    self.SPOTIFY_REDIRECT_URI,
-                ]
-            ):
-                raise ValueError(
-                    "Without all the configuration options SPOTIFY_CLIENT_ID, "
-                    "SPOTIFY_CLIENT_SECRET, and SPOTIFY_REDIRECT_URI set to "
-                    "valid values, you cannot use CHECK_TRACKS_SPOTIFY_PLAYLISTS"
-                )
+            logger.warning(
+                "CHECK_TRACKS depends on valid Spotify API credentials in "
+                "SpotifyConfig."
+            )
