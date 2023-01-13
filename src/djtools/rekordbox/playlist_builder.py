@@ -417,7 +417,7 @@ def rekordbox_playlists(config: BaseConfig):
     playlist_builder = PlaylistBuilder(
         rekordbox_database=config.XML_PATH,
         playlist_config=playlist_config,
-        pure_genre_playlists=config.GENRE_PLAYLISTS_PURE,
+        pure_genre_playlists=config.PURE_GENRE_PLAYLISTS,
         playlist_remainder_type=config.REKORDBOX_PLAYLISTS_REMAINDER,
     )
     playlist_builder()

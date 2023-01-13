@@ -1,10 +1,10 @@
 """This is the entry point for the DJ Tools library.
 
 Rekordbox operations:
-    * COPY_TRACKS_PLAYLISTS (copy_tracks_playlists.py): Copy audio files from
+    * COPY_PLAYLISTS (copy_playlists.py): Copy audio files from
         playlists to a new location and generate a new XML with updated
         Location fields.
-    * RANDOMIZE_TRACKS (randomize_tracks.py): Set ID3 tags of tracks in
+    * RANDOMIZE_PLAYLISTS (randomize_playlists.py): Set ID3 tags of tracks in
         playlists sequentially (after shuffling) to randomize.
     * REKORDBOX_PLAYLISTS (rekordbox.playlist_builder.py): Automatically
         create a playlist structure based on the tags present in an XML.
@@ -19,7 +19,7 @@ Spotify operations:
 Utils operations:
     * CHECK_TRACKS (check_tracks.py): Identify overlap between Spotify 
         playlists and / or local directories and and the Beatcloud.
-    * YOUTUBE_DL (youtube_dl.py): Download tracks from a URL (e.g. Soundcloud
+    * URL_DOWNLOAD (url_download.py): Download tracks from a URL (e.g. Soundcloud
         playlist).
 
 Sync operations:

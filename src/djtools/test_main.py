@@ -21,7 +21,7 @@ def test_main(mock_parse_args, mock_get_spotify_client, test_xml):
         link_configs="",
         log_level="INFO",
         check_tracks=True,
-        randomize_tracks_playlists=["Rock"],
+        randomize_playlists=["Rock"],
         xml_path=test_xml,
     )
     main()

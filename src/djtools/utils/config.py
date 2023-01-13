@@ -16,8 +16,8 @@ class UtilsConfig(BaseConfig):
     CHECK_TRACKS_FUZZ_RATIO: NonNegativeInt = 80
     CHECK_TRACKS_LOCAL_DIRS:  List[str] = []
     CHECK_TRACKS_SPOTIFY_PLAYLISTS:  List[str] = []
-    YOUTUBE_DL_LOCATION: str = ""
-    YOUTUBE_DL_URL: str = ""
+    URL_DOWNLOAD: str = ""
+    URL_DOWNLOAD_DESTINATION: str = ""
 
     def __init__(self, *args, **kwargs):
         """Constructor.

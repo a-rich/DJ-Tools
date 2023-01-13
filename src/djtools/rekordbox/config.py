@@ -15,10 +15,10 @@ logger = logging.getLogger(__name__)
 class RekordboxConfig(BaseConfig):
     """Configuration object for the rekordbox package."""
 
-    COPY_TRACKS_PLAYLISTS:  List[str] = []
-    COPY_TRACKS_PLAYLISTS_DESTINATION: str = ""
-    GENRE_PLAYLISTS_PURE:  List[str] = []
-    RANDOMIZE_TRACKS_PLAYLISTS:  List[str] = []
+    COPY_PLAYLISTS:  List[str] = []
+    COPY_PLAYLISTS_DESTINATION: str = ""
+    PURE_GENRE_PLAYLISTS:  List[str] = []
+    RANDOMIZE_PLAYLISTS:  List[str] = []
     REKORDBOX_PLAYLISTS: bool = False 
     REKORDBOX_PLAYLISTS_REMAINDER: str = "folder"
 
@@ -33,8 +33,8 @@ class RekordboxConfig(BaseConfig):
 
         if any(
             [
-                self.COPY_TRACKS_PLAYLISTS,
-                self.RANDOMIZE_TRACKS_PLAYLISTS,
+                self.COPY_PLAYLISTS,
+                self.RANDOMIZE_PLAYLISTS,
                 self.REKORDBOX_PLAYLISTS,
             ]
         ) and (not self.XML_PATH or not os.path.exists(self.XML_PATH)):

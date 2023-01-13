@@ -18,7 +18,7 @@ from djtools.rekordbox.helpers import copy_file
 from djtools.utils.helpers import make_dirs
 
 
-def copy_tracks_playlists(config: BaseConfig):
+def copy_playlists(config: BaseConfig):
     """Copies tracks from provided playlists to a destination.
 
     Writes a new XML with these playlists and updated Location fields.
@@ -27,7 +27,7 @@ def copy_tracks_playlists(config: BaseConfig):
         config: Configuration object.
 
     Raises:
-        LookupError: Playlist names in COPY_TRACKS_PLAYLISTS must exist in
+        LookupError: Playlist names in COPY_PLAYLISTS must exist in
             "XML_PATH".
     """
     # Load Rekordbox database from XML.
@@ -35,7 +35,7 @@ def copy_tracks_playlists(config: BaseConfig):
         rekordbox_database = BeautifulSoup(_file.read(), "xml")
 
     # Create destination directory.
-    make_dirs(config.COPY_TRACKS_PLAYLISTS_DESTINATION)
+    make_dirs(config.COPY_PLAYLISTS_DESTINATION)
 
     # Nodes to not remove when writing the new XML.
     keep_nodes = set()
@@ -43,7 +43,7 @@ def copy_tracks_playlists(config: BaseConfig):
     # Get the set of track IDs across the provided playlists.
     # Get the parents of playlists so they aren't removed from the output XML.
     playlists_track_keys = defaultdict(set)
-    for playlist_name in config.COPY_TRACKS_PLAYLISTS:
+    for playlist_name in config.COPY_PLAYLISTS:
         try:
             playlist = rekordbox_database.find_all(
                 "NODE", {"Name": playlist_name}
@@ -80,7 +80,7 @@ def copy_tracks_playlists(config: BaseConfig):
     # Copy tracks to the destination and update Location for the track.
     payload = [
         {tracks[key] for key in flattened_track_keys},
-        [config.COPY_TRACKS_PLAYLISTS_DESTINATION] * len(flattened_track_keys),
+        [config.COPY_PLAYLISTS_DESTINATION] * len(flattened_track_keys),
     ]
     with ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as executor:
         _ = list(
@@ -100,7 +100,7 @@ def copy_tracks_playlists(config: BaseConfig):
             node.decompose()
     
     # Repopulate playlists with relocated tracks.
-    for playlist_name in config.COPY_TRACKS_PLAYLISTS:
+    for playlist_name in config.COPY_PLAYLISTS:
         playlist = rekordbox_database.find_all(
             "NODE", {"Name": playlist_name}
         )[0]

@@ -13,8 +13,8 @@ pytest_plugins = [
 
 def test_rekordboxconfig():
     cfg = {
-        "COPY_TRACKS_PLAYLISTS": [],
-        "RANDOMIZE_TRACKS_PLAYLISTS": [],
+        "COPY_PLAYLISTS": [],
+        "RANDOMIZE_PLAYLISTS": [],
         "REKORDBOX_PLAYLISTS": False,
     }
     RekordboxConfig(**cfg)

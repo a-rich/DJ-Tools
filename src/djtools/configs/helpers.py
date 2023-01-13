@@ -120,13 +120,13 @@ def arg_parse() -> argparse.Namespace:
         help="List of Spotify playlist names to check against the Beatcloud",
     )
     parser.add_argument(
-        "--copy-tracks-playlists",
+        "--copy-playlists",
         type=str,
         nargs="+",
         help="List of Rekordbox playlists to copy audio files from",
     )
     parser.add_argument(
-        "--copy-tracks-playlists-destination",
+        "--copy-playlists-destination",
         type=str,
         help="Location to copy Rekordbox playlists' audio files to",
     )
@@ -168,12 +168,6 @@ def arg_parse() -> argparse.Namespace:
         help='Show result of "aws s3 sync" command without running it',
     )
     parser.add_argument(
-        "--genre-playlists-pure",
-        type=str,
-        nargs="+",
-        help='List of genre tag substrings to create "pure" playlists for',
-    )
-    parser.add_argument(
         "--import-user",
         type=str,
         metavar="Entry of registered_user.yaml",
@@ -198,7 +192,13 @@ def arg_parse() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        "--randomize-tracks-playlists",
+        "--pure-genre-playlists",
+        type=str,
+        nargs="+",
+        help='List of genre tag substrings to create "pure" playlists for',
+    )
+    parser.add_argument(
+        "--randomize-playlists",
         type=str,
         nargs="+",
         help="List of Rekordbox playlist names to randomize tracks in",
@@ -275,12 +275,22 @@ def arg_parse() -> argparse.Namespace:
         help="Trigger uploading the XML of IMPORT_USER from the Beatcloud",
     )
     parser.add_argument(
+        "--url-download",
+        type=str,
+        help="URL to download audio file(s) from",
+    )
+    parser.add_argument(
+        "--url-download-location",
+        type=str,
+        help="Path to download audio file(s) to",
+    )
+    parser.add_argument(
         "--usb-path",
         type=str,
         help="Path to a drive with audio files",
     )
     parser.add_argument(
-        "--USER",
+        "--user",
         type=str,
         metavar="Entry of registered_user.yaml",
         help="Entry in registered_users.yaml which maps to your USB_PATH",
@@ -296,16 +306,6 @@ def arg_parse() -> argparse.Namespace:
         "--xml-path",
         type=str,
         help='Path to your exported Rekordbox XML database',
-    )
-    parser.add_argument(
-        "--youtube-dl-url",
-        type=str,
-        help="URL to download audio file(s) from",
-    )
-    parser.add_argument(
-        "--youtube-dl-location",
-        type=str,
-        help="Path to download audio file(s) to",
     )
     args = parser.parse_args()
 
