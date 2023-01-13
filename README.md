@@ -138,10 +138,10 @@ general:
   VERBOSITY: 0
   XML_PATH: /path/to/xmls/my_rekordbox.xml
 rekordbox:
-  COPY_TRACKS_PLAYLISTS: []
-  COPY_TRACKS_PLAYLISTS_DESTINATION: ""
-  GENRE_PLAYLISTS_PURE: []
-  RANDOMIZE_TRACKS_PLAYLISTS:
+  COPY_PLAYLISTS: []
+  COPY_PLAYLISTS_DESTINATION: ""
+  PURE_GENRE_PLAYLISTS: []
+  RANDOMIZE_PLAYLISTS:
     - Halftime
     - Trip Hop
   REKORDBOX_PLAYLISTS: false
@@ -192,8 +192,8 @@ utils:
   CHECK_TRACKS_SPOTIFY_PLAYLISTS:
     - Download
     - Maybe Download
-  YOUTUBE_DL_LOCATION: /Volumes/My_DJ_USB/DJ Music/New Music
-  YOUTUBE_DL_URL: https://soundcloud.com/me/sets/to-download
+  URL_DOWNLOAD: https://soundcloud.com/me/sets/to-download
+  URL_DOWNLOAD_DESTINATION: /Volumes/My_DJ_USB/DJ Music/New Music
 ```
 ### Explanation of configuration options
 #### General "configs" options:
@@ -202,10 +202,10 @@ utils:
 * `VERBOSITY`: verbosity level for logging messages
 * `XML_PATH`: the full path to your Rekordbox XML file which should contain an up-to-date export of your Collection...the directory where this points to is also where all other XMLs generated or utilized by this library will exist
 #### "rekordbox" options:
-* `COPY_TRACKS_PLAYLISTS`: list of playlists in `XML_PATH` to (a) copy audio files to `COPY_TRACKS_PLAYLISTS_DESTINATION` and (b) write to a new XML with updated Location fields.
-* `COPY_TRACKS_PLAYLISTS_DESTINATION`: path to copy audio files to.
-* `GENRE_PLAYLISTS_PURE`: list of genre tags (case-sensitive) which will each have a "Pure" playlist generated for...each item must be accompanied with a "Pure \<genre>" entry in `rekordbox_playlists.yaml`,
-* `RANDOMIZE_TRACKS_PLAYLISTS`: list of playlist names (must exist in `XML_PATH`) that should have their tracks shuffled
+* `COPY_PLAYLISTS`: list of playlists in `XML_PATH` to (a) copy audio files to `COPY_PLAYLISTS_DESTINATION` and (b) write to a new XML with updated Location fields.
+* `COPY_PLAYLISTS_DESTINATION`: path to copy audio files to.
+* `PURE_GENRE_PLAYLISTS`: list of genre tags (case-sensitive) which will each have a "Pure" playlist generated for...each item must be accompanied with a "Pure \<genre>" entry in `rekordbox_playlists.yaml`,
+* `RANDOMIZE_PLAYLISTS`: list of playlist names (must exist in `XML_PATH`) that should have their tracks shuffled
 * `REKORDBOX_PLAYLISTS`: boolean flag to trigger the generation of a playlist structure (as informed by `rekordbox_playlists.yaml`) using the tags in `XML_PATH`...the resulting XML file is `XML_PATH` prefixed with "`auto_`"
 * `REKORDBOX_PLAYLISTS_REMAINDER`: whether tracks of remainder tags (those not specified in `rekordbox_playlists.yaml`) will be placed in a `folder` called "Other" with individual tag playlists or a `playlist` called "Other"
 #### "spotify" options:
@@ -245,8 +245,8 @@ utils:
 * `CHECK_TRACKS_FUZZ_RATIO`: the minimum Levenshtein similarity for indicating potential redundancies between Spotify playlists / local directories and the `beatcloud`
 * `CHECK_TRACKS_LOCAL_DIRS`: list of local directories (under "DJ Music") to use with `CHECK_TRACKS`,
 * `CHECK_TRACKS_SPOTIFY_PLAYLISTS`: list of Spotify playlists to use with `CHECK_TRACKS`
-* `YOUTUBE_DL_LOCATION`: path to download files to
-* `YOUTUBE_DL_URL`: URL from which music files should be downloaded (i.e. a Soundcloud playlist)
+* `URL_DOWNLOAD`: URL from which music files should be downloaded (i.e. a Soundcloud playlist)
+* `URL_DOWNLOAD_DESTINATION`: path to download files to
 
 # Contribution
 If you wish to contribute to `DJ Tools`, please follow these development rules:

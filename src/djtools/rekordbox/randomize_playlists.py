@@ -22,9 +22,9 @@ from djtools.rekordbox.helpers import (
 logger = logging.getLogger(__name__)
 
 
-def randomize_tracks(config: BaseConfig):
-    """For each playlist in "RANDOMIZE_TRACKS_PLAYLISTS", shuffle the tracks
-    and sequentially set the TrackNumber tag to a number to emulate track
+def randomize_playlists(config: BaseConfig):
+    """For each playlist in "RANDOMIZE_PLAYLISTS", shuffle the tracks and
+    sequentially set the TrackNumber tag to a number to emulate track
     randomization.
 
     Args:
@@ -41,12 +41,11 @@ def randomize_tracks(config: BaseConfig):
 
     seen_tracks = set()
     randomized_tracks = []
-    for playlist in config.RANDOMIZE_TRACKS_PLAYLISTS:
+    for playlist in config.RANDOMIZE_PLAYLISTS:
         try:
             tracks = get_playlist_track_locations(soup, playlist, seen_tracks)
         except LookupError as exc:
-            logger.error(exc)
-            continue
+            raise LookupError(f"{playlist} not found")
 
         random.shuffle(tracks)
         randomized_tracks.extend(tracks)

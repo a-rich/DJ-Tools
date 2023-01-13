@@ -1,4 +1,4 @@
-"""This module is used to download tracks from "YOUTUBE_DL_URL". For example, a
+"""This module is used to download tracks from "URL_DOWNLOAD". For example, a
 Soundcloud playlist can be made and the URL of that playlist can be provided to
 download all those tracks and rename them to cleanup the digits appended to the
 files by the youtube-dl package.
@@ -33,13 +33,13 @@ def fix_up(_file: str) -> str:
     return name + ext
 
 
-def youtube_dl(config: BaseConfig):
+def url_download(config: BaseConfig):
     """Downloads music files from a provided URL using the youtube-dl package.
 
     Args:
         config: Configuration object.
     """
-    dl_loc = config.YOUTUBE_DL_LOCATION or "."
+    dl_loc = config.URL_DOWNLOAD_DESTINATION or "."
     dl_loc = os.path.join(dl_loc, "").replace(os.sep, "/")
     make_dirs(dl_loc)
 
@@ -54,8 +54,8 @@ def youtube_dl(config: BaseConfig):
     }
 
     with ytdl.YoutubeDL(ydl_opts) as ydl:
-        logger.info(f"Downloading {config.YOUTUBE_DL_URL} to {dl_loc}")
-        ydl.download([config.YOUTUBE_DL_URL])
+        logger.info(f"Downloading {config.URL_DOWNLOAD} to {dl_loc}")
+        ydl.download([config.URL_DOWNLOAD])
 
     for _file in os.listdir(dl_loc):
         os.rename(

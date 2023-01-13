@@ -65,13 +65,13 @@ class BaseConfig(BaseModel, extra=Extra.allow):
             logger.warning(
                 "XML_PATH is not set. Without this set to a valid Rekordbox "
                 "XML export, you cannot use the following features: "
-                "COPY_TRACKS_PLAYLISTS, DOWNLOAD_XML, "
-                "RANDOMIZE_TRACKS_PLAYLISTS, REKORDBOX_PLAYLISTS, UPLOAD_XML"
+                "COPY_PLAYLISTS, DOWNLOAD_XML, RANDOMIZE_PLAYLISTS, "
+                "REKORDBOX_PLAYLISTS, UPLOAD_XML"
             )
         elif not os.path.exists(self.XML_PATH):
             logger.warning(
                 "XML_PATH does not exist. Without this set to a valid "
                 "Rekordbox XML export, you cannot use the following features: "
-                "COPY_TRACKS_PLAYLISTS, DOWNLOAD_XML, "
-                "RANDOMIZE_TRACKS_PLAYLISTS, REKORDBOX_PLAYLISTS, UPLOAD_XML"
+                "COPY_PLAYLISTS, DOWNLOAD_XML, RANDOMIZE_PLAYLISTS, "
+                "REKORDBOX_PLAYLISTS, UPLOAD_XML"
             )
