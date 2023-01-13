@@ -280,9 +280,9 @@ def arg_parse() -> argparse.Namespace:
         help="URL to download audio file(s) from",
     )
     parser.add_argument(
-        "--url-download-location",
+        "--url-download-destination",
         type=str,
-        help="Path to download audio file(s) to",
+        help="Location to download audio file(s) to",
     )
     parser.add_argument(
         "--usb-path",
