@@ -26,16 +26,13 @@
     - Importing tracks from XML
     - Exporting to a Device
 # Release Plan
-* 2.3.1
-    - `spotify.playlist_builder`
-        - [ ] Make Spotify API calls asynchronous
-        - [ ] Improved Spotify API request stability 
-        - [ ] Improved Reddit post parsing and Spotify searching
-* 2.4.0
-    - `spotify`
-        - [x] Generate Spotify playlist from "New Music" Discord webhook output
-        - [x] Format `DOWNLOAD_INCLUDE_DIRS` override using the contents of a Spotify playlist
-        - [ ] Create Spotify playlist from a Rekordbox playlist
+* 2.4.1
+    - [ ] Make Spotify API calls asynchronous
+    - [ ] Improved Spotify API request stability 
+    - [ ] Improved Reddit post parsing and Spotify searching
+    - [ ] Optimize pytest-cov workflow and add Windows runner
+* 2.5.0
+    - [ ] Create serializers package for converting database files from other DJ software (e.g. Serato, Traktor, Denon, etc.) so that operations in the rekordbox package can be used on them
 
 # Overview
 `DJ Tools` is a library for managing a Collection of audio files (not necessarily mp3 files, although that is preferred) and Rekordbox XML files.
