@@ -4,7 +4,7 @@ from unittest import mock
 import pytest
 from youtube_dl.utils import DownloadError
 
-from djtools.utils.youtube_dl import fix_up, youtube_dl
+from djtools.utils.url_download import fix_up, url_download
 
 
 pytest_plugins = [
@@ -35,11 +35,11 @@ def test_fix_up(test_assets):
     assert clean_file == expected_clean_file
 
 
-def test_youtube_dl(tmpdir, test_config):
-    test_config["YOUTUBE_DL_URL"] = (
+def test_url_download(tmpdir, test_config):
+    test_config.URL_DOWNLOAD = (
         "https://soundcloud.com/aweeeezy_music/sets/test-download"
     )
-    test_config["YOUTUBE_DL_LOCATION"] = tmpdir
+    test_config.URL_DOWNLOAD_DESTINATION = tmpdir
     with mock.patch(
         "youtube_dl.YoutubeDL",
     ) as mock_ytdl:
@@ -49,17 +49,11 @@ def test_youtube_dl(tmpdir, test_config):
             mode="w",
             encoding="utf-8",
         ).write("")
-        youtube_dl(test_config)
+        url_download(test_config)
     assert len(os.listdir(tmpdir)) == 1
 
 
-def test_youtube_dl_no_url(test_config):
-    del test_config["YOUTUBE_DL_URL"]
-    with pytest.raises(KeyError):
-        youtube_dl(test_config)
-    
-
-def test_youtube_dl_invalid_url(test_config):
-    test_config["YOUTUBE_DL_URL"] = ""
+def test_url_download_invalid_url(test_config):
+    test_config.URL_DOWNLOAD = ""
     with pytest.raises(DownloadError):
-        youtube_dl(test_config)
+        url_download(test_config)

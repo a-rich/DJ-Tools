@@ -1,10 +1,11 @@
 """This module contains helper functions used by the "sync_operations" module.
 Helper functions include formatting "aws s3 sync" commands, formatting the
 output of "aws s3 sync" commands, posting uploaded tracks to Discord, and
-modifying XML_IMPORT_USER's XML to point to tracks located at "USB_PATH".
+modifying IMPORT_USER's XML to point to tracks located at "USB_PATH".
 """
+from datetime import datetime, timedelta
+from glob import glob
 from itertools import groupby
-import json
 import logging
 import os
 from subprocess import Popen, PIPE, CalledProcessError
@@ -12,9 +13,103 @@ from typing import Dict, List, Optional, Union
 
 from bs4 import BeautifulSoup
 import requests
+import yaml
+
+from djtools.configs.config import BaseConfig
 
 
 logger = logging.getLogger(__name__)
+
+
+def parse_sync_command(
+    _cmd: str, config: BaseConfig, upload: Optional[bool] = False,
+) -> str:
+    """Appends flags to "aws s3 sync" command. If "*_INCLUDE_DIRS" is
+        specified, all directories are ignored except those specified. If
+        "*_EXCLUDE_DIRS" is specified, all directories are included except
+        those specified. Only one of these can be specified at once. If
+        "AWS_USE_DATE_MODIFIED", then tracks will be redownloaded / reuploaded
+        if their date modified at the source is after that of the destination.
+
+    Args:
+        _cmd: Partial "aws s3 sync" command.
+        config: Configuration object.
+        upload: Whether uploading or downloading.
+
+    Returns:
+        Fully constructed "aws s3 sync" command.
+    """
+    if (
+        (upload and config.UPLOAD_INCLUDE_DIRS)
+        or (not upload and config.DOWNLOAD_INCLUDE_DIRS)
+    ):
+        _cmd.extend(["--exclude", "*"])
+        directories = getattr(
+            config, f'{"UP" if upload else "DOWN"}LOAD_INCLUDE_DIRS'
+        )
+        for _dir in directories:
+            path, ext = os.path.splitext(_dir)
+            if not ext:
+                path = os.path.join(_dir, "*").replace(os.sep, "/")
+            else:
+                path = path + ext
+            _cmd.extend(["--include", path])
+    if (
+        (upload and config.UPLOAD_EXCLUDE_DIRS)
+        or (not upload and config.DOWNLOAD_EXCLUDE_DIRS)
+    ):
+        _cmd.extend(["--include", "*"])
+        directories = getattr(
+            config, f'{"UP" if upload else "DOWN"}LOAD_EXCLUDE_DIRS'
+        )
+        for _dir in directories:
+            path, ext = os.path.splitext(_dir)
+            if not ext:
+                path = os.path.join(_dir, "*").replace(os.sep, "/")
+            else:
+                path = path + ext
+            _cmd.extend(["--exclude", path])
+    if not config.AWS_USE_DATE_MODIFIED:
+        _cmd.append("--size-only")
+    if config.DRYRUN:
+        _cmd.append("--dryrun")
+    logger.info(" ".join(_cmd))
+
+    return _cmd
+
+
+def rewrite_xml(config: BaseConfig):
+    """This function modifies the "Location" field of track tags in a
+        downloaded Rekordbox XML replacing the "USB_PATH" written by
+        "IMPORT_USER" with the "USB_PATH" in "config.yaml".
+
+    Args:
+        config: Configuration object.
+    """
+    registered_users_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        "configs",
+        "registered_users.yaml",
+    ).replace(os.sep, "/")
+
+    with open(registered_users_path, mode="r", encoding="utf-8") as _file:
+        registered_users = yaml.load(_file, Loader=yaml.FullLoader)
+        src = registered_users[config.IMPORT_USER].strip("/")
+        dst = registered_users[config.USER].strip("/")
+
+    xml_path = os.path.join(
+        os.path.dirname(config.XML_PATH), f"{config.IMPORT_USER}_rekordbox.xml"
+    ).replace(os.sep, "/")
+
+    with open(xml_path, mode="r", encoding="utf-8") as _file:
+        soup = BeautifulSoup(_file.read(), "xml")
+        for track in soup.find_all("TRACK"):
+            if not track.get("Location"):
+                continue
+            track["Location"] = track["Location"].replace(src, dst)
+
+    with open(xml_path, mode="wb", encoding=soup.orignal_encoding) as _file:
+        _file.write(soup.prettify("utf-8"))
 
 
 def run_sync(_cmd: str) -> str:
@@ -45,8 +140,11 @@ def run_sync(_cmd: str) -> str:
                         )[-1]
                     )
                 else:
-                    print(f"{line.strip()}                                  " \
-                          "                        ", end="\r", flush=True)
+                    print(
+                        f"{line.strip()}                                  "
+                        "                        ",
+                        end="\r", flush=True
+                    )
 
             proc.stdout.close()
             return_code = proc.wait()
@@ -78,78 +176,36 @@ def run_sync(_cmd: str) -> str:
     return new_music
 
 
-def parse_sync_command(
-    _cmd: str,
-    config: Dict[str, Union[List, Dict, str, bool, int, float]],
-    upload: Optional[bool] = False,
-) -> str:
-    """Appends flags to "aws s3 sync" command. If "*_INCLUDE_DIRS" is
-        specified, all directories are ignored except those specified. If
-        "*_EXCLUDE_DIRS" is specified, all directories are included except
-        those specified. Only one of these can be specified at once. If
-        "AWS_USE_DATE_MODIFIED", then tracks will be redownloaded / reuploaded
-        if their date modified at the source is after that of the destination.
+def upload_log(config: BaseConfig, log_file: str):
+    """This function uploads "log_file" to the "USER" logs folder in S3. It
+        then deletes all files created more than one day ago.
 
     Args:
-        _cmd: Partial "aws s3 sync" command.
         config: Configuration object.
-        upload: Whether uploading or downloading.
-    
-    Raises:
-        ValueError: include / exclude directories cannot both be specified
-            simultaneously.
-
-    Returns:
-        Fully constructed "aws s3 sync" command.
+        log_file: Path to log file.
     """
-    if (
-        (config.get("UPLOAD_INCLUDE_DIRS")
-        and config.get("UPLOAD_EXCLUDE_DIRS"))
-        or (config.get("DOWNLOAD_INCLUDE_DIRS")
-        and config.get("DOWNLOAD_EXCLUDE_DIRS"))
-    ):
-        msg = (
-            "Config must neither contain (a) both UPLOAD_INCLUDE_DIRS and "
-            "UPLOAD_EXCLUDE_DIRS or (b) both DOWNLOAD_INCLUDE_DIRS and "
-            "DOWNLOAD_EXCLUDE_DIRS"
+    if not config.AWS_PROFILE:
+        logger.warning(
+            "Logs cannot be backed up without specifying the config option "
+            "AWS_PROFILE"
         )
-        logger.critical(msg)
-        raise ValueError(msg)
-    if (
-        config.get("UPLOAD_INCLUDE_DIRS")
-        or config.get("DOWNLOAD_INCLUDE_DIRS")
-    ):
-        _cmd.extend(["--exclude", "*"])
-        for _dir in config.get(
-            f'{"UP" if upload else "DOWN"}LOAD_INCLUDE_DIRS', []
-        ):
-            _cmd.extend(
-                [
-                    "--include",
-                    os.path.join(_dir, "*").replace(os.sep, "/"),
-                ]
-            )
-    if (
-        config.get("UPLOAD_EXCLUDE_DIRS")
-        or config.get("DOWNLOAD_EXCLUDE_DIRS")
-    ):
-        _cmd.extend(["--include", "*"])
-        for _dir in config.get(
-            f'{"UP" if upload else "DOWN"}LOAD_EXCLUDE_DIRS', []
-        ):
-            _cmd.extend(
-                [
-                    "--exclude",
-                    os.path.join(_dir, "*").replace(os.sep, "/"),
-                ]
-            )
-    if not config.get("AWS_USE_DATE_MODIFIED"):
-        _cmd.append("--size-only")
-    if config.get("DRYRUN"):
-        _cmd.append("--dryrun")
-    logger.info(" ".join(_cmd))
+        return
 
-    return _cmd
+    dst = (
+        "s3://dj.beatcloud.com/dj/logs/"
+        f"{config.USER}/{os.path.basename(log_file)}"
+    )
+    cmd = f"aws s3 cp {log_file} {dst}"
+    logger.info(cmd)
+    os.system(cmd)
+
+    now = datetime.now()
+    one_day = timedelta(days=1)
+    for _file in glob(f"{os.path.dirname(log_file)}/*"):
+        if os.path.basename(_file) == "empty.txt":
+            continue
+        if os.path.getmtime(_file) < (now - one_day).timestamp():
+            os.remove(_file)
 
 
 def webhook(
@@ -190,48 +246,3 @@ def webhook(
             requests.post(url, json={"content": batch})
             batch = remainder[:content_size_limit]
             remainder = remainder[content_size_limit:]
-
-
-def rewrite_xml(config: Dict[str, Union[List, Dict, str, bool, int, float]]):
-    """This function modifies the "Location" field of track tags in a
-        downloaded Rekordbox XML replacing the "USB_PATH" written by
-        "XML_IMPORT_USER" with the "USB_PATH" in "config.json".
-
-    Args:
-        config: Configuration object.
-
-    Raises:
-        KeyError: "XML_PATH" must be configured.
-    """
-    xml_path = config.get("XML_PATH")
-    if not xml_path:
-        raise ValueError(
-            "Using the sync_operations module's download_xml function "
-            "requires the config option XML_PATH"
-        )
-
-    registered_users_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)),
-        "configs",
-        "registered_users.json",
-    ).replace(os.sep, "/")
-
-    with open(registered_users_path, mode="r", encoding="utf-8") as _file:
-        registered_users = json.load(_file)
-        src = registered_users[config["XML_IMPORT_USER"]].strip("/")
-        dst = registered_users[config["USER"]].strip("/")
-
-    xml_path = os.path.join(
-        os.path.dirname(xml_path),
-        f'{config["XML_IMPORT_USER"]}_rekordbox.xml',
-    ).replace(os.sep, "/")
-
-    with open(xml_path, mode="r", encoding="utf-8") as _file:
-        soup = BeautifulSoup(_file.read(), "xml")
-        for track in soup.find_all("TRACK"):
-            if not track.get("Location"):
-                continue
-            track["Location"] = track["Location"].replace(src, dst)
-
-    with open(xml_path, mode="wb", encoding=soup.orignal_encoding) as _file:
-        _file.write(soup.prettify("utf-8"))

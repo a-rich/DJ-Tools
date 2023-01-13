@@ -1,9 +1,12 @@
-"""The 'sync' package contains a module for syncing tracks to and from the
-beatcloud, syncing USER's XML to the beatcloud, and syncing XML_IMPORT_USER's
-XML to the parent directory of 'XML_PATH'. It also contains a module of helper
-functions used by the former module.
+"""The `sync` package contains modules:
+    * `config`: the configuration object for the `sync` package
+    * `helpers`: helper functions for the `sync_operations` module
+    * `sync_operations`: for syncing audio and Rekordbox XML files to the
+        Beatcloud
 """
-from .sync_operations import (
+from djtools.sync.config import SyncConfig
+from djtools.sync.helpers import upload_log
+from djtools.sync.sync_operations import (
     download_music, download_xml, upload_music, upload_xml
 )
 
@@ -18,7 +21,9 @@ SYNC_OPERATIONS = {
 __all__ = (
     "download_music",
     "download_xml",
+    "SyncConfig",
     "SYNC_OPERATIONS",
+    "upload_log",
     "upload_music",
     "upload_xml",
 )

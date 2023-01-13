@@ -1,26 +1,26 @@
-"""The "utils" package contains modules for a variety of different tasks.
-    * local_dirs_checker.py: Check local tracks for overlap with those already
-        in the beatcloud.
-    * youtube_dl.py: Download tracks from a URL (e.g. Soundcloud playlist).
+"""The `utils` package contains modules:
+    * `check_tracks`: Compares Spotify and / or local files with the Beatcloud
+        to identify overlap.
+    * `config`: the configuration object for the `utils` package
+    * `helpers`: helper functions for the `utils` package and the `djtools`
+        library in general
+    * `url_download`: download tracks from a URL (e.g. Soundcloud playlist).
 """
-from .config import build_config
-from .helpers import upload_log
-from .copy_playlists_tracks import copy_playlists_tracks
-from .local_dirs_checker import check_local_dirs
-from .youtube_dl import youtube_dl
+from djtools.utils.config import UtilsConfig
+from djtools.utils.check_tracks import compare_tracks
+from djtools.utils.helpers import initialize_logger
+from djtools.utils.url_download import url_download
 
 
 UTILS_OPERATIONS = {
-    "CHECK_TRACK_OVERLAP": check_local_dirs,
-    "COPY_PLAYLISTS_TRACKS": copy_playlists_tracks,
-    "YOUTUBE_DL": youtube_dl,
+    "CHECK_TRACKS": compare_tracks,
+    "URL_DOWNLOAD": url_download,
 }
 
 __all__ = (
-    "build_config",
-    "check_local_dirs",
-    "copy_playlists_tracks",
+    "compare_tracks",
+    "initialize_logger",
+    "url_download",
+    "UtilsConfig",
     "UTILS_OPERATIONS",
-    "upload_log",
-    "youtube_dl",
 )

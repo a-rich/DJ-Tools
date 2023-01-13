@@ -1,20 +1,35 @@
-"""The "rekordbox" package contains modules for operating on exported Rekordbox
-databases i.e. rekordbox.xml files.
-
-Included in this package:
-    * randomize_tracks.py: Set tags of tracks in playlists sequentially
-        (after shuffling) to randomize.
-    * rekordbox_playlist_builder.py: Automatically create a desired playlist
-        structure based on the tags present in an XML.
+"""The `rekordbox` package contains modules:
+    * `config`: the configuration object for the `rekordbox` package
+    * `copy_playlists`: copies audio files for tracks within a set of
+        playlists to a new location and writes a new XML with these updated
+        paths
+    * `helpers`: contains helper classes and functions for the other modules of
+        this package
+    * `playlist_builder`: constructs rekordbox playlists using tags in a
+        Collection and a defined playlist structure in
+        `rekordbox_playlists.yaml`
+    * `randomize_playlists`: writes sequential numbers to Rekordbox tags of
+        shuffled tracks in playlists to emulate playlist shuffling
+    * `tag_parsers`: the `TagParser` abstract base class and its
+        implementations used by the `playlist_builder`
 """
 
-from .randomize_tracks import randomize_tracks
-from .rekordbox_playlist_builder import rekordbox_playlists
+from djtools.rekordbox.config import RekordboxConfig
+from djtools.rekordbox.copy_playlists import copy_playlists
+from djtools.rekordbox.playlist_builder import rekordbox_playlists
+from djtools.rekordbox.randomize_playlists import randomize_playlists
 
 
 REKORDBOX_OPERATIONS = {
-    "RANDOMIZE_TRACKS": randomize_tracks,
+    "COPY_PLAYLISTS": copy_playlists,
+    "RANDOMIZE_PLAYLISTS": randomize_playlists,
     "REKORDBOX_PLAYLISTS": rekordbox_playlists
 }
 
-__all__ = "randomize_tracks", "REKORDBOX_OPERATIONS", "rekordbox_playlists"
+__all__ = (
+    "copy_playlists",
+    "randomize_playlists",
+    "RekordboxConfig",
+    "REKORDBOX_OPERATIONS",
+    "rekordbox_playlists",
+)
