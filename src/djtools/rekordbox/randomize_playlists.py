@@ -14,9 +14,7 @@ from tqdm import tqdm
 
 
 from djtools.configs.config import BaseConfig
-from djtools.rekordbox.helpers import (
-    get_playlist_track_locations, set_tag, wrap_playlists
-)
+from djtools.rekordbox.helpers import get_playlist_track_locations, set_tag
 
 
 logger = logging.getLogger(__name__)
@@ -30,15 +28,18 @@ def randomize_playlists(config: BaseConfig):
     Args:
         config: Configuration object.
     """
+    # Load Rekordbox database from XML.
     with open(config.XML_PATH, mode="r", encoding="utf-8") as _file:
         soup = BeautifulSoup(_file.read(), "xml")
 
+    # Create track ID lookup.
     lookup = {}
     for track in soup.find_all("TRACK"):
         if not track.get("Location"):
             continue
         lookup[track["TrackID"]] = track
 
+    # Build a list of tracks to randomize from the provided list of playlists.
     seen_tracks = set()
     randomized_tracks = []
     for playlist in config.RANDOMIZE_PLAYLISTS:
@@ -50,6 +51,7 @@ def randomize_playlists(config: BaseConfig):
         random.shuffle(tracks)
         randomized_tracks.extend(tracks)
 
+    # Shuffle the track number field of the tracks.
     randomized_tracks = [lookup[x] for x in randomized_tracks]
     payload = [randomized_tracks, list(range(1, len(randomized_tracks) + 1))]
     with ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as executor:
@@ -61,7 +63,16 @@ def randomize_playlists(config: BaseConfig):
             )
         )
 
-    wrap_playlists(soup, randomized_tracks)
+    # Insert randomized tracks playlist into the playlist root.
+    playlists_root = soup.find_all("NODE", {"Name": "ROOT", "Type": "0"})[0]
+    new_playlist = soup.new_tag(
+        "NODE", KeyType="0", Name="AUTO_RANDOMIZE", Type="1"
+    )
+    for track in randomized_tracks:
+        new_playlist.append(soup.new_tag("TRACK", Key=track["TrackID"]))
+    playlists_root.insert(0, new_playlist)
+
+    # Write XML file.
     _dir, _file = os.path.split(config.XML_PATH)
     auto_xml_path = os.path.join(_dir, f"auto_{_file}").replace(os.sep, "/")
     with open(

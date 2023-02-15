@@ -122,8 +122,38 @@ class Combiner(TagParser):
         """Returns tag / selector -> tracks mapping.
 
         Returns:
-            Map of tags / selectors to track_id: list of tracks mapping.
+            Map of tags / selectors to track_id.
         """
+        return self._tracks
+
+    def get_playlist_mapping(
+        self,
+        rekordbox_database: BeautifulSoup,
+    ) -> Dict[str, List[Tuple[str, List]]]:
+        """Adds tags for playlist selectors.
+
+        Args:
+            rekordbox_database: Parsed XML.
+
+        Raises:
+            LookupError: Playlists in expressions must exist in "XML_PATH".
+
+        Returns:
+            Map of playlist selectors to (track_id, tags) tuples.
+        """
+        for playlist_name in self._playlists:
+            try:
+                playlist = rekordbox_database.find_all(
+                    "NODE", {"Name": playlist_name}
+                )[0]
+            except IndexError:
+                raise LookupError(f"{playlist_name} not found") from LookupError
+
+            self._tracks[f"{{{playlist_name}}}"] = {
+                track["Key"]: [] for track in playlist.children
+                if str(track).strip()
+            }
+
         return self._tracks
 
     def _parse_boolean_expression(self, expression: str) -> Set[str]:
@@ -209,19 +239,28 @@ class Combiner(TagParser):
         return bpms, ratings
 
     def _prescan(self, rekordbox_database: BeautifulSoup):
-        """Populates track lookup using BPM, rating, and playlist selectors.
+        """Populates track lookup using BPM and rating selectors.
 
         Boolean expressions may contain zero or more indicators for selectors:
-            * BPM and / or rating selectors: comma-delimited list of integers
-                or integer ranges (e.g. "137-143") enclosed in square brackets
-                (e.g. "[5, 120, 137-143]").
+            * BPM selectors: comma-delimited list of integers or integer ranges
+                (e.g. "6-666") greater than 5 enclosed in square brackets
+                (e.g. "[120, 137-143]").
+            * Rating selectors: comma-delimited list of integers or integer
+                ranges (e.g. "0-5") less than 6 enclosed in square brackets
+                (e.g. "[5, 2, 2-4]").
             * Playlist selectors: exact matches to existing playlist name
                 enclosed in curly braces (e.g. "{All DnB}").
-            
+        
         Whether the numbers of a BPM / rating selector are interpreted as a BPM
-        or a rating depends on the value; if the 0 <= number <= 5, then it's
+        or a rating depends on the value; if 0 <= number <= 5, then it's
         interpreted as a rating, if number > 5, then it's interpreted as a BPM.
 
+        This method also initializes a set of playlist selectors but delays
+        populating them until any other TagParser implementations have been
+        called so as to ensure the Combiner logic evaluation includes the
+        complete set of tracks that may have been added to playlists by these
+        TagParsers.
+            
         If you want to make a Combiner playlist that has all tracks in a
         playlist called "All DnB" that have a 5 star rating and are in the BPM
         range [170, 172], this can be expressed as:
@@ -235,9 +274,9 @@ class Combiner(TagParser):
         """
         # Get the sets of BPMs, ratings, and playlists in order to pre-populate
         # the track lookup.
-        bpms, ratings, playlists = set(), set(), set()
+        bpms, ratings, self._playlists = set(), set(), set()
         for expression in self.parser_config.get("playlists", []): 
-            playlists.update(re.findall(r"(?<={)[^{}]*(?=})", expression))
+            self._playlists.update(re.findall(r"(?<={)[^{}]*(?=})", expression))
             bpm_rating_match = re.findall(r"(?<=\[)[^\[\]]*(?=\])", expression)
             if not bpm_rating_match:
                 continue
@@ -273,20 +312,6 @@ class Combiner(TagParser):
                             (isinstance(value, tuple) and val in value)
                         ):
                             self._tracks[tag][track["TrackID"]] = []
-
-        # Build out the lookup for playlists.
-        for playlist_name in playlists:
-            try:
-                playlist = rekordbox_database.find_all(
-                    "NODE", {"Name": playlist_name}
-                )[0]
-            except IndexError:
-                raise LookupError(f"{playlist_name} not found") from LookupError
-
-            self._tracks[f"{{{playlist_name}}}"] = {
-                track["Key"]: [] for track in playlist.children
-                if str(track).strip()
-            }
 
 
 class GenreTagParser(TagParser):

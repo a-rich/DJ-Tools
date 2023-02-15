@@ -1,4 +1,5 @@
 import os
+import shutil
 import tempfile
 from typing import List, Optional, Tuple
 from unittest import mock
@@ -132,5 +133,9 @@ def test_config(mock_get_spotify_client):
 
 
 @pytest.fixture
-def test_playlist_config():
-    return "src/djtools/configs/rekordbox_playlists.yaml"
+def test_playlist_config(tmpdir):
+    src = "src/djtools/configs/rekordbox_playlists.yaml"
+    dst = os.path.join(tmpdir, os.path.basename(src))
+    shutil.copyfile(src, dst)
+
+    return dst
