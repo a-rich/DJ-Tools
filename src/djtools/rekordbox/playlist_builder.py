@@ -88,6 +88,11 @@ class PlaylistBuilder:
             "NODE", {"Name": "ROOT", "Type": "0"}
         )[0]
 
+        # Create folder for auto-playlists.
+        self._auto_playlists_root = self._database.new_tag(
+            "NODE", Name="AUTO_PLAYLISTS", Type="0"
+        )
+
         # Whether tags unspecified in playlist taxonomies are grouped into an
         # "Other" "folder" or "playlist".
         self._playlist_remainder_type = playlist_remainder_type
@@ -154,11 +159,6 @@ class PlaylistBuilder:
                 for tag in tags:
                     tracks[playlist_type][tag].append((track["TrackID"], tags))
         
-        # Decompose irrelevant playlists.
-        for node in self._playlists_root.find_all("NODE"):
-            if node.attrs and node.attrs["Name"] != "ROOT":
-                node.decompose()
-        
         # Add tracks to their respective playlists.
         for playlist_type, playlist_data in playlists.items():
             if self._playlist_remainder_type:
@@ -179,28 +179,50 @@ class PlaylistBuilder:
                 tracks=tracks[playlist_type],
             )
             
-            # Insert playlist node into playlist root.
-            self._playlists_root.insert(0, playlist_data["playlists"])
+            # Insert playlist node into the playlist root.
+            self._auto_playlists_root.insert(0, playlist_data["playlists"])
         
         if self._combiner_parser:
-            # Apply "Combiner" boolean algebra to reduced parser tracks.
+            # Create Combiner playlist structure.
             combiner_playlists = self._create_playlists(
                 soup=self._database,
                 content=self._combiner_parser.parser_config,
                 top_level=True,
             ) 
+
             # Reduce track tags across parsers unioning when there is overlap.
             merged_tracks = defaultdict(list)
             for values in tracks.values():
                 for k, v in values.items():
                     merged_tracks[k].extend(v)
+
+            # Use the most up-to-date Rekordbox database to update the track
+            # lookup with playlist selectors to their component tracks.
+            playlist_mapping = self._combiner_parser.get_playlist_mapping(
+                self._auto_playlists_root
+            )
+            merged_tracks.update(playlist_mapping)
+
+            # Evaluate the boolean logic of the Combiner playlists.
             tracks = self._combiner_parser(merged_tracks)
+
+            # Insert tracks into their respective playlists.
             self._add_tracks(
                 soup=self._database,
                 playlists=combiner_playlists,
                 tracks=tracks,
             )
-            self._playlists_root.insert(0, combiner_playlists)
+
+            # Insert playlist node into the playlist root.
+            self._auto_playlists_root.insert(0, combiner_playlists)
+
+        # Decompose irrelevant playlists.
+        for node in self._playlists_root.find_all("NODE"):
+            if node.attrs and node.attrs["Name"] != "ROOT":
+                node.decompose()
+        
+        # Insert the auto-playlists into the playlists root.
+        self._playlists_root.insert(0, self._auto_playlists_root)
 
         # Write XML file.
         _dir, _file = os.path.split(self._database_path)
