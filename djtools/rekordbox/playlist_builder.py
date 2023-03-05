@@ -24,6 +24,7 @@ import yaml
 
 from djtools.configs.config import BaseConfig
 from djtools.rekordbox import tag_parsers
+from djtools.rekordbox.helpers import print_data
 from djtools.rekordbox.playlist_combiner import Combiner
 
 
@@ -137,6 +138,7 @@ class PlaylistBuilder:
         * writing new XML database
         """
         tracks = {k: defaultdict(list) for k in self._parsers}
+        track_lookup = {}
         playlists = {}
         for track in self._database.find_all("TRACK"):
             if not track.get("Location"):
@@ -159,6 +161,10 @@ class PlaylistBuilder:
                 tags = parser(track)
                 for tag in tags:
                     tracks[playlist_type][tag].append((track["TrackID"], tags))
+                if track["TrackID"] not in track_lookup:
+                    track_lookup[track["TrackID"]] = set(tags)
+                else:
+                    track_lookup[track["TrackID"]].update(set(tags))
 
         # Add tracks to their respective playlists.
         for playlist_type, playlist_data in playlists.items():
@@ -193,6 +199,7 @@ class PlaylistBuilder:
 
             # Reduce track tags across parsers unioning when there is overlap.
             merged_tracks = defaultdict(list)
+            parser_tracks = dict(tracks)
             for values in tracks.values():
                 for key, value in values.items():
                     merged_tracks[key].extend(value)
@@ -207,7 +214,19 @@ class PlaylistBuilder:
             # Evaluate the boolean logic of the Combiner playlists.
             tracks = self._combiner_parser(merged_tracks)
 
-            # Insert tracks into their respective playlists.
+            # Print tag statistics for each Combiner playlist.
+            for playlist, _tracks in tracks.items():
+                if not _tracks:
+                    continue
+                print(f"\n{playlist} tag statistics:")
+                playlist_tags = defaultdict(int)
+                for track in _tracks:
+                    for tag in track_lookup[track]:
+                        playlist_tags[tag] += 1
+                for parser, parser_tags in parser_tracks.items():
+                    print(f"\n{parser}:")
+                    print_data({k: playlist_tags[k] for k in parser_tags})
+
             self._add_tracks(
                 soup=self._database,
                 playlists=combiner_playlists,
