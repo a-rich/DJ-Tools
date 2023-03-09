@@ -9,7 +9,7 @@ import logging
 import logging.config
 import os
 from os import name as os_name
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import Any, AsyncGenerator, Dict, List, Optional, Set, Tuple
 
 from fuzzywuzzy import fuzz
 import spotipy
@@ -41,25 +41,24 @@ def add_tracks(result: Dict[str, Any]) -> List[str]:
     return tracks
 
 
-def catch(
-    func: Callable,
-    *args,
-    handle: Optional[Callable] = lambda e: None,
-    **kwargs,
-):  
+async def catch(generator: AsyncGenerator, message: Optional[str] = "") -> Any:
     """This function permits one-line try/except logic for comprehensions.
 
     Args:
-        func: Function to try.
-        handle: Handler function.
+        generator: Async generator.
+        message: Prefix message for logger warning.
 
     Returns:
-        Callable to handle exception.
+        Return of the AsyncGenerator.
     """
-    try:
-        return func(*args, **kwargs)
-    except Exception as exc:
-        return handle(exc)
+    while True:
+        try:
+            yield await generator.__anext__()
+        except StopAsyncIteration:
+            return
+        except Exception as exc:
+            logger.warning(f"{message}: {exc}" if message else exc)
+            continue
 
 
 def compute_distance(
@@ -288,15 +287,3 @@ def make_dirs(path: str):
         os.chdir(cwd)
     else:
         os.makedirs(path, exist_ok=True)
-
-
-def raise_(exc: Exception):
-    """This function permits raising exceptions in unnamed functions.
-
-    Args:
-        exc: Arbitrary exception.
-
-    Raises:
-        Arbitrary exception.
-    """
-    raise exc
