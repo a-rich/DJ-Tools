@@ -7,5 +7,6 @@ build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
 filterwarnings = [
-    "ignore::pytest.PytestAssertRewriteWarning"
+    "ignore::pytest.PytestAssertRewriteWarning",
+    "ignore::RuntimeWarning"
 ]
