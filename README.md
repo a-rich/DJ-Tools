@@ -371,7 +371,7 @@ Then select the track(s), playlist(s), or folder(s) and choose "Import To Collec
 ## Writing "My Tag" data to the Comments field
 In order for "My Tag" data to be accessible by functions of `djtools`, like the `REKORDBOX_PLAYLISTS` feature, that data must be written to the Comments field. There's no need to clear pre-existing data from the Comments; just ensure that this option is checked in the settings.
 
-![alt text](https://raw.githubusercontent.com/a-rich/DJ-Tools/releases/images/Pioneer_MyTag_Comments.png "Writing My Tag data to Comments")
+![alt text](https://raw.githubusercontent.com/a-rich/DJ-Tools/main/images/Pioneer_MyTag_Comments.png "Writing My Tag data to Comments")
 ---
 
 ## Exporting to a Device

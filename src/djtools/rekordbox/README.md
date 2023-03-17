@@ -75,18 +75,7 @@ Combiner:
     - "*House ~ Bass House"
     - "{All DnB} & Uplifting"
     - "{All Bass} & [137-143]"
-    - Dark & [2-5]
     - Dark & [5]
-    - Dark & [140]
-MyTagParser:
-  name: My Tags
-  playlists:
-    - name: _ignore
-      playlists:
-        - Vocal
-        - Wave
-    - Dark
-    - Uplifting 
 GenreTagParser:
   name: Genres
   playlists:
@@ -114,10 +103,19 @@ GenreTagParser:
       playlists:
         - Pure Techno
         - Hard Techno
+MyTagParser:
+  name: My Tags
+  playlists:
+    - name: _ignore
+      playlists:
+        - Vocal
+        - Wave
+    - Dark
+    - Uplifting 
 ```
 The above structure generates a set of auto-playlists like this:
 
-![alt text](https://raw.githubusercontent.com/a-rich/DJ-Tools/images/Pioneer_Auto_Playlist.png "Automatic Genre Playlist")
+![alt text](https://raw.githubusercontent.com/a-rich/DJ-Tools/main/images/Pioneer_Auto_Playlist.png "Automatic Genre Playlist")
 
 ## randomize_playlists
 To trigger the `randomize_playlists` module, set `RANDOMIZE_PLAYLISTS` to a list of playlists that exist in `XML_PATH`. Once the operation has completed, you'll need to open Rekordbox and reimport the `AUTO_RANDOMIZE` playlist containing the set of tracks with updated `TrackNumber` fields.

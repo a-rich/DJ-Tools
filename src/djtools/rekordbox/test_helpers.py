@@ -11,7 +11,6 @@ from djtools.rekordbox.helpers import (
     copy_file,
     get_playlist_track_locations,
     set_tag,
-    wrap_playlists,
 )
 
 pytest_plugins = [
@@ -105,14 +104,3 @@ def test_get_playlist_track_locations_no_playlist(xml):
 def test_set_tag(index, test_track):
     set_tag(test_track, index)
     assert test_track.get("TrackNumber") == index
-
-
-def test_wrap_playlists(xml, test_track):
-    randomized_tracks = [test_track]
-    try:
-        wrap_playlists(xml, randomized_tracks)
-        xml.find_all(
-            "NODE", {"Name": "AUTO_RANDOMIZE", "Type": "1"}
-        )[0]
-    except Exception:
-        assert False

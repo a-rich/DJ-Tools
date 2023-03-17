@@ -52,6 +52,7 @@ def test_combiner_raises_lookuperror_for_bad_playlist(
             parser_config=playlist_config["Combiner"],
             rekordbox_database=xml,
         )
+        combiner_parser.get_playlist_mapping(db)
 
 
 def test_genretagparser(test_playlist_config, xml):
