@@ -39,6 +39,6 @@ jobs:
         exit 1
 
     - name: Commit pytest coverage table
-      uses: peter-evans/commit-comment@b9271bee479e9805bb47672c2d025951a09268aa
+      uses: peter-evans/commit-comment@main
       with:
         body: ${{ steps.pytester-cov.outputs.output-table }}
