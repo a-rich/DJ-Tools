@@ -12,11 +12,9 @@ pytest_plugins = [
 ]
 
 
-def test_combiner(test_playlist_config, test_xml, caplog):
+def test_combiner(test_playlist_config, xml, caplog):
     with open(test_playlist_config, mode="r", encoding="utf-8",) as _file:
         playlist_config = yaml.load(_file, Loader=yaml.FullLoader) or {}
-    with open(test_xml, mode="r", encoding="utf-8") as _file:
-        db = BeautifulSoup(_file.read(), "xml")
     bad_playlist = "Dark & [-1, 5-7, a-5]"
     selector_playlists = [
         x for x in playlist_config["Combiner"]["playlists"]
@@ -25,7 +23,7 @@ def test_combiner(test_playlist_config, test_xml, caplog):
     playlist_config["Combiner"]["playlists"].append(bad_playlist)
     combiner_parser = Combiner(
         parser_config=playlist_config["Combiner"],
-        rekordbox_database=db,
+        rekordbox_database=xml,
     )
     prescan_tag_mapping = combiner_parser.get_combiner_tracks()
     for selector in prescan_tag_mapping:
@@ -43,23 +41,21 @@ def test_combiner(test_playlist_config, test_xml, caplog):
 
 
 def test_combiner_raises_lookuperror_for_bad_playlist(
-    test_playlist_config, test_xml
+    test_playlist_config, xml
 ):
     with open(test_playlist_config, mode="r", encoding="utf-8",) as _file:
         playlist_config = yaml.load(_file, Loader=yaml.FullLoader) or {}
-    with open(test_xml, mode="r", encoding="utf-8") as _file:
-        db = BeautifulSoup(_file.read(), "xml")
     bad_playlist = "nonexistent playlist"
     playlist_config["Combiner"]["playlists"] = [f"{{{bad_playlist}}} | Dark"]
     with pytest.raises(LookupError, match=f"{bad_playlist} not found"):
         combiner_parser = Combiner(
             parser_config=playlist_config["Combiner"],
-            rekordbox_database=db,
+            rekordbox_database=xml,
         )
         combiner_parser.get_playlist_mapping(db)
 
 
-def test_genretagparser(test_playlist_config, test_xml):
+def test_genretagparser(test_playlist_config, xml):
     with open(test_playlist_config, mode="r", encoding="utf-8",) as _file:
         playlist_config = yaml.load(_file, Loader=yaml.FullLoader) or {}
     genre = "Techno"
@@ -67,13 +63,11 @@ def test_genretagparser(test_playlist_config, test_xml):
         parser_config=playlist_config["GenreTagParser"],
         pure_genre_playlists=[genre],
     )
-    with open(test_xml, mode="r", encoding="utf-8") as _file:
-        db = BeautifulSoup(_file.read(), "xml")
     tracks = {
-        track["TrackID"]: track for track in db.find_all("TRACK")
+        track["TrackID"]: track for track in xml.find_all("TRACK")
         if track.get("Location")
     }
-    playlist = db.find_all("NODE", {"Name": genre, "Type": "1"})[0]
+    playlist = xml.find_all("NODE", {"Name": genre, "Type": "1"})[0]
     for track_key in playlist.find_all("TRACK"):
         track = tracks[track_key["Key"]]
         tags = parser(track)
@@ -84,18 +78,16 @@ def test_genretagparser(test_playlist_config, test_xml):
             )
 
 
-def test_mytagparser(test_playlist_config, test_xml):
+def test_mytagparser(test_playlist_config, xml):
     with open(test_playlist_config, mode="r", encoding="utf-8",) as _file:
         playlist_config = yaml.load(_file, Loader=yaml.FullLoader) or {}
     mytag = "Hypnotic"
     parser = MyTagParser(parser_config=playlist_config["MyTagParser"])
-    with open(test_xml, mode="r", encoding="utf-8") as _file:
-        db = BeautifulSoup(_file.read(), "xml")
     tracks = {
-        track["TrackID"]: track for track in db.find_all("TRACK")
+        track["TrackID"]: track for track in xml.find_all("TRACK")
         if track.get("Location")
     }
-    playlist = db.find_all("NODE", {"Name": mytag, "Type": "1"})[0]
+    playlist = xml.find_all("NODE", {"Name": mytag, "Type": "1"})[0]
     for track_key in playlist.find_all("TRACK"):
         track = tracks[track_key["Key"]]
         tags = parser(track)

@@ -84,26 +84,20 @@ def test_copy_file(tmpdir, test_track):
     assert os.path.exists(unquote(new_file_path))
 
 
-def test_get_playlist_track_locations(test_xml):
-    playlist = "Darkpsy"
+def test_get_playlist_track_locations(xml):
+    playlist = "Dubstep"
     seen_tracks = set()
-    with open(test_xml, mode="r", encoding="utf-8") as _file:
-        ret = get_playlist_track_locations(
-            BeautifulSoup(_file.read(), "xml"), playlist, seen_tracks
-        )
+    ret = get_playlist_track_locations(xml, playlist, seen_tracks)
     assert seen_tracks
     assert ret
     assert len(ret) == len(seen_tracks)
 
 
-def test_get_playlist_track_locations_no_playlist(test_xml):
+def test_get_playlist_track_locations_no_playlist(xml):
     playlist = "nonexistent playlist"
     seen_tracks = set()
-    with open(test_xml, mode="r", encoding="utf-8") as _file:
-        with pytest.raises(LookupError, match=f"{playlist} not found"):
-            get_playlist_track_locations(
-                BeautifulSoup(_file.read(), "xml"), playlist, seen_tracks
-            )
+    with pytest.raises(LookupError, match=f"{playlist} not found"):
+        get_playlist_track_locations(xml, playlist, seen_tracks)
 
 
 @pytest.mark.parametrize("index", [0, 5, 9])
