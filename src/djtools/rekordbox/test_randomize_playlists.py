@@ -13,7 +13,7 @@ pytest_plugins = [
 
 def test_randomize_playlists(test_config, test_xml, caplog):
     caplog.set_level("INFO")
-    playlists = ["Acid Techno", "Dubstep"]
+    playlists = ["Hip Hop"]
     test_config.XML_PATH = test_xml
     test_config.RANDOMIZE_PLAYLISTS = playlists
     randomize_playlists(test_config)

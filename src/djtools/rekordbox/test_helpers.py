@@ -73,19 +73,21 @@ def test_copy_file(tmpdir, test_track):
     os.makedirs(dest_dir)
     old_track_loc = test_track["Location"]
     copy_file(track=test_track, destination=dest_dir)
-    new_track_loc = test_track["Location"]
+    new_track_loc = unquote(test_track["Location"])
     loc_prefix = inspect.signature(
         copy_file
     ).parameters.get("loc_prefix").default
-    new_file_path = os.path.join(
-        dest_dir, os.path.basename(old_track_loc)
-    ).replace(os.sep, "/")
+    new_file_path = unquote(
+        os.path.join(
+            dest_dir, os.path.basename(old_track_loc)
+        ).replace(os.sep, "/")
+    )
     assert new_track_loc == f"{loc_prefix}{new_file_path}"
     assert os.path.exists(unquote(new_file_path))
 
 
 def test_get_playlist_track_locations(xml):
-    playlist = "Dubstep"
+    playlist = "Hip Hop"
     seen_tracks = set()
     ret = get_playlist_track_locations(xml, playlist, seen_tracks)
     assert seen_tracks

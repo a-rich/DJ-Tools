@@ -58,7 +58,7 @@ def test_combiner_raises_lookuperror_for_bad_playlist(
 def test_genretagparser(test_playlist_config, xml):
     with open(test_playlist_config, mode="r", encoding="utf-8",) as _file:
         playlist_config = yaml.load(_file, Loader=yaml.FullLoader) or {}
-    genre = "Techno"
+    genre = "Hip Hop"
     parser = GenreTagParser(
         parser_config=playlist_config["GenreTagParser"],
         pure_genre_playlists=[genre],
@@ -81,7 +81,7 @@ def test_genretagparser(test_playlist_config, xml):
 def test_mytagparser(test_playlist_config, xml):
     with open(test_playlist_config, mode="r", encoding="utf-8",) as _file:
         playlist_config = yaml.load(_file, Loader=yaml.FullLoader) or {}
-    mytag = "Hypnotic"
+    mytag = "Dark"
     parser = MyTagParser(parser_config=playlist_config["MyTagParser"])
     tracks = {
         track["TrackID"]: track for track in xml.find_all("TRACK")

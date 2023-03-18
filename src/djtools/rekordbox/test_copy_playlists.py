@@ -13,7 +13,7 @@ pytest_plugins = [
 
 
 def test_copy_playlists(tmpdir, test_config, test_xml):
-    target_playlists = ["Rock", "Dubstep"]
+    target_playlists = ["Hip Hop"]
     new_xml = os.path.join(
         os.path.dirname(test_xml), "relocated_rekordbox.xml"
     ).replace(os.sep, "/")

@@ -21,20 +21,18 @@ def test_playlistbuilder(remainder_type, test_xml, test_playlist_config):
     playlist_builder = PlaylistBuilder(
         rekordbox_database=test_xml,
         playlist_config=test_playlist_config,
-        pure_genre_playlists=["Techno"],
+        pure_genre_playlists=["Dubstep"],
         playlist_remainder_type=remainder_type
     )()
 
 
 def test_playlistbuilder_combiner_playlist_contains_new_playlist_selector_tracks(
-    test_playlist_config, test_xml
+    test_playlist_config, test_xml, xml
 ):
     # Insert test track and Combiner playlist to target it.
     with open(test_playlist_config, mode="r", encoding="utf-8",) as _file:
         playlist_config = yaml.load(_file, Loader=yaml.FullLoader) or {}
-    with open(test_xml, mode="r", encoding="utf-8") as _file:
-        db = BeautifulSoup(_file.read(), "xml")
-    new_track = db.new_tag("TRACK")
+    new_track = xml.new_tag("TRACK")
     new_track_ID = "-1"
     new_track.attrs = {
         "TrackID": new_track_ID,
@@ -44,9 +42,9 @@ def test_playlistbuilder_combiner_playlist_contains_new_playlist_selector_tracks
         "Location": "file://localhost/test-track.mp3",
         "Comments": "",
     }
-    collection = db.find_all("COLLECTION")[0]
+    collection = xml.find_all("COLLECTION")[0]
     collection.insert(0, new_track)
-    selector_playlist = "{All Bass} & [140]"
+    selector_playlist = "{Dubstep} & [140]"
     playlist_config["Combiner"]["playlists"] = [selector_playlist]
     playlist_config = {
         k: v for k, v in playlist_config.items()
@@ -54,18 +52,18 @@ def test_playlistbuilder_combiner_playlist_contains_new_playlist_selector_tracks
     }
     with open(test_playlist_config, mode="w", encoding="utf-8",) as _file:
         playlist_config = yaml.dump(playlist_config, _file)
-    with open(test_xml, mode="wb", encoding=db.orignal_encoding) as _file:
-        _file.write(db.prettify("utf-8"))
+    with open(test_xml, mode="wb", encoding=xml.orignal_encoding) as _file:
+        _file.write(xml.prettify("utf-8"))
 
     # Test pre-conditions.
-    playlist = db.find_all("NODE", {"Name": "All Bass", "Type": "1"})[0]
+    playlist = xml.find_all("NODE", {"Name": "Dubstep", "Type": "1"})[0]
     for track_key in playlist.find_all("TRACK"):
         assert (
             track_key["Key"] != new_track_ID,
-            "Test track should not exist in All Bass!"
+            "Test track should not exist in Dubstep!"
         )
     test_track = None
-    for track in db.find_all("TRACK"):
+    for track in xml.find_all("TRACK"):
         if not track.get("Location"):
             continue
         if track.get("TrackID") == new_track_ID:
@@ -83,9 +81,9 @@ def test_playlistbuilder_combiner_playlist_contains_new_playlist_selector_tracks
     with open(os.path.join(path, f"auto_{file_name}"), mode="r", encoding="utf-8") as _file:
         db = BeautifulSoup(_file.read(), "xml")
 
-    # Test that the test track was inserted into the "All Bass" playlist.
+    # Test that the test track was inserted into the "Dubstep" playlist.
     test_track = None
-    playlist = db.find_all("NODE", {"Name": "All Bass", "Type": "1"})[0]
+    playlist = db.find_all("NODE", {"Name": "Dubstep", "Type": "1"})[0]
     for track_key in playlist.find_all("TRACK"):
         if track_key["Key"] == new_track_ID:
             test_track = track_key

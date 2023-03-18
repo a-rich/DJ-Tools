@@ -1,16 +1,11 @@
 Combiner:
   name: Combinations
   playlists:
-    - (Hard Techno | Acid Techno) | Minimal Techno
-    - Minimal House | Techno
-    - (Jungle | Breaks | Techno) | (Garage ~ Tech House)
-    - Wave ~ Trap | Uplifting
-    - "*House ~ Bass House"
-    - "{All Breaks} & Uplifting"
-    - "{All Bass} & [137-143]"
+    - "(Dubstep | Hip Hop) | (Dubstep | Hip Hop)"
+    - "{Hip Hop} & [85-87]"
+    - "{Hip Hop} & [86]"
     - Dark & [2-5]
     - Dark & [5]
-    - Dark & [140]
 MyTagParser:
   name: My Tags
   playlists:
