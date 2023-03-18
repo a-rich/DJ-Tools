@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 import os
 import logging
@@ -16,7 +17,6 @@ from djtools.utils.helpers import (
     get_playlist_tracks,
     get_spotify_tracks,
     make_dirs,
-    raise_,
 )
 from test_data import MockOpen
 
@@ -56,17 +56,33 @@ def test_add_tracks():
     assert output == expected
 
 
-def test_catch():
-    x = "test"
-    func = lambda x: x
-    assert catch(func, x) == func(x)
-    func = lambda x: x/0
-    ret = catch(func, x)
-    assert ret is None
-    handler_ret = "some string"
-    handler = lambda x: handler_ret
-    ret = catch(func, x, handle=handler)
-    assert ret == handler_ret
+@pytest.mark.asyncio
+@pytest.mark.parametrize("message", ["", "oops"])
+async def test_catch(message, caplog):
+    exc = ZeroDivisionError("You can't divide by zero!")
+    class Generator:
+        def __init__(self):
+            self._iters = 2
+            self._i = 0
+
+        def __aiter__(self):
+            return self
+
+        async def __anext__(self):
+            if self._i >= self._iters:
+                raise StopAsyncIteration
+            self._i += 1
+            await asyncio.sleep(0.1)
+            if self._i % 2 == 0:
+                raise exc
+
+            return self._i
+
+    caplog.set_level("WARNING")
+    results = [x async for x in catch(Generator(), message=message)]
+    assert caplog.records[0].message == (
+        f"{message}: {str(exc)}" if message else str(exc)
+    )
 
 
 @pytest.mark.parametrize("track_a", ["some track", "another track"])
@@ -287,8 +303,3 @@ def test_make_dirs(tmpdir, platform):
         rel_dir = os.path.join(tmpdir, "relative_dir").replace(os.sep, "/")
         make_dirs(rel_dir)
         assert os.path.exists(rel_dir)
-
-
-def test_raise_():
-    with pytest.raises(Exception):
-        raise_(Exception())

@@ -149,21 +149,3 @@ def set_tag(track: str, index: int):
         index: New TrackNumber.
     """
     track["TrackNumber"] = index
-
-
-def wrap_playlists(soup: BeautifulSoup, randomized_tracks: List[bs4.element.Tag]):
-    """Creates a playlist called "AUTO_RANDOMIZE", inserts the randomized
-    tracks into it, and then inserts "AUTO_RANDOMIZE" into the root of the
-    "Playlist" folder.
-
-    Args:
-        soup: Parsed XML.
-        randomized_tracks: Track nodes.
-    """
-    playlists_root = soup.find_all("NODE", {"Name": "ROOT", "Type": "0"})[0]
-    new_playlist = soup.new_tag(
-        "NODE", KeyType="0", Name="AUTO_RANDOMIZE", Type="1"
-    )
-    for track in randomized_tracks:
-        new_playlist.append(soup.new_tag("TRACK", Key=track["TrackID"]))
-    playlists_root.insert(0, new_playlist)

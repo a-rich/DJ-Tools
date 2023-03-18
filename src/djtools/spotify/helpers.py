@@ -247,29 +247,18 @@ async def get_subreddit_posts(
         List of Spotify track ("id", "name") tuples and SubredditConfig as a
             dictionary.
     """
-    from djtools.utils.helpers import catch, raise_
-
-    sub_limit = config.AUTO_PLAYLIST_POST_LIMIT
+    from djtools.utils.helpers import catch
+    
     sub = await reddit.subreddit(subreddit["name"])
     func = getattr(sub, subreddit["type"])
+    kwargs = {"limit": config.AUTO_PLAYLIST_POST_LIMIT}
     if subreddit["type"]== "top":
-        subs = [
-            x async for x in catch(
-                func,
-                handle=lambda exc: raise_(exc)
-                    if isinstance(exc, TypeError) else logger.info(exc),
-                limit=sub_limit,
-                time_filter=subreddit["period"],
-            )
-        ]
-    else:
-        subs = [
-            x async for x in catch(
-                func,
-                handle=lambda exc: logger.info(exc),
-                limit=sub_limit,
-            )
-        ]
+        kwargs["time_filter"] = subreddit["period"]
+    subs = [
+        x async for x in catch(
+            func(**kwargs), message="Failed to retrieve Reddit submission"
+        )
+    ]
     msg = f'Filtering {len(subs)} "r/{subreddit["name"]}" {subreddit["type"]} posts'
     logger.info(msg)
     submissions = []
