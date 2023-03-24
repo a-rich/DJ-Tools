@@ -3,6 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 import logging
 from operator import itemgetter
 import os
+from pathlib import Path
 import sys
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
@@ -167,12 +168,8 @@ def get_playlist_ids() -> Dict[str, str]:
         Dictionary of Spotify playlist names mapped to playlist IDs. 
     """
     playlist_ids = {}
-    ids_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)),
-        "configs",
-        "spotify_playlists.yaml",
-    ).replace(os.sep, "/")
-    if os.path.exists(ids_path):
+    ids_path = Path(__file__).parent.parent / "configs" / "spotify_playlists.yaml"
+    if ids_path.exists():
         with open(ids_path, mode="r", encoding="utf-8") as _file:
             playlist_ids = yaml.load(_file, Loader=yaml.FullLoader) or {}
     
@@ -215,9 +212,7 @@ def get_spotify_client(config: BaseConfig) -> spotipy.Spotify:
             scope="playlist-modify-public",
             requests_timeout=30,
             cache_handler=spotipy.CacheFileHandler(
-                cache_path=os.path.join(
-                    os.path.dirname(__file__), ".spotify.cache"
-                ).replace(os.sep, "/"),
+                cache_path=Path(__file__).parent / ".spotify.cache"
             ),
         )
     )
@@ -502,10 +497,8 @@ def write_playlist_ids(playlist_ids: Dict[str, str]):
         playlist_ids: Dictionary of Spotify playlist names mapped to playlist
             IDs. 
     """
-    ids_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)),
-        "configs",
-        "spotify_playlists.yaml",
-    ).replace(os.sep, "/")
+    ids_path = (
+        Path(__file__).parent.parent / "configs" / "spotify_playlists.yaml"
+    )
     with open(ids_path, mode="w", encoding="utf-8") as _file:
         yaml.dump(playlist_ids, _file)

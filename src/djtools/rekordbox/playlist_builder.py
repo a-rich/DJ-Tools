@@ -14,7 +14,6 @@ enable the 'Add "My Tag" to the "Comments"' setting under
 """
 from collections import defaultdict
 import logging
-import os
 from pathlib import Path
 from typing import Dict, List, Set, Tuple, Union
 
@@ -59,8 +58,8 @@ class PlaylistBuilder:
     """
     def __init__(
         self,
-        rekordbox_database: Union[str, Path],
-        playlist_config: Union[str, Path],
+        rekordbox_database: Path,
+        playlist_config: Path,
         pure_genre_playlists: List[str] = [],
         playlist_remainder_type: str = "",
     ):
@@ -225,8 +224,9 @@ class PlaylistBuilder:
         self._playlists_root.insert(0, self._auto_playlists_root)
 
         # Write XML file.
-        _dir, _file = os.path.split(self._database_path)
-        auto_xml_path = os.path.join(_dir, f"auto_{_file}").replace(os.sep, "/")
+        _dir = self._database_path.parent
+        _file = self._database_path.name
+        auto_xml_path = _dir / f"auto_{_file}"
         with open(
             auto_xml_path, mode="wb", encoding=self._database.orignal_encoding
         ) as _file:
@@ -430,12 +430,9 @@ def rekordbox_playlists(config: BaseConfig):
     Args:
         config: Configuration object.
     """
-    playlist_config = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)),
-        "configs",
-        "rekordbox_playlists.yaml",
-    ).replace(os.sep, "/")
-
+    playlist_config = (
+        Path(__file__).parent.parent / "configs" / "rekordbox_playlists.yaml"
+    )
     playlist_builder = PlaylistBuilder(
         rekordbox_database=config.XML_PATH,
         playlist_config=playlist_config,

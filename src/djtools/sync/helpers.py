@@ -4,10 +4,9 @@ output of "aws s3 sync" commands, posting uploaded tracks to Discord, and
 modifying IMPORT_USER's XML to point to tracks located at "USB_PATH".
 """
 from datetime import datetime, timedelta
-from glob import glob
 from itertools import groupby
 import logging
-import os
+from pathlib import Path
 from subprocess import Popen, PIPE, CalledProcessError
 from typing import Dict, List, Optional, Union
 
@@ -44,31 +43,35 @@ def parse_sync_command(
         or (not upload and config.DOWNLOAD_INCLUDE_DIRS)
     ):
         _cmd.extend(["--exclude", "*"])
-        directories = getattr(
-            config, f'{"UP" if upload else "DOWN"}LOAD_INCLUDE_DIRS'
+        directories = map(
+            Path,
+            getattr(config, f'{"UP" if upload else "DOWN"}LOAD_INCLUDE_DIRS'),
         )
         for _dir in directories:
-            path, ext = os.path.splitext(_dir)
+            path = Path(_dir.stem)
+            ext = _dir.suffix
             if not ext:
-                path = os.path.join(_dir, "*").replace(os.sep, "/")
+                path = _dir / "*"
             else:
-                path = path + ext
-            _cmd.extend(["--include", path])
+                path = _dir.parent / path.with_suffix(ext)
+            _cmd.extend(["--include", path.as_posix()])
     if (
         (upload and config.UPLOAD_EXCLUDE_DIRS)
         or (not upload and config.DOWNLOAD_EXCLUDE_DIRS)
     ):
         _cmd.extend(["--include", "*"])
-        directories = getattr(
-            config, f'{"UP" if upload else "DOWN"}LOAD_EXCLUDE_DIRS'
+        directories = map(
+            Path,
+            getattr(config, f'{"UP" if upload else "DOWN"}LOAD_EXCLUDE_DIRS'),
         )
         for _dir in directories:
-            path, ext = os.path.splitext(_dir)
+            path = Path(_dir.stem)
+            ext = _dir.suffix
             if not ext:
-                path = os.path.join(_dir, "*").replace(os.sep, "/")
+                path = _dir / "*"
             else:
-                path = path + ext
-            _cmd.extend(["--exclude", path])
+                path = _dir.parent / path.with_suffix(ext)
+            _cmd.extend(["--exclude", path.as_posix()])
     if not config.AWS_USE_DATE_MODIFIED:
         _cmd.append("--size-only")
     if config.DRYRUN:
@@ -86,20 +89,18 @@ def rewrite_xml(config: BaseConfig):
     Args:
         config: Configuration object.
     """
-    registered_users_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)),
-        "configs",
-        "registered_users.yaml",
-    ).replace(os.sep, "/")
+    registered_users_path = (
+        Path(__file__).parent.parent / "configs" / "registered_users.yaml"
+    )
 
     with open(registered_users_path, mode="r", encoding="utf-8") as _file:
         registered_users = yaml.load(_file, Loader=yaml.FullLoader)
         src = registered_users[config.IMPORT_USER].strip("/")
         dst = registered_users[config.USER].strip("/")
 
-    xml_path = os.path.join(
-        os.path.dirname(config.XML_PATH), f"{config.IMPORT_USER}_rekordbox.xml"
-    ).replace(os.sep, "/")
+    xml_path = (
+        Path(config.XML_PATH).parent / f"{config.IMPORT_USER}_rekordbox.xml"
+    )
 
     with open(xml_path, mode="r", encoding="utf-8") as _file:
         soup = BeautifulSoup(_file.read(), "xml")
@@ -176,7 +177,7 @@ def run_sync(_cmd: str) -> str:
     return new_music
 
 
-def upload_log(config: BaseConfig, log_file: str):
+def upload_log(config: BaseConfig, log_file: Path):
     """This function uploads "log_file" to the "USER" logs folder in S3. It
         then deletes all files created more than one day ago.
 
@@ -191,21 +192,18 @@ def upload_log(config: BaseConfig, log_file: str):
         )
         return
 
-    dst = (
-        "s3://dj.beatcloud.com/dj/logs/"
-        f"{config.USER}/{os.path.basename(log_file)}"
-    )
-    cmd = f"aws s3 cp {log_file} {dst}"
+    dst = f"s3://dj.beatcloud.com/dj/logs/{config.USER}/{log_file.name}"
+    cmd = f"aws s3 cp {log_file.as_posix()} {dst}"
     logger.info(cmd)
-    os.system(cmd)
+    Popen(cmd, shell=True).wait()
 
     now = datetime.now()
     one_day = timedelta(days=1)
-    for _file in glob(f"{os.path.dirname(log_file)}/*"):
-        if os.path.basename(_file) == "empty.txt":
+    for _file in log_file.parent.rglob("*"):
+        if _file.name == "empty.txt":
             continue
-        if os.path.getmtime(_file) < (now - one_day).timestamp():
-            os.remove(_file)
+        if _file.lstat().st_mtime < (now - one_day).timestamp():
+            _file.unlink()
 
 
 def webhook(

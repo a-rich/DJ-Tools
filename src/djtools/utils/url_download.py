@@ -4,19 +4,18 @@ download all those tracks and rename them to cleanup the digits appended to the
 files by the youtube-dl package.
 """
 import logging
-import os
+from pathlib import Path
 import re
 
 import youtube_dl as ytdl
 
 from djtools.configs.config import BaseConfig
-from djtools.utils.helpers import make_dirs
 
 
 logger = logging.getLogger(__name__)
 
 
-def fix_up(_file: str) -> str:
+def fix_up(_file: Path) -> Path:
     """Removes digits appended to file name by youtube-dl.
 
     Args:
@@ -25,12 +24,12 @@ def fix_up(_file: str) -> str:
     Returns:
         Cleaned up music file name.
     """
-    _, ext = os.path.splitext(_file)
+    ext = _file.suffix
     exp = fr"(\-\d{{1,}}(?={ext}))"
-    stripped = os.path.splitext(re.split(exp, _file)[0])[0]
-    name = " - ".join(stripped.split(" - ")[-1::-1])
+    stripped = Path(re.split(exp, _file.as_posix())[0]).stem
+    name = Path(" - ".join(stripped.split(" - ")[-1::-1]))
 
-    return name + ext
+    return name.with_suffix(ext)
 
 
 def url_download(config: BaseConfig):
@@ -39,9 +38,8 @@ def url_download(config: BaseConfig):
     Args:
         config: Configuration object.
     """
-    dl_loc = config.URL_DOWNLOAD_DESTINATION or "."
-    dl_loc = os.path.join(dl_loc, "").replace(os.sep, "/")
-    make_dirs(dl_loc)
+    dl_loc = config.URL_DOWNLOAD_DESTINATION or Path(".")
+    dl_loc.mkdir(parents=True, exist_ok=True)
 
     ydl_opts = {
         "format": "bestaudio/best",
@@ -50,15 +48,12 @@ def url_download(config: BaseConfig):
             "preferredcodec": "mp3",
             "preferredquality": "320",
         }],
-        "outtmpl": dl_loc + "%(title)s.%(ext)s"
+        "outtmpl": dl_loc / "%(title)s.%(ext)s"
     }
 
     with ytdl.YoutubeDL(ydl_opts) as ydl:
         logger.info(f"Downloading {config.URL_DOWNLOAD} to {dl_loc}")
         ydl.download([config.URL_DOWNLOAD])
 
-    for _file in os.listdir(dl_loc):
-        os.rename(
-            os.path.join(dl_loc, _file).replace(os.sep, "/"),
-            os.path.join(dl_loc, fix_up(_file)).replace(os.sep, "/"),
-        )
+    for _file in dl_loc.iterdir():
+        (dl_loc / _file).rename(dl_loc / fix_up(_file))

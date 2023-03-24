@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import os
+from pathlib import Path
 import shutil
 import tempfile
 from unittest import mock
@@ -82,19 +83,16 @@ def test_rewrite_xml(test_config, test_xml, xml):
     test_config.USER = test_user
     test_config.IMPORT_USER = other_user
     test_config.XML_PATH = test_xml
-    other_users_xml = os.path.join(
-        os.path.dirname(test_xml), f'{other_user}_rekordbox.xml'
-    ).replace(os.sep, "/")
-    shutil.copyfile(test_xml, other_users_xml)
+    other_users_xml = Path(test_xml).parent / f"{other_user}_rekordbox.xml"
+    other_users_xml.write_text(Path(test_xml).read_text())
 
     for track in xml.find_all("TRACK"):
         if not track.get("Location"):
             continue
-        track["Location"] = os.path.join(
-            os.path.dirname(track["Location"]),
-            user_b_path.strip("/"),
-            os.path.basename(track["Location"]),
-        ).replace(os.sep, "/")
+        track["Location"] = (
+            Path(track["Location"]).parent / user_b_path.strip("/") /
+            Path(track["Location"]).name
+        )
     
     with open(
         other_users_xml, mode="wb", encoding=xml.orignal_encoding
@@ -114,11 +112,7 @@ def test_rewrite_xml(test_config, test_xml, xml):
 
 @mock.patch("djtools.sync.helpers.Popen")
 def test_run_sync(mock_popen, tmpdir):
-    with open(
-        os.path.join(tmpdir, "track.mp3").replace(os.sep, "/"),
-        mode="w",
-        encoding="utf-8",
-    ) as _file:
+    with open(Path(tmpdir) / "track.mp3", mode="w", encoding="utf-8") as _file:
         _file.write("")
     cmd = ["aws", "s3", "sync", str(tmpdir), "s3://dj.beatcloud.com/dj/music/"]
     sync_output = (
@@ -169,8 +163,8 @@ def test_run_sync_handles_return_code(mock_popen, tmpdir, caplog):
     assert caplog.records[0].message == msg
 
 
-@mock.patch("os.system")
-def test_upload_log(mock_os_system, tmpdir, test_config):
+@mock.patch("subprocess.Popen.wait")
+def test_upload_log(mock_subprocess, tmpdir, test_config):
     test_config.AWS_PROFILE = "DJ"
     now = datetime.now()
     one_day_ago = now - timedelta(days=1)
@@ -182,15 +176,13 @@ def test_upload_log(mock_os_system, tmpdir, test_config):
     ]
     ctime = one_day_ago.timestamp()
     for filename in filenames:
-        file_path = os.path.join(tmpdir, filename).replace(os.sep, "/")
+        file_path = Path(tmpdir) / filename
         with open(file_path, mode="w", encoding="utf-8") as _file:
             _file.write("stuff")
         if filename != test_log: 
             os.utime(file_path, (ctime, ctime))
-    upload_log(
-        test_config, os.path.join(tmpdir, test_log).replace(os.sep, "/")
-    )
-    assert len(os.listdir(tmpdir)) == len(filenames) - 1
+    upload_log(test_config, Path(tmpdir) / test_log)
+    assert len(list(Path(tmpdir).iterdir())) == len(filenames) - 1
 
 
 def test_upload_log_no_aws_profile(test_config, caplog):

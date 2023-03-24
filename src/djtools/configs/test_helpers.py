@@ -1,37 +1,36 @@
 from argparse import Namespace
-import os
+from pathlib import Path
+from typing import List
 from unittest import mock
 
 import pytest
 
 from djtools.configs.config import BaseConfig
 from djtools.configs.helpers import (
-    arg_parse, build_config, filter_dict, parse_yaml, pkg_cfg
+    arg_parse, build_config, convert_to_paths, filter_dict, parse_yaml, pkg_cfg
 )
 from test_data import MockOpen
 
 
 @mock.patch("argparse.ArgumentParser.parse_args")
 def test_arg_parse_links_configs(mock_parse_args, tmpdir):
-    config_path = os.path.join(tmpdir, "test_dir").replace(os.sep, "/")
+    config_path = Path(tmpdir) / "test_dir"
     mock_parse_args.return_value = Namespace(
         link_configs=config_path, log_level="INFO"
     )
     args = arg_parse()
-    assert os.path.islink(config_path)
+    assert config_path.is_symlink()
 
 
 @mock.patch("argparse.ArgumentParser.parse_args")
 def test_arg_parse_links_configs_dir_does_exist(mock_parse_args, tmpdir):
-    link_path = os.path.join(
-        str(tmpdir), "new_dir", "link_dir"
-    ).replace(os.sep, "/")
+    link_path = Path(tmpdir) / "new_dir" / "link_dir"
     mock_parse_args.return_value = Namespace(
         link_configs=link_path, log_level="INFO"
     )
     args = arg_parse()
-    assert os.path.exists(link_path)
-    assert os.path.islink(link_path)
+    assert link_path.exists()
+    assert link_path.is_symlink()
 
 
 @mock.patch("argparse.ArgumentParser.parse_args")
@@ -81,21 +80,33 @@ def test_build_config_invalid_config_yaml(caplog):
 @mock.patch("djtools.spotify.helpers.get_spotify_client")
 @mock.patch(
     "builtins.open",
-    MockOpen(files=["registered_users.yaml", "config.yaml"]).open
+    MockOpen(
+        files=["registered_users.yaml", "config.yaml"],
+        user_a=("aweeeezy", "/Volumes/AWEEEEZY/"),
+        user_b=("test_user", "/test/USB/"),
+    ).open
 )
 @mock.patch("argparse.ArgumentParser.parse_args")
 def test_build_config_no_config_yaml(mock_parse_args, mock_spotify_client):
     mock_parse_args.return_value = Namespace(
         link_configs="", log_level="INFO"
     )
-    config_dir = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), "configs"
-    ).replace(os.sep, "/")
-    config_file = os.path.join(config_dir, "config.yaml").replace(os.sep, "/")
-    with mock.patch("os.path.exists", return_value=False):
-        assert not os.path.exists(config_file)
+    config_dir = Path(__file__).parent.parent / "configs"
+    config_file = config_dir / "config.yaml"
+    with mock.patch.object(Path, "exists", return_value=False):
+        assert not config_file.exists()
         config = build_config()
-    assert os.path.exists(config_file)
+    assert config_file.exists()
+
+
+@pytest.mark.parametrize("paths", ["path", ["path1", "path2"]])
+def test_convert_to_paths(paths):
+    paths = convert_to_paths(paths)
+    if isinstance(paths, List):
+        for path in paths:
+            assert isinstance(path, Path)
+    else:
+        assert isinstance(paths, Path)
 
 
 @pytest.mark.parametrize("config", [cfg for cfg in pkg_cfg.values()])

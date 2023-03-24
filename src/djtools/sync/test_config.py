@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest import mock
 
 import getpass
@@ -5,7 +6,7 @@ import pytest
 
 
 from djtools.sync.config import SyncConfig
-from test_data import MockExists, MockOpen
+from test_data import mock_exists, MockOpen
 
 
 pytest_plugins = [
@@ -66,17 +67,19 @@ def test_syncconfig_no_aws_profile():
         SyncConfig(**cfg)
 
 
-@mock.patch("builtins.open", MockOpen(files=["registered_users.yaml"], write_only=True).open)
 @mock.patch(
-    "djtools.sync.config.os.path.exists",
-    MockExists(
-        files=[
-            ("registered_users.yaml", False),
-        ]
-    ).exists,
+    "builtins.open",
+    MockOpen(files=["registered_users.yaml"],
+    write_only=True).open,
+)
+@mock.patch(
+    "djtools.sync.config.Path.exists",
+    lambda path: mock_exists([("registered_users.yaml", False)], path)
 )
 @mock.patch("djtools.spotify.helpers.get_spotify_client")
-def test_syncconfig_no_registered_users(mock_get_spotify_client, test_xml, caplog):
+def test_syncconfig_no_registered_users(
+    mock_get_spotify_client, test_xml, caplog
+):
     cfg = {
         "XML_PATH": test_xml,
         "SPOTIFY_CLIENT_ID": "id",
@@ -89,7 +92,11 @@ def test_syncconfig_no_registered_users(mock_get_spotify_client, test_xml, caplo
     assert caplog.records[0].message == "No registered users!"
 
 
-@mock.patch("builtins.open", MockOpen(files=["registered_users.yaml"], write_only=True).open)
+@mock.patch(
+    "builtins.open",
+    MockOpen(files=["registered_users.yaml"],
+    write_only=True).open,
+)
 def test_syncconfig_set_user():
     cfg = {"USER": ""}
     assert not SyncConfig.__fields__["USER"].default
@@ -97,7 +104,11 @@ def test_syncconfig_set_user():
     assert sync_config.USER == getpass.getuser()
 
 
-@mock.patch("builtins.open", MockOpen(files=["registered_users.yaml"], write_only=True).open)
+@mock.patch(
+    "builtins.open",
+    MockOpen(files=["registered_users.yaml"],
+    write_only=True).open,
+)
 @mock.patch("djtools.spotify.helpers.get_spotify_client")
 def test_syncconfig_upload_without_discord_url(
     mock_get_spotify_client, test_xml, caplog

@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from typing import List
 
 from pydantic import NonNegativeInt
@@ -14,10 +15,10 @@ class UtilsConfig(BaseConfig):
 
     CHECK_TRACKS: bool = False 
     CHECK_TRACKS_FUZZ_RATIO: NonNegativeInt = 80
-    CHECK_TRACKS_LOCAL_DIRS:  List[str] = []
+    CHECK_TRACKS_LOCAL_DIRS:  List[Path] = []
     CHECK_TRACKS_SPOTIFY_PLAYLISTS:  List[str] = []
     URL_DOWNLOAD: str = ""
-    URL_DOWNLOAD_DESTINATION: str = ""
+    URL_DOWNLOAD_DESTINATION: Path = None
 
     def __init__(self, *args, **kwargs):
         """Constructor.

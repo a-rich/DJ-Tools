@@ -73,8 +73,9 @@ def randomize_playlists(config: BaseConfig):
     playlists_root.insert(0, new_playlist)
 
     # Write XML file.
-    _dir, _file = os.path.split(config.XML_PATH)
-    auto_xml_path = os.path.join(_dir, f"auto_{_file}").replace(os.sep, "/")
+    _dir = config.XML_PATH.parent
+    _file = config.XML_PATH.name
+    auto_xml_path = _dir / f"auto_{_file}"
     with open(
         auto_xml_path, mode="wb", encoding=soup.orignal_encoding
     ) as _file:

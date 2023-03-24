@@ -48,7 +48,7 @@ def test_baseconfig_no_xml_path(caplog):
     cfg = {
         "AWS_PROFILE": "default",
         "SPOTIFY_CLIENT_ID": "",
-        "XML_PATH": "",
+        "XML_PATH": None,
     }
     BaseConfig(**cfg)
     assert caplog.records[0].message == (

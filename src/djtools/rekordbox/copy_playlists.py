@@ -15,7 +15,6 @@ from tqdm import tqdm
 
 from djtools.configs.config import BaseConfig
 from djtools.rekordbox.helpers import copy_file
-from djtools.utils.helpers import make_dirs
 
 
 def copy_playlists(config: BaseConfig):
@@ -35,7 +34,7 @@ def copy_playlists(config: BaseConfig):
         rekordbox_database = BeautifulSoup(_file.read(), "xml")
 
     # Create destination directory.
-    make_dirs(config.COPY_PLAYLISTS_DESTINATION)
+    config.COPY_PLAYLISTS_DESTINATION.mkdir(parents=True, exist_ok=True)
 
     # Nodes to not remove when writing the new XML.
     keep_nodes = set()
@@ -108,13 +107,8 @@ def copy_playlists(config: BaseConfig):
             playlist.append(rekordbox_database.new_tag("TRACK", Key=track_id))
     
     # Write new XML.
-    new_rekordbox_database_path = os.path.join(
-        os.path.dirname(config.XML_PATH),
-        f"relocated_{os.path.basename(config.XML_PATH)}"
-    ).replace(os.sep, "/")
+    new_db = config.XML_PATH.parent / f"relocated_{config.XML_PATH.name}"
     with open(
-        new_rekordbox_database_path,
-        mode="wb",
-        encoding=rekordbox_database.original_encoding,
+        new_db, mode="wb", encoding=rekordbox_database.original_encoding,
     ) as _file:
         _file.write(rekordbox_database.prettify("utf-8"))

@@ -3,12 +3,12 @@ particular subpackage of this library.
 """
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from glob import glob
 from itertools import product
 import logging
 import logging.config
 import os
-from os import name as os_name
+from pathlib import Path
+from subprocess import check_output
 from typing import Any, AsyncGenerator, Dict, List, Optional, Set, Tuple
 
 from fuzzywuzzy import fuzz
@@ -141,9 +141,8 @@ def get_beatcloud_tracks() -> List[str]:
     """
     logger.info("Getting tracks from the beatcloud...")
     cmd = "aws s3 ls --recursive s3://dj.beatcloud.com/dj/music/"
-    with os.popen(cmd) as proc:
-        output = proc.read().split("\n")
-    tracks = [track for track in output if track]
+    output = check_output(cmd, shell=True).split("\n")
+    tracks = [Path(track) for track in output if track]
     logger.info(f"Got {len(tracks)} tracks")
 
     return tracks
@@ -161,21 +160,14 @@ def get_local_tracks(config: BaseConfig) -> Dict[str, List[str]]:
     """
     local_dir_tracks = {}
     for _dir in config.CHECK_TRACKS_LOCAL_DIRS:
-        path = _dir.replace(os.sep, "/")
-        if not os.path.exists(path):
+        if not _dir.exists():
             logger.warning(
-                f"{path} does not exist; will not be able to check its "
+                f"{_dir} does not exist; will not be able to check its "
                 "contents against the beatcloud"
             )
             continue
-        files = glob(
-            os.path.join(path, "**", "*.*").replace(os.sep, "/"),
-            recursive=True,
-        )
-        if files:
-            local_dir_tracks[_dir] = [
-                os.path.splitext(os.path.basename(x))[0] for x in files
-            ]
+        files = (_dir / "**" / "*.*").rglob("*")
+        local_dir_tracks[_dir] = [_file.stem for _file in files]
 
     return local_dir_tracks
 
@@ -250,14 +242,11 @@ def initialize_logger() -> Tuple[logging.Logger, str]:
     Returns:
         Tuple containing Logger and associated log file.
     """
-    log_file = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)),
-        "logs",
-        f'{datetime.now().strftime("%Y-%m-%d")}.log',
-    ).replace(os.sep, "/")
-    log_conf = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), "configs", "logging.conf"
-    ).replace(os.sep, "/")
+    log_file = (
+        Path(__file__).parent.parent / "logs" /
+        f'{datetime.now().strftime("%Y-%m-%d")}.log'
+    )
+    log_conf = Path(__file__).parent.parent / "configs" / "logging.conf"
     logging.config.fileConfig(
         fname=log_conf,
         defaults={"logfilename": log_file},
@@ -265,25 +254,3 @@ def initialize_logger() -> Tuple[logging.Logger, str]:
     )
 
     return logging.getLogger(__name__), log_file
-
-
-def make_dirs(path: str):
-    """This function performs operating system agnostic directory creation.
-
-    Args:
-        path: Directory path.
-    """
-    if os_name == "nt":
-        cwd = os.getcwd()
-        path_parts = path.split(os.sep)
-        if path_parts and not path_parts[0]:
-            path_parts[0] = "/"
-        root = path_parts[0]
-        path_parts = path_parts[1:]
-        os.chdir(root)
-        for part in path_parts:
-            os.makedirs(part, exist_ok=True)
-            os.chdir(part)
-        os.chdir(cwd)
-    else:
-        os.makedirs(path, exist_ok=True)

@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -30,12 +30,13 @@ pytest_plugins = [
     ],
 )
 def test_fix_up(test_assets):
-    test_file, expected_clean_file = test_assets
+    test_file, expected_clean_file = map(Path, test_assets)
     clean_file = fix_up(test_file)
     assert clean_file == expected_clean_file
 
 
 def test_url_download(tmpdir, test_config):
+    tmpdir = Path(tmpdir)
     test_config.URL_DOWNLOAD = (
         "https://soundcloud.com/aweeeezy_music/sets/test-download"
     )
@@ -45,12 +46,12 @@ def test_url_download(tmpdir, test_config):
     ) as mock_ytdl:
         context = mock_ytdl.return_value.__enter__.return_value 
         context.download.side_effect = lambda *args, **kwargs: open(
-            os.path.join(tmpdir, "file.mp3").replace(os.sep, "/"),
+            tmpdir / "file.mp3",
             mode="w",
             encoding="utf-8",
         ).write("")
         url_download(test_config)
-    assert len(os.listdir(tmpdir)) == 1
+    assert len(list(tmpdir.iterdir())) == 1
 
 
 def test_url_download_invalid_url(test_config):

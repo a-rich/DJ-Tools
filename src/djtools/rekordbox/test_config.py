@@ -1,9 +1,10 @@
+from pathlib import Path
 from unittest import mock
 
 import pytest
 
 from djtools.rekordbox.config import RekordboxConfig
-from test_data import MockExists
+from test_data import mock_exists
 
 
 pytest_plugins = [
@@ -21,13 +22,14 @@ def test_rekordboxconfig():
 
 
 @mock.patch(
-    "djtools.rekordbox.config.os.path.exists",
-    MockExists(
-        files=[
+    "djtools.rekordbox.config.Path.exists",
+    lambda path: mock_exists(
+        [
             ("rekordbox_playlists.yaml", False),
             ("rekordbox.xml", True),
-        ]
-    ).exists,
+        ],
+        path,
+    )
 )
 def test_rekordboxconfig_no_rekordbox_playlists_config(test_xml):
     cfg = {"REKORDBOX_PLAYLISTS": True, "XML_PATH": test_xml}
@@ -40,7 +42,7 @@ def test_rekordboxconfig_no_rekordbox_playlists_config(test_xml):
 
 
 def test_rekordboxconfig_no_xml():
-    cfg = {"REKORDBOX_PLAYLISTS": True, "XML_PATH": ""}
+    cfg = {"REKORDBOX_PLAYLISTS": True, "XML_PATH": None}
     with pytest.raises(
         RuntimeError,
         match="Using the rekordbox package requires the config option "

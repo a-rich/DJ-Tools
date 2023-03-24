@@ -4,7 +4,7 @@ of config.yaml
 """
 import getpass
 import logging
-import os
+from pathlib import Path
 from typing import Dict, List
 
 import yaml
@@ -20,18 +20,18 @@ class SyncConfig(BaseConfig):
 
     AWS_USE_DATE_MODIFIED: bool = False 
     DISCORD_URL: str = ""
-    DOWNLOAD_EXCLUDE_DIRS: List[str] = []
-    DOWNLOAD_INCLUDE_DIRS: List[str] = []
+    DOWNLOAD_EXCLUDE_DIRS: List[Path] = []
+    DOWNLOAD_INCLUDE_DIRS: List[Path] = []
     DOWNLOAD_MUSIC: bool = False 
     DOWNLOAD_SPOTIFY: str = ""
     DOWNLOAD_XML: bool = False 
     DRYRUN: bool = False
     IMPORT_USER: str = ""
-    UPLOAD_EXCLUDE_DIRS: List[str] = []
-    UPLOAD_INCLUDE_DIRS: List[str] = []
+    UPLOAD_EXCLUDE_DIRS: List[Path] = []
+    UPLOAD_INCLUDE_DIRS: List[Path] = []
     UPLOAD_MUSIC: bool = False 
     UPLOAD_XML: bool = False 
-    USB_PATH: str = ""
+    USB_PATH: Path = None
     USER: str = ""
 
     def __init__(self, *args, **kwargs):
@@ -80,12 +80,10 @@ class SyncConfig(BaseConfig):
                 "discord messages!"
             )
 
-        registered_users_path = os.path.join(
-            os.path.dirname(os.path.dirname(__file__)),
-            "configs",
-            "registered_users.yaml",
-        ).replace(os.sep, "/")
-        if os.path.exists(registered_users_path):
+        registered_users_path = (
+            Path(__file__).parent.parent / "configs" / "registered_users.yaml"
+        )
+        if registered_users_path.exists():
             try:
                 with open(
                     registered_users_path, mode="r", encoding="utf-8"
