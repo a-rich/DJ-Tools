@@ -1,9 +1,8 @@
 import inspect
-import os
+from pathlib import Path
 import re
 from urllib.parse import unquote
 
-from bs4 import BeautifulSoup
 import pytest
 
 from djtools.rekordbox.helpers import (
@@ -69,21 +68,17 @@ def test_booleannode_raises_runtime_eror():
 
 
 def test_copy_file(tmpdir, test_track):
-    dest_dir = os.path.join(tmpdir, "output").replace(os.sep, "/")
-    os.makedirs(dest_dir)
-    old_track_loc = test_track["Location"]
+    dest_dir = Path(tmpdir) / "output"
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    old_track_loc = Path(test_track["Location"])
     copy_file(track=test_track, destination=dest_dir)
     new_track_loc = unquote(test_track["Location"])
     loc_prefix = inspect.signature(
         copy_file
     ).parameters.get("loc_prefix").default
-    new_file_path = unquote(
-        os.path.join(
-            dest_dir, os.path.basename(old_track_loc)
-        ).replace(os.sep, "/")
-    )
+    new_file_path = dest_dir / old_track_loc.name
     assert new_track_loc == f"{loc_prefix}{new_file_path}"
-    assert os.path.exists(unquote(new_file_path))
+    assert new_file_path.exists()
 
 
 def test_get_playlist_track_locations(xml):

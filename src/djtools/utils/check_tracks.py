@@ -4,7 +4,6 @@ directories to see if there is any overlap with the contents of the Beatcloud.
 from itertools import groupby
 import logging
 from operator import itemgetter
-import os
 from typing import List, Optional, Tuple
 
 from djtools.configs.config import BaseConfig
@@ -71,9 +70,7 @@ def compare_tracks(
     if not beatcloud_tracks:
         beatcloud_tracks = get_beatcloud_tracks()
     
-    path_lookup = {
-        os.path.splitext(os.path.basename(x))[0]: x for x in beatcloud_tracks
-    }
+    path_lookup = {x.stem: x for x in beatcloud_tracks}
     
     for tracks, track_type in track_sets:
         matches = find_matches(

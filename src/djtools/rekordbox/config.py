@@ -3,7 +3,7 @@ The attributes of this configuration object correspond with the "rekordbox" key
 of config.yaml
 """
 import logging
-import os
+from pathlib import Path
 from typing import List 
 
 from djtools.configs.config import BaseConfig
@@ -16,7 +16,7 @@ class RekordboxConfig(BaseConfig):
     """Configuration object for the rekordbox package."""
 
     COPY_PLAYLISTS:  List[str] = []
-    COPY_PLAYLISTS_DESTINATION: str = ""
+    COPY_PLAYLISTS_DESTINATION: Path = None
     PURE_GENRE_PLAYLISTS:  List[str] = []
     RANDOMIZE_PLAYLISTS:  List[str] = []
     REKORDBOX_PLAYLISTS: bool = False 
@@ -37,19 +37,18 @@ class RekordboxConfig(BaseConfig):
                 self.RANDOMIZE_PLAYLISTS,
                 self.REKORDBOX_PLAYLISTS,
             ]
-        ) and (not self.XML_PATH or not os.path.exists(self.XML_PATH)):
+        ) and (not self.XML_PATH or not self.XML_PATH.exists()):
             raise RuntimeError(
                 "Using the rekordbox package requires the config option "
                 "XML_PATH to be a valid rekordbox XML file"
             )
 
         if self.REKORDBOX_PLAYLISTS:
-            playlist_config = os.path.join(
-                os.path.dirname(os.path.dirname(__file__)),
-                "configs",
-                "rekordbox_playlists.yaml",
-            ).replace(os.sep, "/")
-            if not os.path.exists(playlist_config):
+            playlist_config = (
+                Path(__file__).parent.parent / "configs" /
+                "rekordbox_playlists.yaml"
+            )
+            if not playlist_config.exists():
                 raise RuntimeError(
                     "rekordbox_playlists.yaml must be a valid YAML to use the "
                     "REKORDBOX_PLAYLISTS feature"

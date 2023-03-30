@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 from bs4 import BeautifulSoup
 import pytest
@@ -14,12 +14,11 @@ pytest_plugins = [
 def test_randomize_playlists(test_config, test_xml, caplog):
     caplog.set_level("INFO")
     playlists = ["Hip Hop"]
+    test_xml = Path(test_xml)
     test_config.XML_PATH = test_xml
     test_config.RANDOMIZE_PLAYLISTS = playlists
     randomize_playlists(test_config)
-    new_xml = os.path.join(
-        os.path.dirname(test_xml), f"auto_{os.path.basename(test_xml)}"
-    ).replace(os.sep, "/")
+    new_xml = test_xml.parent / f"auto_{test_xml.name}"
     with open(new_xml, mode="r", encoding="utf-8") as _file:
         db = BeautifulSoup(_file.read(), "xml")
     randomized_playlist = db.find_all(

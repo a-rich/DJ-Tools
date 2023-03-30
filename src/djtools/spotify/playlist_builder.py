@@ -17,6 +17,7 @@ to the respective playlist if the Levenshtein similarity passes a threshold.
 import asyncio
 import logging
 import os
+from pathlib import Path
 
 import pyperclip
 import yaml
@@ -55,10 +56,8 @@ async def async_update_auto_playlists(config: BaseConfig):
     playlist_ids = get_playlist_ids()
     
     praw_cache = {}
-    cache_file = os.path.join(
-        os.path.dirname(__file__), ".praw.cache"
-    ).replace(os.sep, "/")
-    if os.path.exists(cache_file):
+    cache_file = Path(__file__).parent / ".praw.cache"
+    if cache_file.exists():
         with open(cache_file, mode="r", encoding="utf-8") as _file:
             praw_cache = yaml.load(_file, Loader=yaml.FullLoader) or {}
     
@@ -130,7 +129,7 @@ def playlist_from_upload(config: BaseConfig):
             if not user:
                 user = line.split("/")[0]
             continue
-        file_, _ = os.path.splitext(line)
+        file_ = Path(line).stem
         try:
             track, artist = file_.strip().split(" - ")
         except ValueError:

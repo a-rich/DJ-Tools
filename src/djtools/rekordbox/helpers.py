@@ -1,5 +1,5 @@
 """This module contains helpers for the rekordbox package."""
-import os
+from pathlib import Path
 import re
 import shutil
 from typing import Any, Dict, List, Optional, Set, Tuple 
@@ -92,7 +92,7 @@ class BooleanNode:
 
 def copy_file(
     track: bs4.element.Tag,
-    destination: str,
+    destination: Path,
     loc_prefix: str="file://localhost",
 ):
     """Copies tracks to a destination and writes new Location field.
@@ -102,12 +102,10 @@ def copy_file(
         destination: Directory to copy tracks to.
         loc_prefix: Location field prefix.
     """
-    loc = unquote(track["Location"]).split(loc_prefix)[-1]
-    new_loc = os.path.join(
-        destination, os.path.basename(loc)
-    ).replace(os.sep, "/")
+    loc = Path(unquote(track["Location"]).split(loc_prefix)[-1])
+    new_loc = destination / loc.name
     shutil.copyfile(loc, new_loc)		
-    track["Location"] = f"{loc_prefix}{quote(new_loc)}"
+    track["Location"] = f"{loc_prefix}{quote(new_loc.as_posix())}"
 
 
 def get_playlist_track_locations(

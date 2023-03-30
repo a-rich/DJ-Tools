@@ -1,6 +1,6 @@
 import asyncio
 from datetime import datetime
-import os
+from pathlib import Path
 import logging
 from unittest import mock
 
@@ -16,7 +16,6 @@ from djtools.utils.helpers import (
     get_local_tracks,
     get_playlist_tracks,
     get_spotify_tracks,
-    make_dirs,
 )
 from test_data import MockOpen
 
@@ -141,10 +140,10 @@ def test_find_matches(test_config):
         ]
     ]
 )
-@mock.patch("os.popen")
+@mock.patch("djtools.utils.helpers.check_output")
 def test_get_beatcloud_tracks(mock_os_popen, proc_dump):
-    process = mock_os_popen.return_value.__enter__.return_value
-    process.read.side_effect = lambda: "\n".join(proc_dump)
+    proc_dump = list(map(Path, proc_dump))
+    process = mock_os_popen.return_value = "\n".join(map(Path.as_posix, proc_dump))
     tracks = get_beatcloud_tracks()
     mock_os_popen.assert_called_once()
     assert len(tracks) == len(proc_dump)
@@ -154,17 +153,16 @@ def test_get_beatcloud_tracks(mock_os_popen, proc_dump):
 
 def test_get_local_tracks(tmpdir, test_config):
     check_dirs = []
+    tmpdir = Path(tmpdir)
     for dir in ["dir1", "dir2"]:
-        path = os.path.join(tmpdir, dir).replace(os.sep, "/")
-        os.makedirs(path)
+        path = tmpdir / dir
+        path.mkdir(parents=True, exist_ok=True)
         check_dirs.append(path)
-    test_config.CHECK_TRACKS_LOCAL_DIRS = check_dirs + ["nonexistent_dir"]
+    test_config.CHECK_TRACKS_LOCAL_DIRS = check_dirs + [Path("nonexistent_dir")]
     beatcloud_tracks = ["test_file1.mp3", "test_file2.mp3"]
     for index, track in enumerate(beatcloud_tracks):
         with open(
-            os.path.join(
-                check_dirs[index % len(check_dirs)], f"{track}"
-            ).replace(os.sep, "/"),
+            check_dirs[index % len(check_dirs)] / f"{track}",
             mode="w",
             encoding="utf-8",
         ) as _file:
@@ -286,20 +284,4 @@ def test_initialize_logger():
     today = f'{datetime.now().strftime("%Y-%m-%d")}.log'
     logger, log_file = initialize_logger()
     assert isinstance(logger, logging.Logger)
-    assert os.path.basename(log_file) == today
-
-
-@pytest.mark.parametrize("platform", ["posix", "nt"])
-def test_make_dirs(tmpdir, platform):
-    with mock.patch("djtools.utils.helpers.os_name", platform):
-        new_dir = os.path.join(tmpdir, "test_dir").replace(os.sep, "/")
-        make_dirs(new_dir)
-        assert os.path.exists(new_dir)
-        new_sub_dir = os.path.join(
-            tmpdir, "test_dir_2", "sub_dir"
-        ).replace(os.sep, "/")
-        make_dirs(new_sub_dir)
-        assert os.path.exists(new_sub_dir)
-        rel_dir = os.path.join(tmpdir, "relative_dir").replace(os.sep, "/")
-        make_dirs(rel_dir)
-        assert os.path.exists(rel_dir)
+    assert log_file.name == today

@@ -5,8 +5,9 @@ beatcloud by "IMPORT_USER" before modifying it to point to track locations at
 "USB_PATH".
 """
 import logging
-import os
+from os.path import getmtime
 from pathlib import Path
+from subprocess import Popen
 from typing import List
 
 from djtools.configs.config import BaseConfig
@@ -14,7 +15,6 @@ from djtools.sync.helpers import (
     parse_sync_command, rewrite_xml, run_sync, webhook
 )
 from djtools.utils.check_tracks import compare_tracks
-from djtools.utils.helpers import make_dirs
 
 
 logger = logging.getLogger(__name__)
@@ -39,34 +39,25 @@ def download_music(config: BaseConfig, beatcloud_tracks: List[str] = []):
             download_spotify_playlist=config.DOWNLOAD_SPOTIFY,
         )
         config.DOWNLOAD_INCLUDE_DIRS = [
-            os.path.join(
-                user,
-                path.split(os.path.join(user, "").replace(os.sep, "/"))[-1]
-            )
+            (Path(user) / path.split(f"{Path(user)}/")[-1])
             for path in beatcloud_matches
         ]
         config.DOWNLOAD_EXCLUDE_DIRS = []
 
-    dest = os.path.join(config.USB_PATH, "DJ Music").replace(os.sep, "/")
-    glob_path = Path(dest)
-    old = {
-        str(p) for p in glob_path.rglob(
-            os.path.join("**", "*.*").replace(os.sep, "/")
-        )
-    }
+    dest = Path(config.USB_PATH) / "DJ Music"
+    glob_path = (Path("**") / "*.*").as_posix()
+    old = {str(p) for p in dest.rglob(glob_path)}
     logger.info(f"Found {len(old)} files")
 
     logger.info("Syncing remote track collection...")
-    make_dirs(dest)
-    cmd = ["aws", "s3", "sync", "s3://dj.beatcloud.com/dj/music/", dest]
+    dest.mkdir(parents=True, exist_ok=True)
+    cmd = [
+        "aws", "s3", "sync", "s3://dj.beatcloud.com/dj/music/", dest.as_posix()
+    ]
     run_sync(parse_sync_command(cmd, config))
 
-    new = {
-        str(p) for p in glob_path.rglob(
-            os.path.join("**", "*.*").replace(os.sep, "/")
-        )
-    }
-    difference = sorted(list(new.difference(old)), key=os.path.getmtime)
+    new = {str(p) for p in dest.rglob(glob_path)}
+    difference = sorted(list(new.difference(old)), key=getmtime)
     if difference:
         logger.info(f"Found {len(difference)} new files")
         for diff in difference:
@@ -84,16 +75,15 @@ def download_xml(config: BaseConfig):
         config: Configuration object.
     """
     logger.info("Syncing remote rekordbox.xml...")
-    xml_dir = os.path.dirname(config.XML_PATH)
-    make_dirs(xml_dir)
-    _file = f'{config.IMPORT_USER}_rekordbox.xml'
-    _file = os.path.join(xml_dir, _file).replace(os.sep, "/")
+    xml_dir = Path(config.XML_PATH).parent
+    xml_dir.mkdir(parents=True, exist_ok=True)
+    _file = Path(xml_dir) / f'{config.IMPORT_USER}_rekordbox.xml'
     cmd = (
         "aws s3 cp s3://dj.beatcloud.com/dj/xml/"
         f'{config.IMPORT_USER}/rekordbox.xml {_file}'
     )
     logger.info(cmd)
-    os.system(cmd)
+    Popen(cmd, shell=True).wait()
     if config.USER != config.IMPORT_USER:
         rewrite_xml(config)
 
@@ -107,22 +97,19 @@ def upload_music(config: BaseConfig):
     Args:
         config: Configuration object.
     """
-    glob_path = Path(
-        os.path.join(config.USB_PATH, "DJ Music").replace(os.sep, "/")
-    )
-    hidden_files = {
-        str(p) for p in glob_path.rglob(
-            os.path.join("**", ".*.*").replace(os.sep, "/")
+    hidden_files = set(
+        (Path(config.USB_PATH) / "DJ Music").rglob(
+            (Path("**") / ".*.*").as_posix()
         )
-    }
+    )
     if hidden_files:
         logger.info(f"Removed {len(hidden_files)} files...")
         for _file in hidden_files:
             logger.info(f"\t{_file}")
-            os.remove(_file)
+            _file.unlink()
 
     logger.info("Syncing track collection...")
-    src = os.path.join(config.USB_PATH, "DJ Music").replace(os.sep, "/")
+    src = (Path(config.USB_PATH) / "DJ Music").as_posix()
     cmd = ["aws", "s3", "sync", src, "s3://dj.beatcloud.com/dj/music/"]
 
     if config.DISCORD_URL and not config.DRYRUN:
@@ -144,4 +131,4 @@ def upload_xml(config: BaseConfig):
     dst = f"s3://dj.beatcloud.com/dj/xml/{config.USER}/"
     cmd = f"aws s3 cp {config.XML_PATH} {dst}"
     logger.info(cmd)
-    os.system(cmd)
+    Popen(cmd, shell=True).wait()

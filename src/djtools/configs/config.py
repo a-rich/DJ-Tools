@@ -4,9 +4,10 @@ apply to multiple packages. The attributes of this configuration object
 correspond with the "configs" key of config.yaml."""
 import logging
 import os
+from pathlib import Path
 from typing_extensions import Literal
 
-from pydantic import BaseModel, Extra, NonNegativeInt
+from pydantic import BaseModel, Extra, NonNegativeInt, validator
 
 
 logger = logging.getLogger(__name__)
@@ -20,7 +21,7 @@ class BaseConfig(BaseModel, extra=Extra.allow):
         "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"
     ] = "INFO"
     VERBOSITY: NonNegativeInt = 0
-    XML_PATH: str = ""
+    XML_PATH: Path = None
 
     def __init__(self, *args, **kwargs):
         """Constructor.
@@ -68,7 +69,7 @@ class BaseConfig(BaseModel, extra=Extra.allow):
                 "COPY_PLAYLISTS, DOWNLOAD_XML, RANDOMIZE_PLAYLISTS, "
                 "REKORDBOX_PLAYLISTS, UPLOAD_XML"
             )
-        elif not os.path.exists(self.XML_PATH):
+        elif not self.XML_PATH.exists():
             logger.warning(
                 "XML_PATH does not exist. Without this set to a valid "
                 "Rekordbox XML export, you cannot use the following features: "

@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 from unittest import mock
 
 import pyperclip
@@ -24,7 +24,7 @@ pytest_plugins = [
 )
 @pytest.mark.parametrize("got_playlist_ids", [True, False])
 @pytest.mark.parametrize("got_tracks", [True, False])
-@mock.patch("os.path.exists", return_value=True)
+@mock.patch.object(Path, "exists",return_value=True)
 @mock.patch(
     "djtools.spotify.helpers.update_existing_playlist",
     return_value={

@@ -11,18 +11,12 @@ from djtools.configs.config import BaseConfig
 from djtools.configs.helpers import filter_dict, pkg_cfg
 
 
-class MockExists:
-    os_exists = os.path.exists
+def mock_exists(files, path):
+    for file_name, exists in files:
+        if file_name == path.name:
+            return exists
 
-    def __init__(self, files: List[Tuple[str, bool]]):
-        self._files = files
-
-    def exists(self, *args, **kwargs):
-        file_name = os.path.basename(args[0])
-        for file_, exists in self._files:
-            if file_name == file_:
-                return exists
-        return True
+    return True
 
     
 class MockOpen:

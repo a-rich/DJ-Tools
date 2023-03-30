@@ -5,8 +5,8 @@ overrides the corresponding configuration options with these arguments.
 import argparse
 from argparse import ArgumentParser
 import logging
-import os
-from typing import Any, Dict, Union
+from pathlib import Path
+from typing import Any, Dict, List, Union
 
 import yaml
 
@@ -15,7 +15,6 @@ from djtools.rekordbox.config import RekordboxConfig
 from djtools.spotify.config import SpotifyConfig
 from djtools.sync.config import SyncConfig
 from djtools.utils.config import UtilsConfig
-from djtools.utils.helpers import make_dirs
 
 
 logger = logging.getLogger(__name__)
@@ -109,7 +108,7 @@ def arg_parse() -> argparse.Namespace:
     )
     parser.add_argument(
         "--check-tracks-local-dirs",
-        type=str,
+        type=convert_to_paths,
         nargs="+",
         help="List of local directories to check against the Beatcloud",
     )
@@ -127,7 +126,7 @@ def arg_parse() -> argparse.Namespace:
     )
     parser.add_argument(
         "--copy-playlists-destination",
-        type=str,
+        type=convert_to_paths,
         help="Location to copy Rekordbox playlists' audio files to",
     )
     parser.add_argument(
@@ -137,13 +136,13 @@ def arg_parse() -> argparse.Namespace:
     )
     parser.add_argument(
         "--download-exclude-dirs",
-        type=str,
+        type=convert_to_paths,
         nargs="+",
         help="Paths to exclude when downloading from the Beatcloud",
     )
     parser.add_argument(
         "--download-include-dirs",
-        type=str,
+        type=convert_to_paths,
         nargs="+",
         help="Paths to include when downloading from the Beatcloud",
     )
@@ -175,7 +174,7 @@ def arg_parse() -> argparse.Namespace:
     )
     parser.add_argument(
         "--link-configs",
-        type=str,
+        type=convert_to_paths,
         help="Location to symlink library configuration files to",
     )
     parser.add_argument(
@@ -254,13 +253,13 @@ def arg_parse() -> argparse.Namespace:
     )
     parser.add_argument(
         "--upload-exclude-dirs",
-        type=str,
+        type=convert_to_paths,
         nargs="+",
         help="List of paths to exclude when uploading to the Beatcloud",
     )
     parser.add_argument(
         "--upload-include-dirs",
-        type=str,
+        type=convert_to_paths,
         nargs="+",
         help="List of paths to include when uploading to the Beatcloud",
     )
@@ -281,12 +280,12 @@ def arg_parse() -> argparse.Namespace:
     )
     parser.add_argument(
         "--url-download-destination",
-        type=str,
+        type=convert_to_paths,
         help="Location to download audio file(s) to",
     )
     parser.add_argument(
         "--usb-path",
-        type=str,
+        type=convert_to_paths,
         help="Path to a drive with audio files",
     )
     parser.add_argument(
@@ -304,7 +303,7 @@ def arg_parse() -> argparse.Namespace:
     )
     parser.add_argument(
         "--xml-path",
-        type=str,
+        type=convert_to_paths,
         help='Path to your exported Rekordbox XML database',
     )
     args = parser.parse_args()
@@ -313,21 +312,21 @@ def arg_parse() -> argparse.Namespace:
         logger.setLevel(args.log_level)
 
     if args.link_configs:
-        args.link_configs = args.link_configs.rstrip("/")
-        if os.path.exists(args.link_configs):
+        args.link_configs = Path(args.link_configs)
+        if args.link_configs.exists():
             msg = (
                 f"{args.link_configs} must be a directory that does not "
                 "already exist"
             )
             logger.error(msg)
             raise ValueError(msg)
-        parent_dir = os.path.dirname(args.link_configs)
-        if not os.path.exists(parent_dir):
-            make_dirs(parent_dir)
+        parent_dir = args.link_configs.parent
+        if not parent_dir.exists():
+            parent_dir.mkdir(parents=True, exist_ok=True)
 
-        package_root = os.path.dirname(os.path.dirname(__file__))
-        configs_dir = os.path.join(package_root, "configs").replace(os.sep, "/")
-        os.symlink(configs_dir, args.link_configs, target_is_directory=True)
+        package_root = Path(__file__).parent.parent
+        configs_dir = package_root / "configs"
+        args.link_configs.symlink_to(configs_dir, target_is_directory=True)
 
     return vars(args)
 
@@ -345,11 +344,9 @@ def build_config():
         Global configuration object.
     """
     # Load "config.yaml".
-    config_dir = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), "configs"
-    ).replace(os.sep, "/")
-    config_file = os.path.join(config_dir, "config.yaml").replace(os.sep, "/")
-    if os.path.exists(config_file):
+    config_dir = Path(__file__).parent.parent / "configs"
+    config_file = config_dir / "config.yaml"
+    if config_file.exists():
         try:
             with open(config_file, mode="r", encoding="utf-8") as _file:
                 config = yaml.load(_file, Loader=yaml.FullLoader) or {}
@@ -401,6 +398,21 @@ def build_config():
     )
 
     return joined_config
+
+
+def convert_to_paths(paths: Union[str, List[str]]) -> Path:
+    """Convert CLI argument from string to pathlib.Path.
+
+    Args:
+        paths: String(s) representing path(s).
+
+    Returns:
+        Path 
+    """
+    if isinstance(paths, List):
+        return list(map(Path, paths))
+
+    return Path(paths)
 
 
 def filter_dict(
