@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from typing_extensions import Literal
 
-from pydantic import BaseModel, Extra, NonNegativeInt, validator
+from pydantic import BaseModel, Extra, NonNegativeInt 
 
 
 logger = logging.getLogger(__name__)

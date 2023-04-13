@@ -5,8 +5,9 @@ of config.yaml
 import getpass
 import logging
 from pathlib import Path
-from typing import Dict, List
+from typing import List, Union
 
+from pydantic import validator
 import yaml
 
 from djtools.configs.config import BaseConfig
@@ -31,7 +32,7 @@ class SyncConfig(BaseConfig):
     UPLOAD_INCLUDE_DIRS: List[Path] = []
     UPLOAD_MUSIC: bool = False 
     UPLOAD_XML: bool = False 
-    USB_PATH: Path = None
+    USB_PATH: str = ""
     USER: str = ""
 
     def __init__(self, *args, **kwargs):
@@ -74,6 +75,20 @@ class SyncConfig(BaseConfig):
                 logger.critical(msg)
                 raise RuntimeError(msg)
         
+        if (
+            any([self.DOWNLOAD_MUSIC, self.UPLOAD_MUSIC]) and not
+            (
+                self.USB_PATH if isinstance(self.USB_PATH, str)
+                else self.USB_PATH.exists()
+            )
+        ):
+            msg = (
+                "Config must include USB_PATH for both DOWNLOAD_MUSIC and "
+                "UPLOAD_MUSIC sync operations"
+            )
+            logger.critical(msg)
+            raise RuntimeError(msg)
+        
         if self.UPLOAD_MUSIC and not self.DISCORD_URL:
             logger.warning(
                 'DISCORD_URL is not configured...set this for "New Music" '
@@ -112,6 +127,18 @@ class SyncConfig(BaseConfig):
             )
 
         # Enter USER into "registered_users.yaml".
-        registered_users[self.USER] = self.USB_PATH
+        registered_users[self.USER] = str(self.USB_PATH)
         with open(registered_users_path, mode="w", encoding="utf-8") as _file:
             yaml.dump(registered_users, _file)
+
+    @validator("USB_PATH")
+    def usb_path_as_pathlib_path(cls, v: str) -> Union[Path, str]:
+        """_summary_
+
+        Args:
+            v: USB_PATH field
+
+        Returns:
+            pathlib.Path representing the USB_PATH field or else an empty string.
+        """
+        return v if not v else Path(v)

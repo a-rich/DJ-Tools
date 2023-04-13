@@ -143,7 +143,9 @@ def test_find_matches(test_config):
 @mock.patch("djtools.utils.helpers.check_output")
 def test_get_beatcloud_tracks(mock_os_popen, proc_dump):
     proc_dump = list(map(Path, proc_dump))
-    process = mock_os_popen.return_value = "\n".join(map(Path.as_posix, proc_dump))
+    process = mock_os_popen.return_value = b"\n".join(
+        map(lambda x: x.as_posix().encode(), proc_dump)
+    )
     tracks = get_beatcloud_tracks()
     mock_os_popen.assert_called_once()
     assert len(tracks) == len(proc_dump)

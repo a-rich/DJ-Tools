@@ -29,6 +29,31 @@ def test_syncconfig_bad_registered_users():
         SyncConfig()
 
 
+@mock.patch(
+    "builtins.open",
+    MockOpen(files=["registered_users.yaml"],
+    write_only=True).open,
+)
+@pytest.mark.parametrize("operations", [(True, False), (False, True)])
+@pytest.mark.parametrize("usb_path", ["", "nonexistent/path"])
+def test_syncconfig_download_or_upload_without_usb_path(operations, usb_path):
+    download, upload = operations
+    cfg = {
+        "AWS_PROFILE": "myprofile",
+        "DOWNLOAD_MUSIC": download,
+        "UPLOAD_MUSIC": upload,
+        "USB_PATH": usb_path,
+    }
+    with pytest.raises(
+        RuntimeError,
+        match=(
+            "Config must include USB_PATH for both DOWNLOAD_MUSIC and "
+            "UPLOAD_MUSIC sync operations"
+        ),
+    ):
+        SyncConfig(**cfg)
+
+
 def test_syncconfig_download_without_import_user():
     cfg = {
         "DOWNLOAD_XML": True,
@@ -115,6 +140,7 @@ def test_syncconfig_upload_without_discord_url(
 ):
     caplog.set_level("WARNING")
     cfg = {
+        "USB_PATH": ".",
         "UPLOAD_MUSIC": True,
         "DISCORD_URL": "",
         "XML_PATH": test_xml,

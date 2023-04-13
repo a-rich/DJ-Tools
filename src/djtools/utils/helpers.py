@@ -141,7 +141,7 @@ def get_beatcloud_tracks() -> List[str]:
     """
     logger.info("Getting tracks from the beatcloud...")
     cmd = "aws s3 ls --recursive s3://dj.beatcloud.com/dj/music/"
-    output = check_output(cmd, shell=True).split("\n")
+    output = check_output(cmd, shell=True).decode("utf-8").split("\n")
     tracks = [Path(track) for track in output if track]
     logger.info(f"Got {len(tracks)} tracks")
 
