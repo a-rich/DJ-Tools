@@ -166,7 +166,7 @@ def get_local_tracks(config: BaseConfig) -> Dict[str, List[str]]:
                 "contents against the beatcloud"
             )
             continue
-        files = (_dir / "**" / "*.*").rglob("*")
+        files = _dir.rglob("**/*.*")
         local_dir_tracks[_dir] = [_file.stem for _file in files]
 
     return local_dir_tracks
@@ -249,7 +249,8 @@ def initialize_logger() -> Tuple[logging.Logger, str]:
     log_conf = Path(__file__).parent.parent / "configs" / "logging.conf"
     logging.config.fileConfig(
         fname=log_conf,
-        defaults={"logfilename": log_file},
+        # NOTE(a-rich): the `logfilename` needs a unix-style path.
+        defaults={"logfilename": log_file.as_posix()},
         disable_existing_loggers=False,
     )
 

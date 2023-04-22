@@ -81,7 +81,10 @@ def test_download_xml(
         "s3",
         "cp",
         f's3://dj.beatcloud.com/dj/xml/{other_user}/rekordbox.xml',
-        new_xml.as_posix(),
+        # NOTE(a-rich): since we could be passing a `test_xml` formatted as a
+        # WindowsPath, the comparison needs to be made with `str(new_xml)`
+        # (rather than `new_xml.as_posix()`).
+        str(new_xml),
     ] 
     assert caplog.records[0].message == "Syncing remote rekordbox.xml..."
     assert caplog.records[1].message == " ".join(cmd)

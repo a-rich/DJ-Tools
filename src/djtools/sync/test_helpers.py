@@ -89,10 +89,13 @@ def test_rewrite_xml(test_config, test_xml, xml):
     for track in xml.find_all("TRACK"):
         if not track.get("Location"):
             continue
+        # NOTE(a-rich): `Location` attributes in the XML's `TRACK` tags always
+        # have unix-style paths so paths created in Windows must be
+        # interpretted `.as_posix()`.
         track["Location"] = (
             Path(track["Location"]).parent / user_b_path.strip("/") /
             Path(track["Location"]).name
-        )
+        ).as_posix()
     
     with open(
         other_users_xml, mode="wb", encoding=xml.orignal_encoding
@@ -127,9 +130,14 @@ def test_run_sync(mock_popen, tmpdir):
             "2022-12-22/last track - last artist.mp3"
         "\nirrelevant line"
     )
-    tmp_file = tempfile.NamedTemporaryFile(mode="w")
+    # NOTE(a-rich): Windows does not allow opening a temporary file after it's
+    # been created. The WAR is to initialize a `NamedTemporaryFile` with the
+    # `delete` argument set to `False` and explicitly `.close()` the object
+    # before calling `open()` on it.
+    tmp_file = tempfile.NamedTemporaryFile(mode="w", delete=False)
     tmp_file.write(sync_output)
     tmp_file.seek(0)
+    tmp_file.close()
     tmp_file = open(tmp_file.name)
     process = mock_popen.return_value.__enter__.return_value
     process.stdout = tmp_file
@@ -146,10 +154,19 @@ def test_run_sync(mock_popen, tmpdir):
 @mock.patch("djtools.sync.helpers.Popen")
 def test_run_sync_handles_return_code(mock_popen, tmpdir, caplog):
     caplog.set_level("CRITICAL")
-    cmd = ["aws", "s3", "sync", str(tmpdir), "s3://dj.beatcloud.com/dj/music/"]
-    tmp_file = tempfile.NamedTemporaryFile(mode="w")
+    # NOTE(a-rich): subprocess calls to `awscli` need to have unix-style path
+    # arguments.
+    cmd = [
+        "aws",
+        "s3",
+        "sync",
+        Path(tmpdir).as_posix(),
+        "s3://dj.beatcloud.com/dj/music/",
+    ]
+    tmp_file = tempfile.NamedTemporaryFile(mode="w", delete=False)
     tmp_file.write("")
     tmp_file.seek(0)
+    tmp_file.close()
     tmp_file = open(tmp_file.name)
     process = mock_popen.return_value.__enter__.return_value
     process.stdout = tmp_file

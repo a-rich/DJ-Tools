@@ -1,5 +1,6 @@
 from argparse import Namespace
 from pathlib import Path
+import re
 from typing import List
 from unittest import mock
 
@@ -41,7 +42,11 @@ def test_arg_parse_links_configs_dir_does_not_exist(mock_parse_args, tmpdir):
     )
     with pytest.raises(
         ValueError,
-        match=f'{link_path} must be a directory that does not already exist',
+        # NOTE(a-rich): WindowsPath needs to be escaped for `\` characters to
+        # appear in the `match` argument.
+        match=re.escape(
+            f'{link_path} must be a directory that does not already exist'
+        ),
     ):
         args = arg_parse()
 

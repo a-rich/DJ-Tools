@@ -77,7 +77,10 @@ def test_copy_file(tmpdir, test_track):
         copy_file
     ).parameters.get("loc_prefix").default
     new_file_path = dest_dir / old_track_loc.name
-    assert new_track_loc == f"{loc_prefix}{new_file_path}"
+    # NOTE(a-rich): `Location` attributes in the XML's `TRACK` tags always
+    # have unix-style paths so comparisons made with paths created in Windows
+    # must be interpretted `.as_posix()`.
+    assert new_track_loc == f"{loc_prefix}{new_file_path.as_posix()}"
     assert new_file_path.exists()
 
 
