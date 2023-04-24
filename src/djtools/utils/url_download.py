@@ -48,7 +48,7 @@ def url_download(config: BaseConfig):
             "preferredcodec": "mp3",
             "preferredquality": "320",
         }],
-        "outtmpl": dl_loc / "%(title)s.%(ext)s"
+        "outtmpl": (dl_loc / "%(title)s.%(ext)s").as_posix()
     }
 
     with ytdl.YoutubeDL(ydl_opts) as ydl:
