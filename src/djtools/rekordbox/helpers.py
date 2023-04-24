@@ -103,9 +103,9 @@ def copy_file(
         loc_prefix: Location field prefix.
     """
     loc = Path(unquote(track["Location"]).split(loc_prefix)[-1])
-    new_loc = destination / loc.name
-    shutil.copyfile(loc, new_loc)		
-    track["Location"] = f"{loc_prefix}{quote(new_loc.as_posix())}"
+    new_loc = Path(destination / loc.name).as_posix()
+    shutil.copyfile(loc.as_posix(), new_loc)
+    track["Location"] = f"{loc_prefix}{new_loc}"
 
 
 def get_playlist_track_locations(
