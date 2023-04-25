@@ -169,6 +169,14 @@ def test_get_local_tracks(tmpdir, test_config):
     assert len(local_dir_tracks) == len(check_dirs)
 
 
+def test_get_local_tracks_empty(tmpdir, test_config, caplog):
+    caplog.set_level("INFO")
+    test_config.CHECK_TRACKS_LOCAL_DIRS = [Path(tmpdir)]
+    local_dir_tracks = get_local_tracks(test_config)
+    assert not local_dir_tracks
+    assert caplog.records[0].message == "Got 0 files under local directories"
+
+
 @mock.patch("djtools.spotify.helpers.spotipy.Spotify")
 @mock.patch(
     "djtools.spotify.helpers.spotipy.Spotify.next",
@@ -268,12 +276,9 @@ def test_get_spotify_tracks(
     assert caplog.records[0].message == (
         "playlist A not in spotify_playlists.yaml"
     )
-    assert caplog.records[1].message == (
-        'Getting tracks from Spotify playlist "r/techno | Top weekly Posts"...'
-    )
-    assert caplog.records[2].message == "Got 1 track"
+    assert caplog.records[1].message == 'Got 1 track from Spotify playlist "r/techno | Top weekly Posts"'
     if verbosity:
-        assert caplog.records[3].message == "\tsome track - some artist"
+        assert caplog.records[2].message == "\tsome track - some artist"
     mock_get_playlist_tracks.assert_called_once()
 
 

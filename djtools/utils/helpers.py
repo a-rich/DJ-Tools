@@ -180,11 +180,10 @@ def get_beatcloud_tracks() -> List[str]:
     Returns:
         Beatcloud track titles and artist names.
     """
-    logger.info("Getting tracks from the beatcloud...")
     cmd = "aws s3 ls --recursive s3://dj.beatcloud.com/dj/music/"
     output = check_output(cmd, shell=True).decode("utf-8").split("\n")
     tracks = [Path(track) for track in output if track]
-    logger.info(f"Got {len(tracks)} tracks")
+    logger.info(f"Got {len(tracks)} tracks from the beatcloud")
 
     return tracks
 
@@ -207,8 +206,11 @@ def get_local_tracks(config: BaseConfig) -> Dict[str, List[str]]:
                 "contents against the beatcloud"
             )
             continue
-        files = _dir.rglob("**/*.*")
-        local_dir_tracks[_dir] = [_file.stem for _file in files]
+        files = [_file.stem for _file in _dir.rglob("**/*.*")]
+        if files:
+            local_dir_tracks[_dir] = files 
+    local_tracks_count = sum(len(x) for x in local_dir_tracks.values())
+    logger.info(f"Got {local_tracks_count} files under local directories")
 
     return local_dir_tracks
 
@@ -259,20 +261,25 @@ def get_spotify_tracks(config: BaseConfig) -> Dict[str, Set[str]]:
     playlist_ids = get_playlist_ids()
 
     playlist_tracks = {}
+    _sum = 0
     for playlist in config.CHECK_TRACKS_SPOTIFY_PLAYLISTS:
         playlist_id = playlist_ids.get(playlist)
         if not playlist_id:
             logger.error(f"{playlist} not in spotify_playlists.yaml")
             continue
 
-        logger.info(f'Getting tracks from Spotify playlist "{playlist}"...')
         playlist_tracks[playlist] = get_playlist_tracks(spotify, playlist_id)
         length = len(playlist_tracks[playlist])
-        logger.info(f"Got {length} track{'' if length == 1 else 's'}")
+        logger.info(
+            f'Got {length} track{"" if length == 1 else "s"} from Spotify '
+            f'playlist "{playlist}"'
+        )
+        _sum += length
 
         if config.VERBOSITY > 0:
             for track in playlist_tracks[playlist]:
                 logger.info(f"\t{track}")
+    logger.info(f"Got {_sum} tracks from Spotify in total")
 
     return playlist_tracks
 
