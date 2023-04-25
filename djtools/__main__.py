@@ -32,7 +32,7 @@ Sync operations:
 
 import logging
 
-from djtools.main import main
+from djtools import main
 
 try:
     import Levenshtein
