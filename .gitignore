@@ -14,4 +14,4 @@
 **/__pycache__
 
 # allow test_data
-!src/test_data/*
+!test_data/*

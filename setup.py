@@ -52,7 +52,7 @@ EXTRAS = {
 
 setup(
     name='dj_beatcloud',
-    version='2.4.1-b6',
+    version='2.4.1b34',
     description=(
         'DJ Tools is a library for managing a collection of music and '
         'Rekordbox XML files.'
@@ -63,8 +63,14 @@ setup(
     author='Alex Richards',
     author_email='alex.richards006@gmail.com',
     license='GNU GPLv3',
-    package_dir={"": "src"},
-    packages=find_packages(where="src"),
+    packages=[
+        "djtools",
+        "djtools.configs",
+        "djtools.rekordbox",
+        "djtools.spotify",
+        "djtools.sync",
+        "djtools.utils",
+    ],
     classifiers=CLASSIFIERS,
     install_requires=REQUIREMENTS,
     extras_require=EXTRAS,
@@ -72,6 +78,6 @@ setup(
     include_package_data=True,
     keywords='MP3 Rekordbox XML spotify reddit aws s3',
     entry_points={
-        'console_scripts': ['djtools=djtools:dj_tools.main']
-    }
+        'console_scripts': ['djtools=djtools:main']
+    },
 )

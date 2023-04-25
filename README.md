@@ -63,7 +63,7 @@ The core functionality of this library can be broken up into four sub-packages:
     * compare the tracks of Spotify playlists and / or local directories against the `beatcloud` (to identify redundancies)
     * copy audio files from a given playlist to a new location and generate a new XML for those files (for backups and ensuring you can play a preparation on non-Pioneer setups)
 
-For usage details relating to the individual packages of `DJ Tools`, checkout the README files that are [collocated with those packages](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools).
+For usage details relating to the individual packages of `DJ Tools`, checkout the README files that are [collocated with those packages](https://github.com/a-rich/DJ-Tools/tree/main/djtools).
 
 # Setup
 
@@ -115,11 +115,11 @@ After running this command, base templates for all config files used by `djtools
 
 Please be sure to checkout the package-level README files regarding the usage of the other config files which must also be stored in the same location as `config.yaml`:
 * `spotify`
-    - [spotify_playlists.yaml](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/spotify)
+    - [spotify_playlists.yaml](https://github.com/a-rich/DJ-Tools/tree/main/djtools/spotify)
 * `sync`
-    - [registered_users.yaml](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/sync)
+    - [registered_users.yaml](https://github.com/a-rich/DJ-Tools/tree/main/djtools/sync)
 * `rekordbox`
-    - [rekordbox_playlists.yaml](https://github.com/a-rich/DJ-Tools/tree/main/src/djtools/rekordbox)
+    - [rekordbox_playlists.yaml](https://github.com/a-rich/DJ-Tools/tree/main/djtools/rekordbox)
 
 ## Populating `config.yaml`
 `DJ Tools` contains quite a bit of functionality, but all of it is configurable via `config.yaml`. You may decide to not use `config.yaml` at all and, instead, opt to use the corollary command-line arguments; all configuration options may be overridden via command-line arguments of the same name but in lowercase. Example:
