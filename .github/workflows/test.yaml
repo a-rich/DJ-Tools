@@ -27,8 +27,8 @@ jobs:
       id: pytester-cov
       uses: programmingwithalex/pytester-cov@main
       with:
-        pytest-root-dir: 'src/djtools/'
-        cov-omit-list: 'src/djtools/dj_tools.py, src/djtools/**/test_*'
+        pytest-root-dir: 'djtools/'
+        cov-omit-list: 'djtools/__main__.py, djtools/**/test_*'
         cov-threshold-single: ${{ env.COVERAGE_SINGLE }}
         cov-threshold-total: ${{ env.COVERAGE_TOTAL }}
 
