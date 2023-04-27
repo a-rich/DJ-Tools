@@ -1,3 +1,4 @@
+"""Testing for the helpers module."""
 from datetime import datetime, timedelta
 import os
 from pathlib import Path
@@ -31,6 +32,7 @@ def test_parse_sync_command(
     use_date_modified,
     dryrun,
 ):
+    """Test for the parse_sync_command function."""
     tmpdir = str(tmpdir)
     if upload:
         test_config.UPLOAD_INCLUDE_DIRS = include_dirs
@@ -70,6 +72,7 @@ def test_parse_sync_command(
     ).open
 )
 def test_rewrite_xml(test_config, test_xml, xml):
+    """Test for the rewrite_xml function."""
     user_a_path= "/Volumes/AWEEEEZY/"
     user_b_path= "/Volumes/my_beat_stick/"
     test_user = "aweeeezy"
@@ -78,24 +81,26 @@ def test_rewrite_xml(test_config, test_xml, xml):
     test_config.IMPORT_USER = other_user
     test_config.XML_PATH = test_xml
     other_users_xml = Path(test_xml).parent / f"{other_user}_rekordbox.xml"
-    other_users_xml.write_text(Path(test_xml).read_text())
+    other_users_xml.write_text(
+        Path(test_xml).read_text(encoding="utf-8"), encoding="utf-8"
+    )
 
     for track in xml.find_all("TRACK"):
         if not track.get("Location"):
             continue
         # NOTE(a-rich): `Location` attributes in the XML's `TRACK` tags always
         # have unix-style paths so paths created in Windows must be
-        # interpretted `.as_posix()`.
+        # interpreted `.as_posix()`.
         track["Location"] = (
             Path(track["Location"]).parent / user_b_path.strip("/") /
             Path(track["Location"]).name
         ).as_posix()
-    
+
     with open(
         other_users_xml, mode="wb", encoding=xml.orignal_encoding
     ) as _file:
         _file.write(xml.prettify("utf-8"))
-        
+
     rewrite_xml(test_config)
 
     with open(other_users_xml, mode="r", encoding="utf-8") as _file:
@@ -109,6 +114,7 @@ def test_rewrite_xml(test_config, test_xml, xml):
 
 @mock.patch("djtools.sync.helpers.Popen")
 def test_run_sync(mock_popen, tmpdir):
+    """Test for the run_sync function."""
     with open(Path(tmpdir) / "track.mp3", mode="w", encoding="utf-8") as _file:
         _file.write("")
     cmd = ["aws", "s3", "sync", str(tmpdir), "s3://dj.beatcloud.com/dj/music/"]
@@ -128,15 +134,15 @@ def test_run_sync(mock_popen, tmpdir):
     # been created. The WAR is to initialize a `NamedTemporaryFile` with the
     # `delete` argument set to `False` and explicitly `.close()` the object
     # before calling `open()` on it.
-    tmp_file = tempfile.NamedTemporaryFile(mode="w", delete=False)
-    tmp_file.write(sync_output)
-    tmp_file.seek(0)
-    tmp_file.close()
-    tmp_file = open(tmp_file.name)
-    process = mock_popen.return_value.__enter__.return_value
-    process.stdout = tmp_file
-    process.wait.return_value = 0
-    ret = run_sync(cmd)
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_file:
+        tmp_file.write(sync_output)
+        tmp_file.seek(0)
+        tmp_file.close()
+        with open(tmp_file.name, encoding="utf-8") as tmp_file:
+            process = mock_popen.return_value.__enter__.return_value
+            process.stdout = tmp_file
+            process.wait.return_value = 0
+            ret = run_sync(cmd)
     expected = (
         "Bass/2022-12-21: 1\n\ttrack - artist.mp3\nBass/2O22-12-21: 1\n\tother"
         " track - other artist.mp3\nTechno/2022-12-22: 1\n\tlast track - last "
@@ -147,6 +153,7 @@ def test_run_sync(mock_popen, tmpdir):
 
 @mock.patch("djtools.sync.helpers.Popen")
 def test_run_sync_handles_return_code(mock_popen, tmpdir, caplog):
+    """Test for the run_sync function."""
     caplog.set_level("CRITICAL")
     # NOTE(a-rich): subprocess calls to `awscli` need to have unix-style path
     # arguments.
@@ -157,32 +164,33 @@ def test_run_sync_handles_return_code(mock_popen, tmpdir, caplog):
         Path(tmpdir).as_posix(),
         "s3://dj.beatcloud.com/dj/music/",
     ]
-    tmp_file = tempfile.NamedTemporaryFile(mode="w", delete=False)
-    tmp_file.write("")
-    tmp_file.seek(0)
-    tmp_file.close()
-    tmp_file = open(tmp_file.name)
-    process = mock_popen.return_value.__enter__.return_value
-    process.stdout = tmp_file
-    process.wait.return_value = 1
-    msg = (
-        f"Failure while syncing: Command '{' '.join(cmd)}' returned "
-        f"non-zero exit status {process.wait.return_value}."
-    )
-    with pytest.raises(Exception, match=msg):
-        run_sync(cmd)
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_file:
+        tmp_file.write("")
+        tmp_file.seek(0)
+        tmp_file.close()
+        with open(tmp_file.name, encoding="utf-8") as tmp_file:
+            process = mock_popen.return_value.__enter__.return_value
+            process.stdout = tmp_file
+            process.wait.return_value = 1
+            msg = (
+                f"Failure while syncing: Command '{' '.join(cmd)}' returned "
+                f"non-zero exit status {process.wait.return_value}."
+            )
+            with pytest.raises(Exception, match=msg):
+                run_sync(cmd)
     assert caplog.records[0].message == msg
 
 
-@mock.patch("subprocess.Popen.wait")
-def test_upload_log(mock_subprocess, tmpdir, test_config):
+@mock.patch("subprocess.Popen.wait", mock.Mock())
+def test_upload_log(tmpdir, test_config):
+    """Test for the upload_log function."""
     test_config.AWS_PROFILE = "DJ"
     now = datetime.now()
     one_day_ago = now - timedelta(days=1)
     test_log = f'{now.strftime("%Y-%m-%d")}.log'
     filenames = [
         "empty.txt",
-        test_log, 
+        test_log,
         f'{one_day_ago.strftime("%Y-%m-%d")}.log',
     ]
     ctime = one_day_ago.timestamp()
@@ -190,17 +198,17 @@ def test_upload_log(mock_subprocess, tmpdir, test_config):
         file_path = Path(tmpdir) / filename
         with open(file_path, mode="w", encoding="utf-8") as _file:
             _file.write("stuff")
-        if filename != test_log: 
+        if filename != test_log:
             os.utime(file_path, (ctime, ctime))
     upload_log(test_config, Path(tmpdir) / test_log)
     assert len(list(Path(tmpdir).iterdir())) == len(filenames) - 1
 
 
 def test_upload_log_no_aws_profile(test_config, caplog):
+    """Test for the upload_log function."""
     caplog.set_level("WARNING")
     test_config.AWS_PROFILE = ""
-    ret = upload_log(test_config, "some_file.txt")
-    assert ret is None
+    upload_log(test_config, "some_file.txt")
     assert (
         caplog.records[0].message == "Logs cannot be backed up without "
         "specifying the config option AWS_PROFILE"
@@ -218,6 +226,7 @@ def test_upload_log_no_aws_profile(test_config, caplog):
 )
 @mock.patch("requests.post", side_effect=lambda *args, **kwargs: None)
 def test_webhook(mock_post, content):
+    """Test for the webhook function."""
     url = "https://discord.com/api/webhooks/some-id/"
     content_size_limit = 2000
     posts = len(content) // content_size_limit
@@ -228,9 +237,9 @@ def test_webhook(mock_post, content):
 
 
 def test_webhook_no_content(caplog):
+    """Test for the webhook function."""
     caplog.set_level("INFO")
     url = "https://discord.com/api/webhooks/some-id/"
     content = ""
-    ret = webhook(url=url, content=content)
-    assert not ret
+    webhook(url=url, content=content)
     assert caplog.records[0].message == "There's no content"

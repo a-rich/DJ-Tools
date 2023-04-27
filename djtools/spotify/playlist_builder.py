@@ -16,7 +16,6 @@ to the respective playlist if the Levenshtein similarity passes a threshold.
 """
 import asyncio
 import logging
-import os
 from pathlib import Path
 
 import pyperclip
@@ -54,13 +53,13 @@ async def async_update_auto_playlists(config: BaseConfig):
     spotify = get_spotify_client(config)
     reddit = get_reddit_client(config)
     playlist_ids = get_playlist_ids()
-    
+
     praw_cache = {}
     cache_file = Path(__file__).parent / ".praw.cache"
     if cache_file.exists():
         with open(cache_file, mode="r", encoding="utf-8") as _file:
             praw_cache = yaml.load(_file, Loader=yaml.FullLoader) or {}
-    
+
     tasks = [
         asyncio.create_task(
             get_subreddit_posts(
@@ -85,7 +84,7 @@ async def async_update_auto_playlists(config: BaseConfig):
             playlist_limit=subreddit["limit"],
             verbosity=config.VERBOSITY,
         )
-    
+
     await reddit.close()
 
     write_playlist_ids(playlist_ids)
@@ -142,18 +141,14 @@ def playlist_from_upload(config: BaseConfig):
     threshold = config.AUTO_PLAYLIST_FUZZ_RATIO
     tracks = []
     for title, artist in files:
-        artist = ", ".join(sorted([x.strip() for x in artist.split(",")]))
-        query = (
-            f'{title.replace(" ", "+")}+'
-            f'{artist.replace(" ", "+").replace(",", "")}'
-        )
+        query = f"track:{title} artist:{artist}"
         try:
             results = spotify.search(q=query, type="track", limit=50)
         except Exception as exc:
             logger.error(f'Error searching for "{title} - {artist}": {exc}')
             continue
 
-        match = filter_results(spotify, results, threshold, title, artist)
+        match, _ = filter_results(spotify, results, threshold, title, artist)
         if match:
             artists = ", ".join([y["name"] for y in match["artists"]])
             logger.info(f"Matched {match['name']} - {artists} to {title} - {artist}")
@@ -161,7 +156,7 @@ def playlist_from_upload(config: BaseConfig):
             logger.warning(f"Could not find a match for {title} - {artist}")
             continue
         tracks.append((match["id"], f'{match["name"]} - {artists}'))
-    
+
     playlist_ids = populate_playlist(
         playlist_name=f"{user} Uploads",
         playlist_ids=playlist_ids,

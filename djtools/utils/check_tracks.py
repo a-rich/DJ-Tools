@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 def compare_tracks(
     config: BaseConfig,
-    beatcloud_tracks: Optional[List[str]] = [],
+    beatcloud_tracks: Optional[List[str]] = None,
     download_spotify_playlist: Optional[str] = "",
 ) -> Tuple[List[str], List[str]]:
     """Compares tracks from Spotify / local with Beatcloud tracks.
@@ -69,9 +69,9 @@ def compare_tracks(
 
     if not beatcloud_tracks:
         beatcloud_tracks = get_beatcloud_tracks()
-    
+
     path_lookup = {x.stem: x for x in beatcloud_tracks}
-    
+
     for tracks, track_type in track_sets:
         matches = find_matches(
             tracks,
@@ -86,7 +86,7 @@ def compare_tracks(
             for _, track, beatcloud_track, fuzz_ratio in matches:
                 beatcloud_matches.append(path_lookup[beatcloud_track])
                 logger.info(f"\t{fuzz_ratio}: {track} | {beatcloud_track}")
-    
+
     if download_spotify_playlist:
         config.CHECK_TRACKS_SPOTIFY_PLAYLISTS = cached_playlists
         config.CHECK_TRACKS_LOCAL_DIRS = cached_local_dirs

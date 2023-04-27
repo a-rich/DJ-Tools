@@ -1,4 +1,4 @@
-"""This module is responible for building this library's configuration objects
+"""This module is responsible for building this library's configuration objects
 using config.yaml. If command-line arguments are provided, this module
 overrides the corresponding configuration options with these arguments.
 """
@@ -88,6 +88,20 @@ def arg_parse() -> argparse.Namespace:
             'Drop --size-only flag for "aws s3 sync" command; '
             '"--aws-use-date-modified" will permit re-downloading/'
             "re-uploading files if the date modified field changes"
+        ),
+    )
+    parser.add_argument(
+        "--build-playlists",
+        action="store_true",
+        help="Trigger automatic Rekordbox playlist creation",
+    )
+    parser.add_argument(
+        "--build-playlists-remainder",
+        type=str,
+        choices=["folder", "playlist"],
+        help=(
+            'Place remainder tracks in either an "Other" folder of playlists '
+            'or a single "Other" playlist'
         ),
     )
     parser.add_argument(
@@ -197,12 +211,6 @@ def arg_parse() -> argparse.Namespace:
         help='List of genre tag substrings to create "pure" playlists for',
     )
     parser.add_argument(
-        "--randomize-playlists",
-        type=str,
-        nargs="+",
-        help="List of Rekordbox playlist names to randomize tracks in",
-    )
-    parser.add_argument(
         "--reddit-client-id",
         type=str,
         help="Reddit API client ID",
@@ -218,18 +226,10 @@ def arg_parse() -> argparse.Namespace:
         help="Reddit API user agent",
     )
     parser.add_argument(
-        "--rekordbox-playlists",
-        action="store_true",
-        help="Trigger automatic Rekordbox playlist creation",
-    )
-    parser.add_argument(
-        "--rekordbox-playlists-remainder",
+        "--shuffle-playlists",
         type=str,
-        choices=["folder", "playlist"],
-        help=(
-            'Place remainder tracks in either an "Other" folder of playlists '
-            'or a single "Other" playlist'
-        ),
+        nargs="+",
+        help="List of Rekordbox playlist names to randomize tracks in",
     )
     parser.add_argument(
         "--spotify-client-id",

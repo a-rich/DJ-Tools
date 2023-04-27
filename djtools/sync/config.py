@@ -5,7 +5,7 @@ of config.yaml
 import getpass
 import logging
 from pathlib import Path
-from typing import List, Union
+from typing import List, Optional, Union
 
 from pydantic import validator
 import yaml
@@ -19,20 +19,20 @@ logger = logging.getLogger(__name__)
 class SyncConfig(BaseConfig):
     """Configuration object for the sync package."""
 
-    AWS_USE_DATE_MODIFIED: bool = False 
+    AWS_USE_DATE_MODIFIED: bool = False
     DISCORD_URL: str = ""
     DOWNLOAD_EXCLUDE_DIRS: List[Path] = []
     DOWNLOAD_INCLUDE_DIRS: List[Path] = []
-    DOWNLOAD_MUSIC: bool = False 
+    DOWNLOAD_MUSIC: bool = False
     DOWNLOAD_SPOTIFY: str = ""
-    DOWNLOAD_XML: bool = False 
+    DOWNLOAD_XML: bool = False
     DRYRUN: bool = False
     IMPORT_USER: str = ""
     UPLOAD_EXCLUDE_DIRS: List[Path] = []
     UPLOAD_INCLUDE_DIRS: List[Path] = []
-    UPLOAD_MUSIC: bool = False 
-    UPLOAD_XML: bool = False 
-    USB_PATH: str = ""
+    UPLOAD_MUSIC: bool = False
+    UPLOAD_XML: bool = False
+    USB_PATH: Optional[Union[str, Path]] = None
     USER: str = ""
 
     def __init__(self, *args, **kwargs):
@@ -61,7 +61,7 @@ class SyncConfig(BaseConfig):
             )
             logger.critical(msg)
             raise ValueError(msg)
-        
+
         if any(
             [
                 self.DOWNLOAD_MUSIC,
@@ -74,13 +74,10 @@ class SyncConfig(BaseConfig):
                 msg = "Config must include AWS_PROFILE for sync operations"
                 logger.critical(msg)
                 raise RuntimeError(msg)
-        
+
         if (
-            any([self.DOWNLOAD_MUSIC, self.UPLOAD_MUSIC]) and not
-            (
-                self.USB_PATH if isinstance(self.USB_PATH, str)
-                else self.USB_PATH.exists()
-            )
+            any([self.DOWNLOAD_MUSIC, self.UPLOAD_MUSIC]) and
+            (not self.USB_PATH or not self.USB_PATH.exists())
         ):
             msg = (
                 "Config must include USB_PATH for both DOWNLOAD_MUSIC and "
@@ -88,7 +85,7 @@ class SyncConfig(BaseConfig):
             )
             logger.critical(msg)
             raise RuntimeError(msg)
-        
+
         if self.UPLOAD_MUSIC and not self.DISCORD_URL:
             logger.warning(
                 'DISCORD_URL is not configured...set this for "New Music" '
@@ -132,13 +129,14 @@ class SyncConfig(BaseConfig):
             yaml.dump(registered_users, _file)
 
     @validator("USB_PATH")
-    def usb_path_as_pathlib_path(cls, v: str) -> Union[Path, str]:
-        """_summary_
+    @classmethod
+    def usb_path_as_pathlib_path(cls, value: str) -> Union[Path, str]:
+        """Validator to convert USB_PATH to a pathlib.Path.
 
         Args:
-            v: USB_PATH field
+            value: USB_PATH field
 
         Returns:
             pathlib.Path representing the USB_PATH field or else an empty string.
         """
-        return v if not v else Path(v)
+        return value if not value else Path(value)

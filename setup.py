@@ -10,14 +10,10 @@ REQUIREMENTS = [
     "asyncpraw==7.6.1",
     "awscli==1.27.45",
     "beautifulsoup4==4.11.1",
-    "eyed3==0.9.7",
     "fuzzywuzzy==0.18.0",
     "lxml==4.9.2",
     "pydantic==1.9.1",
     "pyperclip==1.8.2",
-    "pytest==7.2.0",
-    "pytest-asyncio==0.20.3",
-    "pytest-cov==4.0.0",
     "PyYAML==5.4.1",
     "requests==2.28.0",
     "setuptools==58.1.0",
@@ -52,7 +48,7 @@ EXTRAS = {
 
 setup(
     name='dj_beatcloud',
-    version='2.4.1b38',
+    version='2.5.0b0',
     description=(
         'DJ Tools is a library for managing a collection of music and '
         'Rekordbox XML files.'

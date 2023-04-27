@@ -1,3 +1,4 @@
+"""Testing for the sync_operations module."""
 from pathlib import Path
 from unittest import mock
 
@@ -12,14 +13,15 @@ from djtools.utils.helpers import MockOpen
 @pytest.mark.parametrize("playlist_name", ["", "playlist Uploads"])
 @mock.patch(
     "djtools.sync.sync_operations.compare_tracks",
-    return_value=(
-        ["file.mp3"],
-        ["playlist/file.mp3"],
+    mock.Mock(
+        return_value=(
+            ["file.mp3"],
+            ["playlist/file.mp3"],
+        ),
     ),
 )
-def test_download_music(
-    mock_compare_tracks, playlist_name, test_config, tmpdir, caplog
-):
+def test_download_music(playlist_name, test_config, tmpdir, caplog):
+    """Test for the download_music function."""
     caplog.set_level("INFO")
     test_config.USB_PATH = tmpdir
     test_config.DOWNLOAD_SPOTIFY = playlist_name
@@ -34,11 +36,14 @@ def test_download_music(
     if playlist_name:
         cmd += ["--exclude", "*", "--include", "playlist/file.mp3"]
     cmd += ["--size-only"]
+
+    def dummy_func():
+        with open(write_path, mode="w", encoding="utf-8") as _file:
+            _file.write("")
+
     with mock.patch(
         "djtools.sync.sync_operations.run_sync",
-        side_effect=lambda *args, **kwargs: open(
-            write_path, mode="w", encoding="utf-8",
-        ).write("") 
+        side_effect=lambda *args, **kwargs: dummy_func()
     ) as mock_run_sync:
         download_music(test_config)
         mock_run_sync.assert_called_with(cmd)
@@ -58,16 +63,15 @@ def test_download_music(
     ).open,
 )
 @mock.patch("djtools.sync.sync_operations.rewrite_xml")
-@mock.patch("subprocess.Popen.wait")
-def test_download_xml(
-    mock_subprocess, mock_rewrite_xml, test_config, test_xml, caplog
-):
+@mock.patch("subprocess.Popen.wait", mock.Mock())
+def test_download_xml(mock_rewrite_xml, test_config, test_xml, caplog):
+    """Test for the download_xml function."""
     caplog.set_level("INFO")
     test_user = "test_user"
     other_user = "aweeeezy"
     test_xml = Path(test_xml)
     new_xml = test_xml.parent / f"{other_user}_rekordbox.xml"
-    new_xml.write_text(test_xml.read_text())
+    new_xml.write_text(test_xml.read_text(encoding="utf-8"), encoding="utf-8")
     test_config.USER = test_user
     test_config.IMPORT_USER = other_user
     test_config.XML_PATH = test_xml
@@ -81,7 +85,7 @@ def test_download_xml(
         # WindowsPath, the comparison needs to be made with `str(new_xml)`
         # (rather than `new_xml.as_posix()`).
         str(new_xml),
-    ] 
+    ]
     assert caplog.records[0].message == "Syncing remote rekordbox.xml..."
     assert caplog.records[1].message == " ".join(cmd)
     mock_rewrite_xml.assert_called_once()
@@ -95,6 +99,7 @@ def test_download_xml(
 def test_upload_music(
     mock_webhook, mock_run_sync, discord_url, tmpdir, test_config, caplog
 ):
+    """Test for the upload_music function."""
     caplog.set_level("INFO")
     test_config.USB_PATH = tmpdir
     test_config.DISCORD_URL = discord_url
@@ -124,8 +129,9 @@ def test_upload_music(
         )
 
 
-@mock.patch("subprocess.Popen.wait")
-def test_upload_xml(mock_subprocess, test_config, test_xml, caplog):
+@mock.patch("subprocess.Popen.wait", mock.Mock())
+def test_upload_xml(test_config, test_xml, caplog):
+    """Test for the upload_xml function."""
     caplog.set_level("INFO")
     test_user = "test_user"
     test_config.USER = test_user

@@ -1,11 +1,14 @@
+"""Testing for the config module."""
 from djtools.configs.config import BaseConfig
 
 
 def test_baseconfig_aws_profile():
+    """Test for the BaseConfig class."""
     BaseConfig()
 
 
 def test_baseconfig_aws_profile_not_set(caplog):
+    """Test for the BaseConfig class."""
     caplog.set_level("WARNING")
     cfg = {"AWS_PROFILE": ""}
     BaseConfig(**cfg)
@@ -24,7 +27,7 @@ def test_baseconfig_aws_profile_not_set(caplog):
 #     ):
 #         BaseConfig(**cfg)
 
- 
+
 # @mock.patch("djtools.configs.config.Popen", side_effect=Exception())
 # def test_baseconfig_awscli_not_installed(mock_popen):
 #     cfg = {"AWS_PROFILE": "definitely not a real AWS profile"}
@@ -39,6 +42,7 @@ def test_baseconfig_aws_profile_not_set(caplog):
 
 
 def test_baseconfig_no_xml_path(caplog):
+    """Test for the BaseConfig class."""
     caplog.set_level("WARNING")
     cfg = {
         "AWS_PROFILE": "default",
@@ -49,12 +53,13 @@ def test_baseconfig_no_xml_path(caplog):
     assert caplog.records[0].message == (
         "XML_PATH is not set. Without this set to a valid Rekordbox XML "
         "export, you cannot use the following features: "
-        "COPY_PLAYLISTS, DOWNLOAD_XML, RANDOMIZE_PLAYLISTS, "
-        "REKORDBOX_PLAYLISTS, UPLOAD_XML"
+        "BUILD_PLAYLISTS, COPY_PLAYLISTS, DOWNLOAD_XML, SHUFFLE_PLAYLISTS, "
+        "UPLOAD_XML"
     )
 
 
 def test_baseconfig_xml_path_does_not_exist(caplog):
+    """Test for the BaseConfig class."""
     caplog.set_level("WARNING")
     cfg = {
         "AWS_PROFILE": "default",
@@ -65,6 +70,6 @@ def test_baseconfig_xml_path_does_not_exist(caplog):
     assert caplog.records[0].message == (
         "XML_PATH does not exist. Without this set to a valid "
         "Rekordbox XML export, you cannot use the following features: "
-        "COPY_PLAYLISTS, DOWNLOAD_XML, RANDOMIZE_PLAYLISTS, "
-        "REKORDBOX_PLAYLISTS, UPLOAD_XML"
+        "BUILD_PLAYLISTS, COPY_PLAYLISTS, DOWNLOAD_XML, SHUFFLE_PLAYLISTS, "\
+        "UPLOAD_XML"
     )

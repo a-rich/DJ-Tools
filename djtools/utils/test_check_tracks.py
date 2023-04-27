@@ -1,3 +1,4 @@
+"""Testing for the check_tracks module."""
 from pathlib import Path
 from unittest import mock
 
@@ -29,6 +30,7 @@ def test_compare_tracks(
     tmpdir,
     caplog,
 ):
+    """Test the compare_tracks function."""
     caplog.set_level("INFO")
     spotify_playlist = "playlist"
     tmpdir = Path(tmpdir)
@@ -40,7 +42,7 @@ def test_compare_tracks(
         mock_get_spotify_tracks.return_value = {"playlist": ["track - artist"]}
     if get_local_tracks_flag:
         mock_get_local_tracks.return_value = {tmpdir: ["track - artist"]}
-    ret_beatcloud_tracks, beatcloud_matches = compare_tracks(
+    compare_tracks(
         test_config,
         beatcloud_tracks,
         download_spotify_playlist=download_spotify,

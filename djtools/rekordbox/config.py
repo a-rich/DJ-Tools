@@ -4,7 +4,7 @@ of config.yaml
 """
 import logging
 from pathlib import Path
-from typing import List 
+from typing import List
 
 from djtools.configs.config import BaseConfig
 
@@ -15,12 +15,12 @@ logger = logging.getLogger(__name__)
 class RekordboxConfig(BaseConfig):
     """Configuration object for the rekordbox package."""
 
+    BUILD_PLAYLISTS: bool = False
+    BUILD_PLAYLISTS_REMAINDER: str = "folder"
     COPY_PLAYLISTS:  List[str] = []
     COPY_PLAYLISTS_DESTINATION: Path = None
     PURE_GENRE_PLAYLISTS:  List[str] = []
-    RANDOMIZE_PLAYLISTS:  List[str] = []
-    REKORDBOX_PLAYLISTS: bool = False 
-    REKORDBOX_PLAYLISTS_REMAINDER: str = "folder"
+    SHUFFLE_PLAYLISTS:  List[str] = []
 
     def __init__(self, *args, **kwargs):
         """Constructor.
@@ -33,9 +33,9 @@ class RekordboxConfig(BaseConfig):
 
         if any(
             [
+                self.BUILD_PLAYLISTS,
                 self.COPY_PLAYLISTS,
-                self.RANDOMIZE_PLAYLISTS,
-                self.REKORDBOX_PLAYLISTS,
+                self.SHUFFLE_PLAYLISTS,
             ]
         ) and (not self.XML_PATH or not self.XML_PATH.exists()):
             raise RuntimeError(
@@ -43,7 +43,7 @@ class RekordboxConfig(BaseConfig):
                 "XML_PATH to be a valid rekordbox XML file"
             )
 
-        if self.REKORDBOX_PLAYLISTS:
+        if self.BUILD_PLAYLISTS:
             playlist_config = (
                 Path(__file__).parent.parent / "configs" /
                 "rekordbox_playlists.yaml"
@@ -51,5 +51,5 @@ class RekordboxConfig(BaseConfig):
             if not playlist_config.exists():
                 raise RuntimeError(
                     "rekordbox_playlists.yaml must be a valid YAML to use the "
-                    "REKORDBOX_PLAYLISTS feature"
+                    "BUILD_PLAYLISTS feature"
                 )

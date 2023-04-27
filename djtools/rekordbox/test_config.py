@@ -1,3 +1,4 @@
+"""Testing for the config module."""
 from unittest import mock
 
 import pytest
@@ -7,10 +8,11 @@ from djtools.utils.helpers import mock_exists
 
 
 def test_rekordboxconfig():
+    """Test for the RekordboxConfig class."""
     cfg = {
+        "BUILD_PLAYLISTS": False,
         "COPY_PLAYLISTS": [],
-        "RANDOMIZE_PLAYLISTS": [],
-        "REKORDBOX_PLAYLISTS": False,
+        "SHUFFLE_PLAYLISTS": [],
     }
     RekordboxConfig(**cfg)
 
@@ -25,18 +27,20 @@ def test_rekordboxconfig():
         path,
     )
 )
-def test_rekordboxconfig_no_rekordbox_playlists_config(test_xml):
-    cfg = {"REKORDBOX_PLAYLISTS": True, "XML_PATH": test_xml}
+def test_rekordboxconfig_no_build_playlists_config(test_xml):
+    """Test for the RekordboxConfig class."""
+    cfg = {"BUILD_PLAYLISTS": True, "XML_PATH": test_xml}
     with pytest.raises(
         RuntimeError,
         match="rekordbox_playlists.yaml must be a valid YAML to use the "
-            "REKORDBOX_PLAYLISTS feature"
+            "BUILD_PLAYLISTS feature"
     ):
         RekordboxConfig(**cfg)
 
 
 def test_rekordboxconfig_no_xml():
-    cfg = {"REKORDBOX_PLAYLISTS": True, "XML_PATH": None}
+    """Test for the RekordboxConfig class."""
+    cfg = {"BUILD_PLAYLISTS": True, "XML_PATH": None}
     with pytest.raises(
         RuntimeError,
         match="Using the rekordbox package requires the config option "

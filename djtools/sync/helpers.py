@@ -27,8 +27,9 @@ def parse_sync_command(
         specified, all directories are ignored except those specified. If
         "*_EXCLUDE_DIRS" is specified, all directories are included except
         those specified. Only one of these can be specified at once. If
-        "AWS_USE_DATE_MODIFIED", then tracks will be redownloaded / reuploaded
-        if their date modified at the source is after that of the destination.
+        "AWS_USE_DATE_MODIFIED", then tracks will be
+        re-downloaded / re-uploaded if their date modified at the source is
+        after that of the destination.
 
     Args:
         _cmd: Partial "aws s3 sync" command.
@@ -154,7 +155,7 @@ def run_sync(_cmd: str) -> str:
     except Exception as exc:
         msg = f"Failure while syncing: {exc}"
         logger.critical(msg)
-        raise Exception(msg)
+        raise Exception(msg) from exc
 
     new_music = ""
     if tracks:
@@ -195,7 +196,8 @@ def upload_log(config: BaseConfig, log_file: Path):
     dst = f"s3://dj.beatcloud.com/dj/logs/{config.USER}/{log_file.name}"
     cmd = f"aws s3 cp {log_file.as_posix()} {dst}"
     logger.info(cmd)
-    Popen(cmd, shell=True).wait()
+    with Popen(cmd, shell=True) as proc:
+        proc.wait()
 
     now = datetime.now()
     one_day = timedelta(days=1)
@@ -241,6 +243,6 @@ def webhook(
         batch = batch[:index+1]
 
         if batch:
-            requests.post(url, json={"content": batch})
+            requests.post(url, json={"content": batch}, timeout=10)
             batch = remainder[:content_size_limit]
             remainder = remainder[content_size_limit:]

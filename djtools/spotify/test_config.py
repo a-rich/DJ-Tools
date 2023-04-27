@@ -1,3 +1,4 @@
+"""Testing for the config module."""
 from unittest import mock
 
 import pytest
@@ -5,13 +6,15 @@ import pytest
 from djtools.spotify.config import SpotifyConfig
 
 
-@mock.patch("djtools.spotify.helpers.get_spotify_client")
-def test_spotifyconfig(mock_get_spotify_client):
+@mock.patch("djtools.spotify.helpers.get_spotify_client", mock.Mock())
+def test_spotifyconfig():
+    """Test for the SpotifyConfig class."""
     SpotifyConfig()
 
 
 @mock.patch("djtools.spotify.helpers.get_spotify_client")
 def test_baseconfig_invalid_spotify_credentials(mock_spotify):
+    """Test for the SpotifyConfig class."""
     mock_spotify.return_value.current_user.side_effect = Exception()
     cfg = {
         "PLAYLIST_FROM_UPLOAD": True,
@@ -25,6 +28,7 @@ def test_baseconfig_invalid_spotify_credentials(mock_spotify):
 
 
 def test_spotifyconfig_no_spotify_credentials():
+    """Test for the SpotifyConfig class."""
     cfg = {"PLAYLIST_FROM_UPLOAD": True, "SPOTIFY_CLIENT_ID": ""}
     with pytest.raises(
         RuntimeError,
@@ -38,8 +42,9 @@ def test_spotifyconfig_no_spotify_credentials():
         SpotifyConfig(**cfg)
 
 
-@mock.patch("djtools.spotify.helpers.get_spotify_client")
-def test_spotifyconfig_no_reddit_credentials(mock_get_spotify_client):
+@mock.patch("djtools.spotify.helpers.get_spotify_client", mock.Mock())
+def test_spotifyconfig_no_reddit_credentials():
+    """Test for the SpotifyConfig class."""
     cfg = {
         "AUTO_PLAYLIST_UPDATE": True,
         "REDDIT_CLIENT_ID": "",

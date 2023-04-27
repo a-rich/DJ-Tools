@@ -1,3 +1,4 @@
+"""Testing for the helpers module."""
 import inspect
 from pathlib import Path
 import re
@@ -8,8 +9,8 @@ import pytest
 from djtools.rekordbox.helpers import (
     BooleanNode,
     copy_file,
-    get_playlist_track_locations,
-    set_tag,
+    get_playlist_tracks,
+    set_track_number,
 )
 
 
@@ -26,6 +27,7 @@ from djtools.rekordbox.helpers import (
     ],
 )
 def test_booleannode(node_attributes):
+    """Test for the BooleanNode class."""
     operators, tags, expected = node_attributes
     tracks = {
         "{All DnB}": [1,2,3],
@@ -47,8 +49,9 @@ def test_booleannode(node_attributes):
 
 
 def test_booleannode_raises_runtime_eror():
+    """Test for the BooleanNode class."""
     node = BooleanNode()
-    node.operators = [set.union] 
+    node.operators = [set.union]
     node.tags = ["tag"]
     with pytest.raises(
         RuntimeError,
@@ -64,6 +67,7 @@ def test_booleannode_raises_runtime_eror():
 
 
 def test_copy_file(tmpdir, test_track):
+    """Test for the copy_file function."""
     dest_dir = Path(tmpdir) / "output"
     dest_dir.mkdir(parents=True, exist_ok=True)
     old_track_loc = Path(test_track["Location"])
@@ -75,28 +79,31 @@ def test_copy_file(tmpdir, test_track):
     new_file_path = dest_dir / old_track_loc.name
     # NOTE(a-rich): `Location` attributes in the XML's `TRACK` tags always
     # have unix-style paths so comparisons made with paths created in Windows
-    # must be interpretted `.as_posix()`.
+    # must be interpreted `.as_posix()`.
     assert new_track_loc == f"{loc_prefix}{new_file_path.as_posix()}"
     assert new_file_path.exists()
 
 
-def test_get_playlist_track_locations(xml):
+def test_get_playlist_tracks(xml):
+    """Test for the get_playlist_tracks function."""
     playlist = "Hip Hop"
     seen_tracks = set()
-    ret = get_playlist_track_locations(xml, playlist, seen_tracks)
+    ret = get_playlist_tracks(xml, playlist, seen_tracks)
     assert seen_tracks
     assert ret
     assert len(ret) == len(seen_tracks)
 
 
-def test_get_playlist_track_locations_no_playlist(xml):
+def test_get_playlist_tracks_no_playlist(xml):
+    """Test for the get_playlist_tracks function."""
     playlist = "nonexistent playlist"
     seen_tracks = set()
     with pytest.raises(LookupError, match=f"{playlist} not found"):
-        get_playlist_track_locations(xml, playlist, seen_tracks)
+        get_playlist_tracks(xml, playlist, seen_tracks)
 
 
 @pytest.mark.parametrize("index", [0, 5, 9])
-def test_set_tag(index, test_track):
-    set_tag(test_track, index)
+def test_set_track_number(index, test_track):
+    """Test for the set_track_number function."""
+    set_track_number(test_track, index)
     assert test_track.get("TrackNumber") == index

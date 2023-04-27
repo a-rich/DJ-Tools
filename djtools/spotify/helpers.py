@@ -4,7 +4,7 @@ import logging
 from operator import itemgetter
 from pathlib import Path
 import sys
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, AsyncGenerator, Dict, List, Optional, Set, Tuple, Union
 
 import asyncpraw as praw
 from fuzzywuzzy import fuzz
@@ -45,6 +45,26 @@ def build_new_playlist(
     return playlist
 
 
+async def catch(generator: AsyncGenerator, message: Optional[str] = "") -> Any:
+    """This function permits one-line try/except logic for comprehensions.
+
+    Args:
+        generator: Async generator.
+        message: Prefix message for logger warning.
+
+    Returns:
+        Return of the AsyncGenerator.
+    """
+    while True:
+        try:
+            yield await generator.__anext__()
+        except StopAsyncIteration:
+            return
+        except Exception as exc:
+            logger.warning(f"{message}: {exc}" if message else exc)
+            continue
+
+
 def filter_results(
     spotify: spotipy.Spotify,
     results: List[Dict],
@@ -65,6 +85,7 @@ def filter_results(
     Returns:
         Tuple of track object and Levenshtein distance. 
     """
+    track, dist = {}, 0.0
     tracks = filter_tracks(
         results["tracks"]["items"], threshold, title, artist
     )
@@ -79,9 +100,9 @@ def filter_results(
         )
 
     if tracks:
-        track, _ = sorted(tracks, key=itemgetter(1)).pop()
+        track, dist = max(tracks, key=itemgetter(1))
 
-        return track
+    return track, dist
 
 
 def filter_tracks(
@@ -101,19 +122,21 @@ def filter_tracks(
         List of tuple of track object and Levenshtein distance. 
     """
     results = []
+    artist = ", ".join(sorted([x.strip() for x in artist.split(",")]))
     for track in tracks:
-        artists = sorted({x["name"].lower() for x in track["artists"]})
+        artists = ", ".join(
+            sorted({x["name"].lower() for x in track["artists"]})
+        )
         title_match = max(
             fuzz.ratio(track["name"].lower(), title.lower()),
             fuzz.ratio(track["name"].lower(), artist.lower())
         )
-        if title_match >= threshold:
-            if any(
-                fuzz.ratio(a, part) >= threshold
-                for part in [title.lower(), artist.lower()]
-                for a in artists + [", ".join(artists)]
-            ):
-                results.append((track, title_match))
+        artist_match = max(
+            fuzz.ratio(artists.lower(), title.lower()),
+            fuzz.ratio(artists.lower(), artist.lower()),
+        )
+        if title_match >= threshold and artist_match >= threshold:
+            results.append((track, title_match + artist_match))
 
     return results
 
@@ -134,30 +157,33 @@ def fuzzy_match(
     Returns:
         Tuple of matching track's ID and artist - title or None if no match.
     """
-    title, artist = parse_title(title)
-    if not (title and artist):
-        return
+    ret = None
+    parts = parse_title(title)
+    if not all(parts):
+        return ret
 
-    query = (
-        f'{title.replace(" ", "+")}+'
-        f'{artist.replace(" ", "+").replace(",", "")}'
-    )
-    try:
-        results = spotify.search(
-            q=query,
-            type="track",
-            limit=50,
-        )
-    except Exception as exc:
-        logger.error(f'Error searching for "{title} - {artist}": {exc}')
-        return
+    matches = []
+    for track, artist in [parts, parts[::-1]]:
+        try:
+            results = spotify.search(
+                q=f"track:{track} artist:{artist}",
+                type="track",
+                limit=50,
+            )
+        except Exception as exc:
+            logger.error(f'Error searching for "{track} - {artist}": {exc}')
+            continue
 
-    match = filter_results(spotify, results, threshold, title, artist)
-    if match:
-        artists = ", ".join([y["name"] for y in match["artists"]])
-        return match["id"], f'{match["name"]} - {artists}'
+        artist = ", ".join(sorted([x.strip() for x in artist.split(",")]))
+        match, dist = filter_results(spotify, results, threshold, track, artist)
+        if match:
+            artists = ", ".join([y["name"] for y in match["artists"]])
+            matches.append((dist, match["id"], f'{match["name"]} - {artists}'))
 
-    return
+    if matches:
+        ret = tuple(max(matches, key=itemgetter(0))[1:])
+
+    return ret
 
 
 def get_playlist_ids() -> Dict[str, str]:
@@ -171,7 +197,7 @@ def get_playlist_ids() -> Dict[str, str]:
     if ids_path.exists():
         with open(ids_path, mode="r", encoding="utf-8") as _file:
             playlist_ids = yaml.load(_file, Loader=yaml.FullLoader) or {}
-    
+
     return playlist_ids
 
 
@@ -190,7 +216,7 @@ def get_reddit_client(config: BaseConfig) -> praw.Reddit:
         user_agent=config.REDDIT_USER_AGENT,
         timeout=30,
     )
-    
+
     return reddit
 
 
@@ -215,7 +241,7 @@ def get_spotify_client(config: BaseConfig) -> spotipy.Spotify:
             ),
         )
     )
-    
+
     return spotify
 
 
@@ -241,8 +267,6 @@ async def get_subreddit_posts(
         List of Spotify track ("id", "name") tuples and SubredditConfig as a
             dictionary.
     """
-    from djtools.utils.helpers import catch
-    
     sub = await reddit.subreddit(subreddit["name"])
     func = getattr(sub, subreddit["type"])
     kwargs = {"limit": config.AUTO_PLAYLIST_POST_LIMIT}
@@ -262,7 +286,7 @@ async def get_subreddit_posts(
         submissions.append(submission)
         praw_cache[submission.id] = True
     new_tracks = []
-    if len(submissions):
+    if submissions:
         msg = (
             f"Searching Spotify for {len(submissions)} new submission(s) from "
             f'"r/{subreddit["name"]}"'
@@ -292,7 +316,7 @@ async def get_subreddit_posts(
     return new_tracks, subreddit
 
 
-def parse_title(title: str) -> Tuple[str]:
+def parse_title(title: str) -> List[str]:
     """Attempts to split submission title into two parts
         (track name, artist(s)).
 
@@ -309,13 +333,12 @@ def parse_title(title: str) -> Tuple[str]:
         try:
             title, artist = map(str.strip, title.lower().split(" by "))
         except ValueError:
-            return None, None
+            return [None, None]
 
     title, artist = map(str.strip, [title.split("(")[0], artist.split("(")[0]])
     title, artist = map(str.strip, [title.split("[")[0], artist.split("[")[0]])
-    artist = ", ".join(sorted([x.strip() for x in artist.split(",")]))
 
-    return title, artist
+    return [title, artist]
 
 
 def populate_playlist(
@@ -323,10 +346,24 @@ def populate_playlist(
     playlist_ids: Dict[str, str],
     spotify_username: str,
     spotify: spotipy.Spotify,
-    tracks: List[Tuple[str]], 
+    tracks: List[Tuple[str]],
     playlist_limit: Optional[int] = sys.maxsize,
     verbosity: Optional[int] = 0,
 ):
+    """Inserts tracks into either a new playlist or an existing one.
+
+    Args:
+        playlist_name: Name of the playlist.
+        playlist_ids: Lookup of playlist IDs.
+        spotify_username: Spotify users's username.
+        spotify: Spotify client.
+        tracks: List of tracks.
+        playlist_limit: Maximum number of tracks allowed in a playlist.
+        verbosity: Logging verbosity level.
+
+    Returns:
+        Updated playlist IDs.
+    """
     playlist_id = playlist_ids.get(playlist_name)
     playlist = None
     if playlist_id and tracks:
@@ -353,7 +390,7 @@ def populate_playlist(
             f'"{playlist["name"]}": '
             f'{playlist["external_urls"].get("spotify")}'
         )
-    
+
     return playlist_ids
 
 
@@ -476,7 +513,7 @@ def update_existing_playlist(
         if verbosity > 0:
             for track in tracks_removed:
                 logger.info(f"\t{track}")
-    
+
     if not (tracks_added or tracks_removed):
         logger.info("No tracks added or removed")
 

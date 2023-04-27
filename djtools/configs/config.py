@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from typing_extensions import Literal
 
-from pydantic import BaseModel, Extra, NonNegativeInt 
+from pydantic import BaseModel, Extra, NonNegativeInt
 
 
 logger = logging.getLogger(__name__)
@@ -24,14 +24,7 @@ class BaseConfig(BaseModel, extra=Extra.allow):
     XML_PATH: Path = None
 
     def __init__(self, *args, **kwargs):
-        """Constructor.
-        
-        Raises:
-            RuntimeError: awscli must be installed.
-            RuntimeError: AWS_PROFILE must be valid.
-            RuntimeError: SPOTIFY_CLIENT_ID, SPOTFIY_CLIENT_SECRET, and
-                SPOTIFY_REDIRECT_URI must all be valid.
-        """
+        """Constructor."""
         super().__init__(*args, **kwargs)
         logger.info(repr(self))
         if self.__class__.__name__ != "BaseConfig":
@@ -61,18 +54,18 @@ class BaseConfig(BaseModel, extra=Extra.allow):
             #     f"The config profile ({self.AWS_PROFILE}) could not be found"
             # ):
             #     raise RuntimeError("AWS_PROFILE is not a valid profile!")
-        
+
         if not self.XML_PATH:
             logger.warning(
                 "XML_PATH is not set. Without this set to a valid Rekordbox "
                 "XML export, you cannot use the following features: "
-                "COPY_PLAYLISTS, DOWNLOAD_XML, RANDOMIZE_PLAYLISTS, "
-                "REKORDBOX_PLAYLISTS, UPLOAD_XML"
+                "BUILD_PLAYLISTS, COPY_PLAYLISTS, DOWNLOAD_XML, SHUFFLE_PLAYLISTS, "
+                "UPLOAD_XML"
             )
         elif not self.XML_PATH.exists():
             logger.warning(
                 "XML_PATH does not exist. Without this set to a valid "
                 "Rekordbox XML export, you cannot use the following features: "
-                "COPY_PLAYLISTS, DOWNLOAD_XML, RANDOMIZE_PLAYLISTS, "
-                "REKORDBOX_PLAYLISTS, UPLOAD_XML"
+                "BUILD_PLAYLISTS, COPY_PLAYLISTS, DOWNLOAD_XML, SHUFFLE_PLAYLISTS, "
+                "UPLOAD_XML"
             )
