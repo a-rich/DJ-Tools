@@ -2,6 +2,11 @@
 
 In this guide you will learn how to compare the contents of one or more Spotify playlists and / or one or more local directories with the contents of the Beatcloud in order to identify redundancies.
 
+## Prerequisites
+
+* [Setup Object Storage For Syncing Files](setup_object_storage.md)
+* [Setup API access for Spotify and Reddit](reddit_spotify_api_access.md)
+
 ## Why check the Beatcloud against Spotify playlists and / or local directories?
 When managing a shared collection of tracks across multiple users, it can become difficult to ensure that the same tracks aren't being added to the Beatcloud again and again.
 
@@ -11,7 +16,9 @@ Once tracks are acquired, it may be necessary to compare a location on my comput
 
 ## How it's done
 1. If using the `CHECK_TRACKS_SPOTIFY_PLAYLISTS` option, ensure that the playlist names configured for that option exist as `playlist name: playlist ID` mappings in `spotify_playlists.yaml`
-1. Configure `CHECK_TRACKS_SPOTIFY_PLAYLISTS` and / or `CHECK_TRACKS_LOCAL_DIRS` to contain the playlist names and absolute paths, respectively, to the tracks you want to compare with the Beatcloud
+    - you'll have to add these manually (grab the playlist ID from the URL when opening the playlist in the browser)
+    - playlist names don't necessarily have to match the actual name of the playlist...they're just used to lookup the IDs when configuring `utils` options
+1. Configure `CHECK_TRACKS_SPOTIFY_PLAYLISTS` and / or `CHECK_TRACKS_LOCAL_DIRS` to contain the playlist names and / or absolute paths, respectively, to the tracks you want to compare with the Beatcloud
 1. Run the command `djtools --check-tracks`
 
 ## Example

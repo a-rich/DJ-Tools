@@ -1,3 +1,4 @@
+"""This module contains fixtures for DJ Tools."""
 import os
 import shutil
 # import time
@@ -13,12 +14,13 @@ from djtools.utils.helpers import MockOpen
 
 
 @pytest.fixture
-@mock.patch("djtools.spotify.helpers.get_spotify_client")
+@mock.patch("djtools.spotify.helpers.get_spotify_client", mock.MagicMock())
 @mock.patch(
     "builtins.open",
     MockOpen(files=["registered_users.yaml"], write_only=True).open,
 )
-def test_config(mock_get_spotify_client):
+def test_config():
+    """Test config fixture."""
     configs = {pkg: cfg() for pkg, cfg in pkg_cfg.items() if pkg != "configs"}
     joined_config = BaseConfig(
         **{
@@ -32,6 +34,7 @@ def test_config(mock_get_spotify_client):
 
 @pytest.fixture
 def test_playlist_config(tmpdir):
+    """Test playlist config fixture."""
     src = "djtools/configs/rekordbox_playlists.yaml"
     dst = os.path.join(tmpdir, os.path.basename(src))
     shutil.copyfile(src, dst)
@@ -40,7 +43,8 @@ def test_playlist_config(tmpdir):
 
 
 @pytest.fixture(scope="session")
-def test_track(xml_tmpdir, xml):
+def test_track(xml_tmpdir, xml):  # pylint: disable=redefined-outer-name
+    """Test track fixture."""
     test_dir = os.path.join(xml_tmpdir, "input").replace(os.sep, "/")
     os.makedirs(test_dir, exist_ok=True)
     track = xml.find("TRACK")
@@ -53,7 +57,8 @@ def test_track(xml_tmpdir, xml):
 
 
 @pytest.fixture(scope="session")
-def test_xml(xml_tmpdir, xml):
+def test_xml(xml_tmpdir, xml):  # pylint: disable=redefined-outer-name
+    """Test XML fixture."""
     for track in xml.find_all("TRACK"):
         if not track.get("Location"):
             continue
@@ -72,22 +77,24 @@ def test_xml(xml_tmpdir, xml):
         encoding=xml.original_encoding,
     ) as _file:
         _file.write(xml.prettify("utf-8"))
-    
+
     return xml_path
 
 
 @pytest.fixture(scope="session")
 def xml_tmpdir(tmpdir_factory):
+    """Test tmpdir fixture."""
     return tmpdir_factory.mktemp("input")
 
 
 @pytest.fixture(scope="session")
 def xml():
+    """Test XML fixture."""
     with open(
         "test_data/rekordbox.xml", mode="r", encoding="utf-8"
     ) as _file:
-        xml = BeautifulSoup(_file.read(), "xml")
-    
+        xml = BeautifulSoup(_file.read(), "xml")  # pylint: disable=redefined-outer-name
+
     return xml
 
 

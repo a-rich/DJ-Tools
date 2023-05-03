@@ -1,6 +1,6 @@
 # Setup Object Storage For Syncing Files
 
-In this guide you will learn how to setup access to an AWS S3 API compliant object store service. Once this access has been setup, you will be able to sync files between your USB and the Beatcloud.
+In this guide you will learn how to setup access to an AWS S3 API compliant object store service. Once this access has been setup, you will be able to sync files with the Beatcloud.
 
 ## Why sync files in the first place?
 There are two primary reasons to sync your files to the cloud:

@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 from subprocess import check_output
 import tempfile
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, IO, List, Optional, Set, Tuple
 from unittest import mock
 
 from fuzzywuzzy import fuzz
@@ -42,7 +42,7 @@ class MockOpen:
         self._content = content
         self._write_only = write_only
 
-    def open(self, *args, **kwargs):
+    def open(self, *args, **kwargs) -> IO:
         """Function to replace the builtin open function.
 
         Returns:

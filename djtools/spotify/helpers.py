@@ -349,13 +349,13 @@ def populate_playlist(
     tracks: List[Tuple[str]],
     playlist_limit: Optional[int] = sys.maxsize,
     verbosity: Optional[int] = 0,
-):
+) -> Dict[str, str]:
     """Inserts tracks into either a new playlist or an existing one.
 
     Args:
         playlist_name: Name of the playlist.
         playlist_ids: Lookup of playlist IDs.
-        spotify_username: Spotify users's username.
+        spotify_username: Spotify user's username.
         spotify: Spotify client.
         tracks: List of tracks.
         playlist_limit: Maximum number of tracks allowed in a playlist.

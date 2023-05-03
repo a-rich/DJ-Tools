@@ -5,12 +5,12 @@ The music files in your Collection _should_ be in the MP3 format. There are a co
 1. MP3 files are very compact meaning you can fit more music on your USB, pay less for cloud storage, and enjoy faster sync times
 1. MP3 files have metadata fields called ID3 tags which couple information like track, title, artist, comment, genres, etc. with the file itself; other formats (AIFF or WAV) _may_ include implementations of ID3 but this library has not been tested with these
 
-It's true that MP3 is lossy, meaning it's _possible_ for MP3 files to produce lower quality audio than, say, FLAC files, but [research](https://www.researchgate.net/publication/257068576_Subjective_Evaluation_of_MP3_Compression_for_Different_Musical_Genres) (see [Nyquist–Shannon sampling theorem](https://en.wikipedia.org/wiki/Nyquist%E2%80%93Shannon_sampling_theorem)) shows that even the most trained ears of audiophiles cannot distinguish any difference between lossless audio and 256 kbps MP3 audio. There _are_ arguments that support using a sample rate higher than the theoretical minimum for human hearing (44.1 kHz); digital-to-analog conversion (as is performed in a speaker cone) is necessarily a non-linear system which can produce audible distortions from previously inaudible frequencies. Since my audio processing facilities support the highest quality bitrate for MP3 files, and the size of these files is negligibly larger, I use 320 kbps files.
+It's true that MP3 is lossy, meaning it's _possible_ for MP3 files to produce lower quality audio than, say, FLAC files, but [research](https://www.researchgate.net/publication/257068576_Subjective_Evaluation_of_MP3_Compression_for_Different_Musical_Genres) (see [Nyquist–Shannon sampling theorem](https://en.wikipedia.org/wiki/Nyquist%E2%80%93Shannon_sampling_theorem)) shows that even the most trained ears of audiophiles cannot distinguish any difference between lossless audio and 256 kbps MP3 audio. There _are_ arguments that support using a sample rate higher than the theoretical minimum for human hearing (44.1 kHz); digital-to-analog conversion (as is performed in a speaker cone) is necessarily a non-linear system which can produce audible distortions from previously inaudible frequencies.
 
 ## Filenames
 The characters you use in the filenames added to the Beatcloud _does_ matter; while Unix systems are very tolerant of filenames, Windows systems are comparably very sensitive. Windows explicitly lists these characters as forbidden: `<`, `>`, `:`, `"`, `/`, `\`, `|`, `?`, `*`, `%`, `?`
 
-Futher more, files stored in S3 may not interact properly with the protocols that may be used to sync them if they contain particular characters. I cannot speak to character related compatibility issues with other object-storage solutions.
+Futher more, files stored in S3 may not interact properly with the protocols that may be used to sync them if they contain particular characters. I cannot speak to character-related compatibility issues with other object-storage solutions.
 
 I'm advocating that the character set matched by this regex expression be the whitelist of characters for filenames:
 
@@ -32,7 +32,7 @@ In general:
 * the exception to the above is when the track title contains accent marks, any of the explicitly listed characters disallowed by Windows, or any other weird / non-standard characters
 
 ## Standard pre-processing 
-To ensure Collection consistency and successful operation of `DJ Tools`, the following properties should be maintained for all music files. **Users of my Beatcloud instance _must_ complete a minimum of (1), (2), and (3) prior to uploading**. Since track title, artist names, and melodic key are objective, and populating these tags prior to uploading saves every other user from repeating these efforts, it is greatly appreciated if users also complete (4) and (5). It's advised that users complete (6) and (7) so they can use the [build_playlists][djtools.rekordbox.playlist_builder.build_playlists] feature:
+To ensure Collection consistency and successful operation of `DJ Tools`, the following properties should be maintained for all music files. **Users of my Beatcloud instance _must_ complete a minimum of (1), (2), and (3) prior to uploading**. Since track title, artist names, and melodic key are objective, and populating these tags prior to uploading saves every other user from repeating these efforts, it is greatly appreciated if users also complete (4) and (5). It's advised that users complete (6) and (7) at some point so they can use the [Build Playlists From Tags](../how_to_guides/build_playlists.md) feature:
 
 1. MP3 file format
 1. minimum 256 kbps bitrate

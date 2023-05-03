@@ -10,7 +10,7 @@ In this guide you will learn how to setup authorization to the Spotify and Reddi
 ## How it's done
 
 1. Setup access to the Spotify API by following their [official documentation](https://developer.spotify.com/documentation/web-api)
-1. [optional unless [creating Spotify playlists from Reddit submissions](spotify_playlist_from_reddit.md)] Setup access to the Reddit API; you can take a look at [reddit.com/wiki/api](https://www.reddit.com/wiki/api) or follow PRAW's [Quick Start guide](https://praw.readthedocs.io/en/stable/getting_started/authentication.html#oauth)
+1. [optional unless [Creating Spotify Playlists From Reddit Submissions](spotify_playlist_from_reddit.md)] Setup access to the Reddit API; you can take a look at [reddit.com/wiki/api](https://www.reddit.com/wiki/api) or follow PRAW's [Quick Start guide](https://praw.readthedocs.io/en/stable/getting_started/authentication.html#oauth)
 1. Populate the following list of config options:
     - `REDDIT_CLIENT_ID`
     - `REDDIT_CLIENT_SECRET`

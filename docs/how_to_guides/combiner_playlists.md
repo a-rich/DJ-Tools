@@ -1,6 +1,12 @@
 # Combine Playlists with Boolean Algebra
 
-In this guide you will learn how to automatically build playlists based off of powerful boolean algebra expressions that apply set operations to tags, playlists, and other selections of your Collection. It may be helpful to first review the relevant section of the [Setup](../tutorials/getting_started/setup.md#importing-tracks-from-xml) tutorial and the [Get to Know Your Rekordbox Collection](../conceptual_guides/rekordbox_collection.md#how-dj-tools-uses-this-xml) conceptual guide. It may also be helpful to do a light review of [set theory](https://en.wikipedia.org/wiki/Set_theory#Basic_concepts_and_notation).
+In this guide you will learn how to automatically build playlists based off of powerful boolean algebra expressions that apply set operations to tags, playlists, and other selections of your Collection.
+
+## Prerequisites
+
+* [Rekordbox settings](../tutorials/getting_started/setup.md#importing-tracks-from-xml)
+* [Get to Know Your Rekordbox Collection](../conceptual_guides/rekordbox_collection.md)
+* [A light review of set theory](https://en.wikipedia.org/wiki/Set_theory#Basic_concepts_and_notation)
 
 ## Why combine playlists with boolean algebra?
 It may not be commonly known, but Rekordbox already has a very elementary version of this functionality called the "Track Filter":
@@ -22,9 +28,9 @@ The `Combiner` solves all these issues in the following ways:
 
 1. Portability
     * generates regular playlists which can be exported to a device for use on any Pioneer system
-    * combining this with the [copy_playlists](copy_playlists.md) feature gives you portability on non-Pioneer systems
+    * combining this with the [Copy Tracks From Playlists](../how_to_guides/copy_playlists.md) feature gives you portability on non-Pioneer systems
 1. Operands
-    * works on `My Tags` and `Genre` tags
+    * works on `My Tags` and `Genre` tags (and is extensible so other tags can be used as well)
     * includes selector syntax to choose arbitrary number of BPM / rating values as well as arbitrary ranges of values
     * includes selector syntax to choose playlists in your Collection
 1. Operators
@@ -54,8 +60,10 @@ The `Combiner` solves all these issues in the following ways:
 1. Import the `AUTO_PLAYLISTS` folder from the generated XML file
 
 ## Example
-As is done in the [build_playlists](build_playlists.md#example) how-to guide, we'll start by looking at some simple expressions configured in the pre-packaged [rekordbox_playlists.yaml](../../djtools/configs/rekordbox_playlists.yaml), but this time we'll focus only on the `Combiner` section:
+As is done in the [Build Playlists From Tags](build_playlists.md#example) how-to guide, we'll start by looking at some simple expressions configured in the pre-packaged [rekordbox_playlists.yaml](https://github.com/a-rich/DJ-Tools/blob/main/djtools/configs/rekordbox_playlists.yaml), but this time we'll focus only on the `Combiner` section:
 ![alt text](../../images/Rekordbox_playlists_yaml.png "Rekordbox playlists YAML")
+
+Note that the examples above are trivial ones designed to get 100% code coverage in unit tests.
 
 This configuration contains a single named folder with a flat list of playlists. Each playlists' name is a boolean algebra expression that uses the syntax noted above to describe how different tags and selectors are to be unioned, intersected, and differenced to produce the final playlist of tracks. Valid expressions must contain at least two operands and must have one less operator than there are operands. 
 

@@ -37,21 +37,22 @@ Additionally, if you're using any of the following features, you are required to
 * [Create Spotify playlists from Reddit posts](../../how_to_guides/spotify_playlist_from_reddit.md)
 
 ## Spotify user account
-If you are using any of the following features, your are required to have a Spotify account to add playlists to:
+If you are using any of the following features, you are required to have a Spotify account to add playlists to:
 
 * [Create Spotify playlists from Reddit posts](../../how_to_guides/spotify_playlist_from_reddit.md)
 * [Create Spotify playlists from other users' uploads](../../how_to_guides/spotify_playlist_from_upload.md)
 
 ## Discord webhook
-If you are using any of the following features, you are required to have a Discord server with a registered webhook integration (see [this guide](../../how_to_guides/sync_beatcloud.md) for more details):
+If you are using any of the following features, you are required to have a Discord server with a registered webhook integration (see [this guide](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks) for more details):
 
 * [Create Spotify playlists from other users' uploads](../../how_to_guides/spotify_playlist_from_upload.md)
-* [not strictly required, but is the corollary feature to the above] [Sync files with the Beatcloud](../../how_to_guides/sync_beatcloud.md)
+* [not strictly required, but uploading music is the corollary feature to the above] [Sync files with the Beatcloud](../../how_to_guides/sync_beatcloud.md#uploading-music)
 
 ## Rekordbox settings
 
 ### Writing "My Tag" data to the Comments field
-In order for "My Tag" data to be accessible to the [build_playlists][djtools.rekordbox.playlist_builder.build_playlists] feature, that data must be written to the Comments field. There's no need to clear pre-existing data from the Comments; just ensure that this option is checked in the settings:
+In order for "My Tag" data to be accessible to the [Build Playlists From Tags](../../how_to_guides/build_playlists.md) and [Combine Playlists With Boolean Algebra](../../how_to_guides/combiner_playlists.md) features, that data must be written to the Comments field. There's no need to clear pre-existing data from the Comments; just ensure that this option is checked in the settings:
+
 ![alt text](../../images/Pioneer_MyTag_Comments.png "Writing My Tag data to Comments")
 
 ### Importing tracks from XML

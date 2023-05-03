@@ -1,9 +1,18 @@
 # Copy Tracks From Playlists
 
-In this guide you will learn how to copy tracks from your playlists to a new location. It may be helpful to first review the relevant section of the [Setup](../tutorials/getting_started/setup.md#importing-tracks-from-xml) tutorial and the [Get to Know Your Rekordbox Collection](../conceptual_guides/rekordbox_collection.md#how-dj-tools-uses-this-xml) conceptual guide.
+In this guide you will learn how to copy tracks from your playlists to a new location.
+
+## Prerequisites
+
+* [Rekordbox settings](../tutorials/getting_started/setup.md#importing-tracks-from-xml)
+* [Get to Know Your Rekordbox Collection](../conceptual_guides/rekordbox_collection.md)
 
 ## Why copy playlists?
-Have you ever compiled a playlist for an event and wanted to make a backup USB that has specifically this playlist on it? Have you ever wanted to share a playlist with a wedding DJ you've hired or with a friend you're planning a back-to-back with? In this types of situations, you'd normally have to trace the location of the audio files for each track in your playlist(s) and copy them to the new USB. Furthermore, if you wanted the new Collection on the target USB to have the same hot cues, tags, etc., you'd have to process those tracks again on the new USB to carry that information over.
+Have you ever compiled a playlist for an event and wanted to make a backup USB that has specifically this playlist on it? Have you ever wanted to share a playlist with a wedding DJ you've hired or with a friend you're planning a back-to-back with?
+
+For users who keep their music collection separate from their USB devices, achieving this is as simple as exporting to the new device; but what if your USB *is* your master database as well?
+
+In these types of situations, you'd normally have to trace the location of the audio files for each track in your playlist(s) and copy them to the new USB. Furthermore, if you wanted the new Collection on the target USB to have the same hot cues, tags, etc., you'd have to process those tracks again on the new USB to carry that information over.
 
 Wouldn't it be nice if you make your playlists, run a command, and get a new USB with all those audio files automatically copied to it AND a generated XML that you can import from to retrieve all the track data present in your existing Collection? That's exactly what the [copy_playlists][djtools.rekordbox.copy_playlists.copy_playlists] feature does!
 

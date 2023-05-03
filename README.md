@@ -1,16 +1,19 @@
 # DJ Tools
 [![image](https://img.shields.io/pypi/v/dj-beatcloud.svg)](https://pypi.org/project/dj-beatcloud/)
 
-Please see the [docs](docs/index.md) for tutorials, how-to guides, conceptual guides, and references!
+Please see the [docs](https://a-rich.github.io/DJ-Tools/) for tutorials, how-to guides, conceptual guides, and references!
 
 # Release Plan
-* 2.4.1
-    - [ ] Make Spotify API calls asynchronous
-    - [ ] Improved Spotify API request stability 
-    - [ ] Improved Reddit post parsing and Spotify searching
-    - [ ] Optimize pytest-cov workflow and add Windows runner
-* 2.5.0
-    - [ ] Create serializers package for converting database files from other DJ software (e.g. Serato, Traktor, Denon, etc.) so that operations in the rekordbox package can be used on them
+* 2.5.1
+    - [ ] [Stability issues with requests to the search endpoint of the Spotify API](https://github.com/a-rich/DJ-Tools/issues/58)
+    - [ ] [Make Spotify API calls asynchronous](https://github.com/a-rich/DJ-Tools/issues/38)
+* 2.6.0
+    - [ ] [Create serializers package for converting database files from other DJ software (e.g. Serato, Traktor, Denon, etc.) so that operations in the rekordbox package can be used on them](https://github.com/a-rich/DJ-Tools/issues/68)
+    - [ ] [Improve Reddit submission title parsing in order to improve precision and recall of Spotify API search results](https://github.com/a-rich/DJ-Tools/issues/59)
+    - [ ] [Print ASCII histogram of tag statistics for Combiner playlists](https://github.com/a-rich/DJ-Tools/issues/87)
+    - [ ] [Parameterize music folder root](https://github.com/a-rich/DJ-Tools/issues/94)
+    - [ ] [Deprecate registered_users.yaml](https://github.com/a-rich/DJ-Tools/issues/99)
+    - [ ] [Parameterize whether Beatcloud tracks should be read as <title> - <artist> or vice versa](https://github.com/a-rich/DJ-Tools/issues/95)
 
 # Contribution
 Please see the [CONTRIBUTING](CONTRIBUTING.md)
