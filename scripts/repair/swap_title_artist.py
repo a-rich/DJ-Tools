@@ -3,7 +3,7 @@ format. The expected format for track file name is
 'TRACK TITLE - ARTIST NAME.mp3'; this format is required in order for this
 library to properly identify potential overlap between tracks in a Spotify
 playlist(s) and tracks in the beatcloud. This format is also expected for
-preprocessing tracks when populating the track title and artist ID3 tags. This
+pre-processing tracks when populating the track title and artist ID3 tags. This
 script is intended to be run as a three stage process...
 
 (1) Running this script with just '--fuzz_ratio' will identify "bad" tracks
@@ -14,8 +14,8 @@ the identified tracks are indeed improperly formatted. If there are properly
 formatted tracks that are incorrectly identified, you may add them to the
 IGNORE_TRACKS set specified at the bottom of this script. If properly formatted
 tracks are improperly identified because the ID3 tag for track title is wrong,
-then those files should be retagged with Picard or MP3Tag or whatever tagging
-software you use. They should then be reuploaded to the beatcloud with
+then those files should be re-tagged with Picard or MP3Tag or whatever tagging
+software you use. They should then be re-uploaded to the beatcloud with
 'upload_music' and '--aws_use_date_modified'.
 
 (2) Running this script with '--fuzz_ratio' and '--replace' will first rename
@@ -54,16 +54,16 @@ import logging
 import os
 from urllib.parse import quote, unquote
 
+from fuzzywuzzy import fuzz
 from bs4 import BeautifulSoup
 import eyed3
 eyed3.log.setLevel("ERROR")
-from fuzzywuzzy import fuzz
 
 
 logger = logging.getLogger(__name__)
 
 try:
-    import Levenshtein
+    import Levenshtein  # pylint: disable=unused-import
 except ImportError:
     logger.warning('NOTE: Track similarity can be made faster by running ' \
                    '`pip install "dj-beatcloud[levenshtein]"`')
@@ -141,7 +141,8 @@ def fix_track_location(xml_path, playlist):
                         (missing because they were renamed)
         playlist (str): name of the playlist containing missing files
     """
-    soup = BeautifulSoup(open(xml_path, 'r', encoding='utf-8').read(), 'xml')
+    with open(xml_path, 'r', encoding='utf-8') as _file:
+        soup = BeautifulSoup(_file.read(), 'xml')
     lookup = {x['TrackID']: x
               for x in soup.find_all('TRACK') if x.get('Location')}
 

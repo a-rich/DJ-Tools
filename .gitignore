@@ -12,6 +12,7 @@
 
 # ignore directories
 **/__pycache__
+site/
 
 # allow test_data
-!src/test_data/*
+!test_data/*

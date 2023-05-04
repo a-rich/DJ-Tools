@@ -1,6 +1,6 @@
 """Setup 'djtools' package.
 """
-from setuptools import find_packages, setup
+from setuptools import setup
 
 
 with open('README.md', encoding='utf-8') as _file:
@@ -10,14 +10,10 @@ REQUIREMENTS = [
     "asyncpraw==7.6.1",
     "awscli==1.27.45",
     "beautifulsoup4==4.11.1",
-    "eyed3==0.9.7",
     "fuzzywuzzy==0.18.0",
     "lxml==4.9.2",
     "pydantic==1.9.1",
     "pyperclip==1.8.2",
-    "pytest==7.2.0",
-    "pytest-asyncio==0.20.3",
-    "pytest-cov==4.0.0",
     "PyYAML==5.4.1",
     "requests==2.28.0",
     "setuptools==58.1.0",
@@ -52,7 +48,7 @@ EXTRAS = {
 
 setup(
     name='dj_beatcloud',
-    version='2.4.0',
+    version='2.5.0',
     description=(
         'DJ Tools is a library for managing a collection of music and '
         'Rekordbox XML files.'
@@ -63,8 +59,14 @@ setup(
     author='Alex Richards',
     author_email='alex.richards006@gmail.com',
     license='GNU GPLv3',
-    package_dir={"": "src"},
-    packages=find_packages(where="src"),
+    packages=[
+        "djtools",
+        "djtools.configs",
+        "djtools.rekordbox",
+        "djtools.spotify",
+        "djtools.sync",
+        "djtools.utils",
+    ],
     classifiers=CLASSIFIERS,
     install_requires=REQUIREMENTS,
     extras_require=EXTRAS,
@@ -72,6 +74,6 @@ setup(
     include_package_data=True,
     keywords='MP3 Rekordbox XML spotify reddit aws s3',
     entry_points={
-        'console_scripts': ['djtools=djtools:dj_tools.main']
-    }
+        'console_scripts': ['djtools=djtools:main']
+    },
 )

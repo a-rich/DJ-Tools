@@ -2,7 +2,7 @@
 core functionality (checking if there is overlap between tracks in a Spotify
 playlist(s) and tracks in the DJ library) is preserved in
 src.spotify.playlist_checker.py. This script remains in case it's ever desired
-for this script's auxillary functionality to be incorporated into this library.
+for this script's auxiliary functionality to be incorporated into this library.
 """
 from argparse import ArgumentParser
 from datetime import datetime, timezone
@@ -12,7 +12,6 @@ import json
 import os
 from pathlib import Path
 import sys
-from typing import Union
 
 from bs4 import BeautifulSoup
 from fuzzywuzzy import fuzz
@@ -23,7 +22,7 @@ from tqdm import tqdm
 
 
 
-def get_playlist_label(_spotify, q): 
+def get_playlist_label(_spotify, q):  # pylint: disable=invalid-name
     """Get artists from URL, file, or CLI arg and fetches all albums by artists
        from Spotify. If album has a label ~= --label, then those tracks are
        added to a new playlist with the same name as --label.
@@ -34,7 +33,7 @@ def get_playlist_label(_spotify, q):
                 or space-delimited list of artists
     """
 
-    def get_artist_tracks(q): 
+    def get_artist_tracks(q):  # pylint: disable=invalid-name
         """Search Spotify for artist name, filter for names matching closely
            enough, and get their tracks which belong to --label.
         Args:
@@ -70,12 +69,12 @@ def get_playlist_label(_spotify, q):
                         album_matches (list): list of track (id, name)
                     """
                     album_matches = []
-                    for x in _albums:
-                        x = _spotify.album(x['id'])
+                    for x in _albums:  # pylint: disable=invalid-name
+                        x = _spotify.album(x['id'])  # pylint: disable=invalid-name
                         fuzz_ratio = fuzz.ratio(x['label'].lower(), args.label)
                         if fuzz_ratio > args.fuzz_ratio:
                             album_matches.append([x['id'], x['name']])
-                    
+
                     return album_matches
 
                 albums_ = _spotify.artist_albums(_artist)
@@ -87,7 +86,7 @@ def get_playlist_label(_spotify, q):
                 return albums
 
             artist_album_tracks = {}
-            for x in _artists:
+            for x in _artists:  # pylint: disable=invalid-name
                 fuzz_ratio = fuzz.ratio(x['name'].lower(), q.lower())
                 if fuzz_ratio > args.get_artists_fuzz_ratio:
                     albums = get_artist_albums(x['id'])
@@ -110,20 +109,20 @@ def get_playlist_label(_spotify, q):
 
             return artist_album_tracks
 
-        artists_ = spotify.search(q='artist:' + q, type='artist') 
+        artists_ = spotify.search(q='artist:' + q, type='artist')
         data = filter_artists(artists_['artists']['items'])
-        while artists_['artists']['next']: 
+        while artists_['artists']['next']:
             try:
-                artists_ = spotify.next(artists_['artists']) 
+                artists_ = spotify.next(artists_['artists'])
                 data.update(filter_artists(artists_['artists']['items']))
-            except Exception as e:
-                print(f"Exception while getting artists...")
+            except Exception:
+                print("Exception while getting artists...")
                 break
-        
-        return data 
-        
+
+        return data
+
     # Get list of artists belonging to --label
-    soup = BeautifulSoup(requests.get(q).text, 'html.parser')
+    soup = BeautifulSoup(requests.get(q, timeout=30).text, 'html.parser')
     if 'beatport' in q:
         artist_tab = soup.find_all("div",
                 {"class":"filter-drop filter-artists-drop"})[0]
@@ -134,9 +133,10 @@ def get_playlist_label(_spotify, q):
                 {"class":"artists-grid-name"})]
     else:
         if os.path.exists(q):
-            artists = [x.strip() for x in open(q, 'r').readlines()]
+            with open(q, 'r', encoding="utf-8") as _file:
+                artists = [x.strip() for x in _file.readlines()]
         elif len(q.split(' ')):
-            artists = a.split(' ')
+            artists = q.split(' ')
     artists = set(artists)
     data = {}
     seen = set()
@@ -144,9 +144,9 @@ def get_playlist_label(_spotify, q):
 
     # Get the tracks of artists' albums belonging to --label
     print(f"Getting tracks for record label {args.label.title()}...")
-    for a in tqdm(artists, desc="Getting artists' tracks"):
+    for a in tqdm(artists, desc="Getting artists' tracks"):  # pylint: disable=invalid-name
         data.update(get_artist_tracks(a))
-    
+
     if data:
         playlist = spotify.user_playlist_create(args.spotify_user_name,
                                                 name=args.label.title())
@@ -161,7 +161,7 @@ def get_playlist_label(_spotify, q):
             continue
         seen.add(album['name'])
         _new_tracks = []
-        for x in album['tracks']:
+        for x in album['tracks']:  # pylint: disable=invalid-name
             if x['name'] not in tracks:
                 tracks.add(x['name'])
                 _new_tracks.append(x['id'])
@@ -195,9 +195,11 @@ def get_tracks_spotify(_spotify):
         """
         try:
             playlist = _spotify.playlist(playlist_id)
-        except Exception:
-            raise Exception(f"failed to get playlist with ID {playlist_id}")
-        
+        except Exception as exc:
+            raise Exception(
+                f"failed to get playlist with ID {playlist_id}"
+            ) from exc
+
         tracks = playlist['tracks']
 
 
@@ -221,17 +223,16 @@ def get_tracks_spotify(_spotify):
 
         return set(result)
 
-    playlists = {k.lower(): v for k,v in json.load(open(args.playlist_data,
-                                                        'r')).items()}
-    compare = set([x.lower() for x in args.playlists]) \
-                  if args.playlists else set()
-    _tracks_by_playlist = {k: get_tracks(v) 
+    with open(args.playlist_data, 'r', encoding="utf-8") as _file:
+        playlists = {k.lower(): v for k,v in json.load(_file).items()}
+    compare = {x.lower() for x in args.playlists} if args.playlists else set()
+    _tracks_by_playlist = {k: get_tracks(v)
             for k,v in tqdm({k:v for k,v in playlists.items()
                             if not compare or k in compare}.items(),
                     desc='Query Spotify Tracks')}
 
     if args.verbose:
-        for k,v in _tracks_by_playlist.items():
+        for k,v in _tracks_by_playlist.items():  # pylint: disable=invalid-name
             print(f"\t{k.title()}: {len(v)}")
         print()
 
@@ -244,8 +245,8 @@ def compare_playlists(_tracks_by_playlist):
         _tracks_by_playlist (dict): playlist name mapped to set of 
                                     (track name, date added)
     """
-    print(f"Comparing Spotify playlists for overlapping tracks...")
-    for a,b in combinations(_tracks_by_playlist, 2):
+    print("Comparing Spotify playlists for overlapping tracks...")
+    for a,b in combinations(_tracks_by_playlist, 2):  # pylint: disable=invalid-name
         intersection = set(x[0] for x in _tracks_by_playlist[a]).intersection(
                 set(x[0] for x in _tracks_by_playlist[b]))
         if intersection:
@@ -253,7 +254,7 @@ def compare_playlists(_tracks_by_playlist):
             right = f"{b.title()} ({len(_tracks_by_playlist[b])})"
             print(f"{left : >35}  ∩  {right : <35} {len(intersection)}")
             offset = 35 - len(left)
-            for x in intersection:
+            for x in intersection:  # pylint: disable=invalid-name
                 print(f"{' ' * offset}\t{x}")
     print()
 
@@ -267,9 +268,9 @@ def get_tracks_local():
     glob_path = Path('/'.join([args.path, 'DJ Music']))
     _most_recent = [0, None]
 
-    print(f"Globbing local tracks...")
-    for p in glob_path.rglob('**/[!.]*.*'):
-        x = os.path.splitext(str(p))[0]
+    print("Globbing local tracks...")
+    for p in glob_path.rglob('**/[!.]*.*'):  # pylint: disable=invalid-name,redefined-outer-name
+        x = os.path.splitext(str(p))[0]  # pylint: disable=invalid-name
         _ = [p.stat().st_mtime, x]
         _most_recent = max([_most_recent, _], key=lambda y: y[0])
         folder = os.path.basename(os.path.split(x)[0]).lower()
@@ -280,7 +281,7 @@ def get_tracks_local():
     _most_recent[0] = datetime.fromtimestamp(_most_recent[0])
 
     if args.verbose:
-        for k,v in folders.items():
+        for k,v in folders.items():  # pylint: disable=invalid-name
             print(f"\t{k.title()}: {v}")
         print()
 
@@ -288,11 +289,11 @@ def get_tracks_local():
     print("Newest track is " \
           f"[{os.path.basename(os.path.split(newest_track)[0])}] " \
           f"{os.path.basename(newest_track)}: {newest_date}")
-        
-    _tracks_by_folder = {g: set([os.path.basename(x) for x in group])
+
+    _tracks_by_folder = {g: {os.path.basename(x) for x in group}
             for g, group in groupby(tracks,
                     key=lambda x: os.path.basename(os.path.split(x)[0]))}
-    
+
     return _tracks_by_folder, _most_recent
 
 
@@ -308,8 +309,8 @@ def find_new_tracks(_tracks_by_playlist, _most_recent):
     """
     print("Finding newer tracks in each playlist...")
     _new_tracks = []
-    for k,v in _tracks_by_playlist.items():
-        v = list(filter(lambda x: x[1] > _most_recent[0], sorted(v,
+    for k,v in _tracks_by_playlist.items():  # pylint: disable=invalid-name
+        v = list(filter(lambda x: x[1] > _most_recent[0], sorted(v,  # pylint: disable=invalid-name
                 key=lambda x: x[1], reverse=True)))
         if v:
             print(k.title())
@@ -328,29 +329,29 @@ def compare_local_tracks(_tracks_by_playlist, _tracks_by_folder, _new_tracks):
                                     (track name, date added)
         _tracks_by_folder (dict): folder name mapped to set of track names
     """
-    print(f"\nComparing Spotify playlists with local track collection...")
+    print("\nComparing Spotify playlists with local track collection...")
     _all_files = [(x, ' - '.join(x.split(' - ')[-1::-1])) for x in
             set(reduce(lambda a,b: a.union(b), _tracks_by_folder.values()))
             if len(x.split(' - ')) > 1]
 
-    if type(_new_tracks) is list:
+    if isinstance(_new_tracks, list):
         _all_tracks = set(_new_tracks)
     else:
         _all_tracks = set()
-        for playlist, tracks in _tracks_by_playlist.items():
+        for _, tracks in _tracks_by_playlist.items():
             _all_tracks.update(list(zip(*tracks))[0])
 
-    matches, non_matches = dict(), dict()
-    for x,y in tqdm(list(product(_all_tracks, _all_files))):
-        for z in y:
+    matches, non_matches = {}, {}
+    for x,y in tqdm(list(product(_all_tracks, _all_files))):  # pylint: disable=invalid-name
+        for z in y:  # pylint: disable=invalid-name
             fuzz_ratio = fuzz.ratio(x.lower(), z.lower())
             if fuzz_ratio >= args.fuzz_ratio:
                 matches[x] = max([
-                        matches.get(x, (-1, None)), 
+                        matches.get(x, (-1, None)),
                         (fuzz_ratio, z)], key=lambda x: x[0])
             else:
                 non_matches[x] = max([
-                        non_matches.get(x, (-1, None)), 
+                        non_matches.get(x, (-1, None)),
                         (fuzz_ratio, z)], key=lambda x: x[0])
 
         if x in matches and x in non_matches:
@@ -358,13 +359,13 @@ def compare_local_tracks(_tracks_by_playlist, _tracks_by_folder, _new_tracks):
 
     if args.compare_matches or _new_tracks:
         print(f"Matches: {len(list(matches))}")
-        for x,r in matches.items():
+        for x,r in matches.items():  # pylint: disable=invalid-name
             print(f"\t{r[0]}% similarity\n\tSpotify track: " \
                   f"[{x}]\n\tLocal track:   [{r[1]}]")
         print(f"Non-matches: {len(list(non_matches))}")
     else:
         print(f"Non-matches: {len(list(non_matches))}")
-        for x,r in non_matches.items():
+        for x,r in non_matches.items():  # pylint: disable=invalid-name
             print(f"\t{r[0]}% similarity\n\tSpotify track: " \
                   f"[{x}]\n\tLocal track:   [{r[1]}]")
         print(f"Matches: {len(list(matches))}")
@@ -412,7 +413,7 @@ if __name__ == '__main__':
             help='verbosity level')
     args = p.parse_args()
     if args.include_dirs:
-        args.include_dirs = set([x.lower() for x in args.include_dirs])
+        args.include_dirs = {x.lower() for x in args.include_dirs}
 
     spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(
             scope='playlist-modify-public'))
@@ -435,15 +436,15 @@ if __name__ == '__main__':
                      "compare playlists tracks with local tracks")
         tracks_by_folder, most_recent = get_tracks_local()
 
-    new_tracks = None
+    new_tracks = None  # pylint: disable=invalid-name
     if args.find_new:
-        new_tracks = find_new_tracks(tracks_by_playlist, most_recent)
+        new_tracks = find_new_tracks(tracks_by_playlist, most_recent)  # pylint: disable=invalid-name
 
     if args.compare_local:
         try:
-            import Levenshtein
-        except:
-            print(f"[WARNING]: you can get a huge speed boost fuzzy " \
+            import Levenshtein  # pylint: disable=unused-import
+        except Exception:
+            print("[WARNING]: you can get a huge speed boost fuzzy " \
                   "matching local files if you run `pip install " \
                   "python-Levenshtein`")
 

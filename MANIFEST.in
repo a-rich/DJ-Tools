@@ -1,2 +1,2 @@
-include src/djtools/configs/*
-include src/djtools/logs/empty.txt
+include djtools/configs/*
+include djtools/logs/empty.txt
