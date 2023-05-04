@@ -1,3 +1,4 @@
+"""Testing for the helpers module."""
 from argparse import Namespace
 from pathlib import Path
 import re
@@ -20,27 +21,30 @@ from djtools.utils.helpers import MockOpen
 
 @mock.patch("argparse.ArgumentParser.parse_args")
 def test_arg_parse_links_configs(mock_parse_args, tmpdir):
+    """Test for the arg_parse function."""
     config_path = Path(tmpdir) / "test_dir"
     mock_parse_args.return_value = Namespace(
         link_configs=config_path, log_level="INFO"
     )
-    args = arg_parse()
+    arg_parse()
     assert config_path.is_symlink()
 
 
 @mock.patch("argparse.ArgumentParser.parse_args")
 def test_arg_parse_links_configs_dir_does_exist(mock_parse_args, tmpdir):
+    """Test for the arg_parse function."""
     link_path = Path(tmpdir) / "new_dir" / "link_dir"
     mock_parse_args.return_value = Namespace(
         link_configs=link_path, log_level="INFO"
     )
-    args = arg_parse()
+    arg_parse()
     assert link_path.exists()
     assert link_path.is_symlink()
 
 
 @mock.patch("argparse.ArgumentParser.parse_args")
 def test_arg_parse_links_configs_dir_does_not_exist(mock_parse_args, tmpdir):
+    """Test for the arg_parse function."""
     link_path = str(tmpdir)
     mock_parse_args.return_value = Namespace(
         link_configs=link_path, log_level="INFO"
@@ -53,10 +57,10 @@ def test_arg_parse_links_configs_dir_does_not_exist(mock_parse_args, tmpdir):
             f'{link_path} must be a directory that does not already exist'
         ),
     ):
-        args = arg_parse()
+        arg_parse()
 
 
-@mock.patch("djtools.spotify.helpers.get_spotify_client")
+@mock.patch("djtools.spotify.helpers.get_spotify_client", mock.Mock())
 @mock.patch(
     "builtins.open",
     MockOpen(
@@ -65,7 +69,8 @@ def test_arg_parse_links_configs_dir_does_not_exist(mock_parse_args, tmpdir):
         user_b=("other_user", "/other/USB/"),
     ).open,
 )
-def test_build_config(mock_get_spotify_client, tmpdir):
+def test_build_config():
+    """Test for the build_config function."""
     with mock.patch(
         "argparse.ArgumentParser.parse_args",
     ) as mock_parse_args:
@@ -81,13 +86,14 @@ def test_build_config(mock_get_spotify_client, tmpdir):
     content="yaml_valid: {false",
 ).open)
 def test_build_config_invalid_config_yaml(caplog):
+    """Test for the build_config function."""
     caplog.set_level("CRITICAL")
-    with pytest.raises(RuntimeError) as exc:
-        config = build_config()
+    with pytest.raises(RuntimeError):
+        build_config()
     assert 'Error reading "config.yaml"' in caplog.records[0].message
 
 
-@mock.patch("djtools.spotify.helpers.get_spotify_client")
+@mock.patch("djtools.spotify.helpers.get_spotify_client", mock.Mock())
 @mock.patch(
     "builtins.open",
     MockOpen(
@@ -97,7 +103,8 @@ def test_build_config_invalid_config_yaml(caplog):
     ).open
 )
 @mock.patch("argparse.ArgumentParser.parse_args")
-def test_build_config_no_config_yaml(mock_parse_args, mock_spotify_client):
+def test_build_config_no_config_yaml(mock_parse_args):
+    """Test for the build_config function."""
     mock_parse_args.return_value = Namespace(
         link_configs="", log_level="INFO"
     )
@@ -105,12 +112,13 @@ def test_build_config_no_config_yaml(mock_parse_args, mock_spotify_client):
     config_file = config_dir / "config.yaml"
     with mock.patch.object(Path, "exists", return_value=False):
         assert not config_file.exists()
-        config = build_config()
+        build_config()
     assert config_file.exists()
 
 
 @pytest.mark.parametrize("paths", ["path", ["path1", "path2"]])
 def test_convert_to_paths(paths):
+    """Test for the convert_to_paths function."""
     paths = convert_to_paths(paths)
     if isinstance(paths, List):
         for path in paths:
@@ -119,13 +127,14 @@ def test_convert_to_paths(paths):
         assert isinstance(paths, Path)
 
 
-@pytest.mark.parametrize("config", [cfg for cfg in pkg_cfg.values()])
-@mock.patch("djtools.spotify.helpers.get_spotify_client")
+@pytest.mark.parametrize("config", pkg_cfg.values())
+@mock.patch("djtools.spotify.helpers.get_spotify_client", mock.Mock())
 @mock.patch(
     "builtins.open",
     MockOpen(files=["registered_users.yaml"], write_only=True).open
 )
-def test_filter_dict(mock_get_spotify_client, config):
+def test_filter_dict(config):
+    """Test for the filter_dict function."""
     super_config = BaseConfig()
     sub_config = config(**dict(super_config))
     result = filter_dict(sub_config)
@@ -139,6 +148,7 @@ def test_filter_dict(mock_get_spotify_client, config):
 
 
 def test_parse_yaml():
+    """Test for the parse_yaml function."""
     yaml_string = "name:\n - stuff"
     yaml_obj = parse_yaml(yaml_string)
     assert isinstance(yaml_obj, dict)
@@ -146,6 +156,7 @@ def test_parse_yaml():
 
 
 def test_parse_yaml_invalid():
+    """Test for the parse_yaml function."""
     yaml_string = "name:\n\t - stuff"
     with pytest.raises(ValueError):
-        yaml_obj = parse_yaml(yaml_string)
+        parse_yaml(yaml_string)

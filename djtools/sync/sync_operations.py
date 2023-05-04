@@ -1,14 +1,14 @@
 """This module is responsible for syncing tracks between "USB_PATH" and the
-beatcloud (upload and download). It also handles uploading the Rekordbox XML
+Beatcloud (upload and download). It also handles uploading the Rekordbox XML
 located at "XML_PATH" and downloading the Rekordbox XML uploaded to the
-beatcloud by "IMPORT_USER" before modifying it to point to track locations at
+Beatcloud by "IMPORT_USER" before modifying it to point to track locations at
 "USB_PATH".
 """
 import logging
 from os.path import getmtime
 from pathlib import Path
 from subprocess import Popen
-from typing import List
+from typing import List, Optional
 
 from djtools.configs.config import BaseConfig
 from djtools.sync.helpers import (
@@ -20,8 +20,8 @@ from djtools.utils.check_tracks import compare_tracks
 logger = logging.getLogger(__name__)
 
 
-def download_music(config: BaseConfig, beatcloud_tracks: List[str] = []):
-    """This function syncs tracks from the beatcloud to "USB_PATH".
+def download_music(config: BaseConfig, beatcloud_tracks: Optional[List[str]] = None):
+    """This function syncs tracks from the Beatcloud to "USB_PATH".
 
     If "DOWNLOAD_SPOTIFY" is set to a playlist name that exists in
     "spotify_playlists.yaml", then "DOWNLOAD_INCLUDE_DIRS" will be populated
@@ -62,12 +62,12 @@ def download_music(config: BaseConfig, beatcloud_tracks: List[str] = []):
         logger.info(f"Found {len(difference)} new files")
         for diff in difference:
             logger.info(f"\t{diff}")
-    
+
     return beatcloud_tracks
 
 
 def download_xml(config: BaseConfig):
-    """This function downloads the beatcloud XML of "IMPORT_USER" and modifies
+    """This function downloads the Beatcloud XML of "IMPORT_USER" and modifies
         the "Location" field of all the tracks so that it points to USER's
         "USB_PATH".
 
@@ -83,15 +83,16 @@ def download_xml(config: BaseConfig):
         f'{config.IMPORT_USER}/rekordbox.xml {_file}'
     )
     logger.info(cmd)
-    Popen(cmd, shell=True).wait()
+    with Popen(cmd, shell=True) as proc:
+        proc.wait()
     if config.USER != config.IMPORT_USER:
         rewrite_xml(config)
 
 
 def upload_music(config: BaseConfig):
-    """This function syncs tracks from "USB_PATH" to the beatcloud.
-        "AWS_USE_DATE_MODIFIED" can be used in order to reupload tracks that
-        already exist in the beatcloud but have been modified since the last
+    """This function syncs tracks from "USB_PATH" to the Beatcloud.
+        "AWS_USE_DATE_MODIFIED" can be used in order to re-upload tracks that
+        already exist in the Beatcloud but have been modified since the last
         time they were uploaded (i.e. ID3 tags have been altered).
 
     Args:
@@ -122,7 +123,7 @@ def upload_music(config: BaseConfig):
 
 
 def upload_xml(config: BaseConfig):
-    """This function uploads "XML_PATH" to beatcloud.
+    """This function uploads "XML_PATH" to Beatcloud.
 
     Args:
         config: Configuration object.
@@ -131,4 +132,5 @@ def upload_xml(config: BaseConfig):
     dst = f"s3://dj.beatcloud.com/dj/xml/{config.USER}/"
     cmd = f"aws s3 cp {config.XML_PATH} {dst}"
     logger.info(cmd)
-    Popen(cmd, shell=True).wait()
+    with Popen(cmd, shell=True) as proc:
+        proc.wait()

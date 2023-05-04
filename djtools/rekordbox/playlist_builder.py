@@ -1,12 +1,13 @@
 """This module is used to automatically generate a playlist structure using
 genre tags and the "My Tags" Rekordbox feature. It also supports creating
 "Combiner" playlists with arbitrary boolean algebra using:
-    * "(" and ")" groupings
-    * "&", "|", and "~" operators
-    * playlist selectors, e.g. "{My favorite playlist}"
-    * BPM selectors, e.g. "[80-90, 140, 165-174]"
-    * Rating selectors, e.g. "[1, 2-4"
-    * tag names (genre or "My Tags")
+
+* "(" and ")" groupings
+* "&", "|", and "~" operators
+* playlist selectors, e.g. "{My favorite playlist}"
+* BPM selectors, e.g. "[80-90, 140, 165-174]"
+* Rating selectors, e.g. "[1, 2-4"
+* tag names (genre or "My Tags")
 
 NOTE: In order for "My Tags" to be stored in the exported XML files, users must
 enable the 'Add "My Tag" to the "Comments"' setting under
@@ -15,7 +16,7 @@ enable the 'Add "My Tag" to the "Comments"' setting under
 from collections import defaultdict
 import logging
 from pathlib import Path
-from typing import Dict, List, Set, Tuple, Union
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 import bs4
 from bs4 import BeautifulSoup
@@ -23,7 +24,7 @@ import yaml
 
 from djtools.configs.config import BaseConfig
 from djtools.rekordbox import tag_parsers
-from djtools.rekordbox.tag_parsers import Combiner
+from djtools.rekordbox.playlist_combiner import Combiner
 
 
 logger = logging.getLogger(__name__)
@@ -37,30 +38,32 @@ class PlaylistBuilder:
 
     The "rekordbox_playlists.yaml" configuration file maps implemented
     TagParsers to a playlist taxonomy. Currently supported TagParsers are:
-        * GenreTagParser: reads "Genre" field of tracks and creates a list of
-            tags splitting on "/" characters. 
-        * MyTagParser: reads "Comments" field of tracks and searches for the
-            regex pattern /* tag_1 / tag_2 / tag_3 */
-            and creates a list of tags splitting on "/" characters.
+
+    * GenreTagParser: reads "Genre" field of tracks and creates a list of tags
+        splitting on "/" characters. 
+    * MyTagParser: reads "Comments" field of tracks and searches for the regex
+        pattern /* tag_1 / tag_2 / tag_3 */ and creates a list of tags
+        splitting on "/" characters.
     
     A "rekordbox_playlists.yaml" configuration file may also contain a
     "Combiner" key which is distinct from a TagParser implementation.
     Rather than parse tags, this class accepts the constructed tag -> track
     mapping and applies boolean algebra to create playlists using operators:
-        * AND (designated with "&"): result set will contain tracks having both tags.
-        * OR (designated with "|"): result set will contain tracks having either tag.
-        * NOT (designated with "~"): result set will not contain tracks having this tag.
-        * "()": encloses a grouping of operators which are evaluated first.
-        * "{}": encloses a playlist name to select those tracks. 
-        * "[]": encloses a comma-delimited list of integers representing
-            ratings (1 through 5) or BPMs (numbers greater than 5); ranges can
-            be specified by separating two integers with a dash.
+
+    * AND (designated with "&"): result set will contain tracks having both tags.
+    * OR (designated with "|"): result set will contain tracks having either tag.
+    * NOT (designated with "~"): result set will not contain tracks having this tag.
+    * "()": encloses a grouping of operators which are evaluated first.
+    * "{}": encloses a playlist name to select those tracks. 
+    * "[]": encloses a comma-delimited list of integers representing
+        ratings (1 through 5) or BPMs (numbers greater than 5); ranges can
+        be specified by separating two integers with a dash.
     """
     def __init__(
         self,
         rekordbox_database: Path,
         playlist_config: Path,
-        pure_genre_playlists: List[str] = [],
+        pure_genre_playlists: Optional[List[str]] = None,
         playlist_remainder_type: str = "",
     ):
         """Constructor.
@@ -104,12 +107,19 @@ class PlaylistBuilder:
         self._parsers = {}
         self._combiner_parser = None
         for playlist_type, config in self._playlist_config.items():
+            if playlist_type == "Combiner":
+                self._combiner_parser = Combiner(
+                    parser_config=config,
+                    rekordbox_database=self._database,
+                )
+                continue
+
             try:
                 parser = getattr(tag_parsers, playlist_type)
-            except AttributeError:
+            except AttributeError as exc:
                 raise AttributeError(
                     f"{playlist_type} is not a valid TagParser!"
-                )
+                ) from exc
 
             parser = parser(
                 parser_config=config,
@@ -117,25 +127,20 @@ class PlaylistBuilder:
                 rekordbox_database=self._database,
             )
 
-            # "Combiner" class used to assemble playlists by applying
-            # boolean algebra to tags.
-            if isinstance(parser, Combiner):
-                self._combiner_parser = parser
-                continue
-
             self._parsers[playlist_type] = parser
 
     def __call__(self):
         """Generates auto-playlists by:
-            * creating playlists nodes
-            * generating tags -> tracks mapping
-            * inserting tags to the appropriate playlist nodes for "Genre" and
-                "My Tags" playlists
-            * applying "Combiner" boolean algebra to tags
-            * writting new XML database
+
+        * creating playlists nodes
+        * generating tags -> tracks mapping
+        * inserting tags to the appropriate playlist nodes for "Genre" and
+            "My Tags" playlists
+        * applying "Combiner" boolean algebra to tags
+        * writing new XML database
         """
         tracks = {k: defaultdict(list) for k in self._parsers}
-        playlists = {} 
+        playlists = {}
         for track in self._database.find_all("TRACK"):
             if not track.get("Location"):
                 continue
@@ -150,14 +155,14 @@ class PlaylistBuilder:
                             content=parser.parser_config,
                             tags=tag_set,
                             top_level=True,
-                        ) 
+                        )
                     }
 
                 # Create tags -> tracks map.
                 tags = parser(track)
                 for tag in tags:
                     tracks[playlist_type][tag].append((track["TrackID"], tags))
-        
+
         # Add tracks to their respective playlists.
         for playlist_type, playlist_data in playlists.items():
             if self._playlist_remainder_type:
@@ -170,30 +175,30 @@ class PlaylistBuilder:
                     tracks=tracks[playlist_type],
                     playlists=playlist_data["playlists"],
                 )
-            
+
             # Insert tracks into their respective playlists.
             self._add_tracks(
                 soup=self._database,
                 playlists=playlist_data["playlists"],
                 tracks=tracks[playlist_type],
             )
-            
+
             # Insert playlist node into the playlist root.
             self._auto_playlists_root.insert(0, playlist_data["playlists"])
-        
+
         if self._combiner_parser:
             # Create Combiner playlist structure.
             combiner_playlists = self._create_playlists(
                 soup=self._database,
                 content=self._combiner_parser.parser_config,
                 top_level=True,
-            ) 
+            )
 
             # Reduce track tags across parsers unioning when there is overlap.
             merged_tracks = defaultdict(list)
             for values in tracks.values():
-                for k, v in values.items():
-                    merged_tracks[k].extend(v)
+                for key, value in values.items():
+                    merged_tracks[key].extend(value)
 
             # Use the most up-to-date Rekordbox database to update the track
             # lookup with playlist selectors to their component tracks.
@@ -219,7 +224,7 @@ class PlaylistBuilder:
         for node in self._playlists_root.find_all("NODE"):
             if node.attrs and node.attrs["Name"] != "ROOT":
                 node.decompose()
-        
+
         # Insert the auto-playlists into the playlists root.
         self._playlists_root.insert(0, self._auto_playlists_root)
 
@@ -363,12 +368,12 @@ class PlaylistBuilder:
                     except IndexError:
                         break
                     parent = parent.parent
-            
+
     def _create_playlists(
         self,
         soup: BeautifulSoup,
         content: Union[str, Dict],
-        tags: Set[str] = set(),
+        tags: Optional[Set[str]] = None,
         top_level: bool = False,
     ) -> bs4.element.Tag:
         """Recursively traverses "rekordbox_playlists.yaml" and creates the
@@ -393,12 +398,14 @@ class PlaylistBuilder:
         Returns:
             Populated playlist structure.
         """
+        node = None
+        tags = tags or set()
         if isinstance(content, dict):
             content = {k.lower(): v for k, v in content.items()}
             if content["name"] == "_ignore":
                 tags.update(set(content["playlists"]))
             else:
-                folder = soup.new_tag("NODE", Name=content["name"], Type="0")
+                node = soup.new_tag("NODE", Name=content["name"], Type="0")
                 if not top_level:
                     _all = soup.new_tag(
                         "NODE",
@@ -406,25 +413,24 @@ class PlaylistBuilder:
                         Name=f'All {content["name"]}',
                         Type="1",
                     )
-                    folder.append(_all)
+                    node.append(_all)
                 for playlist in content["playlists"]:
                     _playlist = self._create_playlists(
                         soup=soup, content=playlist, tags=tags
                     )
                     if _playlist:
-                        folder.append(_playlist)
-                return folder
+                        node.append(_playlist)
         elif isinstance(content, str):
             tags.add(content)
-            playlist = soup.new_tag("NODE", KeyType="0", Name=content, Type="1")
-            return playlist
+            node = soup.new_tag("NODE", KeyType="0", Name=content, Type="1")
         else:
             raise ValueError(
                 f"Encountered invalid input type {type(content)}: {content}"
             )
+        return node
 
 
-def rekordbox_playlists(config: BaseConfig):
+def build_playlists(config: BaseConfig):
     """Runs the PlaylistBuilder.
 
     Args:
@@ -437,6 +443,6 @@ def rekordbox_playlists(config: BaseConfig):
         rekordbox_database=config.XML_PATH,
         playlist_config=playlist_config,
         pure_genre_playlists=config.PURE_GENRE_PLAYLISTS,
-        playlist_remainder_type=config.REKORDBOX_PLAYLISTS_REMAINDER,
+        playlist_remainder_type=config.BUILD_PLAYLISTS_REMAINDER,
     )
     playlist_builder()

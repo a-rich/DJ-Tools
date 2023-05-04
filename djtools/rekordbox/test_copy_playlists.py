@@ -1,3 +1,4 @@
+"""Testing for the copy_playlists module."""
 from pathlib import Path
 from urllib.parse import unquote
 
@@ -8,9 +9,10 @@ from djtools.rekordbox.copy_playlists import copy_playlists
 
 
 def test_copy_playlists(tmpdir, test_config, test_xml):
+    """Test for the copy_playlists function."""
     target_playlists = ["Hip Hop"]
     test_xml = Path(test_xml)
-    new_xml = test_xml.parent / "relocated_rekordbox.xml"
+    new_xml = test_xml.parent / "auto_rekordbox.xml"
     test_output_dir = Path(tmpdir) / "output"
     test_config.XML_PATH = test_xml
     test_config.COPY_PLAYLISTS = target_playlists
@@ -25,9 +27,10 @@ def test_copy_playlists(tmpdir, test_config, test_xml):
             continue
         assert any(x in track["Genre"] for x in target_playlists)
         assert test_output_dir.as_posix() in unquote(track["Location"])
-        
+
 
 def test_copy_playlists_invalid_playlist(tmpdir, test_config, test_xml):
+    """Test for the copy_playlists function."""
     playlist = "invalid_playlist"
     test_config.XML_PATH = test_xml
     test_config.COPY_PLAYLISTS = [playlist]

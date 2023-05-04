@@ -9,9 +9,11 @@
 * xml
     - tracks_outside_playlists
         * used to identify all tracks that do not appear in a given playlist or folder of playlists -- "dangling" tracks will be aggregated into a new playlist
-    - copy_tracks
-        * copy audio files from a given playlist and write a new XML with these paths
-        * useful if you want to create a backup for a specific playlist or if you want to colocate tracks from across your Collection when mixing on a non-Pioneer setup
+    - move_genre_tags
+        * take a set of tags encoded in the `Comments` field and relocate them to the `Genre` field
 * deprecated
     - spotify_analysis
         * old spotify analysis with additional (not useful?) functionality that was not ported to DJ Tools
+* testing
+    - parse_pytest_output
+        * used to analyze the timing of unit tests and fixtures

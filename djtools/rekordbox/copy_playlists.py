@@ -3,8 +3,9 @@ new location and write a new XML database with those tracks pointing to these
 new locations.
 
 The purpose of this utility is to:
-    * backup subsets of your library
-    * ensure you have easy access to a preparation on non-Pioneer setups
+
+* backup subsets of your library
+* ensure you have easy access to a preparation on non-Pioneer setups
 """
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
@@ -30,7 +31,7 @@ def copy_playlists(config: BaseConfig):
             "XML_PATH".
     """
     # Load Rekordbox database from XML.
-    with open(config.XML_PATH, mode="r", encoding="utf-8") as _file:	
+    with open(config.XML_PATH, mode="r", encoding="utf-8") as _file:
         rekordbox_database = BeautifulSoup(_file.read(), "xml")
 
     # Create destination directory.
@@ -54,8 +55,8 @@ def copy_playlists(config: BaseConfig):
                 if not next_playlist.attrs:
                     break
                 keep_nodes.add(next_playlist.attrs["Name"])
-        except IndexError:
-            raise LookupError(f"{playlist_name} not found")
+        except IndexError as exc:
+            raise LookupError(f"{playlist_name} not found") from exc
         playlists_track_keys[playlist_name].update(
             {track["Key"] for track in playlist.children if str(track).strip()}
         )
@@ -70,7 +71,7 @@ def copy_playlists(config: BaseConfig):
     for track in rekordbox_database.find_all("TRACK"):
         if (
             not track.get("Location")
-            or track["TrackID"] not in flattened_track_keys 
+            or track["TrackID"] not in flattened_track_keys
         ):
             track.decompose()
         else:
@@ -97,7 +98,7 @@ def copy_playlists(config: BaseConfig):
     for node in playlists_root.find_all("NODE"):
         if node.attrs and node.attrs["Name"] not in keep_nodes:
             node.decompose()
-    
+
     # Repopulate playlists with relocated tracks.
     for playlist_name in config.COPY_PLAYLISTS:
         playlist = rekordbox_database.find_all(
@@ -105,9 +106,9 @@ def copy_playlists(config: BaseConfig):
         )[0]
         for track_id in playlists_track_keys[playlist_name]:
             playlist.append(rekordbox_database.new_tag("TRACK", Key=track_id))
-    
+
     # Write new XML.
-    new_db = config.XML_PATH.parent / f"relocated_{config.XML_PATH.name}"
+    new_db = config.XML_PATH.parent / f"auto_{config.XML_PATH.name}"
     with open(
         new_db, mode="wb", encoding=rekordbox_database.original_encoding,
     ) as _file:

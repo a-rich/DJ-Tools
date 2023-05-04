@@ -36,8 +36,8 @@ class SpotifyConfig(BaseConfig):
     AUTO_PLAYLIST_FUZZ_RATIO: NonNegativeInt = 70
     AUTO_PLAYLIST_POST_LIMIT: NonNegativeInt = 100
     AUTO_PLAYLIST_SUBREDDITS: List[SubredditConfig] = []
-    AUTO_PLAYLIST_UPDATE: bool = False 
-    PLAYLIST_FROM_UPLOAD: bool = False 
+    AUTO_PLAYLIST_UPDATE: bool = False
+    PLAYLIST_FROM_UPLOAD: bool = False
     REDDIT_CLIENT_ID: str = ""
     REDDIT_CLIENT_SECRET: str = ""
     REDDIT_USER_AGENT: str = ""
@@ -73,14 +73,14 @@ class SpotifyConfig(BaseConfig):
                 "SPOTIFY_USERNAME set to valid values, you cannot use "
                 "AUTO_PLAYLIST_UPDATE or PLAYLIST_FROM_UPLOAD"
             )
-        elif self.AUTO_PLAYLIST_UPDATE or self.PLAYLIST_FROM_UPLOAD:
+        if self.AUTO_PLAYLIST_UPDATE or self.PLAYLIST_FROM_UPLOAD:
             from djtools.spotify.helpers import get_spotify_client
             spotify = get_spotify_client(self)
             try:
                 spotify.current_user()
-            except Exception:
-                raise RuntimeError("Spotify credentials are invalid!")
-        
+            except Exception as exc:
+                raise RuntimeError("Spotify credentials are invalid!") from exc
+
         if self.AUTO_PLAYLIST_UPDATE and not all(
             [
                 self.REDDIT_CLIENT_ID,

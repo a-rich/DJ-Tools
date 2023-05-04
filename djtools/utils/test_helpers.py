@@ -1,4 +1,4 @@
-import asyncio
+"""Testing for the helpers module."""
 from datetime import datetime
 from pathlib import Path
 import logging
@@ -9,7 +9,6 @@ import pytest
 from djtools.utils.helpers import (
     add_tracks,
     compute_distance,
-    catch,
     find_matches,
     get_beatcloud_tracks,
     get_local_tracks,
@@ -21,6 +20,7 @@ from djtools.utils.helpers import (
 
 
 def test_add_tracks():
+    """Test for the add_tracks function."""
     test_input = {
         "items": [
             {
@@ -50,38 +50,10 @@ def test_add_tracks():
     assert output == expected
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("message", ["", "oops"])
-async def test_catch(message, caplog):
-    exc = ZeroDivisionError("You can't divide by zero!")
-    class Generator:
-        def __init__(self):
-            self._iters = 2
-            self._i = 0
-
-        def __aiter__(self):
-            return self
-
-        async def __anext__(self):
-            if self._i >= self._iters:
-                raise StopAsyncIteration
-            self._i += 1
-            await asyncio.sleep(0.1)
-            if self._i % 2 == 0:
-                raise exc
-
-            return self._i
-
-    caplog.set_level("WARNING")
-    results = [x async for x in catch(Generator(), message=message)]
-    assert caplog.records[0].message == (
-        f"{message}: {str(exc)}" if message else str(exc)
-    )
-
-
 @pytest.mark.parametrize("track_a", ["some track", "another track"])
 @pytest.mark.parametrize("track_b", ["some track", "another track"])
 def test_compute_distance(track_a, track_b):
+    """Test for the compute_distance function."""
     ret = compute_distance(
         "playlist",
         track_a,
@@ -90,16 +62,16 @@ def test_compute_distance(track_a, track_b):
     )
     if track_a == track_b:
         assert ret
-        playlist, ret_track_a, ret_track_b, fuzz_ratio = ret
-        assert playlist == "playlist"
-        assert ret_track_a == track_a
-        assert ret_track_b == track_b
-        assert fuzz_ratio == 100
+        assert ret[0] == "playlist"
+        assert ret[1] == track_a
+        assert ret[2] == track_b
+        assert ret[3] == 100
     else:
         assert not ret
 
 
 def test_find_matches(test_config):
+    """Test for the find_matches function."""
     test_config.CHECK_TRACKS_FUZZ_RATIO = 99
     expected_matches = [
         "track 1 - someone unique",
@@ -137,8 +109,9 @@ def test_find_matches(test_config):
 )
 @mock.patch("djtools.utils.helpers.check_output")
 def test_get_beatcloud_tracks(mock_os_popen, proc_dump):
+    """Test for the get_beatcloud_tracks function."""
     proc_dump = list(map(Path, proc_dump))
-    process = mock_os_popen.return_value = b"\n".join(
+    mock_os_popen.return_value = b"\n".join(
         map(lambda x: x.as_posix().encode(), proc_dump)
     )
     tracks = get_beatcloud_tracks()
@@ -149,10 +122,11 @@ def test_get_beatcloud_tracks(mock_os_popen, proc_dump):
 
 
 def test_get_local_tracks(tmpdir, test_config):
+    """Test for the get_local_tracks function."""
     check_dirs = []
     tmpdir = Path(tmpdir)
-    for dir in ["dir1", "dir2"]:
-        path = tmpdir / dir
+    for _dir in ["dir1", "dir2"]:
+        path = tmpdir / _dir
         path.mkdir(parents=True, exist_ok=True)
         check_dirs.append(path)
     test_config.CHECK_TRACKS_LOCAL_DIRS = check_dirs + [Path("nonexistent_dir")]
@@ -170,6 +144,7 @@ def test_get_local_tracks(tmpdir, test_config):
 
 
 def test_get_local_tracks_empty(tmpdir, test_config, caplog):
+    """Test for the get_local_tracks function."""
     caplog.set_level("INFO")
     test_config.CHECK_TRACKS_LOCAL_DIRS = [Path(tmpdir)]
     local_dir_tracks = get_local_tracks(test_config)
@@ -224,6 +199,7 @@ def test_get_local_tracks_empty(tmpdir, test_config, caplog):
 def test_get_playlist_tracks(
     mock_spotipy_playlist, mock_spotipy_next, mock_spotipy
 ):
+    """Test for the get_playlist_tracks function."""
     mock_spotipy.playlist.return_value = mock_spotipy_playlist.return_value
     mock_spotipy.next.return_value = mock_spotipy_next.return_value
     expected = sorted(set([
@@ -243,6 +219,7 @@ def test_get_playlist_tracks(
 def test_get_playlist_tracks_handles_spotipy_exception(
     mock_spotipy_playlist, mock_spotipy
 ):
+    """Test for the get_playlist_tracks function."""
     test_playlist_id = "some ID"
     mock_spotipy.playlist.side_effect = mock_spotipy_playlist.side_effect
     with pytest.raises(
@@ -263,6 +240,7 @@ def test_get_playlist_tracks_handles_spotipy_exception(
 def test_get_spotify_tracks(
     mock_get_playlist_tracks, test_config, verbosity, caplog
 ):
+    """Test for the get_spotify_tracks function."""
     caplog.set_level("INFO")
     test_config.SPOTIFY_CLIENT_ID = "spotify client ID"
     test_config.SPOTIFY_CLIENT_SECRET = "spotify client secret"
@@ -276,13 +254,16 @@ def test_get_spotify_tracks(
     assert caplog.records[0].message == (
         "playlist A not in spotify_playlists.yaml"
     )
-    assert caplog.records[1].message == 'Got 1 track from Spotify playlist "r/techno | Top weekly Posts"'
+    assert caplog.records[1].message == (
+        'Got 1 track from Spotify playlist "r/techno | Top weekly Posts"'
+    )
     if verbosity:
         assert caplog.records[2].message == "\tsome track - some artist"
     mock_get_playlist_tracks.assert_called_once()
 
 
 def test_initialize_logger():
+    """Test for the intitialize_logger function."""
     today = f'{datetime.now().strftime("%Y-%m-%d")}.log'
     logger, log_file = initialize_logger()
     assert isinstance(logger, logging.Logger)

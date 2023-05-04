@@ -1,3 +1,7 @@
+"""This module contains the configuration object for the utils package. The
+attributes of this configuration object correspond with the "utils" key of
+config.yaml
+"""
 import logging
 from pathlib import Path
 from typing import List
@@ -13,7 +17,7 @@ logger = logging.getLogger(__name__)
 class UtilsConfig(BaseConfig):
     """Configuration object for the utils package."""
 
-    CHECK_TRACKS: bool = False 
+    CHECK_TRACKS: bool = False
     CHECK_TRACKS_FUZZ_RATIO: NonNegativeInt = 80
     CHECK_TRACKS_LOCAL_DIRS:  List[Path] = []
     CHECK_TRACKS_SPOTIFY_PLAYLISTS:  List[str] = []

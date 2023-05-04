@@ -1,5 +1,5 @@
 """This module contains helper functions that are not specific to any
-particular subpackage of this library.
+particular sub-package of this library.
 """
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 from subprocess import check_output
 import tempfile
-from typing import Any, AsyncGenerator, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, IO, List, Optional, Set, Tuple
 from unittest import mock
 
 from fuzzywuzzy import fuzz
@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class MockOpen:
+    """Class for mocking the builtin open function."""
     builtin_open = open
 
     def __init__(
@@ -35,22 +36,35 @@ class MockOpen:
         content: Optional[str] = "",
         write_only: Optional[bool] = False,
     ):
-        self._user_a = user_a 
-        self._user_b = user_b 
+        self._user_a = user_a
+        self._user_b = user_b
         self._files = files
         self._content = content
         self._write_only = write_only
 
-    def open(self, *args, **kwargs):
+    def open(self, *args, **kwargs) -> IO:
+        """Function to replace the builtin open function.
+
+        Returns:
+            File handler.
+        """
         file_name = os.path.basename(args[0])
         if file_name in self._files:
             if "w" in kwargs.get("mode"):
                 return tempfile.TemporaryFile(mode=kwargs["mode"])
-            elif not self._write_only:
+            if not self._write_only:
                 return self._file_strategy(file_name, *args, **kwargs)
         return self.builtin_open(*args, **kwargs)
-    
+
     def _file_strategy(self, file_name, *args, **kwargs):
+        """Apply logic for file contents based on file name.
+
+        Args:
+            file_name: Name of the file to open.
+
+        Returns:
+            Mock file handler object.
+        """
         data = "{}"
         if self._content:
             data = self._content
@@ -82,26 +96,6 @@ def add_tracks(result: Dict[str, Any]) -> List[str]:
     return tracks
 
 
-async def catch(generator: AsyncGenerator, message: Optional[str] = "") -> Any:
-    """This function permits one-line try/except logic for comprehensions.
-
-    Args:
-        generator: Async generator.
-        message: Prefix message for logger warning.
-
-    Returns:
-        Return of the AsyncGenerator.
-    """
-    while True:
-        try:
-            yield await generator.__anext__()
-        except StopAsyncIteration:
-            return
-        except Exception as exc:
-            logger.warning(f"{message}: {exc}" if message else exc)
-            continue
-
-
 def compute_distance(
     spotify_playlist: str,
     spotify_track: str,
@@ -121,9 +115,11 @@ def compute_distance(
         Tuple of Spotify playlist, Spotify "TRACK TITLE - ARTIST NAME",
             beatcloud "TRACK TITLE - ARTIST NAME", Levenshtein similarity.
     """
+    ret = ()
     fuzz_ratio = fuzz.ratio(spotify_track, beatcloud_track)
     if fuzz_ratio >= threshold:
-        return spotify_playlist, spotify_track, beatcloud_track, fuzz_ratio
+        ret = spotify_playlist, spotify_track, beatcloud_track, fuzz_ratio
+    return ret
 
 
 def find_matches(
@@ -141,7 +137,7 @@ def find_matches(
         config: Configuration object.
 
     Returns:
-        List of tuples of Spotify playlist, Spotify track, Beatcloud track, andl
+        List of tuples of Spotify playlist, Spotify track, Beatcloud track, and
             Levenshtein distance.
     """
     spotify_tracks = [
@@ -208,7 +204,7 @@ def get_local_tracks(config: BaseConfig) -> Dict[str, List[str]]:
             continue
         files = [_file.stem for _file in _dir.rglob("**/*.*")]
         if files:
-            local_dir_tracks[_dir] = files 
+            local_dir_tracks[_dir] = files
     local_tracks_count = sum(len(x) for x in local_dir_tracks.values())
     logger.info(f"Got {local_tracks_count} files under local directories")
 
@@ -306,6 +302,10 @@ def initialize_logger() -> Tuple[logging.Logger, str]:
 
 
 def mock_exists(files, path):
+    """Function for mocking the existence of pathlib.Path object."""
+    ret = True
     for file_name, exists in files:
         if file_name == path.name:
-            return exists
+            ret = exists
+            break
+    return ret

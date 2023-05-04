@@ -1,3 +1,4 @@
+"""Script for moving data from the Comments field to the Genre field."""
 from argparse import ArgumentParser
 import re
 import os
@@ -48,9 +49,8 @@ def parse_args() -> Dict[str, Any]:
         default="/",
         help="Character used to separate genre tags.",
     )
-    args = parser.parse_args()
 
-    return vars(args)
+    return vars(parser.parse_args())
 
 
 def move_genre_tags(
@@ -66,7 +66,7 @@ def move_genre_tags(
         `File > Export Collection in xml format`
     
     The provided tags must match exactly the data written to the Comments field
-    (case-sensative). 
+    (case-sensitive). 
 
     The provided output must be the path to a XML file from which you'll import
     the adjusted data.
@@ -105,17 +105,17 @@ def move_genre_tags(
 
     try:
         with open(xml, mode="r", encoding="utf-8") as _file:
-            db = BeautifulSoup(_file.read(), "xml")
+            database = BeautifulSoup(_file.read(), "xml")
     except Exception as exc:
         raise Exception(
             "Are you sure the provided XML is valid? Parsing it failed with "
             f"the following exception:\n{exc}"
-        )
-    
+        ) from exc
+
     # Regular expression to isolate "My Tags".
     my_tag_regex = re.compile(r"(?<=\/\*).*(?=\*\/)")
 
-    for track in db.find_all("TRACK"):
+    for track in database.find_all("TRACK"):
         # Make sure this isn't a TRACK node for a playlist.
         if not track.get("Location"):
             continue
@@ -141,17 +141,11 @@ def move_genre_tags(
         track["Genre"] = f" {genre_tag_delimiter} ".join(new_genre_tags)
 
     # Write output rekordbox.xml to file.
-    with open(output, mode="wb", encoding=db.orignal_encoding) as _file:
-        _file.write(db.prettify("utf-8"))
+    with open(output, mode="wb", encoding=database.orignal_encoding) as _file:
+        _file.write(database.prettify("utf-8"))
 
 
 if __name__ == "__main__":
-    """Move the provided "My Tags" to the Genre field.
-
-    Raises:
-        RuntimeError: the --tags option must contain one or more "My Tags" to
-            relocate to the Genre field.
-    """
     args = parse_args()
     if not args["tags"]:
         raise RuntimeError(

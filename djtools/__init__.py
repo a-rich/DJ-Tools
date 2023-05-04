@@ -10,10 +10,10 @@ is uploaded to the Beatcloud.
 """
 from .configs import build_config
 from .rekordbox import (
+    build_playlists,
     copy_playlists,
-    randomize_playlists,
     REKORDBOX_OPERATIONS,
-    rekordbox_playlists,
+    shuffle_playlists,
 )
 from .spotify import (
     playlist_from_upload,
@@ -38,15 +38,15 @@ from .utils import (
 
 __all__ = (
     "build_config",
+    "build_playlists",
     "compare_tracks",
     "copy_playlists",
     "download_music",
     "download_xml",
     "initialize_logger",
     "playlist_from_upload",
-    "randomize_playlists",
     "REKORDBOX_OPERATIONS",
-    "rekordbox_playlists",
+    "shuffle_playlists",
     "SPOTIFY_OPERATIONS",
     "SYNC_OPERATIONS",
     "update_auto_playlists",
@@ -79,7 +79,7 @@ def main():
                 continue
             logger.info(f"{operation}")
             if operation in ["CHECK_TRACKS", "DOWNLOAD_MUSIC"]:
-                beatcloud_cache = func(
+                beatcloud_cache = func(  # pylint: disable=assignment-from-no-return,unexpected-keyword-arg
                     config, beatcloud_tracks=beatcloud_cache
                 )
             else:

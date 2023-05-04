@@ -2,31 +2,31 @@
 from pathlib import Path
 import re
 import shutil
-from typing import Any, Dict, List, Optional, Set, Tuple 
-from urllib.parse import quote, unquote
+from typing import Any, Dict, List, Optional, Set, Tuple
+from urllib.parse import unquote
 
 import bs4
 from bs4 import BeautifulSoup
 
 
 class BooleanNode:
-    """Node that contains boolean logic for a subexpression."""
+    """Node that contains boolean logic for a sub-expression."""
 
     def __init__(self, parent: Optional[Any] = None):
         """Constructor.
 
         Args:
-            parent: BooleanNode of which this node is a subexpression.
+            parent: BooleanNode of which this node is a sub-expression.
         """
         self.parent = parent
         self.operators = []
         self.tags = []
         self.tracks = []
-    
+
     def __call__(
         self, tracks: Dict[str, List[Tuple[str, List[str]]]]
     ) -> Set[str]:
-        """Evaluates the boolean algebraic subexpression.
+        """Evaluates the boolean algebraic sub-expression.
 
         Args:
             tracks: Map of tags to dicts of track_id: tags.
@@ -47,20 +47,20 @@ class BooleanNode:
             )
         while self.tags or self.operators:
             operator = self.operators.pop(0)
-            if len(self.tracks):
-                tracks_A = self.tracks.pop(0)
+            if self.tracks:
+                tracks_set_a = self.tracks.pop(0)
             else:
-                tracks_A = self._get_tag_tracks(
+                tracks_set_a = self._get_tag_tracks(
                     tag=self.tags.pop(0), tracks=tracks
                 )
-            if len(self.tracks):
-                tracks_B = self.tracks.pop(0)
+            if self.tracks:
+                tracks_set_b = self.tracks.pop(0)
             else:
-                tracks_B = self._get_tag_tracks(
+                tracks_set_b = self._get_tag_tracks(
                     tag=self.tags.pop(0), tracks=tracks
                 )
-            self.tracks.insert(0, operator(tracks_A, tracks_B))
-        
+            self.tracks.insert(0, operator(tracks_set_a, tracks_set_b))
+
         return next(iter(self.tracks), set())
 
     def _get_tag_tracks(
@@ -69,7 +69,7 @@ class BooleanNode:
         """Gets set of track IDs for the provided tag.
 
         If the tag contains a wildcard, denoted with "*", then the union of
-        track IDs with a tag containing the provided tag as a substring is
+        track IDs with a tag containing the provided tag as a sub-string is
         returned.
 
         Args:
@@ -82,12 +82,12 @@ class BooleanNode:
         if "*" in tag:
             exp = re.compile(r".*".join(tag.split("*")))
             track_ids = set()
-            for k in tracks:
-                if re.search(exp, k):
-                    track_ids.update(set(tracks[k].keys()))
+            for key in tracks:
+                if re.search(exp, key):
+                    track_ids.update(set(tracks[key].keys()))
             return track_ids
-        else:
-            return set(tracks.get(tag, {}).keys())
+
+        return set(tracks.get(tag, {}).keys())
 
 
 def copy_file(
@@ -108,7 +108,7 @@ def copy_file(
     track["Location"] = f"{loc_prefix}{new_loc}"
 
 
-def get_playlist_track_locations(
+def get_playlist_tracks(
     soup: BeautifulSoup, _playlist: str, seen_tracks: Set[str]
 ) -> List[str]:
     """Finds playlist in "XML_PATH" that matches "_playlist" and returns a list
@@ -139,7 +139,7 @@ def get_playlist_track_locations(
     return playlist_tracks
 
 
-def set_tag(track: str, index: int):
+def set_track_number(track: str, index: int):
     """Threaded process to set TRACK node's TrackNumber tag.
 
     Args:

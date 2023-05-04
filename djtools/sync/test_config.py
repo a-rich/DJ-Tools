@@ -1,3 +1,4 @@
+"""Testing for the config module."""
 from unittest import mock
 
 import getpass
@@ -16,6 +17,7 @@ from djtools.utils.helpers import mock_exists, MockOpen
     ).open,
 )
 def test_syncconfig_bad_registered_users():
+    """Test for the SyncConfig class."""
     with pytest.raises(
         RuntimeError,
         match="Error reading registered_users.yaml",
@@ -31,6 +33,7 @@ def test_syncconfig_bad_registered_users():
 @pytest.mark.parametrize("operations", [(True, False), (False, True)])
 @pytest.mark.parametrize("usb_path", ["", "nonexistent/path"])
 def test_syncconfig_download_or_upload_without_usb_path(operations, usb_path):
+    """Test for the SyncConfig class."""
     download, upload = operations
     cfg = {
         "AWS_PROFILE": "myprofile",
@@ -49,6 +52,7 @@ def test_syncconfig_download_or_upload_without_usb_path(operations, usb_path):
 
 
 def test_syncconfig_download_without_import_user():
+    """Test for the SyncConfig class."""
     cfg = {
         "DOWNLOAD_XML": True,
         "AWS_PROFILE": "myprofile",
@@ -65,6 +69,7 @@ def test_syncconfig_download_without_import_user():
 
 
 def test_syncconfig_mutually_exclusive_dirs():
+    """Test for the SyncConfig class."""
     cfg = {"UPLOAD_INCLUDE_DIRS": ["test"], "UPLOAD_EXCLUDE_DIRS": ["test"]}
     with pytest.raises(
         ValueError,
@@ -78,6 +83,7 @@ def test_syncconfig_mutually_exclusive_dirs():
 
 
 def test_syncconfig_no_aws_profile():
+    """Test for the SyncConfig class."""
     cfg = {"AWS_PROFILE": "", "UPLOAD_XML": True}
     with pytest.raises(
         RuntimeError,
@@ -95,10 +101,9 @@ def test_syncconfig_no_aws_profile():
     MockOpen(files=["registered_users.yaml"],
     write_only=True).open,
 )
-@mock.patch("djtools.spotify.helpers.get_spotify_client")
-def test_syncconfig_no_registered_users(
-    mock_get_spotify_client, test_xml, caplog
-):
+@mock.patch("djtools.spotify.helpers.get_spotify_client", mock.MagicMock())
+def test_syncconfig_no_registered_users(test_xml, caplog):
+    """Test for the SyncConfig class."""
     cfg = {
         "XML_PATH": test_xml,
         "SPOTIFY_CLIENT_ID": "id",
@@ -117,6 +122,7 @@ def test_syncconfig_no_registered_users(
     write_only=True).open,
 )
 def test_syncconfig_set_user():
+    """Test for the SyncConfig class."""
     cfg = {"USER": ""}
     assert not SyncConfig.__fields__["USER"].default
     sync_config = SyncConfig(**cfg)
@@ -128,10 +134,9 @@ def test_syncconfig_set_user():
     MockOpen(files=["registered_users.yaml"],
     write_only=True).open,
 )
-@mock.patch("djtools.spotify.helpers.get_spotify_client")
-def test_syncconfig_upload_without_discord_url(
-    mock_get_spotify_client, test_xml, caplog
-):
+@mock.patch("djtools.spotify.helpers.get_spotify_client", mock.MagicMock())
+def test_syncconfig_upload_without_discord_url(test_xml, caplog):
+    """Test for the SyncConfig class."""
     caplog.set_level("WARNING")
     cfg = {
         "USB_PATH": ".",

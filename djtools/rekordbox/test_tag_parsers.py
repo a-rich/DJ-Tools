@@ -1,12 +1,15 @@
+"""Testing for the tag_parser module."""
 import pytest
 import yaml
 
+from djtools.rekordbox.playlist_combiner import Combiner
 from djtools.rekordbox.tag_parsers import (
-    Combiner, GenreTagParser, MyTagParser, TagParser
+    GenreTagParser, MyTagParser, TagParser
 )
 
 
 def test_combiner(test_playlist_config, xml, caplog):
+    """Test Combiner class."""
     with open(test_playlist_config, mode="r", encoding="utf-8",) as _file:
         playlist_config = yaml.load(_file, Loader=yaml.FullLoader) or {}
     bad_playlist = "Dark & [-1, 5-7, a-5]"
@@ -37,6 +40,7 @@ def test_combiner(test_playlist_config, xml, caplog):
 def test_combiner_raises_lookuperror_for_bad_playlist(
     test_playlist_config, xml
 ):
+    """Test Combiner class."""
     with open(test_playlist_config, mode="r", encoding="utf-8",) as _file:
         playlist_config = yaml.load(_file, Loader=yaml.FullLoader) or {}
     bad_playlist = "nonexistent playlist"
@@ -50,6 +54,7 @@ def test_combiner_raises_lookuperror_for_bad_playlist(
 
 
 def test_genretagparser(test_playlist_config, xml):
+    """Test GenreTagParser class."""
     with open(test_playlist_config, mode="r", encoding="utf-8",) as _file:
         playlist_config = yaml.load(_file, Loader=yaml.FullLoader) or {}
     genre = "Hip Hop"
@@ -73,6 +78,7 @@ def test_genretagparser(test_playlist_config, xml):
 
 
 def test_mytagparser(test_playlist_config, xml):
+    """Test MyTagParser class."""
     with open(test_playlist_config, mode="r", encoding="utf-8",) as _file:
         playlist_config = yaml.load(_file, Loader=yaml.FullLoader) or {}
     mytag = "Dark"
@@ -89,19 +95,21 @@ def test_mytagparser(test_playlist_config, xml):
 
 
 def test_tagparser_raises_type_error():
+    """Test TagParser class."""
     with pytest.raises(
         TypeError,
         match=(
             "Can't instantiate abstract class TagParser with abstract method"
         ),
     ):
-        TagParser()
+        TagParser(parser_config={})
 
 
 def test_tagparser_call_raises_not_imlemented_error(test_track):
+    """Test TagParser class."""
     TagParser.__abstractmethods__ = set()
     class TagParserSubclass(TagParser):
-        pass
+        """Dummy sub-class."""
 
     with pytest.raises(
         NotImplementedError,

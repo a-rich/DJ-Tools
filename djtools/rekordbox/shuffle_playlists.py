@@ -1,7 +1,7 @@
 """This module is used to emulate shuffling the track order of one or more
 playlists. This is done by setting the Rekordbox tag (i.e. "TrackNumber") of
 tracks in the playlists to sequential numbers. After setting the TrackNumber
-tags of tracks in the provided playlists, those tracks must be reimported
+tags of tracks in the provided playlists, those tracks must be re-imported
 for Rekordbox to be aware of the update.
 """
 from concurrent.futures import ThreadPoolExecutor
@@ -14,14 +14,14 @@ from tqdm import tqdm
 
 
 from djtools.configs.config import BaseConfig
-from djtools.rekordbox.helpers import get_playlist_track_locations, set_tag
+from djtools.rekordbox.helpers import get_playlist_tracks, set_track_number
 
 
 logger = logging.getLogger(__name__)
 
 
-def randomize_playlists(config: BaseConfig):
-    """For each playlist in "RANDOMIZE_PLAYLISTS", shuffle the tracks and
+def shuffle_playlists(config: BaseConfig):
+    """For each playlist in "SHUFFLE_PLAYLISTS", shuffle the tracks and
     sequentially set the TrackNumber tag to a number to emulate track
     randomization.
 
@@ -39,36 +39,36 @@ def randomize_playlists(config: BaseConfig):
             continue
         lookup[track["TrackID"]] = track
 
-    # Build a list of tracks to randomize from the provided list of playlists.
+    # Build a list of tracks to shuffle from the provided list of playlists.
     seen_tracks = set()
-    randomized_tracks = []
-    for playlist in config.RANDOMIZE_PLAYLISTS:
+    shuffled_tracks = []
+    for playlist in config.SHUFFLE_PLAYLISTS:
         try:
-            tracks = get_playlist_track_locations(soup, playlist, seen_tracks)
+            tracks = get_playlist_tracks(soup, playlist, seen_tracks)
         except LookupError as exc:
-            raise LookupError(f"{playlist} not found")
+            raise LookupError(f"{playlist} not found") from exc
 
         random.shuffle(tracks)
-        randomized_tracks.extend(tracks)
+        shuffled_tracks.extend(tracks)
 
     # Shuffle the track number field of the tracks.
-    randomized_tracks = [lookup[x] for x in randomized_tracks]
-    payload = [randomized_tracks, list(range(1, len(randomized_tracks) + 1))]
+    shuffled_tracks = [lookup[x] for x in shuffled_tracks]
+    payload = [shuffled_tracks, list(range(1, len(shuffled_tracks) + 1))]
     with ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as executor:
         _ = list(
             tqdm(
-                executor.map(set_tag, *payload),
-                total=len(randomized_tracks),
-                desc=f"Randomizing {len(randomized_tracks)} tracks",
+                executor.map(set_track_number, *payload),
+                total=len(shuffled_tracks),
+                desc=f"Randomizing {len(shuffled_tracks)} tracks",
             )
         )
 
-    # Insert randomized tracks playlist into the playlist root.
+    # Insert shuffled tracks playlist into the playlist root.
     playlists_root = soup.find_all("NODE", {"Name": "ROOT", "Type": "0"})[0]
     new_playlist = soup.new_tag(
-        "NODE", KeyType="0", Name="AUTO_RANDOMIZE", Type="1"
+        "NODE", KeyType="0", Name="AUTO_SHUFFLE", Type="1"
     )
-    for track in randomized_tracks:
+    for track in shuffled_tracks:
         new_playlist.append(soup.new_tag("TRACK", Key=track["TrackID"]))
     playlists_root.insert(0, new_playlist)
 
