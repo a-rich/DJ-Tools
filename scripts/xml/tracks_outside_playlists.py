@@ -87,7 +87,8 @@ if __name__ == '__main__':
             help='name of playlist to create with dangling tracks')
     args = parser.parse_args()
 
-    soup = BeautifulSoup(open(args.xml_path, encoding='utf-8').read(), 'xml')
+    with open(args.xml_path, encoding='utf-8') as _file:
+        soup = BeautifulSoup(_file.read(), 'xml')
     try:
         create_playlist(soup, get_tracks(soup, args.name, args.folder),
                         args.new_playlist)

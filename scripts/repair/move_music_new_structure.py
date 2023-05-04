@@ -1,5 +1,5 @@
 """Script used to relocate all music files from the old genre-top-level
-structure to the new username-top-leve structure.
+structure to the new username-top-level structure.
 """
 from argparse import ArgumentParser
 from concurrent.futures import ThreadPoolExecutor
@@ -169,7 +169,7 @@ def exists_process(path, _file):
 
     Args:
         path (str): USB_PATH
-        _file (str): subpath to beatcloud track (relative to "/dj/music/")
+        _file (str): sub-path to beatcloud track (relative to "/dj/music/")
 
     Returns:
         str: local path to track that exists in the `beatcloud`
@@ -343,7 +343,7 @@ def match_local_files(_local_files, _tracks, fuzz_ratio, verbosity, ignore,
     return found_tracks, not_matched
 
 
-def move_files(found_tracks, not_matched, users, playlist_genres, usb_path,
+def move_files(found_tracks, not_matched, users, playlist_genres, usb_path,  # pylint: disable=too-many-arguments,too-many-locals
                move_local_files, not_matched_lookup, move_remote_files,
                verbosity, ignore, bad_files_inverse_lookup, xml_path,
                _user_names, write_xml):
@@ -480,9 +480,11 @@ def fuzz_process(file_name, track_name, threshold):
     Returns:
         tuple: (Spotify track title - artist, fuzz ratio with local file)
     """
+    ret = ()
     fuzz_ratio = fuzz.ratio(file_name.lower(), track_name.lower())
     if fuzz_ratio >= threshold:
-        return (track_name, fuzz_ratio)
+        ret = (track_name, fuzz_ratio)
+    return ret
 
 
 def make_dirs(dest):
