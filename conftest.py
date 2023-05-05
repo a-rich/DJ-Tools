@@ -1,24 +1,19 @@
 """This module contains fixtures for DJ Tools."""
-import os
+from pathlib import Path
 import shutil
 # import time
 from unittest import mock
-from urllib.parse import unquote
+from urllib.parse import quote, unquote
 
 from bs4 import BeautifulSoup
 import pytest
 
 from djtools.configs.config import BaseConfig
 from djtools.configs.helpers import filter_dict, pkg_cfg
-from djtools.utils.helpers import MockOpen
 
 
 @pytest.fixture
 @mock.patch("djtools.spotify.helpers.get_spotify_client", mock.MagicMock())
-@mock.patch(
-    "builtins.open",
-    MockOpen(files=["registered_users.yaml"], write_only=True).open,
-)
 def test_config():
     """Test config fixture."""
     configs = {pkg: cfg() for pkg, cfg in pkg_cfg.items() if pkg != "configs"}
@@ -35,9 +30,9 @@ def test_config():
 @pytest.fixture
 def test_playlist_config(tmpdir):
     """Test playlist config fixture."""
-    src = "djtools/configs/rekordbox_playlists.yaml"
-    dst = os.path.join(tmpdir, os.path.basename(src))
-    shutil.copyfile(src, dst)
+    src = Path("djtools/configs/rekordbox_playlists.yaml")
+    dst = tmpdir / src.name
+    shutil.copyfile(str(src), str(dst))
 
     return dst
 
@@ -45,11 +40,12 @@ def test_playlist_config(tmpdir):
 @pytest.fixture(scope="session")
 def test_track(xml_tmpdir, xml):  # pylint: disable=redefined-outer-name
     """Test track fixture."""
-    test_dir = os.path.join(xml_tmpdir, "input").replace(os.sep, "/")
-    os.makedirs(test_dir, exist_ok=True)
+    xml_tmpdir = Path(xml_tmpdir)
+    test_dir = xml_tmpdir / "input"
+    test_dir.mkdir()
     track = xml.find("TRACK")
-    track_name = os.path.basename(track["Location"])
-    track["Location"] = os.path.join(test_dir, track_name).replace(os.sep, "/")
+    track_name = Path(track["Location"]).name
+    track["Location"] = quote((test_dir / track_name).as_posix())
     with open(unquote(track["Location"]), mode="w", encoding="utf-8") as _file:
         _file.write("")
 
@@ -59,18 +55,17 @@ def test_track(xml_tmpdir, xml):  # pylint: disable=redefined-outer-name
 @pytest.fixture(scope="session")
 def test_xml(xml_tmpdir, xml):  # pylint: disable=redefined-outer-name
     """Test XML fixture."""
+    xml_tmpdir = Path(xml_tmpdir)
     for track in xml.find_all("TRACK"):
         if not track.get("Location"):
             continue
-        track_name = os.path.basename(track["Location"])
-        track["Location"] = os.path.join(
-            xml_tmpdir, track_name
-        ).replace(os.sep, "/")
+        track_name = Path(track["Location"]).name
+        track["Location"] = quote((xml_tmpdir / track_name).as_posix())
         with open(
             unquote(track["Location"]), mode="w", encoding="utf-8"
         ) as _file:
             _file.write("")
-    xml_path = os.path.join(xml_tmpdir, "rekordbox.xml").replace(os.sep, "/")
+    xml_path = xml_tmpdir / "rekordbox.xml"
     with open(
         xml_path,
         mode="wb",

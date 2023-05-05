@@ -8,7 +8,7 @@
 """
 from djtools.utils.config import UtilsConfig
 from djtools.utils.check_tracks import compare_tracks
-from djtools.utils.helpers import initialize_logger, mock_exists, MockOpen
+from djtools.utils.helpers import initialize_logger
 from djtools.utils.url_download import url_download
 
 
@@ -20,8 +20,6 @@ UTILS_OPERATIONS = {
 __all__ = (
     "compare_tracks",
     "initialize_logger",
-    "mock_exists",
-    "MockOpen",
     "url_download",
     "UtilsConfig",
     "UTILS_OPERATIONS",

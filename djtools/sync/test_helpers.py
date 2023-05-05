@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import tempfile
 from unittest import mock
+from urllib.parse import unquote
 
 from bs4 import BeautifulSoup
 import pytest
@@ -11,7 +12,6 @@ import pytest
 from djtools.sync.helpers import (
     parse_sync_command, rewrite_xml, run_sync, upload_log, webhook
 )
-from djtools.utils.helpers import MockOpen
 
 
 @pytest.mark.parametrize("upload", [True, False])
@@ -63,14 +63,6 @@ def test_parse_sync_command(
         assert "--dryrun" in cmd
 
 
-@mock.patch(
-    "builtins.open",
-    MockOpen(
-        files=["registered_users.yaml"],
-        user_a=("aweeeezy", "/Volumes/AWEEEEZY/"),
-        user_b=("other_user", "/Volumes/my_beat_stick/"),
-    ).open
-)
 def test_rewrite_xml(test_config, test_xml, xml):
     """Test for the rewrite_xml function."""
     user_a_path= "/Volumes/AWEEEEZY/"
@@ -80,6 +72,7 @@ def test_rewrite_xml(test_config, test_xml, xml):
     test_config.USER = test_user
     test_config.IMPORT_USER = other_user
     test_config.XML_PATH = test_xml
+    test_config.USB_PATH = Path("/Volumes/AWEEEEZY/")
     other_users_xml = Path(test_xml).parent / f"{other_user}_rekordbox.xml"
     other_users_xml.write_text(
         Path(test_xml).read_text(encoding="utf-8"), encoding="utf-8"
@@ -93,11 +86,11 @@ def test_rewrite_xml(test_config, test_xml, xml):
         # interpreted `.as_posix()`.
         track["Location"] = (
             Path(track["Location"]).parent / user_b_path.strip("/") /
-            Path(track["Location"]).name
+            "DJ Music" / Path(track["Location"]).name
         ).as_posix()
 
     with open(
-        other_users_xml, mode="wb", encoding=xml.orignal_encoding
+        other_users_xml, mode="wb", encoding=xml.original_encoding
     ) as _file:
         _file.write(xml.prettify("utf-8"))
 
@@ -108,8 +101,8 @@ def test_rewrite_xml(test_config, test_xml, xml):
         for track in soup.find_all("TRACK"):
             if not track.get("Location"):
                 continue
-            assert user_a_path in track["Location"]
-            assert user_b_path not in track["Location"]
+            assert user_a_path in unquote(track["Location"])
+            assert user_b_path not in unquote(track["Location"])
 
 
 @mock.patch("djtools.sync.helpers.Popen")

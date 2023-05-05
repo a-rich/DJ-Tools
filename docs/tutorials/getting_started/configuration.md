@@ -45,13 +45,13 @@ In fact, removing the template `config.yaml` and building a config from scratch 
 * `DOWNLOAD_SPOTIFY`: if this is set to the name of a playlist (present in `spotify_playlists.yaml`), then only the Beatcloud tracks present in this playlist will be downloaded
 * `DOWNLOAD_XML`: sync the XML of `IMPORT_USER` from the `beatcloud` to the directory that `XML_PATH` is in
 * `DRYRUN`: show `aws s3 sync` command output without running
-* `IMPORT_USER`: the username of a fellow `beatcloud` user (as present in `registered_users.yaml`) whose XML you want to download
+* `IMPORT_USER`: the username of a fellow `beatcloud` user whose XML you want to download
 * `UPLOAD_EXCLUDE_DIRS`: the list of paths (relative to the `DJ Music` folder on your `USB_PATH`) that should NOT be uploaded to the `beatcloud` when running the `upload_music` sync operation
 * `UPLOAD_INCLUDE_DIRS`: the list of paths (relative to the `DJ Music` folder on your `USB_PATH`) that should exclusively be uploaded to the `beatcloud` when running the `upload_music` sync operation
 * `UPLOAD_MUSIC`: sync "DJ Music" folder to the beatcloud
 * `UPLOAD_XML`: sync `XML_PATH` to the beatcloud
 * `USB_PATH`: the full path to the USB drive which contains all your music files
-* `USER`: this is the username that will be entered into `registered_users.yaml`...if left as an empty string, then your operating system username will be used...it's recommended that you only override this if your username changes from what other users of your `beatcloud` instance are expecting (to ensure consistency...i.e. when you get a new computer with a different username)
+* `USER`: this is the username of the current user...if left as an empty string, then your operating system username will be used...it's recommended that you only override this if your username changes from what other users of your `beatcloud` instance are expecting (to ensure consistency...i.e. when you get a new computer with a different username)
 
 ## [Utils config][djtools.utils.config.UtilsConfig]
 * `CHECK_TRACKS`: boolean flag to trigger checking the contents of the `beatcloud` (to identify redundancies)

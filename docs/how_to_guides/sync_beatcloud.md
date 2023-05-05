@@ -39,9 +39,6 @@ Syncing your database files also improves reliability since you may lose, damage
 
 ### Downloading XML
 1. Set the `IMPORT_USER` option to the username of another user in your Beatcloud
-    - This username must exist in `registered_users.yaml`
-        - you'll have to manually update this file
-        - when a new user runs `djtools`, you can ask them to broadcast the `key: value` mapping of their `USER: USB_PATH` which will automatically be added to their own `registered_users.yaml`
     - This username must exist as a directory in the Beatcloud under `dj.beatcloud.com/xml` (it will if this user has ever run `--upload-xml`)
 1. Run the command `djtools --download-xml`
 

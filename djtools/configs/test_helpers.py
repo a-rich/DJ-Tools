@@ -61,14 +61,6 @@ def test_arg_parse_links_configs_dir_does_not_exist(mock_parse_args, tmpdir):
 
 
 @mock.patch("djtools.spotify.helpers.get_spotify_client", mock.Mock())
-@mock.patch(
-    "builtins.open",
-    MockOpen(
-        files=["registered_users.yaml"],
-        user_a=("aweeeezy", "/Volumes/AWEEEEZY/"),
-        user_b=("other_user", "/other/USB/"),
-    ).open,
-)
 def test_build_config():
     """Test for the build_config function."""
     with mock.patch(
@@ -94,14 +86,6 @@ def test_build_config_invalid_config_yaml(caplog):
 
 
 @mock.patch("djtools.spotify.helpers.get_spotify_client", mock.Mock())
-@mock.patch(
-    "builtins.open",
-    MockOpen(
-        files=["registered_users.yaml", "config.yaml"],
-        user_a=("aweeeezy", "/Volumes/AWEEEEZY/"),
-        user_b=("test_user", "/test/USB/"),
-    ).open
-)
 @mock.patch("argparse.ArgumentParser.parse_args")
 def test_build_config_no_config_yaml(mock_parse_args):
     """Test for the build_config function."""
@@ -129,10 +113,6 @@ def test_convert_to_paths(paths):
 
 @pytest.mark.parametrize("config", pkg_cfg.values())
 @mock.patch("djtools.spotify.helpers.get_spotify_client", mock.Mock())
-@mock.patch(
-    "builtins.open",
-    MockOpen(files=["registered_users.yaml"], write_only=True).open
-)
 def test_filter_dict(config):
     """Test for the filter_dict function."""
     super_config = BaseConfig()
