@@ -7,7 +7,6 @@ import pytest
 from djtools.sync.sync_operations import (
     download_music, download_xml, upload_music, upload_xml
 )
-from djtools.utils.helpers import MockOpen
 
 
 @pytest.mark.parametrize("playlist_name", ["", "playlist Uploads"])
@@ -54,14 +53,6 @@ def test_download_music(playlist_name, test_config, tmpdir, caplog):
     assert Path(caplog.records[4].message).name == "file.mp3"
 
 
-@mock.patch(
-    "builtins.open", 
-    MockOpen(
-        files=["registered_users.yaml"],
-        user_a=("aweeeezy", "/Volumes/AWEEEEZY/"),
-        user_b=("test_user", "/test/USB/"),
-    ).open,
-)
 @mock.patch("djtools.sync.sync_operations.rewrite_xml")
 @mock.patch("subprocess.Popen.wait", mock.Mock())
 def test_download_xml(mock_rewrite_xml, test_config, test_xml, caplog):

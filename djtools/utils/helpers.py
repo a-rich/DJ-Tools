@@ -48,7 +48,7 @@ class MockOpen:
         Returns:
             File handler.
         """
-        file_name = os.path.basename(args[0])
+        file_name = Path(args[0]).name
         if file_name in self._files:
             if "w" in kwargs.get("mode"):
                 return tempfile.TemporaryFile(mode=kwargs["mode"])
@@ -56,11 +56,8 @@ class MockOpen:
                 return self._file_strategy(file_name, *args, **kwargs)
         return self.builtin_open(*args, **kwargs)
 
-    def _file_strategy(self, file_name, *args, **kwargs):
+    def _file_strategy(self, *args, **kwargs):
         """Apply logic for file contents based on file name.
-
-        Args:
-            file_name: Name of the file to open.
 
         Returns:
             Mock file handler object.
@@ -68,11 +65,6 @@ class MockOpen:
         data = "{}"
         if self._content:
             data = self._content
-        elif file_name == "registered_users.yaml":
-            data = (
-                f'{{"{self._user_a[0]}": "{self._user_a[1]}", '
-                f'"{self._user_b[0]}": "{self._user_b[1]}"}}'
-            )
 
         return mock.mock_open(read_data=data)(*args, **kwargs)
 

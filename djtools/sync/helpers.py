@@ -9,10 +9,10 @@ import logging
 from pathlib import Path
 from subprocess import Popen, PIPE, CalledProcessError
 from typing import Optional
+from urllib.parse import quote, unquote
 
 from bs4 import BeautifulSoup
 import requests
-import yaml
 
 from djtools.configs.config import BaseConfig
 
@@ -82,33 +82,31 @@ def parse_sync_command(
     return _cmd
 
 
-def rewrite_xml(config: BaseConfig):
+def rewrite_xml(config: BaseConfig, loc_prefix: str = "file://localhost"):
     """This function modifies the "Location" field of track tags in a
         downloaded Rekordbox XML replacing the "USB_PATH" written by
         "IMPORT_USER" with the "USB_PATH" in "config.yaml".
 
     Args:
         config: Configuration object.
+        loc_prefix: Prefix of the `Location` field.
     """
-    registered_users_path = (
-        Path(__file__).parent.parent / "configs" / "registered_users.yaml"
-    )
-
-    with open(registered_users_path, mode="r", encoding="utf-8") as _file:
-        registered_users = yaml.load(_file, Loader=yaml.FullLoader)
-        src = registered_users[config.IMPORT_USER].strip("/")
-        dst = registered_users[config.USER].strip("/")
-
     xml_path = (
         Path(config.XML_PATH).parent / f"{config.IMPORT_USER}_rekordbox.xml"
     )
+    music_path = "DJ Music"
+    usb_path = config.USB_PATH.as_posix().strip("/")
 
     with open(xml_path, mode="r", encoding="utf-8") as _file:
         soup = BeautifulSoup(_file.read(), "xml")
         for track in soup.find_all("TRACK"):
             if not track.get("Location"):
                 continue
-            track["Location"] = track["Location"].replace(src, dst)
+            loc = unquote(track["Location"])
+            common_path = f"{music_path}/{loc.split(music_path + '/')[-1]}"
+            loc = f"{loc_prefix}/{usb_path}/{common_path}"
+            track["Location"] = quote(loc)
+
 
     with open(xml_path, mode="wb", encoding=soup.orignal_encoding) as _file:
         _file.write(soup.prettify("utf-8"))

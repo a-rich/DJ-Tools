@@ -183,8 +183,7 @@ def arg_parse() -> argparse.Namespace:
     parser.add_argument(
         "--import-user",
         type=str,
-        metavar="Entry of registered_user.yaml",
-        help="Registered USER whose XML_PATH you're downloading",
+        help="USER whose XML_PATH you're downloading",
     )
     parser.add_argument(
         "--link-configs",
@@ -291,8 +290,7 @@ def arg_parse() -> argparse.Namespace:
     parser.add_argument(
         "--user",
         type=str,
-        metavar="Entry of registered_user.yaml",
-        help="Entry in registered_users.yaml which maps to your USB_PATH",
+        help="Username of the current user",
     )
     parser.add_argument(
         "--verbosity",

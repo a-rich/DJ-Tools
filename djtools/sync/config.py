@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import List, Optional, Union
 
 from pydantic import validator
-import yaml
 
 from djtools.configs.config import BaseConfig
 
@@ -42,9 +41,6 @@ class SyncConfig(BaseConfig):
             ValueError: Both include and exclude dirs can't be provided at the
                 same time.
             RuntimeError: AWS_PROFILE must be set.
-            RuntimeError: registered_users.yaml must be a valid YAML file.
-            RuntimeError: IMPORT_USER must exist in registered_users.yaml if
-                using DOWNLOAD_XML.
         """
         super().__init__(*args, **kwargs)
         if not self.USER:
@@ -92,41 +88,10 @@ class SyncConfig(BaseConfig):
                 "discord messages!"
             )
 
-        registered_users_path = (
-            Path(__file__).parent.parent / "configs" / "registered_users.yaml"
-        )
-        if registered_users_path.exists():
-            try:
-                with open(
-                    registered_users_path, mode="r", encoding="utf-8"
-                ) as _file:
-                    registered_users = (
-                        yaml.load(_file, Loader=yaml.FullLoader) or {}
-                    )
-                logger.info(f"Registered users: {registered_users}")
-            except Exception:
-                msg = "Error reading registered_users.yaml"
-                logger.critical(msg)
-                raise RuntimeError(msg) from Exception
-        else:
-            registered_users = {}
-            logger.warning("No registered users!")
-
-        if (
-            self.DOWNLOAD_XML and (
-                not self.IMPORT_USER or self.IMPORT_USER not in
-                registered_users
-            )
-        ):
+        if self.DOWNLOAD_XML and not self.IMPORT_USER:
             raise RuntimeError(
-                "Unable to import from XML of unregistered IMPORT_USER "
-                f'"{self.IMPORT_USER}"'
+                f'Unable to import from XML of IMPORT_USER "{self.IMPORT_USER}"'
             )
-
-        # Enter USER into "registered_users.yaml".
-        registered_users[self.USER] = str(self.USB_PATH)
-        with open(registered_users_path, mode="w", encoding="utf-8") as _file:
-            yaml.dump(registered_users, _file)
 
     @validator("USB_PATH")
     @classmethod
