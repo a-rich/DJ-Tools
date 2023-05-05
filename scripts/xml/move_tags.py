@@ -1,10 +1,17 @@
+"""This is a script for moving tag data around for consistent formatting.
+
+Supported functions include:
+
+* moving particular tags from the `Comments` field to the `Genre` field
+* moving particular tags from in the `Comments` field to the front of that field
+"""
 from argparse import ArgumentParser
 from pathlib import Path
 import re
 from typing import Any, Dict, Set
 
 import bs4
-from bs4 import BeautifulSoup, 
+from bs4 import BeautifulSoup
 
 
 def parse_args() -> Dict[str, Any]:
@@ -14,14 +21,14 @@ def parse_args() -> Dict[str, Any]:
         Dictionary of arguments.
     """
 
-    def parse_path(x):
+    def parse_path(path):
         try:
-            x = Path(x)
-            if not x.exists():
-                raise FileNotFoundError(f"{x} does not exist.")
-        except Exception:
-            raise TypeError(f"{x} is not a valid path.")
-        return x
+            path = Path(path)
+            if not path.exists():
+                raise FileNotFoundError(f"{path} does not exist.")
+        except Exception as exc:
+            raise TypeError(f"{path} is not a valid path.") from exc
+        return path
 
     parser = ArgumentParser()
     parser.add_argument(
@@ -29,9 +36,9 @@ def parse_args() -> Dict[str, Any]:
         "-m",
         type=str,
         choices=[
-            "move_genres_from_comments", "move_tags_to_front_of_comments"
+            "move-genres-from-comments", "move-tags-to-front-of-comments"
         ],
-        default="move_tags_to_front_of_comments",
+        required=True,
         help="Path to Rekordbox XML file.",
     )
     parser.add_argument(
@@ -63,25 +70,38 @@ def parse_args() -> Dict[str, Any]:
         default="/",
         help="Character used to separate tags.",
     )
-    args = parser.parse_args()
 
-    return vars(args)
+    return vars(parser.parse_args())
 
 
 def move_genres_from_comments(
-    track: bs4.elment.Tag,
+    track: bs4.element.Tag,
     my_tags: Set[str],
-    tag_delimiter: str,
     tags: Set[str],
-    *args,
-    **kwargs,
+    tag_delimiter: str,
 ) -> bs4.element.Tag:
+    """Moves `tags` from `my_tags` to the `Genre` field.
+
+    Args:
+        track: Track node.
+        my_tags: Tags extracted from the `Comments` field.
+        tags: Tags targeted for relocation.
+        tag_delimiter: Delimiter used to separate tags within a field.
+
+    Returns:
+        Updated track node.
+    """
     # Filter "My Tags" for tags belonging to the provided set of tags
     # to be relocated.
-    new_tags = [
-        x.strip() for x in my_tags.group().split("/") if x.strip() in tags
-    ]
-    if not new_tags:
+    new_genre_tags = []
+    new_comments_tags = []
+    for tag in my_tags.group().split("/"):
+        tag = tag.strip()
+        if not tag in tags:
+            new_comments_tags.append(tag)
+            continue
+        new_genre_tags.append(tag)
+    if not new_genre_tags:
         return track
     # Get pre-existing tags and split them on the chosen delimiter.
     current_tags = [
@@ -89,21 +109,30 @@ def move_genres_from_comments(
     ]
     # Deduplicate tags across pre-existing tags and "My Tags".
     if current_tags:
-        new_tags = set(current_tags).union(set(new_tags))
+        new_genre_tags = set(current_tags).union(set(new_genre_tags))
     # Write new tags to field.
-    track["Genre"] = f" {tag_delimiter} ".join(new_tags)
+    track["Genre"] = f" {tag_delimiter} ".join(new_genre_tags)
+    track["Comments"] = " / ".join(new_comments_tags)
 
     return track
 
 
 def move_tags_to_front_of_comments(
-    track: bs4.elment.Tag,
+    track: bs4.element.Tag,
     my_tags: Set[str],
     tags: Set[str],
-    *args,
-    **kwargs,
+    **kwargs,  # pylint: disable=unused-argument
 ) -> bs4.element.Tag:
-    # Filter "My Tags" for tags to be moved to the front of the field. 
+    """Moves `tags` from `my_tags` to the front of the `Comments` field.
+
+    Args:
+        track: Track node.
+        my_tags: Tags extracted from the `Comments` field.
+        tags: Tags targeted for relocation.
+
+    Returns:
+        Updated track node.
+    """
     tags_to_move = []
     remainder_tags = []
     for tag in my_tags.group().split("/"):
@@ -118,7 +147,7 @@ def move_tags_to_front_of_comments(
         print(f"{track['Name']} has more than 1 situation tag: {tags_to_move}")
     comment_prefix = track["Comments"].split("/* ")[0]
     comment_suffix = track["Comments"].split(" */")[-1]
-    new_my_tags = f" / ".join(tags_to_move + remainder_tags)
+    new_my_tags = " / ".join(tags_to_move + remainder_tags)
     # Write new tags to Comments field.
     track["Comments"] = (
         f"{comment_prefix} /* {new_my_tags} */{comment_suffix}"
@@ -128,8 +157,8 @@ def move_tags_to_front_of_comments(
 
 
 move_functions = {
-    "move_genres_from_comments": move_genres_from_comments,
-    "move_tags_to_front_of_comments": move_tags_to_front_of_comments,
+    "move-genres-from-comments": move_genres_from_comments,
+    "move-tags-to-front-of-comments": move_tags_to_front_of_comments,
 }
 
 
@@ -140,13 +169,15 @@ def move_tags(
     output: str,
     tag_delimiter: str,
 ):
-    """Copies selected tags from the Comments field to the Genre field.
+    """Moved data from the `Comments` field.
+
+    Behavior depends on the `mode` argument.
 
     The provided XML must be an valid XML export:
         `File > Export Collection in xml format`
     
     The provided tags must match exactly the data written to the Comments field
-    (case-sensative). 
+    (case-sensitive). 
 
     The provided output must be the path to a XML file from which you'll import
     the adjusted data.
@@ -171,17 +202,17 @@ def move_tags(
     """
     try:
         with open(xml, mode="r", encoding="utf-8") as _file:
-            db = BeautifulSoup(_file.read(), "xml")
+            database = BeautifulSoup(_file.read(), "xml")
     except Exception as exc:
         raise Exception(
             "Are you sure the provided XML is valid? Parsing it failed with "
             f"the following exception:\n{exc}"
-        )
-    
+        ) from exc
+
     # Regular expression to isolate "My Tags".
     my_tag_regex = re.compile(r"(?<=\/\*).*(?=\*\/)")
 
-    for track in db.find_all("TRACK"):
+    for track in database.find_all("TRACK"):
         # Make sure this isn't a TRACK node for a playlist.
         if not track.get("Location"):
             continue
@@ -189,30 +220,23 @@ def move_tags(
         my_tags = re.search(my_tag_regex, track["Comments"])
         if not my_tags:
             continue
-        track = move_functions[mode](track, my_tags, tags, tag_delimiter)
+        track = move_functions[mode](
+            track=track,
+            my_tags=my_tags,
+            tags=tags,
+            tag_delimiter=tag_delimiter,
+        )
 
     # Write output rekordbox.xml to file.
-    with open(output, mode="wb", encoding=db.orignal_encoding) as _file:
-        _file.write(db.prettify("utf-8"))
+    with open(output, mode="wb", encoding=database.original_encoding) as _file:
+        _file.write(database.prettify("utf-8"))
 
 
 if __name__ == "__main__":
-    """Move the provided "My Tags".
-
-    Raises:
-        RuntimeError: the --tags option must contain one or more "My Tags" to
-            relocated.
-    """
-    args = parse_args()
-    if not args["tags"]:
+    parsed_args = parse_args()
+    if not parsed_args["tags"]:
         raise RuntimeError(
             'The --tags option must include a list of "My Tag" to be relocated'
         )
-    args["tags"] = set(args["tags"])
-    move_tags(
-        mode=args["mode"],
-        xml=args["xml"],
-        tags=args["tags"],
-        output=args["output"],
-        tag_delimiter=args["tag_delimiter"],
-    )
+    parsed_args["tags"] = set(parsed_args["tags"])
+    move_tags(**parsed_args)
