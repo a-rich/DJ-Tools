@@ -322,7 +322,9 @@ def reverse_title_and_artist(path_lookup: Dict[str, str]) -> Dict[str, str]:
     """
     new_path_lookup = {}
     for key, value in path_lookup.items():
-        title, artist = key.split(" - ")
+        split = key.split(" - ")
+        title = " - ".join(split[:-1])
+        artist = split[-1]
         new_path_lookup[f"{artist} - {title}"] = value
 
     return new_path_lookup
