@@ -39,6 +39,14 @@ def arg_parse() -> argparse.Namespace:
     """
     parser = ArgumentParser()
     parser.add_argument(
+        "--artist-first",
+        action="store_true",
+        help=(
+            "Indicate that Beatcloud tracks are in the format "
+            "`Artist - Track Title` instead of `Track Title - Artist`",
+        ),
+    )
+    parser.add_argument(
         "--auto-playlist-default-limit",
         type=int,
         help="Default number of tracks for a Spotify auto-playlist",
