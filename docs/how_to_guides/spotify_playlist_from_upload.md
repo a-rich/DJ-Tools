@@ -14,7 +14,7 @@ Note that the addition of tracks to a Spotify playlist is done in a best effort 
 ## Why create Spotify playlists from other users' uploads?
 You're probably using DJ Tools to manage a shared track collection with friends who have a similar taste in music. Despite this, we all have our own style and don't necessarily want to indiscriminately sync every track that every other user syncs to the Beatcloud.
 
-The purpose of this feature is to allow you to build a Spotify playlist from the tracks a user uploads so that they can be previewed and filtered for compatibility with your mixing style. Once this playlist has been filtered down a bit, you can then run the [download music](sync_beatcloud.md#downloading-music) command with the `--download-from-spotify` option to sync just the tracks that remain in the playlist.
+The purpose of this feature is to allow you to build a Spotify playlist from the tracks a user uploads so that they can be previewed and filtered for compatibility with your mixing style. Once this playlist has been filtered down a bit, you can then run the [download music](sync_beatcloud.md#downloading-music) command with the `--download-spotify` option to sync just the tracks that remain in the playlist.
 
 ## How it's done
 1. Ensure that other users of your Beatcloud instance have the `DISCORD_URL` option set to this webhook URL; otherwise you won't

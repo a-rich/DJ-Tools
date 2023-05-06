@@ -80,3 +80,79 @@ def test_compare_tracks(
         assert caplog.records.pop(0).message == (
             "\t100: track - artist | track - artist"
         )
+
+
+@mock.patch(
+    "djtools.spotify.helpers.spotipy.Spotify.playlist",
+    return_value = {
+        "tracks": {
+            "items": [
+                {
+                    "track": {
+                        "name": "title",
+                        "artists": [ 
+                            {"name": "artist"},
+                        ],
+                    },
+                },
+            ],
+            "next": False,
+        },
+    },
+)
+@mock.patch("djtools.utils.helpers.get_spotify_client")
+@mock.patch(
+    "djtools.utils.helpers.get_playlist_ids",
+    mock.Mock(return_value={"playlist": "playlist_id"}),
+)
+@mock.patch(
+    "djtools.utils.check_tracks.get_beatcloud_tracks",
+    mock.Mock(return_value=[Path("artist - title")]),
+)
+def test_compare_tracks_spotify_with_artist_first(
+    mock_spotify, mock_spotify_playlist, test_config, caplog
+):
+    """Test the compare_tracks function."""
+    caplog.set_level("INFO")
+    mock_spotify.return_value.playlist.return_value = (
+        mock_spotify_playlist.return_value
+    )
+    test_config.ARTIST_FIRST = True
+    test_config.CHECK_TRACKS = True
+    test_config.CHECK_TRACKS_SPOTIFY_PLAYLISTS = ["playlist"]
+    compare_tracks(test_config)
+    assert caplog.records[0].message == (
+        'Got 1 track from Spotify playlist "playlist"'
+    )
+    assert caplog.records[1].message == 'Got 1 track from Spotify in total'
+    assert caplog.records[2].message == (
+        "\nSpotify Playlist Tracks / Beatcloud Matches: 1"
+    )
+    assert caplog.records[3].message == "playlist:"
+    assert caplog.records[4].message == (
+        "\t100: artist - title | artist - title"
+    )
+
+
+@mock.patch(
+    "djtools.utils.check_tracks.get_local_tracks",
+    mock.Mock(return_value={"dir": ["title - artist"]}),
+)
+@mock.patch(
+    "djtools.utils.check_tracks.get_beatcloud_tracks",
+    mock.Mock(return_value=[Path("artist - title")]),
+)
+def test_compare_tracks_local_dirs_with_artist_first(test_config, caplog):
+    """Test the compare_tracks function."""
+    caplog.set_level("INFO")
+    test_config.ARTIST_FIRST = True
+    test_config.CHECK_TRACKS = True
+    test_config.CHECK_TRACKS_LOCAL_DIRS = ["dir"]
+    compare_tracks(test_config)
+    assert caplog.records[0].message == (
+        "\nLocal Directory Tracks / Beatcloud Matches: 1"
+    )
+    assert caplog.records[1].message == "dir:"
+    assert caplog.records[2].message == (
+        "\t100: title - artist | title - artist"
+    )

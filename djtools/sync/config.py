@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 class SyncConfig(BaseConfig):
     """Configuration object for the sync package."""
 
+    ARTIST_FIRST: bool = False
     AWS_USE_DATE_MODIFIED: bool = False
     DISCORD_URL: str = ""
     DOWNLOAD_EXCLUDE_DIRS: List[Path] = []
