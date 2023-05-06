@@ -26,6 +26,7 @@ Out[4]: "Track_Title (Artist2 Remix) ['Things' & Stuff!] - Artist1, Artist2.mp3"
 In general:
 
 * keep the filenames as close as possible to the `Title (Artist2 Remix) - Artist1, Artist2` format
+    * if you use the format `Artist1, Artist2 - Title (Artist2 Remix)` instead, make sure you configure `ARTIST_FIRST` to be `true` (see [Configuration](../tutorials/getting_started/configuration.md#sync-config) for more detail)
 * ensure there is only one instance of a hyphen with spaces on each side; title / artist splitting, which is needed for multiple features, will not work properly without this
 * if the track is available on Spotify, try to match the fields as close as possible to how it appears there; e.g. if the title includes `(Radio Edit)` then you should name the track accordingly
     - all of the Spotify-based features of DJ Tools work by computing the Levenshtein distance between filenames and Spotify API query results
@@ -37,6 +38,7 @@ To ensure Collection consistency and successful operation of `DJ Tools`, the fol
 1. MP3 file format
 1. minimum 256 kbps bitrate
 1. files named using convention: `Title (Artist2 Remix) - Artist1, Artist2`
+    * if you use the format `Artist1, Artist2 - Title (Artist2 Remix)` instead, make sure you configure `ARTIST_FIRST` to be `true` (see [Configuration](../tutorials/getting_started/configuration.md#sync-config) for more detail)
 1. `Title` and `Artist` tags populated (e.g. software: [Mp3tag](https://www.mp3tag.de/en/) or [Picard](https://picard.musicbrainz.org/))
 1. `Key` tags populated (ideally using [Mixed In Key](https://mixedinkey.com/))
 1. `Genre` tags populated (split with a common delimiter of `/` if multiple genres)

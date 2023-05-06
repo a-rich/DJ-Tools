@@ -16,6 +16,7 @@ from djtools.utils.helpers import (
     get_spotify_tracks,
     initialize_logger,
     MockOpen,
+    reverse_title_and_artist,
 )
 
 
@@ -46,8 +47,21 @@ def test_add_tracks():
         "track title - artist name",
         "another track title - another artist name, a second artist name"
     ]
-    output = add_tracks(test_input)
+    output = add_tracks(test_input, False)
     assert output == expected
+
+
+def test_add_tracks_with_reverse_title_and_artist():
+    """Test for the add_tracks function."""
+    test_input = {
+        "items": [
+            {"track": {"name": "title", "artists": [{"name": "artist"}]}},
+        ],
+    }
+    expected = ["artist - title"]
+    output = add_tracks(test_input, True)
+    assert output == expected
+
 
 
 @pytest.mark.parametrize("track_a", ["some track", "another track"])
@@ -207,7 +221,7 @@ def test_get_playlist_tracks(
         "another track title - another artist name, a second artist name",
         "last track title - final artist name"
     ]))
-    tracks = sorted(get_playlist_tracks(mock_spotipy, "some ID"))
+    tracks = sorted(get_playlist_tracks(mock_spotipy, "some ID", False))
     assert tracks == expected
 
 
@@ -225,7 +239,7 @@ def test_get_playlist_tracks_handles_spotipy_exception(
     with pytest.raises(
         Exception, match=f"Failed to get playlist with ID {test_playlist_id}"
     ):
-        get_playlist_tracks(mock_spotipy, test_playlist_id)
+        get_playlist_tracks(mock_spotipy, test_playlist_id, False)
 
 
 @pytest.mark.parametrize("verbosity", [0, 1])
@@ -268,3 +282,11 @@ def test_initialize_logger():
     logger, log_file = initialize_logger()
     assert isinstance(logger, logging.Logger)
     assert log_file.name == today
+
+
+def test_reverse_title_and_artist():
+    """Test for the reverse_title_and_artist function."""
+    path_lookup = {"title - artist": "path/to/title - artist.mp3"}
+    expected = {"artist - title": "path/to/title - artist.mp3"}
+    new_path_lookup = reverse_title_and_artist(path_lookup)
+    assert new_path_lookup == expected

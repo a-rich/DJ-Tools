@@ -134,6 +134,8 @@ def playlist_from_upload(config: BaseConfig):
         except ValueError:
             logger.warning(f'{line} is not a valid file')
             continue
+        if config.ARTIST_FIRST:
+            track, artist = artist, track
         files.append((track, artist))
     files = list(filter(lambda x: len(x) == 2, files))
 
