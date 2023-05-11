@@ -43,7 +43,7 @@ def arg_parse() -> argparse.Namespace:
         action="store_true",
         help=(
             "Indicate that Beatcloud tracks are in the format "
-            "`Artist - Track Title` instead of `Track Title - Artist`",
+            "`Artist - Track Title` instead of `Track Title - Artist`"
         ),
     )
     parser.add_argument(
