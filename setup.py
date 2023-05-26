@@ -1,5 +1,6 @@
 """Setup 'djtools' package.
 """
+from pathlib import Path
 from setuptools import setup
 
 
@@ -46,9 +47,13 @@ EXTRAS = {
         'levenshtein': ['python-Levenshtein==0.12.2']
 }
 
+version_path = Path(__file__).parent / "djtools" / "version.py"
+with open(version_path, mode="r", encoding="utf-8") as _file:
+    VERSION = _file.read().split("=")[-1].strip().replace('"', "")
+
 setup(
     name='dj_beatcloud',
-    version='2.5.1-b2',
+    version=VERSION,
     description=(
         'DJ Tools is a library for managing a collection of music and '
         'Rekordbox XML files.'

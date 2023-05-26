@@ -6,6 +6,7 @@ import argparse
 from argparse import ArgumentParser
 import logging
 from pathlib import Path
+import sys
 from typing import Any, Dict, List, Union
 
 import yaml
@@ -15,6 +16,7 @@ from djtools.rekordbox.config import RekordboxConfig
 from djtools.spotify.config import SpotifyConfig
 from djtools.sync.config import SyncConfig
 from djtools.utils.config import UtilsConfig
+from djtools.version import __version__
 
 
 logger = logging.getLogger(__name__)
@@ -308,6 +310,11 @@ def arg_parse() -> argparse.Namespace:
         help="Logging verbosity",
     )
     parser.add_argument(
+        "--version",
+        action="store_true",
+        help="Display package version",
+    )
+    parser.add_argument(
         "--xml-path",
         type=convert_to_paths,
         help='Path to your exported Rekordbox XML database',
@@ -316,6 +323,10 @@ def arg_parse() -> argparse.Namespace:
 
     if args.log_level:
         logger.setLevel(args.log_level)
+
+    if args.version:
+        print(__version__)
+        sys.exit()
 
     if args.link_configs:
         args.link_configs = Path(args.link_configs)

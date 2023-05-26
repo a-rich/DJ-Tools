@@ -9,7 +9,13 @@ from djtools.spotify.config import SpotifyConfig
 @mock.patch("djtools.spotify.helpers.get_spotify_client", mock.Mock())
 def test_spotifyconfig():
     """Test for the SpotifyConfig class."""
-    SpotifyConfig()
+    cfg = {
+        "AUTO_PLAYLIST_SUBREDDITS": [
+            {"name": "jungle"},
+            {"name": "darkpsy"},
+        ],
+    }
+    SpotifyConfig(**cfg)
 
 
 @mock.patch("djtools.spotify.helpers.get_spotify_client")

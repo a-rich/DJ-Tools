@@ -1,5 +1,4 @@
 """Testing for the helpers module."""
-from argparse import Namespace
 from pathlib import Path
 import re
 from typing import List
@@ -17,58 +16,58 @@ from djtools.configs.helpers import (
     pkg_cfg,
 )
 from djtools.utils.helpers import MockOpen
+from djtools.version import __version__
 
 
 @mock.patch("argparse.ArgumentParser.parse_args")
-def test_arg_parse_links_configs(mock_parse_args, tmpdir):
+def test_arg_parse_links_configs(mock_parse_args, tmpdir, namespace):
     """Test for the arg_parse function."""
     config_path = Path(tmpdir) / "test_dir"
-    mock_parse_args.return_value = Namespace(
-        link_configs=config_path, log_level="INFO"
-    )
+    namespace.link_configs = config_path
+    mock_parse_args.return_value = namespace
     arg_parse()
     assert config_path.is_symlink()
 
 
 @mock.patch("argparse.ArgumentParser.parse_args")
-def test_arg_parse_links_configs_dir_does_exist(mock_parse_args, tmpdir):
+def test_arg_parse_links_configs_dir_does_exist(
+    mock_parse_args, tmpdir, namespace
+):
     """Test for the arg_parse function."""
-    link_path = Path(tmpdir) / "new_dir" / "link_dir"
-    mock_parse_args.return_value = Namespace(
-        link_configs=link_path, log_level="INFO"
-    )
+    config_path = Path(tmpdir) / "new_dir" / "link_dir"
+    namespace.link_configs = config_path
+    mock_parse_args.return_value = namespace
     arg_parse()
-    assert link_path.exists()
-    assert link_path.is_symlink()
+    assert config_path.exists()
+    assert config_path.is_symlink()
 
 
 @mock.patch("argparse.ArgumentParser.parse_args")
-def test_arg_parse_links_configs_dir_does_not_exist(mock_parse_args, tmpdir):
+def test_arg_parse_links_configs_dir_does_not_exist(
+    mock_parse_args, tmpdir, namespace
+):
     """Test for the arg_parse function."""
-    link_path = str(tmpdir)
-    mock_parse_args.return_value = Namespace(
-        link_configs=link_path, log_level="INFO"
-    )
+    config_path = str(tmpdir)
+    namespace.link_configs = config_path
+    mock_parse_args.return_value = namespace
     with pytest.raises(
         ValueError,
         # NOTE(a-rich): WindowsPath needs to be escaped for `\` characters to
         # appear in the `match` argument.
         match=re.escape(
-            f'{link_path} must be a directory that does not already exist'
+            f'{config_path} must be a directory that does not already exist'
         ),
     ):
         arg_parse()
 
 
 @mock.patch("djtools.spotify.helpers.get_spotify_client", mock.Mock())
-def test_build_config():
+def test_build_config(namespace):
     """Test for the build_config function."""
     with mock.patch(
         "argparse.ArgumentParser.parse_args",
     ) as mock_parse_args:
-        mock_parse_args.return_value = Namespace(
-            link_configs="", log_level="INFO"
-        )
+        mock_parse_args.return_value = namespace
         config = build_config()
     assert isinstance(config, BaseConfig)
 
@@ -87,17 +86,25 @@ def test_build_config_invalid_config_yaml(caplog):
 
 @mock.patch("djtools.spotify.helpers.get_spotify_client", mock.Mock())
 @mock.patch("argparse.ArgumentParser.parse_args")
-def test_build_config_no_config_yaml(mock_parse_args):
+def test_build_config_no_config_yaml(mock_parse_args, namespace):
     """Test for the build_config function."""
-    mock_parse_args.return_value = Namespace(
-        link_configs="", log_level="INFO"
-    )
+    mock_parse_args.return_value = namespace
     config_dir = Path(__file__).parent.parent / "configs"
     config_file = config_dir / "config.yaml"
     with mock.patch.object(Path, "exists", return_value=False):
         assert not config_file.exists()
         build_config()
     assert config_file.exists()
+
+
+@mock.patch("argparse.ArgumentParser.parse_args")
+def test_build_config_version(mock_parse_args, namespace, capsys):
+    """Test for the build_config function."""
+    namespace.version = True
+    mock_parse_args.return_value = namespace
+    with pytest.raises(SystemExit):
+        build_config()
+    assert capsys.readouterr().out == f"{__version__}\n"
 
 
 @pytest.mark.parametrize("paths", ["path", ["path1", "path2"]])

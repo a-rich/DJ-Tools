@@ -27,7 +27,7 @@ class BaseConfig(BaseModel, extra=Extra.allow):
         """Constructor."""
         super().__init__(*args, **kwargs)
         logger.info(repr(self))
-        if self.__class__.__name__ != "BaseConfig":
+        if type(self) is not BaseConfig:  # pylint: disable=unidiomatic-typecheck
             return
 
         if not self.AWS_PROFILE:
@@ -69,3 +69,25 @@ class BaseConfig(BaseModel, extra=Extra.allow):
                 "BUILD_PLAYLISTS, COPY_PLAYLISTS, DOWNLOAD_XML, SHUFFLE_PLAYLISTS, "
                 "UPLOAD_XML"
             )
+
+    def __repr__(self):
+        super_keys = set(BaseConfig.__fields__)
+        ret = f"{self.__class__.__name__}("
+        for name, value in self.dict().items():
+            if (
+                (name in super_keys and type(self) is not BaseConfig)  # pylint: disable=unidiomatic-typecheck
+                or (name not in super_keys and type(self) is BaseConfig)  # pylint: disable=unidiomatic-typecheck
+            ):
+                continue
+            if (
+                isinstance(value, list) and len(value) > 1
+                and isinstance(value[0], (dict, list, set))
+            ):
+                ret += f"\n\t{name}=[\n\t\t"
+                ret += "\n\t\t".join(str(v) for v in value)
+                ret += "\n\t]"
+                continue
+            ret += f"\n\t{name}={str(value)}"
+        ret += "\n)"
+
+        return ret

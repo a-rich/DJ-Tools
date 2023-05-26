@@ -1,4 +1,5 @@
 """This module contains fixtures for DJ Tools."""
+from argparse import Namespace
 from pathlib import Path
 import shutil
 # import time
@@ -10,6 +11,12 @@ import pytest
 
 from djtools.configs.config import BaseConfig
 from djtools.configs.helpers import filter_dict, pkg_cfg
+
+
+@pytest.fixture
+def namespace():
+    """Test Namespace object fixture."""
+    return Namespace(link_configs=False, log_level="INFO", version=False)
 
 
 @pytest.fixture

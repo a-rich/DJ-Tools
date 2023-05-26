@@ -34,6 +34,7 @@ from .utils import (
     UTILS_OPERATIONS,
     url_download,
 )
+from .version import __version__
 
 
 __all__ = (
