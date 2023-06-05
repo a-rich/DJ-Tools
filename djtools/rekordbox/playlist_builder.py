@@ -170,7 +170,7 @@ class PlaylistBuilder:
                 # playlist taxonomy into "Other" groupings.
                 self._add_other(
                     soup=self._database,
-                    remainder_type= self._playlist_remainder_type,
+                    remainder_type=self._playlist_remainder_type,
                     tags=playlist_data["tags"],
                     tracks=tracks[playlist_type],
                     playlists=playlist_data["playlists"],
@@ -325,12 +325,24 @@ class PlaylistBuilder:
                 else:
                     bass_hip_hop = True
 
+            # NOTE: Special logic to distinguish between a "Minimal Deep Tech"
+            # playlist under a "Techno" folder and otherwise.
+            techno_minimal_deep_tech = False
+            if playlist["Name"] == "Minimal Deep Tech":
+                parent = playlist.parent
+                while parent:
+                    if parent["Name"] == "Techno":
+                        techno_minimal_deep_tech = True
+                        break
+                    parent = parent.parent
+
             for entry in tracks.get(playlist["Name"], []):
                 if isinstance(entry, tuple):
                     track_id, tags = entry
                 else:
                     track_id = entry
                     tags = []
+
                 # NOTE: Special logic to distinguish between the general "Hip Hop"
                 # playlist (a.k.a. pure Hip Hop) and the "Hip Hop" playlist under
                 # the "Bass" folder (a.k.a. bass Hip Hop)
@@ -345,10 +357,29 @@ class PlaylistBuilder:
                 ):
                     continue
 
+                # NOTE: Special logic to distinguish between a
+                # "Minimal Deep Tech" playlist under a "Techno" folder and
+                # otherwise.
+                if playlist["Name"] == "Minimal Deep Tech":
+                    min_deep_tech_index = tags.index("Minimal Deep Tech")
+                    prefix_tag = tags[min_deep_tech_index-1]
+                    if (
+                        (
+                            techno_minimal_deep_tech
+                            and prefix_tag.lower() != "techno"
+                        )
+                        or (
+                            not techno_minimal_deep_tech
+                            and prefix_tag.lower() == "techno"
+                        )
+                    ):
+                        continue
+
                 if track_id not in seen[seen_index]:
                     playlist.append(soup.new_tag("TRACK", Key=track_id))
                     seen[seen_index].add(track_id)
 
+                # Ascend the tree and add this track to any "All <name>" playlists.
                 parent = playlist.parent
                 while parent:
                     try:
@@ -399,7 +430,8 @@ class PlaylistBuilder:
             Populated playlist structure.
         """
         node = None
-        tags = tags or set()
+        if not isinstance(tags, set):
+            tags = set()
         if isinstance(content, dict):
             content = {k.lower(): v for k, v in content.items()}
             if content["name"] == "_ignore":
