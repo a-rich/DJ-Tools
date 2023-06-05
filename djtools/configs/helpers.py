@@ -214,12 +214,6 @@ def arg_parse() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        "--pure-genre-playlists",
-        type=str,
-        nargs="+",
-        help='List of genre tag substrings to create "pure" playlists for',
-    )
-    parser.add_argument(
         "--reddit-client-id",
         type=str,
         help="Reddit API client ID",

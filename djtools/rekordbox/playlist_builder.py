@@ -63,7 +63,6 @@ class PlaylistBuilder:
         self,
         rekordbox_database: Path,
         playlist_config: Path,
-        pure_genre_playlists: Optional[List[str]] = None,
         playlist_remainder_type: str = "",
     ):
         """Constructor.
@@ -71,8 +70,6 @@ class PlaylistBuilder:
         Args:
             rekordbox_database: Path to Rekordbox XML.
             playlist_config: Playlist taxonomy.
-            pure_genre_playlists: Create one or more "pure" playlists which
-                have only tracks with tags containing these substrings.
             playlist_remainder_type: Whether unspecified tags are grouped into
                 a "folder" or "playlist".
 
@@ -123,7 +120,7 @@ class PlaylistBuilder:
 
             parser = parser(
                 parser_config=config,
-                pure_genre_playlists=pure_genre_playlists,
+                pure_genre_playlists=self._get_pure_playlists(config),
                 rekordbox_database=self._database,
             )
 
@@ -346,36 +343,16 @@ class PlaylistBuilder:
                 # NOTE: Special logic to distinguish between the general "Hip Hop"
                 # playlist (a.k.a. pure Hip Hop) and the "Hip Hop" playlist under
                 # the "Bass" folder (a.k.a. bass Hip Hop)
-                if playlist["Name"] == "Hip Hop":
-                    if (pure_hip_hop and any(
-                            "r&b" not in x.lower()
-                            and "hip hop" not in x.lower()
-                            for x in tags
-                        )
-                    ) or (bass_hip_hop and all(
-                            "r&b" in x.lower() or "hip hop" in x.lower()
-                            for x in tags
-                        )
-                    ):
-                        continue
-
-                # NOTE: Special logic to distinguish between a
-                # "Minimal Deep Tech" playlist under a "Techno" folder and
-                # otherwise.
-                if playlist["Name"] == "Minimal Deep Tech":
-                    min_deep_tech_index = tags.index("Minimal Deep Tech")
-                    prefix_tag = tags[min_deep_tech_index-1]
-                    if (
-                        (
-                            techno_minimal_deep_tech
-                            and prefix_tag.lower() != "techno"
-                        )
-                        or (
-                            not techno_minimal_deep_tech
-                            and prefix_tag.lower() == "techno"
-                        )
-                    ):
-                        continue
+                if (pure_hip_hop and any(
+                        "r&b" not in x.lower() and "hip hop" not in x.lower()
+                        for x in tags
+                    )
+                ) or (bass_hip_hop and all(
+                        "r&b" in x.lower() or "hip hop" in x.lower()
+                        for x in tags
+                    )
+                ):
+                    continue
 
                 # NOTE: Special logic to distinguish between a
                 # "Minimal Deep Tech" playlist under a "Techno" folder and
@@ -481,6 +458,32 @@ class PlaylistBuilder:
             )
         return node
 
+    def _get_pure_playlists(self, struct: Union[Dict, List, str]) -> List:
+        """Identifies playlists prefixed with "Pure."
+
+        Args:
+            struct: Sub-component of a TagParser configuration.
+
+        Returns:
+            List of tags for which a "Pure" variant should be generated.
+        """
+        if isinstance(struct, str) and struct.startswith("Pure "):
+            return "".join(struct.split("Pure ")[-1:])
+        if isinstance(struct, dict):
+            return self._get_pure_playlists(struct.get("playlists", []))
+        if isinstance(struct, list):
+            result = list(
+                filter(None, [self._get_pure_playlists(x) for x in struct])
+            )
+            ret = []
+            for entry in result:
+                if isinstance(entry, str):
+                    ret.append(entry)
+                    continue
+                ret.extend(entry)
+            return ret
+        return []
+
 
 def build_playlists(config: BaseConfig):
     """Runs the PlaylistBuilder.
@@ -494,7 +497,6 @@ def build_playlists(config: BaseConfig):
     playlist_builder = PlaylistBuilder(
         rekordbox_database=config.XML_PATH,
         playlist_config=playlist_config,
-        pure_genre_playlists=config.PURE_GENRE_PLAYLISTS,
         playlist_remainder_type=config.BUILD_PLAYLISTS_REMAINDER,
     )
     playlist_builder()
