@@ -38,7 +38,13 @@ GenreTagParser:
             - Breakstep
             - Dubstep
     - Hip Hop
+    - name: House
+      playlists:
+        - Minimal Deep Tech
     - name: Techno
       playlists:
         - Pure Techno
         - Hard Techno
+        - name: Other Techno
+          playlists:
+            - Minimal Deep Tech

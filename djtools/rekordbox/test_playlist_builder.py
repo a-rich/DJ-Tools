@@ -61,10 +61,10 @@ def test_playlistbuilder_combiner_playlist_contains_new_playlist_selector_tracks
         _file.write(xml.prettify("utf-8"))
 
     # Test pre-conditions.
-    playlist = xml.find_all("NODE", {"Name": "Dubstep", "Type": "1"})[0]
+    playlist = xml.find_all("NODE", {"Name": "Hip Hop", "Type": "1"})[0]
     for track_key in playlist.find_all("TRACK"):
         assert track_key["Key"] != new_track_id, (
-            "Test track should not exist in Dubstep!"
+            "Test track should not exist in Hip Hop!"
         )
     test_track = None
     for track in xml.find_all("TRACK"):
