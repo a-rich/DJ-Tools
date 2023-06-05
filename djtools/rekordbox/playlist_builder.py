@@ -346,16 +346,36 @@ class PlaylistBuilder:
                 # NOTE: Special logic to distinguish between the general "Hip Hop"
                 # playlist (a.k.a. pure Hip Hop) and the "Hip Hop" playlist under
                 # the "Bass" folder (a.k.a. bass Hip Hop)
-                if (pure_hip_hop and any(
-                        "r&b" not in x.lower() and "hip hop" not in x.lower()
-                        for x in tags
-                    )
-                ) or (bass_hip_hop and all(
-                        "r&b" in x.lower() or "hip hop" in x.lower()
-                        for x in tags
-                    )
-                ):
-                    continue
+                if playlist["Name"] == "Hip Hop":
+                    if (pure_hip_hop and any(
+                            "r&b" not in x.lower()
+                            and "hip hop" not in x.lower()
+                            for x in tags
+                        )
+                    ) or (bass_hip_hop and all(
+                            "r&b" in x.lower() or "hip hop" in x.lower()
+                            for x in tags
+                        )
+                    ):
+                        continue
+
+                # NOTE: Special logic to distinguish between a
+                # "Minimal Deep Tech" playlist under a "Techno" folder and
+                # otherwise.
+                if playlist["Name"] == "Minimal Deep Tech":
+                    min_deep_tech_index = tags.index("Minimal Deep Tech")
+                    prefix_tag = tags[min_deep_tech_index-1]
+                    if (
+                        (
+                            techno_minimal_deep_tech
+                            and prefix_tag.lower() != "techno"
+                        )
+                        or (
+                            not techno_minimal_deep_tech
+                            and prefix_tag.lower() == "techno"
+                        )
+                    ):
+                        continue
 
                 # NOTE: Special logic to distinguish between a
                 # "Minimal Deep Tech" playlist under a "Techno" folder and
