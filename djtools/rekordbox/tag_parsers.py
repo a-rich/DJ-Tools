@@ -69,7 +69,10 @@ class GenreTagParser(TagParser):
                 element in this list.
         """
         super().__init__(parser_config, **kwargs)
-        self._pure_playlists = pure_genre_playlists or []
+        if not isinstance(pure_genre_playlists, list):
+            self._pure_playlists = []
+        else:
+            self._pure_playlists = pure_genre_playlists
 
     def __call__(self, track: bs4.element.Tag) -> List[str]:
         """Produces a list of genre tags from a track.
