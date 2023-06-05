@@ -10,6 +10,8 @@ from djtools.rekordbox.helpers import (
     BooleanNode,
     copy_file,
     get_playlist_tracks,
+    print_data,
+    scale_data,
     set_track_number,
 )
 
@@ -100,6 +102,72 @@ def test_get_playlist_tracks_no_playlist(xml):
     seen_tracks = set()
     with pytest.raises(LookupError, match=f"{playlist} not found"):
         get_playlist_tracks(xml, playlist, seen_tracks)
+
+
+def test_print_data(capsys):
+    """Test for the print_data function."""
+    data = {
+        "Aggro": 30,
+        "Bounce": 2,
+        "Chill": 1,
+        "Dark": 19,
+        "Melodic": 9,
+        "Rave": 13,
+    }
+    expected = (
+        "|   *                                            \n" +
+        "|   *                                            \n" +
+        "|   *                                            \n" +
+        "|   *                                            \n" +
+        "|   *                                            \n" +
+        "|   *                                            \n" +
+        "|   *                                            \n" +
+        "|   *                                            \n" +
+        "|   *                                            \n" +
+        "|   *                      *                     \n" +
+        "|   *                      *                     \n" +
+        "|   *                      *                     \n" +
+        "|   *                      *                     \n" +
+        "|   *                      *                     \n" +
+        "|   *                      *                 *   \n" +
+        "|   *                      *                 *   \n" +
+        "|   *                      *                 *   \n" +
+        "|   *                      *        *        *   \n" +
+        "|   *                      *        *        *   \n" +
+        "|   *                      *        *        *   \n" +
+        "|   *                      *        *        *   \n" +
+        "|   *                      *        *        *   \n" +
+        "|   *                      *        *        *   \n" +
+        "|   *       *              *        *        *   \n" +
+        "|   *       *       *      *        *        *   \n" +
+        "-------------------------------------------------\n" +
+        "  Aggro   Bounce   Chill   Dark   Melodic   Rave  \n"
+    )
+    print_data(data)
+    cap = capsys.readouterr()
+    assert cap.out == expected
+
+
+def test_scale_output():
+    """Test for the scale_output function."""
+    data = {
+        "Aggro": 30,
+        "Bounce": 2,
+        "Chill": 1,
+        "Dark": 19,
+        "Melodic": 9,
+        "Rave": 13,
+    }
+    expected = {
+        "Aggro": 25,
+        "Bounce": 2,
+        "Chill": 1,
+        "Dark": 16,
+        "Melodic": 8,
+        "Rave": 11,
+    }
+    scaled_data = scale_data(data, maximum=25)
+    assert scaled_data == expected
 
 
 @pytest.mark.parametrize("index", [0, 5, 9])

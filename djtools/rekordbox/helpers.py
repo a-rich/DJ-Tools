@@ -1,4 +1,5 @@
 """This module contains helpers for the rekordbox package."""
+from operator import itemgetter
 from pathlib import Path
 import re
 import shutil
@@ -137,6 +138,52 @@ def get_playlist_tracks(
     seen_tracks.update(playlist_tracks)
 
     return playlist_tracks
+
+
+def print_data(data: Dict[str, int]):
+    """Prints an ASCII histogram of tag data.
+
+    Args:
+        data: Tag names to tag counts.
+    """
+    scaled_data = scale_data(data)
+    row_width = 0
+    width_pad = 1
+    row = max(scaled_data.items(), key=itemgetter(1))[1]
+    output = ""
+    while row > 0:
+        output += "|"
+        for key in data:
+            key_width = len(key)
+            key_center = round(key_width / 2)
+            output += f"{' ' * (width_pad + key_center)}"
+            output += f"{'*' if row <= scaled_data[key] else ' '}"
+            output += f"{' ' * (width_pad + key_center)}"
+        if not row_width:
+            row_width = len(output)
+        output += "\n"
+        row -= 1
+    output += "-" * row_width + "\n "
+    for key in data:
+        output += f"{' ' * width_pad}{key}{' ' * (width_pad + 1)}"
+    print(output)
+
+
+def scale_data(
+    data: Dict[str, int], maximum: Optional[int] = 25
+) -> Dict[str, int]:
+    """Scales range of data values with an upper bound.
+
+    Args:
+        data: Tag names to tag counts.
+        maximum: Upper bound for rescaled data.
+
+    Returns:
+        Rescaled dictionary of tag names and tag counts.
+    """
+    data_max = max(data.items(), key=itemgetter(1))[1]
+
+    return {k: round((v / data_max) * maximum) for k, v in data.items()}
 
 
 def set_track_number(track: str, index: int):
