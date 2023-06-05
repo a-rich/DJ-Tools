@@ -16,7 +16,6 @@ In fact, removing the template `config.yaml` and building a config from scratch 
 * `BUILD_PLAYLISTS_REMAINDER`: whether tracks of remainder tags (those not specified in `rekordbox_playlists.yaml`) will be placed in a `folder` called "Other" with individual tag playlists or a `playlist` called "Other"
 * `COPY_PLAYLISTS`: list of playlists in `XML_PATH` to (a) have audio files copied and (b) have track data written to a new XML with updated Location fields
 * `COPY_PLAYLISTS_DESTINATION`: path to copy audio files to
-* `PURE_GENRE_PLAYLISTS`: list of genre tags (case-sensitive) which will each have a "Pure" playlist generated for...each item must be accompanied by a "Pure <genre\>" entry in `rekordbox_playlists.yaml`
 * `SHUFFLE_PLAYLISTS`: list of playlists that will have their tracks shuffled
 
 ## [Spotify config][djtools.spotify.config.SpotifyConfig]

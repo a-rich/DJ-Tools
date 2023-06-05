@@ -19,7 +19,6 @@ class RekordboxConfig(BaseConfig):
     BUILD_PLAYLISTS_REMAINDER: str = "folder"
     COPY_PLAYLISTS:  List[str] = []
     COPY_PLAYLISTS_DESTINATION: Path = None
-    PURE_GENRE_PLAYLISTS:  List[str] = []
     SHUFFLE_PLAYLISTS:  List[str] = []
 
     def __init__(self, *args, **kwargs):

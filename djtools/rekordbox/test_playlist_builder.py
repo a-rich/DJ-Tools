@@ -24,7 +24,6 @@ def test_playlistbuilder(remainder_type, test_xml, test_playlist_config):
     PlaylistBuilder(
         rekordbox_database=Path(test_xml),
         playlist_config=Path(test_playlist_config),
-        pure_genre_playlists=["Dubstep"],
         playlist_remainder_type=remainder_type
     )()
 

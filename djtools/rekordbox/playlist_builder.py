@@ -63,7 +63,6 @@ class PlaylistBuilder:
         self,
         rekordbox_database: Path,
         playlist_config: Path,
-        pure_genre_playlists: Optional[List[str]] = None,
         playlist_remainder_type: str = "",
     ):
         """Constructor.
@@ -71,8 +70,6 @@ class PlaylistBuilder:
         Args:
             rekordbox_database: Path to Rekordbox XML.
             playlist_config: Playlist taxonomy.
-            pure_genre_playlists: Create one or more "pure" playlists which
-                have only tracks with tags containing these substrings.
             playlist_remainder_type: Whether unspecified tags are grouped into
                 a "folder" or "playlist".
 
@@ -123,7 +120,7 @@ class PlaylistBuilder:
 
             parser = parser(
                 parser_config=config,
-                pure_genre_playlists=pure_genre_playlists,
+                pure_genre_playlists=self._get_pure_playlists(config),
                 rekordbox_database=self._database,
             )
 
@@ -461,6 +458,32 @@ class PlaylistBuilder:
             )
         return node
 
+    def _get_pure_playlists(self, struct: Union[Dict, List, str]) -> List:
+        """Identifies playlists prefixed with "Pure."
+
+        Args:
+            struct: Sub-component of a TagParser configuration.
+
+        Returns:
+            List of tags for which a "Pure" variant should be generated.
+        """
+        if isinstance(struct, str) and struct.startswith("Pure "):
+            return "".join(struct.split("Pure ")[-1:])
+        if isinstance(struct, dict):
+            return self._get_pure_playlists(struct.get("playlists", []))
+        if isinstance(struct, list):
+            result = list(
+                filter(None, [self._get_pure_playlists(x) for x in struct])
+            )
+            ret = []
+            for entry in result:
+                if isinstance(entry, str):
+                    ret.append(entry)
+                    continue
+                ret.extend(entry)
+            return ret
+        return []
+
 
 def build_playlists(config: BaseConfig):
     """Runs the PlaylistBuilder.
@@ -474,7 +497,6 @@ def build_playlists(config: BaseConfig):
     playlist_builder = PlaylistBuilder(
         rekordbox_database=config.XML_PATH,
         playlist_config=playlist_config,
-        pure_genre_playlists=config.PURE_GENRE_PLAYLISTS,
         playlist_remainder_type=config.BUILD_PLAYLISTS_REMAINDER,
     )
     playlist_builder()

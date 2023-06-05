@@ -9,7 +9,7 @@ return a list of tags from which playlists are to be constructed.
 from abc import ABC, abstractmethod
 import logging
 import re
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Union
 
 import bs4
 
@@ -56,7 +56,7 @@ class GenreTagParser(TagParser):
     def __init__(
         self,
         parser_config: Dict[str, Union[str, List[Union[str, Dict]]]],
-        pure_genre_playlists: Optional[List[str]] = None,
+        pure_genre_playlists: List[str],
         **kwargs,
     ):
         """Constructor.
@@ -69,7 +69,7 @@ class GenreTagParser(TagParser):
                 element in this list.
         """
         super().__init__(parser_config, **kwargs)
-        self._pure_playlists = pure_genre_playlists or []
+        self._pure_playlists = pure_genre_playlists
 
     def __call__(self, track: bs4.element.Tag) -> List[str]:
         """Produces a list of genre tags from a track.
