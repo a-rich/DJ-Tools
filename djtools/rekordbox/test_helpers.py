@@ -2,6 +2,7 @@
 import inspect
 from pathlib import Path
 import re
+from unittest import mock
 from urllib.parse import unquote
 
 import pytest
@@ -11,6 +12,7 @@ from djtools.rekordbox.helpers import (
     copy_file,
     get_playlist_tracks,
     print_data,
+    print_playlists_tag_statistics,
     scale_data,
     set_track_number,
 )
@@ -109,43 +111,76 @@ def test_print_data(capsys):
     data = {
         "Aggro": 30,
         "Bounce": 2,
-        "Chill": 1,
+        "Chill": 0,
         "Dark": 19,
         "Melodic": 9,
         "Rave": 13,
     }
     expected = (
-        "|   *                                            \n" +
-        "|   *                                            \n" +
-        "|   *                                            \n" +
-        "|   *                                            \n" +
-        "|   *                                            \n" +
-        "|   *                                            \n" +
-        "|   *                                            \n" +
-        "|   *                                            \n" +
-        "|   *                                            \n" +
-        "|   *                      *                     \n" +
-        "|   *                      *                     \n" +
-        "|   *                      *                     \n" +
-        "|   *                      *                     \n" +
-        "|   *                      *                     \n" +
-        "|   *                      *                 *   \n" +
-        "|   *                      *                 *   \n" +
-        "|   *                      *                 *   \n" +
-        "|   *                      *        *        *   \n" +
-        "|   *                      *        *        *   \n" +
-        "|   *                      *        *        *   \n" +
-        "|   *                      *        *        *   \n" +
-        "|   *                      *        *        *   \n" +
-        "|   *                      *        *        *   \n" +
-        "|   *       *              *        *        *   \n" +
-        "|   *       *       *      *        *        *   \n" +
-        "-------------------------------------------------\n" +
-        "  Aggro   Bounce   Chill   Dark   Melodic   Rave  \n"
+        "|   *                                     \n" +
+        "|   *                                     \n" +
+        "|   *                                     \n" +
+        "|   *                                     \n" +
+        "|   *                                     \n" +
+        "|   *                                     \n" +
+        "|   *                                     \n" +
+        "|   *                                     \n" +
+        "|   *                                     \n" +
+        "|   *               *                     \n" +
+        "|   *               *                     \n" +
+        "|   *               *                     \n" +
+        "|   *               *                     \n" +
+        "|   *               *                     \n" +
+        "|   *               *                 *   \n" +
+        "|   *               *                 *   \n" +
+        "|   *               *                 *   \n" +
+        "|   *               *        *        *   \n" +
+        "|   *               *        *        *   \n" +
+        "|   *               *        *        *   \n" +
+        "|   *               *        *        *   \n" +
+        "|   *               *        *        *   \n" +
+        "|   *               *        *        *   \n" +
+        "|   *       *       *        *        *   \n" +
+        "|   *       *       *        *        *   \n" +
+        "------------------------------------------\n" +
+        "  Aggro   Bounce   Dark   Melodic   Rave  \n"
     )
     print_data(data)
     cap = capsys.readouterr()
     assert cap.out == expected
+
+
+@mock.patch("djtools.rekordbox.helpers.print_data")
+def test_print_playlists_tag_statistics(mock_print_data, capsys):
+    """Test for the print_playlists_tag_statistics function."""
+    playlist_tracks = {
+        "Dubstep | Techno": {"1", "3"},
+        "Eurodance & Hip Hop": {},
+    }
+    track_lookup = {
+        "1": {"Dark", "Dubstep"}, "3": {"Minimal Deep Tech", "Techno"}
+    }
+    parser_tracks = {
+        "GenreTagParser": {
+            "Dubstep": [("1", ["Dark", "Dubstep"])],
+            "Minimal Deep Tech": [("3", ["Minimal Deep Tech", "Techno"])],
+            "Techno": [("3", ["Minimal Deep Tech", "Techno"])],
+        },
+        "MyTagParser": {
+            "Dark": [("1", ["Dark", "Dubstep"])],
+        },
+    }
+    print_playlists_tag_statistics(
+        playlist_tracks, track_lookup, parser_tracks
+    )
+    cap = capsys.readouterr()
+    for playlist, tracks in playlist_tracks.items():
+        if not tracks:
+            continue
+        assert f"\n{playlist} tag statistics:" in cap.out
+        for parser in parser_tracks:
+            assert f"\n{parser}" in cap.out
+    assert mock_print_data.call_count == len(parser_tracks)
 
 
 def test_scale_output():

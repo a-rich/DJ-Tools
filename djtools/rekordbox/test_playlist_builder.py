@@ -13,6 +13,7 @@ from djtools.rekordbox.playlist_builder import (
 def test_build_playlists(test_config, test_xml):
     """Test for the build_playlists function."""
     test_config.XML_PATH = Path(test_xml)
+    test_config.VERBOSITY = 1
     build_playlists(test_config)
 
 
