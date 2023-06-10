@@ -1,4 +1,5 @@
 """This module contains helpers for the rekordbox package."""
+from collections import defaultdict
 from operator import itemgetter
 from pathlib import Path
 import re
@@ -140,12 +141,41 @@ def get_playlist_tracks(
     return playlist_tracks
 
 
+def print_playlists_tag_statistics(
+    playlist_tracks: Dict[str, Set[str]],
+    track_lookup: Dict[str, Set[str]],
+    parser_tracks: Dict[str, Dict[str, List[Tuple[str, List[str]]]]],
+) -> None:
+    """Prints tag statistics for Combiner playlists.
+
+    Statistics are split out by Combiner playlist and then by TagParser type.
+
+    Args:
+        playlist_tracks: Combiner playlists mapped to track IDs.
+        track_lookup: Track IDs mapped to set of tags.
+        parser_tracks: Parser type mapped to tags mapped to list of
+            (track ID, tag list) tuples.
+    """
+    for playlist, _tracks in playlist_tracks.items():
+        if not _tracks:
+            continue
+        print(f"\n{playlist} tag statistics:")
+        playlist_tags = defaultdict(int)
+        for track in _tracks:
+            for tag in track_lookup[track]:
+                playlist_tags[tag] += 1
+        for parser, parser_tags in parser_tracks.items():
+            print(f"\n{parser}:")
+            print_data({k: playlist_tags[k] for k in parser_tags})
+
+
 def print_data(data: Dict[str, int]):
     """Prints an ASCII histogram of tag data.
 
     Args:
         data: Tag names to tag counts.
     """
+    data = {k: v for k, v in data.items() if v}
     scaled_data = scale_data(data)
     row_width = 0
     width_pad = 1

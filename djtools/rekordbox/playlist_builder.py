@@ -24,7 +24,7 @@ import yaml
 
 from djtools.configs.config import BaseConfig
 from djtools.rekordbox import tag_parsers
-from djtools.rekordbox.helpers import print_data
+from djtools.rekordbox.helpers import print_playlists_tag_statistics
 from djtools.rekordbox.playlist_combiner import Combiner
 
 
@@ -65,6 +65,7 @@ class PlaylistBuilder:
         rekordbox_database: Path,
         playlist_config: Path,
         playlist_remainder_type: str = "",
+        verbosity: int = 0,
     ):
         """Constructor.
 
@@ -73,11 +74,14 @@ class PlaylistBuilder:
             playlist_config: Playlist taxonomy.
             playlist_remainder_type: Whether unspecified tags are grouped into
                 a "folder" or "playlist".
+            verbosity: Whether or not to print playlist tag statistics.
 
         Raises:
             AttributeError: Configured TagParser must be implemented in
                 "tag_parsers.py".
         """
+        self.verbosity = verbosity
+
         # Load Rekordbox database from XML.
         self._database_path = rekordbox_database
         with open(self._database_path, mode="r", encoding="utf-8") as _file:
@@ -215,17 +219,10 @@ class PlaylistBuilder:
             tracks = self._combiner_parser(merged_tracks)
 
             # Print tag statistics for each Combiner playlist.
-            for playlist, _tracks in tracks.items():
-                if not _tracks:
-                    continue
-                print(f"\n{playlist} tag statistics:")
-                playlist_tags = defaultdict(int)
-                for track in _tracks:
-                    for tag in track_lookup[track]:
-                        playlist_tags[tag] += 1
-                for parser, parser_tags in parser_tracks.items():
-                    print(f"\n{parser}:")
-                    print_data({k: playlist_tags[k] for k in parser_tags})
+            if self.verbosity:
+                print_playlists_tag_statistics(
+                    tracks, track_lookup, parser_tracks
+                )
 
             self._add_tracks(
                 soup=self._database,
@@ -517,5 +514,6 @@ def build_playlists(config: BaseConfig):
         rekordbox_database=config.XML_PATH,
         playlist_config=playlist_config,
         playlist_remainder_type=config.BUILD_PLAYLISTS_REMAINDER,
+        verbosity=config.VERBOSITY,
     )
     playlist_builder()
