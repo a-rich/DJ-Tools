@@ -93,7 +93,7 @@ def xml_tmpdir(tmpdir_factory):
 def xml():
     """Test XML fixture."""
     with open(
-        "test_data/rekordbox.xml", mode="r", encoding="utf-8"
+        "testing/data/rekordbox.xml", mode="r", encoding="utf-8"
     ) as _file:
         xml = BeautifulSoup(_file.read(), "xml")  # pylint: disable=redefined-outer-name
 
