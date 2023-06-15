@@ -23,7 +23,7 @@ def test_download_music(playlist_name, test_config, tmpdir, caplog):
     """Test for the download_music function."""
     caplog.set_level("INFO")
     test_config.USB_PATH = tmpdir
-    test_config.DOWNLOAD_SPOTIFY = playlist_name
+    test_config.DOWNLOAD_SPOTIFY_PLAYLIST = playlist_name
     write_path = Path(tmpdir) / "DJ Music" / "file.mp3"
     cmd = [
         "aws",
@@ -71,13 +71,13 @@ def test_download_xml(mock_rewrite_xml, test_config, test_xml, caplog):
         "aws",
         "s3",
         "cp",
-        f's3://dj.beatcloud.com/dj/xml/{other_user}/rekordbox.xml',
+        f's3://dj.beatcloud.com/dj/xml/{other_user}/collection',
         # NOTE(a-rich): since we could be passing a `test_xml` formatted as a
         # WindowsPath, the comparison needs to be made with `str(new_xml)`
         # (rather than `new_xml.as_posix()`).
         str(new_xml),
     ]
-    assert caplog.records[0].message == "Syncing remote rekordbox.xml..."
+    assert caplog.records[0].message == "Syncing remote collection..."
     assert caplog.records[1].message == " ".join(cmd)
     mock_rewrite_xml.assert_called_once()
 
@@ -130,6 +130,6 @@ def test_upload_xml(test_config, test_xml, caplog):
     cmd = f"aws s3 cp {test_xml} s3://dj.beatcloud.com/dj/xml/{test_user}/"
     upload_xml(test_config)
     assert caplog.records[0].message == (
-        f"Uploading {test_user}'s rekordbox.xml..."
+        f"Uploading {test_user}'s collection..."
     )
     assert caplog.records[1].message == cmd

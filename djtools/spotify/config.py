@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class SubredditConfig(BaseModel):
-    """Configuration object for AUTO_PLAYLIST_SUBREDDITS."""
+    """Configuration object for SPOTIFY_PLAYLISTS."""
 
     name: str
     limit: NonNegativeInt= 50
@@ -30,14 +30,14 @@ class SubredditConfig(BaseModel):
 class SpotifyConfig(BaseConfig):
     """Configuration object for the spotify package."""
 
-    AUTO_PLAYLIST_DEFAULT_LIMIT: NonNegativeInt = 50
-    AUTO_PLAYLIST_DEFAULT_PERIOD: str = "week"
-    AUTO_PLAYLIST_DEFAULT_TYPE: str = "hot"
-    AUTO_PLAYLIST_FUZZ_RATIO: NonNegativeInt = 70
-    AUTO_PLAYLIST_POST_LIMIT: NonNegativeInt = 100
-    AUTO_PLAYLIST_SUBREDDITS: List[SubredditConfig] = []
-    AUTO_PLAYLIST_UPDATE: bool = False
-    PLAYLIST_FROM_UPLOAD: bool = False
+    SPOTIFY_PLAYLIST_DEFAULT_LIMIT: NonNegativeInt = 50
+    SPOTIFY_PLAYLIST_DEFAULT_PERIOD: str = "week"
+    SPOTIFY_PLAYLIST_DEFAULT_TYPE: str = "hot"
+    SPOTIFY_PLAYLIST_FROM_UPLOAD: bool = False
+    SPOTIFY_PLAYLIST_FUZZ_RATIO: NonNegativeInt = 70
+    SPOTIFY_PLAYLIST_POST_LIMIT: NonNegativeInt = 100
+    SPOTIFY_PLAYLIST_SUBREDDITS: List[SubredditConfig] = []
+    SPOTIFY_PLAYLISTS: bool = False
     REDDIT_CLIENT_ID: str = ""
     REDDIT_CLIENT_SECRET: str = ""
     REDDIT_USER_AGENT: str = ""
@@ -57,7 +57,7 @@ class SpotifyConfig(BaseConfig):
         super().__init__(*args, **kwargs)
 
         if (
-            (self.AUTO_PLAYLIST_UPDATE or self.PLAYLIST_FROM_UPLOAD) and
+            (self.SPOTIFY_PLAYLISTS or self.SPOTIFY_PLAYLIST_FROM_UPLOAD) and
             not all(
                 [
                     self.SPOTIFY_CLIENT_ID,
@@ -71,9 +71,9 @@ class SpotifyConfig(BaseConfig):
                 "Without all the configuration options SPOTIFY_CLIENT_ID, "
                 "SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI, and "
                 "SPOTIFY_USERNAME set to valid values, you cannot use "
-                "AUTO_PLAYLIST_UPDATE or PLAYLIST_FROM_UPLOAD"
+                "SPOTIFY_PLAYLISTS or SPOTIFY_PLAYLIST_FROM_UPLOAD"
             )
-        if self.AUTO_PLAYLIST_UPDATE or self.PLAYLIST_FROM_UPLOAD:
+        if self.SPOTIFY_PLAYLISTS or self.SPOTIFY_PLAYLIST_FROM_UPLOAD:
             from djtools.spotify.helpers import get_spotify_client
             spotify = get_spotify_client(self)
             try:
@@ -81,7 +81,7 @@ class SpotifyConfig(BaseConfig):
             except Exception as exc:
                 raise RuntimeError("Spotify credentials are invalid!") from exc
 
-        if self.AUTO_PLAYLIST_UPDATE and not all(
+        if self.SPOTIFY_PLAYLISTS and not all(
             [
                 self.REDDIT_CLIENT_ID,
                 self.REDDIT_CLIENT_SECRET,
@@ -91,5 +91,5 @@ class SpotifyConfig(BaseConfig):
             raise RuntimeError(
                 "Without all the configuration options REDDIT_CLIENT_ID, "
                 "REDDIT_CLIENT_SECRET, and REDDIT_USER_AGENT, set to valid "
-                "values, you cannot use AUTO_PLAYLIST_UPDATE"
+                "values, you cannot use SPOTIFY_PLAYLISTS"
             )

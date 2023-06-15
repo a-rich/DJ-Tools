@@ -6,9 +6,9 @@ import pytest
 
 from djtools.spotify.config import SubredditConfig
 from djtools.spotify.playlist_builder import (
-    async_update_auto_playlists,
-    playlist_from_upload,
-    update_auto_playlists,
+    async_spotify_playlists,
+    spotify_playlist_from_upload,
+    spotify_playlists,
 )
 from djtools.utils.helpers import MockOpen
 
@@ -48,20 +48,20 @@ from djtools.utils.helpers import MockOpen
 @mock.patch(
     "djtools.spotify.playlist_builder.get_spotify_client", mock.MagicMock()
 )
-async def test_async_update_auto_playlists(
+async def test_async_spotify_playlists(
     mock_get_subreddit_posts,
     got_tracks,
     got_playlist_ids,
     playlist_subreddits,
     test_config,
 ):
-    """Test for the async_update_auto_playlists function."""
+    """Test for the async_spotify_playlists function."""
     if not got_tracks:
         mock_get_subreddit_posts.return_value[0] = []
     test_config.SPOTIFY_CLIENT_ID = "test_client_id"
     test_config.SPOTIFY_CLIENT_SECRET = "test_client_secret"
     test_config.SPOTIFY_REDIRECT_URI = "test_redirect_uri"
-    test_config.AUTO_PLAYLIST_SUBREDDITS = playlist_subreddits
+    test_config.SPOTIFY_PLAYLIST_SUBREDDITS = playlist_subreddits
     with mock.patch(
         "builtins.open",
         MockOpen(
@@ -69,7 +69,7 @@ async def test_async_update_auto_playlists(
             content='{"jungle": "some-id"}' if got_playlist_ids else "{}",
         ).open
     ):
-        await async_update_auto_playlists(test_config)
+        await async_spotify_playlists(test_config)
 
 
 @mock.patch(
@@ -108,17 +108,17 @@ async def test_async_update_auto_playlists(
                    Shirt - Cour T..mp3
                    UNKNOWN - 1 - Unknown Artist.mp3""",
 )
-def test_playlist_from_upload(test_config):
-    """Test for the playlist_from_upload function."""
+def test_spotify_playlist_from_upload(test_config):
+    """Test for the spotify_playlist_from_upload function."""
     test_config.SPOTIFY_CLIENT_ID = "test_client_id"
     test_config.SPOTIFY_CLIENT_SECRET = "test_client_secret"
     test_config.SPOTIFY_REDIRECT_URI = "test_redirect_uri"
-    test_config.PLAYLIST_FROM_UPLOAD = True
+    test_config.SPOTIFY_PLAYLIST_FROM_UPLOAD = True
     with mock.patch(
         "builtins.open",
         MockOpen(files=["spotify_playlists.yaml"], content="{}").open
     ):
-        playlist_from_upload(test_config)
+        spotify_playlist_from_upload(test_config)
 
 
 @mock.patch(
@@ -130,12 +130,12 @@ def test_playlist_from_upload(test_config):
 @mock.patch(
     "djtools.spotify.playlist_builder.get_spotify_client", mock.MagicMock()
 )
-def test_playlist_from_upload_handles_non_match(test_config, caplog):
-    """Test for the playlist_from_upload function."""
+def test_spotify_playlist_from_upload_handles_non_match(test_config, caplog):
+    """Test for the spotify_playlist_from_upload function."""
     caplog.set_level("WARNING")
     title = "Under Pressure"
     artist = "Alix Perez, T-Man"
-    test_config.PLAYLIST_FROM_UPLOAD = True
+    test_config.SPOTIFY_PLAYLIST_FROM_UPLOAD = True
     with mock.patch(
         "builtins.open",
         MockOpen(files=["spotify_playlists.yaml"], content="{}").open
@@ -144,7 +144,7 @@ def test_playlist_from_upload_handles_non_match(test_config, caplog):
         return_value=f"""aweeeezy/Bass/2022-09-03: 5
             {title} - {artist}.mp3""",
     ):
-        playlist_from_upload(test_config)
+        spotify_playlist_from_upload(test_config)
     assert caplog.records[0].message == (
         f"Could not find a match for {title} - {artist}"
     )
@@ -155,17 +155,17 @@ def test_playlist_from_upload_handles_non_match(test_config, caplog):
     "djtools.spotify.helpers.spotipy.Spotify.search",
     side_effect=Exception()
 )
-def test_playlist_from_upload_handles_spotify_exception(
+def test_spotify_playlist_from_upload_handles_spotify_exception(
     mock_spotify_search, mock_spotify, test_config, caplog
 ):
-    """Test for the playlist_from_upload function."""
+    """Test for the spotify_playlist_from_upload function."""
     caplog.set_level("ERROR")
     mock_spotify.return_value.search.side_effect = (
         mock_spotify_search.side_effect
     )
     title = "Under Pressure"
     artist = "Alix Perez, T-Man"
-    test_config.PLAYLIST_FROM_UPLOAD = True
+    test_config.SPOTIFY_PLAYLIST_FROM_UPLOAD = True
     test_config.SPOTIFY_CLIENT_ID = "test_client_id"
     test_config.SPOTIFY_CLIENT_SECRET = "test_client_secret"
     test_config.SPOTIFY_REDIRECT_URI = "test_redirect_uri"
@@ -177,29 +177,29 @@ def test_playlist_from_upload_handles_spotify_exception(
         return_value=f"""aweeeezy/Bass/2022-09-03: 5
             {title} - {artist}.mp3"""
     ):
-        playlist_from_upload(test_config)
+        spotify_playlist_from_upload(test_config)
     assert caplog.records[0].message.startswith(
         f'Error searching for "{title} - {artist}"'
     )
 
 
 @mock.patch("pyperclip.paste", return_value="")
-def test_playlist_from_upload_raises_runtimeerror(test_config):
-    """Test for the playlist_from_upload function."""
-    test_config.PLAYLIST_FROM_UPLOAD = True
+def test_spotify_playlist_from_upload_raises_runtimeerror(test_config):
+    """Test for the spotify_playlist_from_upload function."""
+    test_config.SPOTIFY_PLAYLIST_FROM_UPLOAD = True
     with pytest.raises(
         RuntimeError,
         match="Generating a Spotify playlist from an upload requires output "
             "from an upload_music Discord webhook to be copied to the "
             "system's clipboard"
     ):
-        playlist_from_upload(test_config)
+        spotify_playlist_from_upload(test_config)
 
 
 @mock.patch(
-    "djtools.spotify.playlist_builder.async_update_auto_playlists",
+    "djtools.spotify.playlist_builder.async_spotify_playlists",
     mock.AsyncMock(return_value=lambda x: None),
 )
-def test_update_auto_playlists(test_config):
-    """Test for the update_auto_playlists function."""
-    update_auto_playlists(test_config)
+def test_spotify_playlists(test_config):
+    """Test for the spotify_playlists function."""
+    spotify_playlists(test_config)

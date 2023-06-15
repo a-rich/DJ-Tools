@@ -42,7 +42,7 @@ logging.getLogger("asyncio").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
-async def async_update_auto_playlists(config: BaseConfig):
+async def async_spotify_playlists(config: BaseConfig):
     """This function updates the contents of one or more Spotify playlists with
         the posts of one or more subreddits (currently only supports one
         subreddit per playlist).
@@ -70,7 +70,7 @@ async def async_update_auto_playlists(config: BaseConfig):
                 praw_cache,
             )
         )
-        for subreddit in config.AUTO_PLAYLIST_SUBREDDITS
+        for subreddit in config.SPOTIFY_PLAYLIST_SUBREDDITS
     ]
 
     for task in asyncio.as_completed(tasks):
@@ -93,7 +93,7 @@ async def async_update_auto_playlists(config: BaseConfig):
         yaml.dump(praw_cache, _file)
 
 
-def playlist_from_upload(config: BaseConfig):
+def spotify_playlist_from_upload(config: BaseConfig):
     """Generates a Spotify playlist using a Discord webhook output.
 
     If "upload_output", a path to a text file containing the pasted output of
@@ -140,7 +140,7 @@ def playlist_from_upload(config: BaseConfig):
     files = list(filter(lambda x: len(x) == 2, files))
 
     # Query Spotify for files in upload output.
-    threshold = config.AUTO_PLAYLIST_FUZZ_RATIO
+    threshold = config.SPOTIFY_PLAYLIST_FUZZ_RATIO
     tracks = []
     for title, artist in files:
         query = f"track:{title} artist:{artist}"
@@ -171,10 +171,10 @@ def playlist_from_upload(config: BaseConfig):
     write_playlist_ids(playlist_ids)
 
 
-def update_auto_playlists(config: BaseConfig):
+def spotify_playlists(config: BaseConfig):
     """This function asynchronously updates Spotify playlists.
 
     Args:
         config: Configuration object.
     """
-    asyncio.run(async_update_auto_playlists(config))
+    asyncio.run(async_spotify_playlists(config))

@@ -5,12 +5,12 @@ from urllib.parse import unquote
 from bs4 import BeautifulSoup
 import pytest
 
-from djtools.rekordbox.copy_playlists import copy_playlists
+from djtools.collections.copy_playlists import copy_playlists
 
 
 def test_copy_playlists(tmpdir, test_config, test_xml):
     """Test for the copy_playlists function."""
-    target_playlists = ["Hip Hop"]
+    target_playlists = ["Genres", "Hip Hop"]
     test_xml = Path(test_xml)
     new_xml = test_xml.parent / "auto_rekordbox.xml"
     test_output_dir = Path(tmpdir) / "output"

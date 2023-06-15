@@ -1,6 +1,6 @@
 """This module is responsible for syncing tracks between "USB_PATH" and the
-Beatcloud (upload and download). It also handles uploading the Rekordbox XML
-located at "XML_PATH" and downloading the Rekordbox XML uploaded to the
+Beatcloud (upload and download). It also handles uploading the collection
+located at "COLLECTION_PATH" and downloading the collection uploaded to the
 Beatcloud by "IMPORT_USER" before modifying it to point to track locations at
 "USB_PATH".
 """
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 def download_music(config: BaseConfig, beatcloud_tracks: Optional[List[str]] = None):
     """This function syncs tracks from the Beatcloud to "USB_PATH".
 
-    If "DOWNLOAD_SPOTIFY" is set to a playlist name that exists in
+    If "DOWNLOAD_SPOTIFY_PLAYLIST" is set to a playlist name that exists in
     "spotify_playlists.yaml", then "DOWNLOAD_INCLUDE_DIRS" will be populated
     with tracks in that playlist that match Beatcloud tracks.
 
@@ -31,12 +31,12 @@ def download_music(config: BaseConfig, beatcloud_tracks: Optional[List[str]] = N
         config: Configuration object.
         beatcloud_tracks: List of track artist - titles from S3.
     """
-    if config.DOWNLOAD_SPOTIFY:
-        user = config.DOWNLOAD_SPOTIFY.split("Uploads")[0].strip()
+    if config.DOWNLOAD_SPOTIFY_PLAYLIST:
+        user = config.DOWNLOAD_SPOTIFY_PLAYLIST.split("Uploads")[0].strip()
         beatcloud_tracks, beatcloud_matches = compare_tracks(
             config,
             beatcloud_tracks=beatcloud_tracks,
-            download_spotify_playlist=config.DOWNLOAD_SPOTIFY,
+            download_spotify_playlist=config.DOWNLOAD_SPOTIFY_PLAYLIST,
         )
         config.DOWNLOAD_INCLUDE_DIRS = [
             (Path(user) / path.split(f"{Path(user)}/")[-1])
@@ -74,13 +74,14 @@ def download_xml(config: BaseConfig):
     Args:
         config: Configuration object.
     """
-    logger.info("Syncing remote rekordbox.xml...")
-    xml_dir = Path(config.XML_PATH).parent
+    logger.info("Syncing remote collection...")
+    # xml_dir = Path(config.XML_PATH).parent
+    xml_dir = config.XML_PATH.parent
     xml_dir.mkdir(parents=True, exist_ok=True)
-    _file = Path(xml_dir) / f'{config.IMPORT_USER}_rekordbox.xml'
+    _file = Path(xml_dir) / f'{config.IMPORT_USER}_{config.XML_PATH.name}'
     cmd = (
         "aws s3 cp s3://dj.beatcloud.com/dj/xml/"
-        f'{config.IMPORT_USER}/rekordbox.xml {_file}'
+        f'{config.IMPORT_USER}/collection {_file}'
     )
     logger.info(cmd)
     with Popen(cmd, shell=True) as proc:
@@ -128,7 +129,7 @@ def upload_xml(config: BaseConfig):
     Args:
         config: Configuration object.
     """
-    logger.info(f"Uploading {config.USER}'s rekordbox.xml...")
+    logger.info(f"Uploading {config.USER}'s collection...")
     dst = f"s3://dj.beatcloud.com/dj/xml/{config.USER}/"
     cmd = f"aws s3 cp {config.XML_PATH} {dst}"
     logger.info(cmd)

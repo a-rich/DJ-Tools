@@ -269,7 +269,7 @@ async def get_subreddit_posts(
     """
     sub = await reddit.subreddit(subreddit["name"])
     func = getattr(sub, subreddit["type"])
-    kwargs = {"limit": config.AUTO_PLAYLIST_POST_LIMIT}
+    kwargs = {"limit": config.SPOTIFY_PLAYLIST_POST_LIMIT}
     if subreddit["type"]== "top":
         kwargs["time_filter"] = subreddit["period"]
     subs = [
@@ -295,7 +295,7 @@ async def get_subreddit_posts(
         payload = [
             submissions,
             [spotify] * len(submissions),
-            [config.AUTO_PLAYLIST_FUZZ_RATIO] * len(submissions)
+            [config.SPOTIFY_PLAYLIST_FUZZ_RATIO] * len(submissions)
         ]
         with ThreadPoolExecutor(max_workers=8) as executor:
             new_tracks = list(

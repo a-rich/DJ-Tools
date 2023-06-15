@@ -1,7 +1,7 @@
 """This is the entry point for the DJ Tools library.
 
-Rekordbox operations:
-    * BUILD_PLAYLISTS (rekordbox.playlist_builder.py): Automatically
+Collections operations:
+    * COLLECTION_PLAYLISTS (collections.playlist_builder.py): Automatically
         create a playlist structure based on the tags present in an XML.
     * COPY_PLAYLISTS (copy_playlists.py): Copy audio files from
         playlists to a new location and generate a new XML with updated
@@ -10,7 +10,7 @@ Rekordbox operations:
         playlists sequentially (after shuffling) to randomize.
 
 Spotify operations:
-    * AUTO_PLAYLIST_UPDATE (spotify.playlist_builder.py): Creating and updating
+    * SPOTIFY_PLAYLISTS (spotify.playlist_builder.py): Creating and updating
         Spotify playlists using subreddit top posts.
     * PLAYLISTS_FROM_UPLOAD (spotify.playlist_builder.py): Creating and
         updating Spotify playlists using the Discord webhook output from users

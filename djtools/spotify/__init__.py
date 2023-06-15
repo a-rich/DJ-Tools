@@ -6,19 +6,19 @@
 """
 from djtools.spotify.config import SpotifyConfig
 from djtools.spotify.playlist_builder import (
-    playlist_from_upload, update_auto_playlists
+    spotify_playlist_from_upload, spotify_playlists
 )
 
 
 SPOTIFY_OPERATIONS = {
-    "PLAYLIST_FROM_UPLOAD": playlist_from_upload,
-    "AUTO_PLAYLIST_UPDATE": update_auto_playlists,
+    "SPOTIFY_PLAYLIST_FROM_UPLOAD": spotify_playlist_from_upload,
+    "SPOTIFY_PLAYLISTS": spotify_playlists,
 }
 
 
 __all__ = (
-    "playlist_from_upload",
+    "spotify_playlist_from_upload",
     "SpotifyConfig",
     "SPOTIFY_OPERATIONS",
-    "update_auto_playlists",
+    "spotify_playlists",
 )

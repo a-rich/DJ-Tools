@@ -37,7 +37,7 @@ def test_config():
 @pytest.fixture
 def test_playlist_config(tmpdir):
     """Test playlist config fixture."""
-    src = Path("djtools/configs/rekordbox_playlists.yaml")
+    src = Path("djtools/configs/collection_playlists.yaml")
     dst = tmpdir / src.name
     shutil.copyfile(str(src), str(dst))
 
@@ -52,9 +52,11 @@ def test_track(xml_tmpdir, xml):  # pylint: disable=redefined-outer-name
     test_dir.mkdir()
     track = xml.find("TRACK")
     track_name = Path(track["Location"]).name
+    location_prefix = "file://localhost"
     track["Location"] = quote((test_dir / track_name).as_posix())
     with open(unquote(track["Location"]), mode="w", encoding="utf-8") as _file:
         _file.write("")
+    track["Location"] = location_prefix + track["Location"]
 
     return track
 

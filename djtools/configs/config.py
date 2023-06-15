@@ -59,15 +59,15 @@ class BaseConfig(BaseModel, extra=Extra.allow):
             logger.warning(
                 "XML_PATH is not set. Without this set to a valid Rekordbox "
                 "XML export, you cannot use the following features: "
-                "BUILD_PLAYLISTS, COPY_PLAYLISTS, DOWNLOAD_XML, SHUFFLE_PLAYLISTS, "
-                "UPLOAD_XML"
+                "COLLECTION_PLAYLISTS, COPY_PLAYLISTS, DOWNLOAD_XML, "
+                "SHUFFLE_PLAYLISTS, UPLOAD_XML"
             )
         elif not self.XML_PATH.exists():
             logger.warning(
                 "XML_PATH does not exist. Without this set to a valid "
                 "Rekordbox XML export, you cannot use the following features: "
-                "BUILD_PLAYLISTS, COPY_PLAYLISTS, DOWNLOAD_XML, SHUFFLE_PLAYLISTS, "
-                "UPLOAD_XML"
+                "COLLECTION_PLAYLISTS, COPY_PLAYLISTS, DOWNLOAD_XML, "
+                "SHUFFLE_PLAYLISTS, UPLOAD_XML"
             )
 
     def __repr__(self):

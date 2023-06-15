@@ -24,7 +24,7 @@ class SyncConfig(BaseConfig):
     DOWNLOAD_EXCLUDE_DIRS: List[Path] = []
     DOWNLOAD_INCLUDE_DIRS: List[Path] = []
     DOWNLOAD_MUSIC: bool = False
-    DOWNLOAD_SPOTIFY: str = ""
+    DOWNLOAD_SPOTIFY_PLAYLIST: str = ""
     DOWNLOAD_XML: bool = False
     DRYRUN: bool = False
     IMPORT_USER: str = ""

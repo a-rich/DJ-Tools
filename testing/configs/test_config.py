@@ -53,8 +53,8 @@ def test_baseconfig_no_xml_path(caplog):
     assert caplog.records[0].message == (
         "XML_PATH is not set. Without this set to a valid Rekordbox XML "
         "export, you cannot use the following features: "
-        "BUILD_PLAYLISTS, COPY_PLAYLISTS, DOWNLOAD_XML, SHUFFLE_PLAYLISTS, "
-        "UPLOAD_XML"
+        "COLLECTION_PLAYLISTS, COPY_PLAYLISTS, DOWNLOAD_XML, "
+        "SHUFFLE_PLAYLISTS, UPLOAD_XML"
     )
 
 
@@ -70,6 +70,6 @@ def test_baseconfig_xml_path_does_not_exist(caplog):
     assert caplog.records[0].message == (
         "XML_PATH does not exist. Without this set to a valid "
         "Rekordbox XML export, you cannot use the following features: "
-        "BUILD_PLAYLISTS, COPY_PLAYLISTS, DOWNLOAD_XML, SHUFFLE_PLAYLISTS, "\
-        "UPLOAD_XML"
+        "COLLECTION_PLAYLISTS, COPY_PLAYLISTS, DOWNLOAD_XML, "
+        "SHUFFLE_PLAYLISTS, UPLOAD_XML"
     )
