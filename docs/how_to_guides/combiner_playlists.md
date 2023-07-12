@@ -12,7 +12,7 @@ In this guide you will learn how to automatically build playlists based off of p
 It may not be commonly known, but Rekordbox already has a very elementary version of this functionality called the "Track Filter":
 ![alt text](../../images/Rekordbox_track_filter.png "Rekordbox Track Filter")
 
-There are many shortcomings with the Track Filter which make it far inferior to the [Combiner][djtools.rekordbox.playlist_combiner.Combiner]:
+There are many shortcomings with the Track Filter which make it far inferior to the [Combiner][djtools.collections.helpers.build_combiner_playlists]:
 
 1. Portability
     * can only be used on a laptop running Rekordbox (not available on XDJs, CDJs, etc.)
@@ -56,12 +56,12 @@ The `Combiner` solves all these issues in the following ways:
 ## How it's done
 
 1. Configure your desired playlists for the `Combiner` by constructing a boolean algebra expression with the syntax noted above
-1. Run the command `--build-playlists`
-1. Import the `AUTO_PLAYLISTS` folder from the generated XML file
+1. Run the command `--collection-playlists`
+1. Import the `PLAYLIST_BUILDER` folder from the generated collection
 
 ## Example
-As is done in the [Build Playlists From Tags](build_playlists.md#example) how-to guide, we'll start by looking at some simple expressions configured in the pre-packaged [rekordbox_playlists.yaml](https://github.com/a-rich/DJ-Tools/blob/main/djtools/configs/rekordbox_playlists.yaml), but this time we'll focus only on the `Combiner` section:
-![alt text](../../images/Rekordbox_playlists_yaml.png "Rekordbox playlists YAML")
+As is done in the [Build Playlists From Tags](collection_playlists.md#example) how-to guide, we'll start by looking at some simple expressions configured in the pre-packaged [collection_playlists.yaml](https://github.com/a-rich/DJ-Tools/blob/main/djtools/configs/collection_playlists.yaml), but this time we'll focus only on the `Combiner` section:
+![alt text](../../images/Rekordbox_playlists_yaml.png "Collection playlists YAML")
 
 Note that the examples above are trivial ones designed to get 100% code coverage in unit tests.
 
@@ -69,6 +69,6 @@ This configuration contains a single named folder with a flat list of playlists.
 
 Once you've finalized your playlist configuration, run the following command to build the playlists:
 
-`djtools --build-playlists`
+`djtools --collection-playlists`
 
-Now you can import the `AUTO_PLAYLISTS` folder to load these playlists into your Collection.
+Now you can import the `PLAYLIST_BUILDER` folder to load these playlists into your Collection.

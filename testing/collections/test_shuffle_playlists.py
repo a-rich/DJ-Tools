@@ -1,20 +1,17 @@
 """Testing for the shuffle_playlists module."""
-from pathlib import Path
-
 from bs4 import BeautifulSoup
 import pytest
 
 from djtools.collections.shuffle_playlists import shuffle_playlists
 
 
-def test_shuffle_playlists(test_config, test_xml, caplog):
+def test_shuffle_playlists(config, rekordbox_xml, caplog):
     """Test shuffle_playlists function."""
     caplog.set_level("INFO")
     playlists = ["Hip Hop"]
-    test_xml = Path(test_xml)
-    test_config.XML_PATH = test_xml
-    test_config.SHUFFLE_PLAYLISTS = playlists
-    with open(test_xml, mode="r", encoding="utf-8") as _file:
+    config.COLLECTION_PATH = rekordbox_xml
+    config.SHUFFLE_PLAYLISTS = playlists
+    with open(rekordbox_xml, mode="r", encoding="utf-8") as _file:
         database = BeautifulSoup(_file.read(), "xml")
     track_lookup = {
         track["TrackID"]: track for track in database.find_all("TRACK")
@@ -31,8 +28,8 @@ def test_shuffle_playlists(test_config, test_xml, caplog):
     original_track_numbers = [
         track_lookup[key]["TrackNumber"] for key in original_tracks
     ]
-    shuffle_playlists(test_config)
-    new_xml = test_xml.parent / f"auto_{test_xml.name}"
+    shuffle_playlists(config)
+    new_xml = rekordbox_xml.parent / f"auto_{rekordbox_xml.name}"
     with open(new_xml, mode="r", encoding="utf-8") as _file:
         database = BeautifulSoup(_file.read(), "xml")
     track_lookup = {
@@ -52,13 +49,13 @@ def test_shuffle_playlists(test_config, test_xml, caplog):
     assert shuffled_track_numbers != original_track_numbers
 
 
-def test_shuffle_playlists_missing_playlist(test_config, test_xml):
+def test_shuffle_playlists_missing_playlist(config, rekordbox_xml):
     """Test shuffle_playlists function."""
     playlist = "nonexistent playlist"
-    test_config.XML_PATH = test_xml
-    test_config.SHUFFLE_PLAYLISTS = [playlist]
+    config.COLLECTION_PATH = rekordbox_xml
+    config.SHUFFLE_PLAYLISTS = [playlist]
     with pytest.raises(
         LookupError,
         match=f"{playlist} not found",
     ):
-        shuffle_playlists(test_config)
+        shuffle_playlists(config)

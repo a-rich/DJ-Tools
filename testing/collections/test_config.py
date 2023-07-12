@@ -27,9 +27,9 @@ def test_collectionsconfig():
         path,
     )
 )
-def test_collectionsconfig_no_collection_playlists_config(test_xml):
+def test_collectionsconfig_no_collection_playlists_config(rekordbox_xml):
     """Test for the CollectionConfig class."""
-    cfg = {"COLLECTION_PLAYLISTS": True, "XML_PATH": test_xml}
+    cfg = {"COLLECTION_PLAYLISTS": True, "COLLECTION_PATH": rekordbox_xml}
     with pytest.raises(
         RuntimeError,
         match="collection_playlists.yaml must be a valid YAML to use the "
@@ -40,7 +40,7 @@ def test_collectionsconfig_no_collection_playlists_config(test_xml):
 
 def test_collectionsconfig_no_xml():
     """Test for the CollectionConfig class."""
-    cfg = {"COLLECTION_PLAYLISTS": True, "XML_PATH": None}
+    cfg = {"COLLECTION_PLAYLISTS": True, "COLLECTION_PATH": None}
     with pytest.raises(
         RuntimeError,
         match="Using the collections package requires the config option "

@@ -1,17 +1,18 @@
 """The `collections` package contains modules:
+    * `collections`: abstractions and implementations for collections
     * `config`: the configuration object for the `collections` package
     * `copy_playlists`: copies audio files for tracks within a set of
-        playlists to a new location and writes a new XML with these updated
-        paths
+        playlists to a new location and writes a new collection with these
+        updated paths
     * `helpers`: contains helper classes and functions for the other modules of
         this package
     * `playlist_builder`: constructs playlists using tags in a Collection and a
         defined playlist structure in
         `collection_playlists.yaml`
+    * `playlists`: abstractions and implementations for playlists
     * `shuffle_playlists`: writes sequential numbers to tags of shuffled tracks
         in playlists to emulate playlist shuffling
-    * `tag_parsers`: the `TagParser` abstract base class and its
-        implementations used by the `playlist_builder`
+    * `tracks`: abstractions and implementations for tracks
 """
 
 from djtools.collections.config import CollectionConfig

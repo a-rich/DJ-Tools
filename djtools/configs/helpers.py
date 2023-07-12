@@ -91,6 +91,11 @@ def arg_parse() -> argparse.Namespace:
         help="List of Spotify playlist names to check against the Beatcloud",
     )
     parser.add_argument(
+        "--collection-path",
+        type=convert_to_paths,
+        help='Path to a collection database',
+    )
+    parser.add_argument(
         "--collection-playlists",
         action="store_true",
         help="Trigger building collection playlists",
@@ -121,6 +126,14 @@ def arg_parse() -> argparse.Namespace:
         help="Discord webhook URL",
     )
     parser.add_argument(
+        "--download-collection",
+        action="store_true",
+        help=(
+            "Trigger downloading the collection of IMPORT_USER from the "
+            "Beatcloud"
+        ),
+    )
+    parser.add_argument(
         "--download-exclude-dirs",
         type=convert_to_paths,
         nargs="+",
@@ -143,11 +156,6 @@ def arg_parse() -> argparse.Namespace:
         help="Playlist name containing tracks to download from the Beatcloud",
     )
     parser.add_argument(
-        "--download-xml",
-        action="store_true",
-        help="Trigger downloading the XML of IMPORT_USER from the Beatcloud",
-    )
-    parser.add_argument(
         "--dryrun",
         action="store_true",
         help='Show result of "aws s3 sync" command without running it',
@@ -155,7 +163,7 @@ def arg_parse() -> argparse.Namespace:
     parser.add_argument(
         "--import-user",
         type=str,
-        help="USER whose XML_PATH you're downloading",
+        help="USER whose COLLECTION_PATH you're downloading",
     )
     parser.add_argument(
         "--link-configs",
@@ -261,6 +269,14 @@ def arg_parse() -> argparse.Namespace:
         help="Spotify user to maintain playlists for",
     )
     parser.add_argument(
+        "--upload-collection",
+        action="store_true",
+        help=(
+            "Trigger uploading the collection of IMPORT_USER from the "
+            "Beatcloud"
+        ),
+    )
+    parser.add_argument(
         "--upload-exclude-dirs",
         type=convert_to_paths,
         nargs="+",
@@ -276,11 +292,6 @@ def arg_parse() -> argparse.Namespace:
         "--upload-music",
         action="store_true",
         help="Trigger uploading new tracks from the Beatcloud",
-    )
-    parser.add_argument(
-        "--upload-xml",
-        action="store_true",
-        help="Trigger uploading the XML of IMPORT_USER from the Beatcloud",
     )
     parser.add_argument(
         "--url-download",
@@ -313,11 +324,6 @@ def arg_parse() -> argparse.Namespace:
         "--version",
         action="store_true",
         help="Display package version",
-    )
-    parser.add_argument(
-        "--xml-path",
-        type=convert_to_paths,
-        help='Path to a collection database',
     )
     args = parser.parse_args()
 

@@ -32,14 +32,15 @@ def test_syncconfig_download_or_upload_without_usb_path(operations, usb_path):
 def test_syncconfig_download_without_import_user():
     """Test for the SyncConfig class."""
     cfg = {
-        "DOWNLOAD_XML": True,
+        "DOWNLOAD_COLLECTION": True,
         "AWS_PROFILE": "myprofile",
         "IMPORT_USER": "",
     }
     with pytest.raises(
         RuntimeError,
         match=(
-            f'Unable to import from XML of IMPORT_USER "{cfg["IMPORT_USER"]}"'
+            "Unable to import from collection of IMPORT_USER "
+            f'"{cfg["IMPORT_USER"]}"'
         ),
     ):
         SyncConfig(**cfg)
@@ -61,7 +62,7 @@ def test_syncconfig_mutually_exclusive_dirs():
 
 def test_syncconfig_no_aws_profile():
     """Test for the SyncConfig class."""
-    cfg = {"AWS_PROFILE": "", "UPLOAD_XML": True}
+    cfg = {"AWS_PROFILE": "", "UPLOAD_COLLECTION": True}
     with pytest.raises(
         RuntimeError,
         match="Config must include AWS_PROFILE for sync operations"
@@ -78,14 +79,14 @@ def test_syncconfig_set_user():
 
 
 @mock.patch("djtools.spotify.helpers.get_spotify_client", mock.MagicMock())
-def test_syncconfig_upload_without_discord_url(test_xml, caplog):
+def test_syncconfig_upload_without_discord_url(rekordbox_xml, caplog):
     """Test for the SyncConfig class."""
     caplog.set_level("WARNING")
     cfg = {
         "USB_PATH": ".",
         "UPLOAD_MUSIC": True,
         "DISCORD_URL": "",
-        "XML_PATH": test_xml,
+        "COLLECTION_PATH": rekordbox_xml,
         "SPOTIFY_CLIENT_ID": "id",
         "SPOTIFY_CLIENT_SECRET": "secret",
         "SPOTIFY_REDIRECT_URI": "uri",

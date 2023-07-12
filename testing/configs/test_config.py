@@ -15,7 +15,7 @@ def test_baseconfig_aws_profile_not_set(caplog):
     assert caplog.records[0].message == (
         "Without AWS_PROFILE set to a valid profile ('default' or otherwise) "
         "you cannot use any of the following features: CHECK_TRACKS, "
-        "DOWNLOAD_MUSIC, DOWNLOAD_XML, UPLOAD_MUSIC, UPLOAD_XML"
+        "DOWNLOAD_MUSIC, DOWNLOAD_COLLECTION, UPLOAD_MUSIC, UPLOAD_COLLECTION"
     )
 
 
@@ -41,35 +41,35 @@ def test_baseconfig_aws_profile_not_set(caplog):
 #         BaseConfig(**cfg)
 
 
-def test_baseconfig_no_xml_path(caplog):
+def test_baseconfig_no_collection_path(caplog):
     """Test for the BaseConfig class."""
     caplog.set_level("WARNING")
     cfg = {
         "AWS_PROFILE": "default",
         "SPOTIFY_CLIENT_ID": "",
-        "XML_PATH": None,
+        "COLLECTION_PATH": None,
     }
     BaseConfig(**cfg)
     assert caplog.records[0].message == (
-        "XML_PATH is not set. Without this set to a valid Rekordbox XML "
-        "export, you cannot use the following features: "
-        "COLLECTION_PLAYLISTS, COPY_PLAYLISTS, DOWNLOAD_XML, "
-        "SHUFFLE_PLAYLISTS, UPLOAD_XML"
+        "COLLECTION_PATH is not set. Without this set to a valid collection, "
+        "you cannot use the following features: COLLECTION_PLAYLISTS, "
+        "COPY_PLAYLISTS, DOWNLOAD_COLLECTION, SHUFFLE_PLAYLISTS, "
+        "UPLOAD_COLLECTION"
     )
 
 
-def test_baseconfig_xml_path_does_not_exist(caplog):
+def test_baseconfig_collection_path_does_not_exist(caplog):
     """Test for the BaseConfig class."""
     caplog.set_level("WARNING")
     cfg = {
         "AWS_PROFILE": "default",
         "SPOTIFY_CLIENT_ID": "",
-        "XML_PATH": "nonexistent XML",
+        "COLLECTION_PATH": "nonexistent collection",
     }
     BaseConfig(**cfg)
     assert caplog.records[0].message == (
-        "XML_PATH does not exist. Without this set to a valid "
-        "Rekordbox XML export, you cannot use the following features: "
-        "COLLECTION_PLAYLISTS, COPY_PLAYLISTS, DOWNLOAD_XML, "
-        "SHUFFLE_PLAYLISTS, UPLOAD_XML"
+        "COLLECTION_PATH does not exist. Without this set to a valid "
+        "collection, you cannot use the following features: "
+        "COLLECTION_PLAYLISTS, COPY_PLAYLISTS, DOWNLOAD_COLLECTION, "
+        "SHUFFLE_PLAYLISTS, UPLOAD_COLLECTION"
     )

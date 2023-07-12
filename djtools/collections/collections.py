@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 from copy import copy
 from pathlib import Path
 import re
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 import bs4
 from bs4 import BeautifulSoup
@@ -58,7 +58,7 @@ class Collection(ABC):
             The Playlists with the same name.
         """
         if not name:
-            return self.get_root()
+            return self._playlists  # pylint:disable=no-member
 
         playlists = []
         for playlist in self._playlists:  # pylint:disable=no-member
@@ -69,14 +69,6 @@ class Collection(ABC):
                     playlists.extend(playlist.get_playlists(name))
 
         return [playlist for playlist in playlists if playlist is not None]
-
-    def get_root(self) -> Playlist:
-        """Returns the root playlist.
-
-        Returns:
-            Root playlist.
-        """
-        return self._playlists  # pylint:disable=no-member
 
     def get_tracks(self) -> Dict[str, Track]:
         """Returns the tracks in the collection.
@@ -91,11 +83,11 @@ class Collection(ABC):
         """Resets the Playlists in the Collection to be empty."""
 
     @abstractmethod
-    def serialize(self, *args, **kwargs) -> Any:
+    def serialize(self, *args, **kwargs) -> Path:
         """Serialize a collection into the native format of a DJ software.
 
         Returns:
-            Any object or structure that a DJ software natively expects.
+            A path to a serialized collection.
         """
 
     def set_tracks(self, tracks: Dict[str, Track]):
@@ -136,7 +128,7 @@ class RekordboxCollection(Collection):
         )
 
     def __repr__(self) -> str:
-        """Produce a representation of this Collection.
+        """Produce a string representation of this Collection.
 
         Returns:
             Collection represented as a string.

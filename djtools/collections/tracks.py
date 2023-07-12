@@ -13,7 +13,7 @@ from datetime import datetime
 import os
 from pathlib import Path
 import re
-from typing import Any, List, Set
+from typing import Any, List, Union, Set
 from urllib.parse import quote, unquote
 
 import bs4
@@ -28,7 +28,7 @@ class Track(ABC):
 
     @abstractmethod
     def get_bpm(self) -> float:
-        """Returns the track BPM.
+        """Gets the track BPM.
 
         Returns:
             A float representing BPM.
@@ -44,30 +44,59 @@ class Track(ABC):
 
     @abstractmethod
     def get_id(self) -> Any:
-        "Returns the track ID."
+        """Gets the track ID.
+
+        Returns:
+            The ID of this track.
+        """
 
     @abstractmethod
     def get_location(self) -> Path:
-        "Gets the location of the Track."
+        """Gets the location of the track.
 
-    def get_rating(self) -> int:
-        "Gets the rating of the track."
+        Returns:
+            The Path for the location of the track.
+        """
 
     @abstractmethod
-    def get_tags(self) -> Set:
-        "Gets the tags of the Track."
+    def get_rating(self) -> int:
+        """Gets the rating of the track.
+
+        Returns:
+            The rating of the track.
+        """
+
+    @abstractmethod
+    def get_tags(self) -> Set[str]:
+        """Gets the tags of the track.
+
+        Returns:
+            A set of the track's tags.
+        """
 
     @abstractmethod
     def serialize(self, *args, **kwargs) -> Any:
-        "Serializes a track into the native format of a DJ software."
+        """Serializes a track into the native format of a DJ software.
+
+        Returns:
+            A serialized track of the same type used to initialize Track.
+        """
 
     @abstractmethod
-    def set_location(self, location):
-        "Sets the path of the track to location."
+    def set_location(self, location: Union[Path, str]):
+        """Sets the path of the track to location.
+
+        Args:
+            location: New location of the track.
+        """
 
     @abstractmethod
     def set_track_number(self, number: int):
-        "Sets the track number attribute to the provided number."
+        """Sets the track number of a track.
+
+        Args:
+            number: Number to set for TrackNumber.
+        """
 
 
 class RekordboxTrack(Track):
@@ -133,7 +162,7 @@ class RekordboxTrack(Track):
             self._hot_cues = [hot_cue.attrs for hot_cue in self._hot_cues]
 
     def __repr__(self) -> str:
-        """Produces a representation of this track.
+        """Produces a string representation of this track.
 
         Returns:
             Track represented as a string.
@@ -183,7 +212,7 @@ class RekordboxTrack(Track):
         return string.format(type(self).__name__, body)
 
     def __str__(self) -> str:
-        """Produce a string representation of this track.
+        """Produces a string representation of this track.
 
         Returns:
             Track represented as a string.
@@ -191,10 +220,10 @@ class RekordboxTrack(Track):
         return str(self.serialize())
 
     def get_bpm(self) -> float:
-        """Returns the track BPM.
+        """Gets the track BPM.
 
         Returns:
-            The BPM of this track.
+            A float representing BPM.
         """
         return self._AverageBpm  # pylint: disable=no-member
 
@@ -207,7 +236,7 @@ class RekordboxTrack(Track):
         return self._Genre  # pylint: disable=no-member
 
     def get_id(self) -> str:
-        """Get this track's ID.
+        """Get the track ID.
 
         Returns:
             The ID of this track.
@@ -215,10 +244,10 @@ class RekordboxTrack(Track):
         return self._TrackID  # pylint: disable=no-member
 
     def get_location(self) -> Path:
-        """Gets the location attribute of the track.
+        """Gets the location of the track.
 
         Returns:
-            The location of the track.
+            The Path for the location of the track.
         """
         return self._Location
 
@@ -230,7 +259,7 @@ class RekordboxTrack(Track):
         """
         return self._Rating  # pylint: disable=no-member
 
-    def get_tags(self) -> Set:
+    def get_tags(self) -> Set[str]:
         """Gets the tags of the track.
 
         Returns:
@@ -357,8 +386,8 @@ class RekordboxTrack(Track):
 
         return track_tag
 
-    def set_location(self, location):
-        """Sets the Location attribute of the track to location.
+    def set_location(self, location: Union[Path, str]):
+        """Sets the path of the track to location.
 
         Args:
             location: New location of the track.
@@ -366,7 +395,7 @@ class RekordboxTrack(Track):
         self._Location = Path(location)  # pylint: disable=attribute-defined-outside-init,invalid-name
 
     def set_track_number(self, number: int):
-        """Sets the TrackNumber attribute of a track.
+        """Sets the track number of a track.
 
         Args:
             number: Number to set for TrackNumber.

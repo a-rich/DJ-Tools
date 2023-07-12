@@ -17,11 +17,11 @@ class BaseConfig(BaseModel, extra=Extra.allow):
     """Base configuration object used across the whole library."""
 
     AWS_PROFILE: str = "default"
+    COLLECTION_PATH: Path = None
     LOG_LEVEL: Literal[
         "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"
     ] = "INFO"
     VERBOSITY: NonNegativeInt = 0
-    XML_PATH: Path = None
 
     def __init__(self, *args, **kwargs):
         """Constructor."""
@@ -34,8 +34,8 @@ class BaseConfig(BaseModel, extra=Extra.allow):
             logger.warning(
                 "Without AWS_PROFILE set to a valid profile ('default' or "
                 "otherwise) you cannot use any of the following features: "
-                "CHECK_TRACKS, DOWNLOAD_MUSIC, DOWNLOAD_XML, UPLOAD_MUSIC, "
-                "UPLOAD_XML"
+                "CHECK_TRACKS, DOWNLOAD_MUSIC, DOWNLOAD_COLLECTION, "
+                "UPLOAD_MUSIC, UPLOAD_COLLECTION"
             )
         else:
             os.environ["AWS_PROFILE"] = self.AWS_PROFILE
@@ -55,19 +55,19 @@ class BaseConfig(BaseModel, extra=Extra.allow):
             # ):
             #     raise RuntimeError("AWS_PROFILE is not a valid profile!")
 
-        if not self.XML_PATH:
+        if not self.COLLECTION_PATH:
             logger.warning(
-                "XML_PATH is not set. Without this set to a valid Rekordbox "
-                "XML export, you cannot use the following features: "
-                "COLLECTION_PLAYLISTS, COPY_PLAYLISTS, DOWNLOAD_XML, "
-                "SHUFFLE_PLAYLISTS, UPLOAD_XML"
+                "COLLECTION_PATH is not set. Without this set to a valid "
+                "collection, you cannot use the following features: "
+                "COLLECTION_PLAYLISTS, COPY_PLAYLISTS, DOWNLOAD_COLLECTION, "
+                "SHUFFLE_PLAYLISTS, UPLOAD_COLLECTION"
             )
-        elif not self.XML_PATH.exists():
+        elif not self.COLLECTION_PATH.exists():
             logger.warning(
-                "XML_PATH does not exist. Without this set to a valid "
-                "Rekordbox XML export, you cannot use the following features: "
-                "COLLECTION_PLAYLISTS, COPY_PLAYLISTS, DOWNLOAD_XML, "
-                "SHUFFLE_PLAYLISTS, UPLOAD_XML"
+                "COLLECTION_PATH does not exist. Without this set to a valid "
+                "collection, you cannot use the following features: "
+                "COLLECTION_PLAYLISTS, COPY_PLAYLISTS, DOWNLOAD_COLLECTION, "
+                "SHUFFLE_PLAYLISTS, UPLOAD_COLLECTION"
             )
 
     def __repr__(self):

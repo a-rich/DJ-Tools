@@ -2,9 +2,9 @@
 
 DJ Tools started out as a set of scripts used to sync audio files to the cloud so I could share tracks with my friends. It's since grown into a Python library with many features for streamlining the processes around collecting, curating, and sharing a music collection.
 
-Although some of DJ Tool's features cater to Rekordbox users (everything under the `rekordbox` package) the majority of this library is DJ-platform agnostic.
+This library is DJ-platform agnostic. That being said, a subset of features (those under the `collections` package) depend on implementations for `Collection`, `Playlist`, and `Track` abstractions (see the [references](reference/collections/)) for which there are currently only Rekordbox implementations. If you're interested in adding implementations for other DJ platforms, please create an issue.
 
-DJ Tools is built and tested on Unix-based operating systems as well as Windows.
+DJ Tools is built and tested on Unix-based operating systems. I try my best to test everything on Windows as well, but your mileage may very.
 
 ## Where to start
 Check out the [Getting Started](tutorials/getting_started/index.md) tutorial!

@@ -21,17 +21,17 @@ class SyncConfig(BaseConfig):
     ARTIST_FIRST: bool = False
     AWS_USE_DATE_MODIFIED: bool = False
     DISCORD_URL: str = ""
+    DOWNLOAD_COLLECTION: bool = False
     DOWNLOAD_EXCLUDE_DIRS: List[Path] = []
     DOWNLOAD_INCLUDE_DIRS: List[Path] = []
     DOWNLOAD_MUSIC: bool = False
     DOWNLOAD_SPOTIFY_PLAYLIST: str = ""
-    DOWNLOAD_XML: bool = False
     DRYRUN: bool = False
     IMPORT_USER: str = ""
+    UPLOAD_COLLECTION: bool = False
     UPLOAD_EXCLUDE_DIRS: List[Path] = []
     UPLOAD_INCLUDE_DIRS: List[Path] = []
     UPLOAD_MUSIC: bool = False
-    UPLOAD_XML: bool = False
     USB_PATH: Optional[Union[str, Path]] = None
     USER: str = ""
 
@@ -61,10 +61,10 @@ class SyncConfig(BaseConfig):
 
         if any(
             [
+                self.DOWNLOAD_COLLECTION,
                 self.DOWNLOAD_MUSIC,
-                self.DOWNLOAD_XML,
+                self.UPLOAD_COLLECTION,
                 self.UPLOAD_MUSIC,
-                self.UPLOAD_XML,
             ]
         ):
             if not self.AWS_PROFILE:
@@ -89,9 +89,10 @@ class SyncConfig(BaseConfig):
                 "discord messages!"
             )
 
-        if self.DOWNLOAD_XML and not self.IMPORT_USER:
+        if self.DOWNLOAD_COLLECTION and not self.IMPORT_USER:
             raise RuntimeError(
-                f'Unable to import from XML of IMPORT_USER "{self.IMPORT_USER}"'
+                "Unable to import from collection of IMPORT_USER "
+                f'"{self.IMPORT_USER}"'
             )
 
     @validator("USB_PATH")

@@ -26,7 +26,7 @@ def shuffle_playlists(config: BaseConfig):
     """
     # Load collection.
     collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
-        path=config.XML_PATH
+        path=config.COLLECTION_PATH
     )
 
     # Build a dict of tracks to shuffle from the provided list of playlists.

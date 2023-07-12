@@ -27,7 +27,7 @@ class Playlist(ABC):
         "Deserializes a playlist from the native format of a DJ software."
 
     def __getitem__(self, index: int) -> Playlist:
-        """Gets a Playlist from this Playlists playlists.
+        """Gets a Playlist from this Playlist's playlists.
 
         This method is used to iterate this object during serialization. If
         this Playlist is a folder, then it returns elements from
@@ -118,7 +118,6 @@ class Playlist(ABC):
 
         return [playlist for playlist in playlists if playlist is not None]
 
-
     def get_tracks(self) -> Dict[str, Track]:
         """Returns a dict of track IDs and tracks.
 
@@ -183,7 +182,8 @@ class Playlist(ABC):
         """Serializes a playlist into the native format of a DJ software.
 
         Returns:
-            Any object or structure that a DJ software natively expects.
+            A serialized playlist of the same type used to initialized
+                Playlist.
         """
 
     def set_parent(self, parent: Optional[Playlist] = None):
@@ -199,10 +199,10 @@ class Playlist(ABC):
             child.set_parent(self)
 
     def set_tracks(self, tracks: Dict[str, Track]):
-        """Sets the playlists of this playlist folder.
+        """Sets the tracks of this playlist.
 
         Args:
-            playlists: Playlists to set.
+            tracks: A dict of Tracks to override for this Playlist.
         """
         self._tracks = tracks  # pylint: disable=attribute-defined-outside-init
 
@@ -213,7 +213,7 @@ class RekordboxPlaylist(Playlist):
     def __init__(
         self,
         playlist: bs4.element.Tag,
-        tracks: Dict[str, RekordboxTrack] = Dict,
+        tracks: Dict[str, RekordboxTrack] = None,
         playlist_tracks: Optional[Dict[str, RekordboxTrack]] = None,
         parent: Optional[RekordboxPlaylist] = None
     ):
@@ -228,6 +228,7 @@ class RekordboxPlaylist(Playlist):
         self._tracks = None
         self._playlists = None
         self._parent = parent
+        tracks = tracks or {}
 
         # Set this object's attributes with the NODE Tag's attributes.
         for key, value in playlist.attrs.items():
@@ -257,7 +258,7 @@ class RekordboxPlaylist(Playlist):
             }
 
     def __repr__(self) -> str:
-        """Produces a representation of this playlist.
+        """Produces a string representation of this playlist.
 
         Returns:
             Playlist represented as a string.
@@ -367,6 +368,12 @@ class RekordboxPlaylist(Playlist):
             name: The name of the Playlist to be created.
             playlists: A list of Playlists to add to this Playlist.
             tracks: A dict of Tracks to add to this Playlist.
+
+        Raises:
+            RuntimeError: You must provide either a list of Playlists or a list
+                of Tracks.
+            RuntimeError: You must not provide both a list of Playlists and a
+                list of Tracks.
 
         Returns:
             A new playlist.

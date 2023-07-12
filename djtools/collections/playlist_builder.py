@@ -91,7 +91,7 @@ def collection_playlists(config: BaseConfig):
 
     # Load the collection.
     collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
-        path=config.XML_PATH
+        path=config.COLLECTION_PATH
     )
 
     # Dereference the Playlist implementation to use for this collection.
@@ -182,11 +182,10 @@ def collection_playlists(config: BaseConfig):
 
     # Reset the collection's playlists and insert a new playlist containing
     # the built playlists.
-    playlist_class = PLATFORM_REGISTRY[config.PLATFORM]["playlist"]
     auto_playlist = playlist_class.new_playlist(
         name="PLAYLIST_BUILDER", playlists=auto_playlists
     )
-    auto_playlist.set_parent(collection.get_root())
+    auto_playlist.set_parent(collection.get_playlists())
     collection.reset_playlists()
     collection.add_playlist(auto_playlist)
     collection.serialize()

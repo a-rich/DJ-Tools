@@ -30,17 +30,20 @@ def test_customsubstitution():
 
 
 @pytest.mark.parametrize("playlist", ["Genres", "Hip Hop"])
-def test_rekordboxcollection(test_xml, xml, playlist):
+def test_rekordboxcollection(
+    rekordbox_xml, rekordbox_collection_tag, playlist
+):
     """Test RekordboxCollection class."""
-    collection = RekordboxCollection(path=test_xml)
-    test_tracks = {
+    collection = RekordboxCollection(path=rekordbox_xml)
+    tracks = {
         track["TrackID"]: RekordboxTrack(track)
-        for track in xml.find_all("TRACK") if track.get("Location")
+        for track in rekordbox_collection_tag.find_all("TRACK")
+        if track.get("Location")
     }
     assert (
         a[0] == b[0] and str(a[1]) == str(b[1])
         for a, b in zip(
-            test_tracks.items(), collection.get_tracks().items()
+            tracks.items(), collection.get_tracks().items()
         )
     )
     repr(collection)
@@ -48,26 +51,27 @@ def test_rekordboxcollection(test_xml, xml, playlist):
     playlist = collection.get_playlists(playlist)
     serialized_collection = collection.serialize()
     assert serialized_collection.exists()
-    try:
-        RekordboxCollection.validate(test_xml, serialized_collection)
-    except AssertionError:
-        assert False, "Failed RekordboxCollection validation!"
+    RekordboxCollection.validate(rekordbox_xml, serialized_collection)
 
 
-def test_rekordboxcollection_add_playlist(test_xml):
+def test_rekordboxcollection_add_playlist(rekordbox_xml):
     """Test RekordboxCollection class."""
-    collection = RekordboxCollection(path=test_xml)
+    collection = RekordboxCollection(path=rekordbox_xml)
     collection.reset_playlists()
     assert len(collection.get_playlists()) == 0
     collection.add_playlist([])
     assert len(collection.get_playlists()) == 1
 
 
-def test_rekordboxcollection_reset_playlists(test_xml, xml):
+def test_rekordboxcollection_reset_playlists(
+    rekordbox_xml, rekordbox_collection_tag
+):
     """Test RekordboxCollection class."""
-    collection = RekordboxCollection(path=test_xml)
+    collection = RekordboxCollection(path=rekordbox_xml)
     top_level_playlists = [
-        child for child in xml.find("NODE", {"Name": "ROOT"}).children
+        child for child in rekordbox_collection_tag.find(
+            "NODE", {"Name": "ROOT"}
+        ).children
         if isinstance(child, bs4.element.Tag)
     ]
     assert len(collection.get_playlists()) == len(top_level_playlists)

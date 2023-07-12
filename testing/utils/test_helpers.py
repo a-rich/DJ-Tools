@@ -84,9 +84,9 @@ def test_compute_distance(track_a, track_b):
         assert not ret
 
 
-def test_find_matches(test_config):
+def test_find_matches(config):
     """Test for the find_matches function."""
-    test_config.CHECK_TRACKS_FUZZ_RATIO = 99
+    config.CHECK_TRACKS_FUZZ_RATIO = 99
     expected_matches = [
         "track 1 - someone unique",
         "track 2 - seen them before",
@@ -101,10 +101,10 @@ def test_find_matches(test_config):
         beatcloud_tracks=[
             "track 99 - who's that?",
         ] + expected_matches,
-        config=test_config,
+        config=config,
     )
     assert all(
-        match[-1] >= test_config.CHECK_TRACKS_FUZZ_RATIO
+        match[-1] >= config.CHECK_TRACKS_FUZZ_RATIO
         for match in matches
     )
     assert len(matches) == 2
@@ -135,7 +135,7 @@ def test_get_beatcloud_tracks(mock_os_popen, proc_dump):
         assert track == line
 
 
-def test_get_local_tracks(tmpdir, test_config):
+def test_get_local_tracks(tmpdir, config):
     """Test for the get_local_tracks function."""
     check_dirs = []
     tmpdir = Path(tmpdir)
@@ -143,7 +143,7 @@ def test_get_local_tracks(tmpdir, test_config):
         path = tmpdir / _dir
         path.mkdir(parents=True, exist_ok=True)
         check_dirs.append(path)
-    test_config.CHECK_TRACKS_LOCAL_DIRS = check_dirs + [Path("nonexistent_dir")]
+    config.CHECK_TRACKS_LOCAL_DIRS = check_dirs + [Path("nonexistent_dir")]
     beatcloud_tracks = ["test_file1.mp3", "test_file2.mp3"]
     for index, track in enumerate(beatcloud_tracks):
         with open(
@@ -152,16 +152,16 @@ def test_get_local_tracks(tmpdir, test_config):
             encoding="utf-8",
         ) as _file:
             _file.write("")
-    local_dir_tracks = get_local_tracks(test_config)
+    local_dir_tracks = get_local_tracks(config)
     assert all(x in local_dir_tracks for x in check_dirs)
     assert len(local_dir_tracks) == len(check_dirs)
 
 
-def test_get_local_tracks_empty(tmpdir, test_config, caplog):
+def test_get_local_tracks_empty(tmpdir, config, caplog):
     """Test for the get_local_tracks function."""
     caplog.set_level("INFO")
-    test_config.CHECK_TRACKS_LOCAL_DIRS = [Path(tmpdir)]
-    local_dir_tracks = get_local_tracks(test_config)
+    config.CHECK_TRACKS_LOCAL_DIRS = [Path(tmpdir)]
+    local_dir_tracks = get_local_tracks(config)
     assert not local_dir_tracks
     assert caplog.records[0].message == "Got 0 files under local directories"
 
@@ -252,18 +252,18 @@ def test_get_playlist_tracks_handles_spotipy_exception(
     return_value={"some track - some artist"},
 )
 def test_get_spotify_tracks(
-    mock_get_playlist_tracks, test_config, verbosity, caplog
+    mock_get_playlist_tracks, config, verbosity, caplog
 ):
     """Test for the get_spotify_tracks function."""
     caplog.set_level("INFO")
-    test_config.SPOTIFY_CLIENT_ID = "spotify client ID"
-    test_config.SPOTIFY_CLIENT_SECRET = "spotify client secret"
-    test_config.SPOTIFY_REDIRECT_URI = "spotify redirect uri"
-    test_config.CHECK_TRACKS_SPOTIFY_PLAYLISTS = [
+    config.SPOTIFY_CLIENT_ID = "spotify client ID"
+    config.SPOTIFY_CLIENT_SECRET = "spotify client secret"
+    config.SPOTIFY_REDIRECT_URI = "spotify redirect uri"
+    config.CHECK_TRACKS_SPOTIFY_PLAYLISTS = [
         "playlist A", "r/techno | Top weekly Posts"
     ]
-    test_config.VERBOSITY = verbosity
-    tracks = get_spotify_tracks(test_config)
+    config.VERBOSITY = verbosity
+    tracks = get_spotify_tracks(config)
     assert isinstance(tracks, dict)
     assert caplog.records[0].message == (
         "playlist A not in spotify_playlists.yaml"

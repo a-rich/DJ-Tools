@@ -1,4 +1,8 @@
 """Testing for the tracks module."""
+import re
+from pathlib import Path
+from urllib.parse import unquote
+
 import pytest
 
 from djtools.collections.tracks import Track, RekordboxTrack
@@ -15,25 +19,30 @@ def test_track_raises_type_error():
         Track()
 
 
-def test_rekordboxtrack(test_track):
+def test_rekordboxtrack(rekordbox_track, rekordbox_track_tag):
     """Test RekordboxTrack class."""
-    test_track["Genre"] = "something / or"
-    test_track["Comments"] = "/* another / thing */"
-    track = RekordboxTrack(test_track)
-    test_track_number = 42
-    test_location = "/some/path"
-    test_track["TrackNumber"] = str(test_track_number)
-    test_track["Location"] = f"file://localhost{test_location}"
-    track.set_track_number(test_track_number)
-    track.set_location(test_location)
-    assert track.get_id() == test_track["TrackID"]
-    assert sorted(list(track.get_tags())) == [
-        "another", "or", "something", "thing"
-    ]
-    assert str(test_track) == str(track)
-    assert test_track == track.serialize()
-    repr(track)
-    try:
-        RekordboxTrack.validate(test_track, track)
-    except AssertionError:
-        assert False, "Failed RekordboxTrack validation!"
+    track = RekordboxTrack(rekordbox_track_tag)
+    RekordboxTrack.validate(rekordbox_track_tag, track)
+    RekordboxTrack.validate(track.serialize(), rekordbox_track)
+    assert repr(track) == repr(rekordbox_track)
+    assert str(track) == str(rekordbox_track)
+    assert track.get_bpm() == float(rekordbox_track_tag["AverageBpm"])
+    genre_tags = list(
+        map(str.strip, rekordbox_track_tag["Genre"].split("/"))
+    )
+    assert track.get_genre_tags() == genre_tags
+    assert track.get_id() == rekordbox_track_tag["TrackID"]
+    assert track.get_location() == Path(
+        unquote(rekordbox_track_tag["Location"]).split("file://localhost")[-1]
+    )
+    assert track.get_rating() == {
+        "0": 0, "51": 1, "102": 2, "153": 3, "204": 4, "255": 5
+    }.get(rekordbox_track_tag["Rating"])
+    tags = re.search(r"(?<=\/\*).*(?=\*\/)", rekordbox_track_tag["Comments"])
+    tags = [x.strip() for x in tags.group().split("/")] if tags else []
+    assert track.get_tags() == set(genre_tags + tags)
+    track.set_location("path/to.mp3")
+    assert track.get_location() == Path("path/to.mp3")
+    track_number = 42
+    track.set_track_number(track_number)
+    assert f'TrackNumber="{track_number}"' in str(track)

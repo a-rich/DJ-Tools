@@ -21,12 +21,12 @@ from .spotify import (
     spotify_playlists,
 )
 from .sync import (
+    download_collection,
     download_music,
-    download_xml,
     SYNC_OPERATIONS,
+    upload_collection,
     upload_log,
     upload_music,
-    upload_xml,
 )
 from .utils import (
     compare_tracks,
@@ -43,8 +43,8 @@ __all__ = (
     "collection_playlists",
     "compare_tracks",
     "copy_playlists",
+    "download_collection",
     "download_music",
-    "download_xml",
     "initialize_logger",
     "shuffle_playlists",
     "spotify_playlist_from_upload",
@@ -52,8 +52,8 @@ __all__ = (
     "SPOTIFY_OPERATIONS",
     "SYNC_OPERATIONS",
     "upload_log",
+    "upload_collection",
     "upload_music",
-    "upload_xml",
     "UTILS_OPERATIONS",
     "url_download",
 )

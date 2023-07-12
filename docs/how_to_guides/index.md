@@ -1,10 +1,10 @@
 # How-to Guides
 
-## Rekordbox
+## Collections
 
 * [Shuffle Tracks in Playlists](shuffle_playlists.md)
 * [Copy Tracks From Playlists](copy_playlists.md)
-* [Build Playlists From Tags](build_playlists.md)
+* [Build Playlists From Tags](collection_playlists.md)
 * [Combine Playlists With Boolean Algebra](combiner_playlists.md)
 
 ## Spotify

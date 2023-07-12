@@ -98,17 +98,18 @@ def test_build_tag_playlists_raises_exception_():
         build_tag_playlists([], {}, set())
 
 
-def test_copy_file(tmpdir, test_track):
+def test_copy_file(tmpdir, rekordbox_track):
     """Test for the copy_file function."""
     dest_dir = Path(tmpdir) / "output"
     dest_dir.mkdir(parents=True, exist_ok=True)
-    track = RekordboxTrack(test_track)
-    copy_file(track=track, destination=dest_dir)
-    new_file_path = dest_dir / Path(test_track["Location"]).name
+    file_name = rekordbox_track.get_location().name
+    copy_file(track=rekordbox_track, destination=dest_dir)
+    new_file_path = dest_dir / file_name
+    print(f"[DEBUG] dest_dir: {dest_dir}, new_file_path: {new_file_path}")
     # NOTE(a-rich): `Location` attributes in the XML's `TRACK` tags always
     # have unix-style paths so comparisons made with paths created in Windows
     # must be interpreted `.as_posix()`.
-    assert track.get_location() == new_file_path
+    assert rekordbox_track.get_location() == new_file_path
     assert new_file_path.exists()
 
 
@@ -121,16 +122,15 @@ def test_copy_file(tmpdir, test_track):
         (False, ["Hip Hop", "Trap"], False),
     ],
 )
-def test_hiphopfilter(bass_hip_hop, genre_tags, expected, test_track):
+def test_hiphopfilter(bass_hip_hop, genre_tags, expected, rekordbox_track):
     """Test for the HipHopFilter class."""
     track_filter = HipHopFilter()
-    test_track = RekordboxTrack(test_track)
     with mock.patch.object(
         track_filter, '_bass_hip_hop', bass_hip_hop, create=True
     ), mock.patch.object(
         RekordboxTrack, "get_genre_tags", lambda x: genre_tags
     ):
-        result = track_filter.filter_track(test_track)
+        result = track_filter.filter_track(rekordbox_track)
         assert result == expected
 
 
@@ -147,16 +147,15 @@ def test_filter_tag_playlists():
         (False, ["House", "Minimal Deep Tech"], True),
     ],
 )
-def test_minimaldeeptechfilter(techno, genre_tags, expected, test_track):
+def test_minimaldeeptechfilter(techno, genre_tags, expected, rekordbox_track):
     """Test for the HipHopFilter class."""
     track_filter = MinimalDeepTechFilter()
-    test_track = RekordboxTrack(test_track)
     with mock.patch.object(
         track_filter, '_techno', techno, create=True
     ), mock.patch.object(
         RekordboxTrack, "get_genre_tags", lambda x: genre_tags
     ):
-        result = track_filter.filter_track(test_track)
+        result = track_filter.filter_track(rekordbox_track)
         assert result == expected
 
 
@@ -239,9 +238,11 @@ def test_print_data(capsys):
 
 
 @mock.patch("djtools.collections.helpers.print_data")
-def test_print_playlists_tag_statistics(mock_print_data, test_xml, capsys):
+def test_print_playlists_tag_statistics(
+    mock_print_data, rekordbox_xml, capsys
+):
     """Test for the print_playlists_tag_statistics function."""
-    collection = RekordboxCollection(path=test_xml)
+    collection = RekordboxCollection(path=rekordbox_xml)
     playlists = collection.get_playlists("Genres")[0]
     print_playlists_tag_statistics(playlists)
     cap = capsys.readouterr()

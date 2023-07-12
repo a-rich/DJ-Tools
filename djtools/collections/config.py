@@ -41,7 +41,7 @@ class CollectionConfig(BaseConfig):
                 self.COPY_PLAYLISTS,
                 self.SHUFFLE_PLAYLISTS,
             ]
-        ) and (not self.XML_PATH or not self.XML_PATH.exists()):
+        ) and (not self.COLLECTION_PATH or not self.COLLECTION_PATH.exists()):
             raise RuntimeError(
                 "Using the collections package requires the config option "
                 "COLLECTION_PATH to be a valid collection path"

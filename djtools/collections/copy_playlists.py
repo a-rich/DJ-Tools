@@ -26,18 +26,19 @@ def copy_playlists(config: BaseConfig):
 
     Raises:
         LookupError: Playlist names in COPY_PLAYLISTS must exist in
-            "XML_PATH".
+            "COLLECTION_PATH".
     """
     # Load collection.
     collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
-        path=config.XML_PATH
+        path=config.COLLECTION_PATH
     )
 
     # Create destination directory.
     config.COPY_PLAYLISTS_DESTINATION.mkdir(parents=True, exist_ok=True)
 
     # Get the set of track IDs across the provided playlists.
-    # Get the parents of playlists so they aren't removed from the output XML.
+    # Get the parents of playlists so they aren't removed from the output
+    # playlists.
     playlist_tracks = {}
     for playlist_name in config.COPY_PLAYLISTS:
         playlists = collection.get_playlists(playlist_name)

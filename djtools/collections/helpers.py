@@ -9,8 +9,8 @@ import re
 import shutil
 from typing import Dict, List, Optional, Set, Tuple, Union
 
-from djtools.collections.config import PlaylistConfig, PlaylistConfigContent
 from djtools.collections.collections import Collection, RekordboxCollection
+from djtools.collections.config import PlaylistConfig, PlaylistConfigContent
 from djtools.collections.playlists import Playlist, RekordboxPlaylist
 from djtools.collections.tracks import Track
 
@@ -67,6 +67,9 @@ def copy_file(track: Track, destination: Path):
 # #############################################################################
 
 
+# As support for various platforms (Serato, Denon, Traktor, etc.) is added, the
+# platform name must be registered with references to their Collection and
+# Playlist implementations.
 PLATFORM_REGISTRY = {
     "rekordbox": {
         "collection": RekordboxCollection,
@@ -107,7 +110,8 @@ def build_tag_playlists(
         # contain the sub-string indicated by the suffix of the playlist name.
         # For example, "Pure Techno" will contain tracks that have genres
         # {"Hard Techno", "Melodic Techno"} but will not contain tracks that
-        # contain {"Hard Techno", "Tech House"}.
+        # contain {"Hard Techno", "Tech House"} because "Tech House" does not
+        # contain "Techno" as a sub-string.
         if content.startswith("Pure "):
             # Isolate the tag to create a pure playlist for.
             tag = content.split("Pure ")[-1]
@@ -184,7 +188,7 @@ class PlaylistFilter(ABC):
         """Returns True if this track should remain in the playlist.
 
         Args:
-            Track: Track object to apply filter to.
+            track: Track object to apply filter to.
 
         Returns:
             Whether or not this track should be included in the playlist.
@@ -195,7 +199,7 @@ class PlaylistFilter(ABC):
         """Returns True if this playlist should be filtered.
 
         Args:
-            Playlist: Playlist object to potentially filter.
+            playlist: Playlist object to potentially filter.
 
         Returns:
             Whether or not to filter this playlist.
@@ -215,7 +219,7 @@ class HipHopFilter(PlaylistFilter):
         "R&B" genre tags.
 
         Args:
-            Track: Track object to apply filter to.
+            track: Track object to apply filter to.
 
         Returns:
             Whether or not this track should be included in the playlist.
@@ -238,7 +242,7 @@ class HipHopFilter(PlaylistFilter):
         """Returns True if this playlist's name is "Hip Hop".
 
         Args:
-            Playlist: Playlist object to potentially filter.
+            playlist: Playlist object to potentially filter.
 
         Returns:
             Whether or not to filter this playlist.
@@ -269,7 +273,7 @@ class MinimalDeepTechFilter(PlaylistFilter):
         "Minimal Deep Tech" is not "Techno".
 
         Args:
-            Track: Track object to apply filter to.
+            track: Track object to apply filter to.
 
         Returns:
             Whether or not this track should be included in the playlist.
@@ -292,7 +296,7 @@ class MinimalDeepTechFilter(PlaylistFilter):
         """Returns True if this playlist's name is "Minimal Deep Tech".
 
         Args:
-            Playlist: Playlist object to potentially filter.
+            playlist: Playlist object to potentially filter.
 
         Returns:
             Whether or not to filter this playlist.
@@ -680,7 +684,7 @@ class BooleanNode:
         """
         return self._parent
 
-    def is_operator(self, char: str):
+    def is_operator(self, char: str) -> bool:
         """Checks if a character is one that represents a set operation.
 
         Args:
