@@ -16,6 +16,8 @@ max-statements=100
 
 min-public-methods=0
 
+max-returns=8
+
 [LOGGING]
 
 disable=logging-fstring-interpolation

@@ -1,7 +1,7 @@
 # Setup
 
 ## Python
-The DJ Tools library uses [f-strings](https://peps.python.org/pep-0498/) so a minimum version of Python 3.6 is required. As always, when working with a Python project, you're going to want to create a [virtual environment](https://docs.python.org/3/tutorial/venv.html); [Pyenv](https://github.com/pyenv/pyenv) is really nice but if you insist on doing a system-wide Python installation then proceed with the following instructions:
+The DJ Tools library uses [f-strings](https://peps.python.org/pep-0498/) and the [`asyncio` API](https://peps.python.org/pep-3156/) so a minimum version of Python 3.6 is required. As always, when working with a Python project, you're going to want to create a [virtual environment](https://docs.python.org/3/tutorial/venv.html); [Pyenv](https://github.com/pyenv/pyenv) is really nice but if you insist on doing a system-wide Python installation then proceed with the following instructions:
 
 - Mac installation: `brew install python@3.6`
 - Linux installation: `sudo apt install python3.6`
@@ -51,7 +51,7 @@ If you are using any of the following features, you are required to have a Disco
 ## Rekordbox settings
 
 ### Writing "My Tag" data to the Comments field
-In order for "My Tag" data to be accessible to the [Build Playlists From Tags](../../how_to_guides/build_playlists.md) and [Combine Playlists With Boolean Algebra](../../how_to_guides/combiner_playlists.md) features, that data must be written to the Comments field. There's no need to clear pre-existing data from the Comments; just ensure that this option is checked in the settings:
+In order for "My Tag" data to be accessible to the [Build Playlists From Tags](../../how_to_guides/collection_playlists.md) and [Combine Playlists With Boolean Algebra](../../how_to_guides/combiner_playlists.md) features, that data must be written to the Comments field. There's no need to clear pre-existing data from the Comments; just ensure that this option is checked in the settings:
 
 ![alt text](../../images/Pioneer_MyTag_Comments.png "Writing My Tag data to Comments")
 

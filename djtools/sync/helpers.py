@@ -1,7 +1,7 @@
 """This module contains helper functions used by the "sync_operations" module.
 Helper functions include formatting "aws s3 sync" commands, formatting the
 output of "aws s3 sync" commands, posting uploaded tracks to Discord, and
-modifying IMPORT_USER's XML to point to tracks located at "USB_PATH".
+modifying IMPORT_USER's collection to point to tracks located at "USB_PATH".
 """
 from datetime import datetime, timedelta
 from itertools import groupby
@@ -9,11 +9,10 @@ import logging
 from pathlib import Path
 from subprocess import Popen, PIPE, CalledProcessError
 from typing import Optional
-from urllib.parse import quote, unquote
 
-from bs4 import BeautifulSoup
 import requests
 
+from djtools.collections.helpers import PLATFORM_REGISTRY
 from djtools.configs.config import BaseConfig
 
 
@@ -82,34 +81,27 @@ def parse_sync_command(
     return _cmd
 
 
-def rewrite_xml(config: BaseConfig, loc_prefix: str = "file://localhost"):
-    """This function modifies the "Location" field of track tags in a
-        downloaded Rekordbox XML replacing the "USB_PATH" written by
-        "IMPORT_USER" with the "USB_PATH" in "config.yaml".
+def rewrite_track_paths(config: BaseConfig, other_user_collection: Path):
+    """This function modifies the location of tracks in a collection.
+    
+    This is done by replacing the "USB_PATH" written by "IMPORT_USER" with the
+    "USB_PATH" in "config.yaml".
 
     Args:
         config: Configuration object.
-        loc_prefix: Prefix of the `Location` field.
+        other_user_collection: Path to another user's collection.
     """
-    xml_path = (
-        Path(config.XML_PATH).parent / f"{config.IMPORT_USER}_rekordbox.xml"
+    music_path = Path("DJ Music")
+    collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
+        path=other_user_collection
     )
-    music_path = "DJ Music"
-    usb_path = config.USB_PATH.as_posix().strip("/")
-
-    with open(xml_path, mode="r", encoding="utf-8") as _file:
-        soup = BeautifulSoup(_file.read(), "xml")
-        for track in soup.find_all("TRACK"):
-            if not track.get("Location"):
-                continue
-            loc = unquote(track["Location"])
-            common_path = f"{music_path}/{loc.split(music_path + '/')[-1]}"
-            loc = f"{loc_prefix}/{usb_path}/{common_path}"
-            track["Location"] = quote(loc)
-
-
-    with open(xml_path, mode="wb", encoding=soup.orignal_encoding) as _file:
-        _file.write(soup.prettify("utf-8"))
+    for track in collection.get_tracks().values():
+        loc = str(track.get_location())
+        common_path = (
+            music_path / loc.split(str(music_path) + '/', maxsplit=-1)[-1]
+        )
+        track.set_location(config.USB_PATH / common_path)
+    collection.serialize(new_path=other_user_collection)
 
 
 def run_sync(_cmd: str) -> str:

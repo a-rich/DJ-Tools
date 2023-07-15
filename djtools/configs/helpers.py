@@ -11,8 +11,8 @@ from typing import Any, Dict, List, Union
 
 import yaml
 
+from djtools.collections.config import CollectionConfig
 from djtools.configs.config import BaseConfig
-from djtools.rekordbox.config import RekordboxConfig
 from djtools.spotify.config import SpotifyConfig
 from djtools.sync.config import SyncConfig
 from djtools.utils.config import UtilsConfig
@@ -22,8 +22,8 @@ from djtools.version import __version__
 logger = logging.getLogger(__name__)
 
 pkg_cfg = {
+    "collections": CollectionConfig,
     "configs": BaseConfig,
-    "rekordbox": RekordboxConfig,
     "spotify": SpotifyConfig,
     "sync": SyncConfig,
     "utils": UtilsConfig,
@@ -49,44 +49,6 @@ def arg_parse() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        "--auto-playlist-default-limit",
-        type=int,
-        help="Default number of tracks for a Spotify auto-playlist",
-    )
-    parser.add_argument(
-        "--auto-playlist-default-period",
-        type=str,
-        help="Default Subreddit time filter for a Spotify auto-playlist",
-    )
-    parser.add_argument(
-        "--auto-playlist-default-type",
-        type=str,
-        help="Default Subreddit post filter for a Spotify auto-playlist",
-    )
-    parser.add_argument(
-        "--auto-playlist-fuzz-ratio",
-        type=int,
-        help="Minimum similarity to add track to an auto-playlist",
-    )
-    parser.add_argument(
-        "--auto-playlist-post-limit",
-        type=int,
-        help="Maximum Subreddit posts to query for each auto-playlist",
-    )
-    parser.add_argument(
-        "--auto-playlist-subreddits",
-        type=parse_yaml,
-        help=(
-            "List of Subreddits configs to generate playlists from; YAML "
-            'strings with "name", "type", "period", and "limit" keys'
-        ),
-    )
-    parser.add_argument(
-        "--auto-playlist-update",
-        action="store_true",
-        help="Trigger updating auto-playlists",
-    )
-    parser.add_argument(
         "--aws-profile",
         type=str,
         help="AWS config profile",
@@ -98,20 +60,6 @@ def arg_parse() -> argparse.Namespace:
             'Drop --size-only flag for "aws s3 sync" command; '
             '"--aws-use-date-modified" will permit re-downloading/'
             "re-uploading files if the date modified field changes"
-        ),
-    )
-    parser.add_argument(
-        "--build-playlists",
-        action="store_true",
-        help="Trigger automatic Rekordbox playlist creation",
-    )
-    parser.add_argument(
-        "--build-playlists-remainder",
-        type=str,
-        choices=["folder", "playlist"],
-        help=(
-            'Place remainder tracks in either an "Other" folder of playlists '
-            'or a single "Other" playlist'
         ),
     )
     parser.add_argument(
@@ -143,20 +91,47 @@ def arg_parse() -> argparse.Namespace:
         help="List of Spotify playlist names to check against the Beatcloud",
     )
     parser.add_argument(
+        "--collection-path",
+        type=convert_to_paths,
+        help='Path to a collection database',
+    )
+    parser.add_argument(
+        "--collection-playlists",
+        action="store_true",
+        help="Trigger building collection playlists",
+    )
+    parser.add_argument(
+        "--collection-playlists-remainder",
+        type=str,
+        choices=["folder", "playlist"],
+        help=(
+            'Place remainder tracks in either an "Other" folder of playlists '
+            'or a single "Other" playlist'
+        ),
+    )
+    parser.add_argument(
         "--copy-playlists",
         type=str,
         nargs="+",
-        help="List of Rekordbox playlists to copy audio files from",
+        help="List of playlists to copy audio files from",
     )
     parser.add_argument(
         "--copy-playlists-destination",
         type=convert_to_paths,
-        help="Location to copy Rekordbox playlists' audio files to",
+        help="Location to copy playlists' audio files to",
     )
     parser.add_argument(
         "--discord-url",
         type=str,
         help="Discord webhook URL",
+    )
+    parser.add_argument(
+        "--download-collection",
+        action="store_true",
+        help=(
+            "Trigger downloading the collection of IMPORT_USER from the "
+            "Beatcloud"
+        ),
     )
     parser.add_argument(
         "--download-exclude-dirs",
@@ -176,14 +151,9 @@ def arg_parse() -> argparse.Namespace:
         help="Trigger downloading new tracks from the Beatcloud",
     )
     parser.add_argument(
-        "--download-spotify",
+        "--download-spotify-playlist",
         type=str,
         help="Playlist name containing tracks to download from the Beatcloud",
-    )
-    parser.add_argument(
-        "--download-xml",
-        action="store_true",
-        help="Trigger downloading the XML of IMPORT_USER from the Beatcloud",
     )
     parser.add_argument(
         "--dryrun",
@@ -193,7 +163,7 @@ def arg_parse() -> argparse.Namespace:
     parser.add_argument(
         "--import-user",
         type=str,
-        help="USER whose XML_PATH you're downloading",
+        help="USER whose COLLECTION_PATH you're downloading",
     )
     parser.add_argument(
         "--link-configs",
@@ -206,12 +176,10 @@ def arg_parse() -> argparse.Namespace:
         help="Logger level",
     )
     parser.add_argument(
-        "--playlist-from-upload",
-        action="store_true",
-        help=(
-            "Trigger creating a Spotify playlist using the Discord webhook "
-            "output of a music upload"
-        ),
+        "--platform",
+        type=str,
+        choices=["rekordbox"],
+        help="DJ platform to use for the collections package",
     )
     parser.add_argument(
         "--reddit-client-id",
@@ -232,7 +200,7 @@ def arg_parse() -> argparse.Namespace:
         "--shuffle-playlists",
         type=str,
         nargs="+",
-        help="List of Rekordbox playlist names to randomize tracks in",
+        help="List of playlist names to randomize tracks in",
     )
     parser.add_argument(
         "--spotify-client-id",
@@ -245,6 +213,52 @@ def arg_parse() -> argparse.Namespace:
         help="Spotify API client secret",
     )
     parser.add_argument(
+        "--spotify-playlist-default-limit",
+        type=int,
+        help="Default number of tracks for a Spotify playlist",
+    )
+    parser.add_argument(
+        "--spotify-playlist-default-period",
+        type=str,
+        help="Default Subreddit time filter for a Spotify playlist",
+    )
+    parser.add_argument(
+        "--spotify-playlist-default-type",
+        type=str,
+        help="Default Subreddit post filter for a Spotify playlist",
+    )
+    parser.add_argument(
+        "--spotify-playlist-from-upload",
+        action="store_true",
+        help=(
+            "Trigger creating a Spotify playlist using the Discord webhook "
+            "output of a music upload"
+        ),
+    )
+    parser.add_argument(
+        "--spotify-playlist-fuzz-ratio",
+        type=int,
+        help="Minimum similarity to add track to a playlist",
+    )
+    parser.add_argument(
+        "--spotify-playlist-post-limit",
+        type=int,
+        help="Maximum Subreddit posts to query for each playlist",
+    )
+    parser.add_argument(
+        "--spotify-playlist-subreddits",
+        type=parse_yaml,
+        help=(
+            "List of Subreddits configs to generate playlists from; YAML "
+            'strings with "name", "type", "period", and "limit" keys'
+        ),
+    )
+    parser.add_argument(
+        "--spotify-playlists",
+        action="store_true",
+        help="Trigger building Spotify playlists",
+    )
+    parser.add_argument(
         "--spotify-redirect-uri",
         type=str,
         help="Spotify API redirect URI",
@@ -252,7 +266,15 @@ def arg_parse() -> argparse.Namespace:
     parser.add_argument(
         "--spotify-username",
         type=str,
-        help="Spotify user to maintain auto-playlists for",
+        help="Spotify user to maintain playlists for",
+    )
+    parser.add_argument(
+        "--upload-collection",
+        action="store_true",
+        help=(
+            "Trigger uploading the collection of IMPORT_USER from the "
+            "Beatcloud"
+        ),
     )
     parser.add_argument(
         "--upload-exclude-dirs",
@@ -270,11 +292,6 @@ def arg_parse() -> argparse.Namespace:
         "--upload-music",
         action="store_true",
         help="Trigger uploading new tracks from the Beatcloud",
-    )
-    parser.add_argument(
-        "--upload-xml",
-        action="store_true",
-        help="Trigger uploading the XML of IMPORT_USER from the Beatcloud",
     )
     parser.add_argument(
         "--url-download",
@@ -307,11 +324,6 @@ def arg_parse() -> argparse.Namespace:
         "--version",
         action="store_true",
         help="Display package version",
-    )
-    parser.add_argument(
-        "--xml-path",
-        type=convert_to_paths,
-        help='Path to your exported Rekordbox XML database',
     )
     args = parser.parse_args()
 
@@ -427,7 +439,9 @@ def convert_to_paths(paths: Union[str, List[str]]) -> Path:
 
 
 def filter_dict(
-    sub_config: Union[RekordboxConfig, SpotifyConfig, SyncConfig, UtilsConfig],
+    sub_config: Union[
+        CollectionConfig, SpotifyConfig, SyncConfig, UtilsConfig
+    ],
 ) -> Dict[Any, Any]:
     """Filters out the superclass key: value pairs of a subclass.
 

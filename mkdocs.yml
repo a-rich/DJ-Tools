@@ -9,10 +9,10 @@ nav:
       - Usage: tutorials/getting_started/usage.md
       - Configuration: tutorials/getting_started/configuration.md
   - How-to Guides:
-    - Rekordbox:
+    - Collections:
       - Shuffle Tracks in Playlists: how_to_guides/shuffle_playlists.md
       - Copy Tracks From Playlists: how_to_guides/copy_playlists.md
-      - Build Playlists From Tags: how_to_guides/build_playlists.md
+      - Build Playlists From Tags: how_to_guides/collection_playlists.md
       - Combine Playlists With Boolean Algebra: how_to_guides/combiner_playlists.md
     - Spotify:
       - Setup Reddit & Spotify API Access: how_to_guides/reddit_spotify_api_access.md
@@ -30,7 +30,7 @@ nav:
     - The Importance of Standardization and Quality Control: conceptual_guides/file_standardization.md
   - Reference:
     - Config: reference/configs/index.md
-    - Rekordbox: reference/rekordbox/index.md
+    - Collections: reference/collections/index.md
     - Spotify: reference/spotify/index.md
     - Sync: reference/sync/index.md
     - Utils: reference/utils/index.md

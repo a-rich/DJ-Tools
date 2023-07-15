@@ -317,21 +317,21 @@ def test_get_playlist_ids():
 
 
 @mock.patch("djtools.spotify.helpers.praw.Reddit")
-def test_get_reddit_client(test_config):
+def test_get_reddit_client(config):
     """Test for the get_reddit_client function."""
-    test_config.REDDIT_CLIENT_ID = "test_client_id"
-    test_config.REDDIT_CLIENT_SECRET = "test_client_secret"
-    test_config.REDDIT_USER_AGENT = "test_user_agent"
-    get_reddit_client(test_config)
+    config.REDDIT_CLIENT_ID = "test_client_id"
+    config.REDDIT_CLIENT_SECRET = "test_client_secret"
+    config.REDDIT_USER_AGENT = "test_user_agent"
+    get_reddit_client(config)
 
 
 @mock.patch("djtools.spotify.helpers.spotipy.Spotify")
-def test_get_spotify_client(test_config):
+def test_get_spotify_client(config):
     """Test for the get_spotify_client function."""
-    test_config.SPOTIFY_CLIENT_ID = "test_client_id"
-    test_config.SPOTIFY_CLIENT_SECRET = "test_client_secret"
-    test_config.SPOTIFY_REDIRECT_URI = "test_redirect_uri"
-    get_spotify_client(test_config)
+    config.SPOTIFY_CLIENT_ID = "test_client_id"
+    config.SPOTIFY_CLIENT_SECRET = "test_client_secret"
+    config.SPOTIFY_REDIRECT_URI = "test_redirect_uri"
+    get_spotify_client(config)
 
 
 @pytest.mark.asyncio
@@ -349,7 +349,7 @@ async def test_get_subreddit_posts(
     mock_process,
     subreddit_type,
     num_subs,
-    test_config,
+    config,
     caplog,
 ):
     """Test for the get_subreddit_posts function."""
@@ -366,7 +366,7 @@ async def test_get_subreddit_posts(
     ):
         mock_catch.return_value=aiter(mock_praw_submission, num_subs)
         await get_subreddit_posts(
-            mock_spotify, mock_praw, subreddit, test_config, praw_cache
+            mock_spotify, mock_praw, subreddit, config, praw_cache
         )
     assert caplog.records[0].message == (
         f'Filtering {num_subs} "r/techno" {subreddit_type} posts'

@@ -3,12 +3,10 @@ DJ Tools is a Python library with many features for streamlining the processes a
 
 If you want to learn more about how to use DJ Tools to achieve any of the following, please visit the [How-to Guides](../../how_to_guides/index.md).
 
-## Rekordbox
-This package, as the name suggests, performs operations that are only relevant to Rekordbox users. In general, this package manipulates an exported XML of your Rekordbox Collection in order to add functionality that's lacking in the Rekordbox software.
+## Collections
+This package deserializes a collection which contains tracks and playlists. Operations can be performed on this collection such as shuffling playlists and create backups of playlists and the files that they're comprised of.
 
-For example, you can shuffle playlists and create backups of playlists and the files that they're comprised of.
-
-My favorite feature in the `rekordbox` package automatically builds playlists based on tags in your collection and allows you to express powerful [boolean algebra expressions](https://en.wikipedia.org/wiki/Set_theory#Basic_concepts_and_notation) that combine and filter playlists.
+My favorite feature in the `collections` package builds playlists based on tags in your collection and allows you to express powerful [boolean algebra expressions](https://en.wikipedia.org/wiki/Set_theory#Basic_concepts_and_notation) that combine and filter playlists.
 
 ## Spotify
 This package interfaces with the Spotify (and Reddit) API in order to automatically generate playlists from Reddit submission and the uploads of other users of your Beatcloud instance.
@@ -20,9 +18,9 @@ Being able to generate Spotify playlists from other users' uploads gives you an 
 ## Sync
 This package is essentially a wrapper around an AWS S3 API compliant object storage solution. Throughout the code and documentation, this cloud storage instance is referred to as the "Beatcloud".
 
-The core of the `sync` package is the music uploading and downloading features that the progenitor version of DJ Tools was constructed for. This lets you backup your collection for safe keeping and, furthermore, allows you to share your collection amongst your DJ friends. It also can be used to upload your XML database export as well as download XMLs that other users have uploaded.
+The core of the `sync` package is the music uploading and downloading features that the progenitor version of DJ Tools was constructed for. This lets you backup your collection for safe keeping and, furthermore, allows you to share your collection amongst your DJ friends. It also can be used to upload your DJ platform's database as well as download databases that other users have uploaded.
 
-If you're downloading another user's XML, this package will doctor the file so the track locations point to where they exist for you (assuming you're all syncing with the same Beatcloud instance). This allows you to import tracks from another user's Collection inheriting all their tags, hot cues, etc.
+If you're downloading another user's database, this package will doctor it so the track locations point to where they exist for you (assuming you're all syncing with the same Beatcloud instance). This allows you to import tracks from another user's collection inheriting all their tags, hot cues, etc.
 
 As mentioned under the [Spotify](#spotify) section above, the `sync` package offers a sister feature for syncing just the tracks that appear in a playlist generated from another user's upload. This allows you to (a) preview and filter the tracks another user uploads in Spotify and (b) automatically format the `DOWNLOAD_EXCLUDE_DIRS` configuration option on-the-fly based on the remaining tracks of the playlist.
 

@@ -54,10 +54,7 @@ with open(version_path, mode="r", encoding="utf-8") as _file:
 setup(
     name='dj_beatcloud',
     version=VERSION,
-    description=(
-        'DJ Tools is a library for managing a collection of music and '
-        'Rekordbox XML files.'
-    ),
+    description='DJ Tools is a library for managing a collection of music.',
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
     url='https://github.com/a-rich/DJ-tools',
@@ -67,7 +64,7 @@ setup(
     packages=[
         "djtools",
         "djtools.configs",
-        "djtools.rekordbox",
+        "djtools.collections",
         "djtools.spotify",
         "djtools.sync",
         "djtools.utils",
@@ -77,7 +74,7 @@ setup(
     extras_require=EXTRAS,
     python_requires=">=3.6",
     include_package_data=True,
-    keywords='MP3 Rekordbox XML spotify reddit aws s3',
+    keywords='DJ Rekordbox spotify reddit aws s3',
     entry_points={
         'console_scripts': ['djtools=djtools:main']
     },

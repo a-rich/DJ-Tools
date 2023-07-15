@@ -9,24 +9,24 @@ appropriate configuration object. Finally, the log file generated from this run
 is uploaded to the Beatcloud.
 """
 from .configs import build_config
-from .rekordbox import (
-    build_playlists,
+from .collections import (
+    COLLECTION_OPERATIONS,
+    collection_playlists,
     copy_playlists,
-    REKORDBOX_OPERATIONS,
     shuffle_playlists,
 )
 from .spotify import (
-    playlist_from_upload,
+    spotify_playlist_from_upload,
     SPOTIFY_OPERATIONS,
-    update_auto_playlists,
+    spotify_playlists,
 )
 from .sync import (
+    download_collection,
     download_music,
-    download_xml,
     SYNC_OPERATIONS,
+    upload_collection,
     upload_log,
     upload_music,
-    upload_xml,
 )
 from .utils import (
     compare_tracks,
@@ -39,21 +39,21 @@ from .version import __version__
 
 __all__ = (
     "build_config",
-    "build_playlists",
+    "COLLECTION_OPERATIONS",
+    "collection_playlists",
     "compare_tracks",
     "copy_playlists",
+    "download_collection",
     "download_music",
-    "download_xml",
     "initialize_logger",
-    "playlist_from_upload",
-    "REKORDBOX_OPERATIONS",
     "shuffle_playlists",
+    "spotify_playlist_from_upload",
+    "spotify_playlists",
     "SPOTIFY_OPERATIONS",
     "SYNC_OPERATIONS",
-    "update_auto_playlists",
     "upload_log",
+    "upload_collection",
     "upload_music",
-    "upload_xml",
     "UTILS_OPERATIONS",
     "url_download",
 )
@@ -66,11 +66,11 @@ def main():
     config = build_config()
     logger.setLevel(config.LOG_LEVEL)
 
-    # Run "rekordbox", "spotify", "sync", and "utils" package operations if any
-    # of the flags to do so are present in the config.
+    # Run "collections", "spotify", "sync", and "utils" package operations if
+    # any of the flags to do so are present in the config.
     beatcloud_cache = []
     for package in [
-        REKORDBOX_OPERATIONS,
+        COLLECTION_OPERATIONS,
         SPOTIFY_OPERATIONS,
         UTILS_OPERATIONS,
         SYNC_OPERATIONS,
@@ -80,7 +80,7 @@ def main():
                 continue
             logger.info(f"{operation}")
             if operation in ["CHECK_TRACKS", "DOWNLOAD_MUSIC"]:
-                beatcloud_cache = func(  # pylint: disable=assignment-from-no-return,unexpected-keyword-arg
+                beatcloud_cache = func(  # pylint: disable=assignment-from-none,unexpected-keyword-arg
                     config, beatcloud_tracks=beatcloud_cache
                 )
             else:

@@ -1,16 +1,17 @@
 """This module contains fixtures for DJ Tools."""
 from argparse import Namespace
 from pathlib import Path
-import shutil
 # import time
 from unittest import mock
-from urllib.parse import quote, unquote
 
 from bs4 import BeautifulSoup
 import pytest
 
 from djtools.configs.config import BaseConfig
 from djtools.configs.helpers import filter_dict, pkg_cfg
+from djtools.collections.collections import RekordboxCollection
+from djtools.collections.playlists import RekordboxPlaylist
+from djtools.collections.tracks import RekordboxTrack
 
 
 @pytest.fixture
@@ -21,7 +22,7 @@ def namespace():
 
 @pytest.fixture
 @mock.patch("djtools.spotify.helpers.get_spotify_client", mock.MagicMock())
-def test_config():
+def config():
     """Test config fixture."""
     configs = {pkg: cfg() for pkg, cfg in pkg_cfg.items() if pkg != "configs"}
     joined_config = BaseConfig(
@@ -34,70 +35,98 @@ def test_config():
     return joined_config
 
 
-@pytest.fixture
-def test_playlist_config(tmpdir):
-    """Test playlist config fixture."""
-    src = Path("djtools/configs/rekordbox_playlists.yaml")
-    dst = tmpdir / src.name
-    shutil.copyfile(str(src), str(dst))
-
-    return dst
-
-
 @pytest.fixture(scope="session")
-def test_track(xml_tmpdir, xml):  # pylint: disable=redefined-outer-name
-    """Test track fixture."""
-    xml_tmpdir = Path(xml_tmpdir)
-    test_dir = xml_tmpdir / "input"
-    test_dir.mkdir()
-    track = xml.find("TRACK")
-    track_name = Path(track["Location"]).name
-    track["Location"] = quote((test_dir / track_name).as_posix())
-    with open(unquote(track["Location"]), mode="w", encoding="utf-8") as _file:
-        _file.write("")
-
-    return track
-
-
-@pytest.fixture(scope="session")
-def test_xml(xml_tmpdir, xml):  # pylint: disable=redefined-outer-name
-    """Test XML fixture."""
-    xml_tmpdir = Path(xml_tmpdir)
-    for track in xml.find_all("TRACK"):
-        if not track.get("Location"):
-            continue
-        track_name = Path(track["Location"]).name
-        track["Location"] = quote((xml_tmpdir / track_name).as_posix())
-        with open(
-            unquote(track["Location"]), mode="w", encoding="utf-8"
-        ) as _file:
-            _file.write("")
-    xml_path = xml_tmpdir / "rekordbox.xml"
-    with open(
-        xml_path,
-        mode="wb",
-        encoding=xml.original_encoding,
-    ) as _file:
-        _file.write(xml.prettify("utf-8"))
-
-    return xml_path
-
-
-@pytest.fixture(scope="session")
-def xml_tmpdir(tmpdir_factory):
+def input_tmpdir(tmpdir_factory):
     """Test tmpdir fixture."""
     return tmpdir_factory.mktemp("input")
 
 
+# @pytest.fixture
+# def playlist_config(tmpdir):
+#     """Test playlist config fixture."""
+#     src = Path("djtools/configs/collection_playlists.yaml")
+#     dst = tmpdir / src.name
+#     shutil.copyfile(str(src), str(dst))
+
+#     return dst
+
+
 @pytest.fixture(scope="session")
-def xml():
-    """Test XML fixture."""
-    with open(
-        "testing/data/rekordbox.xml", mode="r", encoding="utf-8"
-    ) as _file:
+def rekordbox_playlist_tag():  # pylint: disable=redefined-outer-name
+    """Fixture for Rekordbox playlist tag."""
+    playlist_string = (
+        """<NODE Name="ROOT" Type="0" Count="2">"""
+        """  <NODE Name="Genres" Type="0" Count="1">"""
+        """    <NODE Name="Hip Hop" Type="1" Entries="1">"""
+        """      <TRACK Key="2"/>"""
+        """    </NODE>"""
+        """  </NODE>"""
+        """  <NODE Name="My Tags" Type="0" Count="1">"""
+        """    <NODE Name="Dark" Type="1" Entries="0"/>"""
+        """  </NODE>"""
+        """</NODE>"""
+    )
+    return BeautifulSoup(playlist_string, "xml").find("NODE")
+
+
+@pytest.fixture(scope="session")
+def rekordbox_playlist(rekordbox_playlist_tag):  # pylint: disable=redefined-outer-name
+    """Fixture for Rekordbox playlist object."""
+    return RekordboxPlaylist(rekordbox_playlist_tag)
+
+
+@pytest.fixture(scope="session")
+def rekordbox_track_tag(input_tmpdir):  # pylint: disable=redefined-outer-name
+    """Fixture for Rekordbox track tag."""
+    track_string = (
+        """<TRACK AverageBpm="140.00" Comments="/* Dark */" """
+        """DateAdded="2023-06-24" Genre="Dubstep" """
+        """Location="file://localhost/track1.mp3" Rating="255" TrackID="1" """
+        """TrackNumber="1">\n<TEMPO/>\n<POSITION_MARK/>\n</TRACK>"""
+    )
+    track_tag = BeautifulSoup(track_string, "xml").find("TRACK")
+    test_dir = Path(input_tmpdir) / "input"
+    test_dir.mkdir(exist_ok=True)
+    track_name = Path(track_tag["Location"]).name
+    track_tag["Location"] = f"file://localhost{test_dir / track_name}"
+    with open(test_dir / track_name, mode="w", encoding="utf-8") as _file:
+        _file.write("")
+
+    return track_tag
+
+
+@pytest.fixture()
+def rekordbox_track(rekordbox_track_tag):  # pylint: disable=redefined-outer-name
+    """Fixture for Rekordbox track object."""
+    return RekordboxTrack(rekordbox_track_tag)
+
+
+@pytest.fixture(scope="session")
+def rekordbox_xml(input_tmpdir):  # pylint: disable=redefined-outer-name
+    """Fixture for XML file."""
+    input_tmpdir = Path(input_tmpdir)
+    collection = RekordboxCollection("testing/data/rekordbox.xml")
+    for track in collection.get_tracks().values():
+        track.set_location(input_tmpdir / track.get_location().name)
+        with open(track.get_location(), mode="w", encoding="utf-8") as _file:
+            _file.write("")
+
+    return collection.serialize(new_path=input_tmpdir / "rekordbox.xml")
+
+
+@pytest.fixture(scope="session")
+def rekordbox_collection_tag(rekordbox_xml):  # pylint: disable=redefined-outer-name
+    """Fixture for Rekordbox collection tag."""
+    with open(rekordbox_xml, mode="r", encoding="utf-8") as _file:
         xml = BeautifulSoup(_file.read(), "xml")  # pylint: disable=redefined-outer-name
 
     return xml
+
+
+@pytest.fixture(scope="session")
+def rekordbox_collection(rekordbox_xml):  # pylint: disable=redefined-outer-name
+    """Fixture for Rekordbox collection object."""
+    return RekordboxCollection(rekordbox_xml)
 
 
 ###############################################################################

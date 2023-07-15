@@ -4,13 +4,12 @@ import os
 from pathlib import Path
 import tempfile
 from unittest import mock
-from urllib.parse import unquote
 
-from bs4 import BeautifulSoup
 import pytest
 
+from djtools.collections.collections import RekordboxCollection
 from djtools.sync.helpers import (
-    parse_sync_command, rewrite_xml, run_sync, upload_log, webhook
+    parse_sync_command, rewrite_track_paths, run_sync, upload_log, webhook
 )
 
 
@@ -25,7 +24,7 @@ from djtools.sync.helpers import (
 @pytest.mark.parametrize("dryrun", [True, False])
 def test_parse_sync_command(
     tmpdir,
-    test_config,
+    config,
     upload,
     include_dirs,
     exclude_dirs,
@@ -35,13 +34,13 @@ def test_parse_sync_command(
     """Test for the parse_sync_command function."""
     tmpdir = str(tmpdir)
     if upload:
-        test_config.UPLOAD_INCLUDE_DIRS = include_dirs
-        test_config.UPLOAD_EXCLUDE_DIRS = exclude_dirs
+        config.UPLOAD_INCLUDE_DIRS = include_dirs
+        config.UPLOAD_EXCLUDE_DIRS = exclude_dirs
     else:
-        test_config.DOWNLOAD_INCLUDE_DIRS = include_dirs
-        test_config.DOWNLOAD_EXCLUDE_DIRS = exclude_dirs
-    test_config.AWS_USE_DATE_MODIFIED = not use_date_modified
-    test_config.DRYRUN = dryrun
+        config.DOWNLOAD_INCLUDE_DIRS = include_dirs
+        config.DOWNLOAD_EXCLUDE_DIRS = exclude_dirs
+    config.AWS_USE_DATE_MODIFIED = not use_date_modified
+    config.DRYRUN = dryrun
     partial_cmd = [
         "aws",
         "s3",
@@ -49,7 +48,7 @@ def test_parse_sync_command(
         tmpdir if upload else "s3://dj.beatcloud.com/dj/music/",
         "s3://dj.beatcloud.com/dj/music/" if upload else tmpdir,
     ]
-    cmd = parse_sync_command(partial_cmd, test_config, upload)
+    cmd = parse_sync_command(partial_cmd, config, upload)
     cmd = " ".join(cmd)
     if include_dirs:
         assert all(f"--include {x}" in cmd for x in include_dirs)
@@ -63,46 +62,50 @@ def test_parse_sync_command(
         assert "--dryrun" in cmd
 
 
-def test_rewrite_xml(test_config, test_xml, xml):
-    """Test for the rewrite_xml function."""
-    user_a_path= "/Volumes/AWEEEEZY/"
-    user_b_path= "/Volumes/my_beat_stick/"
-    test_user = "aweeeezy"
-    other_user = "other_user"
-    test_config.USER = test_user
-    test_config.IMPORT_USER = other_user
-    test_config.XML_PATH = test_xml
-    test_config.USB_PATH = Path("/Volumes/AWEEEEZY/")
-    other_users_xml = Path(test_xml).parent / f"{other_user}_rekordbox.xml"
-    other_users_xml.write_text(
-        Path(test_xml).read_text(encoding="utf-8"), encoding="utf-8"
+def test_rewrite_track_paths(config, rekordbox_xml):
+    """Test for the rewrite_track_paths function."""
+    user_a = "first_user"
+    user_b = "other_user"
+    user_a_path= Path("/Volumes/first_user_usb/")
+    user_b_path= Path("/Volumes/other_user_usb/")
+    user_a_xml = rekordbox_xml.parent / "rekordbox.xml"
+    user_b_xml = rekordbox_xml.parent / f"{user_b}_rekordbox.xml"
+    user_a_xml.write_text(
+        Path(rekordbox_xml).read_text(encoding="utf-8"), encoding="utf-8"
     )
+    user_b_xml.write_text(
+        Path(rekordbox_xml).read_text(encoding="utf-8"), encoding="utf-8"
+    )
+    config.USER = user_a
+    config.COLLECTION_PATH = user_a_xml
+    config.USB_PATH = user_a_path
+    config.IMPORT_USER = user_b
 
-    for track in xml.find_all("TRACK"):
-        if not track.get("Location"):
-            continue
-        # NOTE(a-rich): `Location` attributes in the XML's `TRACK` tags always
-        # have unix-style paths so paths created in Windows must be
-        # interpreted `.as_posix()`.
-        track["Location"] = (
-            Path(track["Location"]).parent / user_b_path.strip("/") /
-            "DJ Music" / Path(track["Location"]).name
-        ).as_posix()
+    # Write the first user's USB_PATH into each track.
+    collection = RekordboxCollection(user_a_xml)
+    for track in collection.get_tracks().values():
+        loc = track.get_location()
+        track.set_location(
+            loc.parent / str(user_a_path).strip("/") / "DJ Music" / loc.name
+        )
+    collection.serialize(new_path=user_a_xml)
 
-    with open(
-        other_users_xml, mode="wb", encoding=xml.original_encoding
-    ) as _file:
-        _file.write(xml.prettify("utf-8"))
+    # Write the second user's USB_PATH into each track.
+    collection = RekordboxCollection(user_b_xml)
+    for track in collection.get_tracks().values():
+        loc = track.get_location()
+        track.set_location(
+            loc.parent / str(user_b_path).strip("/") / "DJ Music" / loc.name
+        )
+    collection.serialize(new_path=user_b_xml)
 
-    rewrite_xml(test_config)
+    rewrite_track_paths(config, user_b_xml)
 
-    with open(other_users_xml, mode="r", encoding="utf-8") as _file:
-        soup = BeautifulSoup(_file.read(), "xml")
-        for track in soup.find_all("TRACK"):
-            if not track.get("Location"):
-                continue
-            assert user_a_path in unquote(track["Location"])
-            assert user_b_path not in unquote(track["Location"])
+    collection = RekordboxCollection(user_b_xml)
+    for track in collection.get_tracks().values():
+        loc = str(track.get_location())
+        assert str(user_a_path) in loc
+        assert str(user_b_path) not in loc
 
 
 @mock.patch("djtools.sync.helpers.Popen")
@@ -175,9 +178,9 @@ def test_run_sync_handles_return_code(mock_popen, tmpdir, caplog):
 
 
 @mock.patch("subprocess.Popen.wait", mock.Mock())
-def test_upload_log(tmpdir, test_config):
+def test_upload_log(tmpdir, config):
     """Test for the upload_log function."""
-    test_config.AWS_PROFILE = "DJ"
+    config.AWS_PROFILE = "DJ"
     now = datetime.now()
     one_day_ago = now - timedelta(days=1)
     test_log = f'{now.strftime("%Y-%m-%d")}.log'
@@ -193,15 +196,15 @@ def test_upload_log(tmpdir, test_config):
             _file.write("stuff")
         if filename != test_log:
             os.utime(file_path, (ctime, ctime))
-    upload_log(test_config, Path(tmpdir) / test_log)
+    upload_log(config, Path(tmpdir) / test_log)
     assert len(list(Path(tmpdir).iterdir())) == len(filenames) - 1
 
 
-def test_upload_log_no_aws_profile(test_config, caplog):
+def test_upload_log_no_aws_profile(config, caplog):
     """Test for the upload_log function."""
     caplog.set_level("WARNING")
-    test_config.AWS_PROFILE = ""
-    upload_log(test_config, "some_file.txt")
+    config.AWS_PROFILE = ""
+    upload_log(config, "some_file.txt")
     assert (
         caplog.records[0].message == "Logs cannot be backed up without "
         "specifying the config option AWS_PROFILE"

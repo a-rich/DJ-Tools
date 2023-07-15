@@ -32,13 +32,13 @@ def test_fix_up(test_assets):
     assert clean_file == expected_clean_file
 
 
-def test_url_download(tmpdir, test_config):
+def test_url_download(tmpdir, config):
     """Test for the url_download function."""
     tmpdir = Path(tmpdir)
-    test_config.URL_DOWNLOAD = (
+    config.URL_DOWNLOAD = (
         "https://soundcloud.com/aweeeezy_music/sets/test-download"
     )
-    test_config.URL_DOWNLOAD_DESTINATION = tmpdir
+    config.URL_DOWNLOAD_DESTINATION = tmpdir
 
     def dummy_func():
         with open(tmpdir / "file.mp3", mode="w", encoding="utf-8") as _file:
@@ -49,12 +49,12 @@ def test_url_download(tmpdir, test_config):
     ) as mock_ytdl:
         context = mock_ytdl.return_value.__enter__.return_value
         context.download.side_effect = lambda *args, **kwargs: dummy_func()
-        url_download(test_config)
+        url_download(config)
     assert len(list(tmpdir.iterdir())) == 1
 
 
-def test_url_download_invalid_url(test_config):
+def test_url_download_invalid_url(config):
     """Test for the url_download function."""
-    test_config.URL_DOWNLOAD = ""
+    config.URL_DOWNLOAD = ""
     with pytest.raises(DownloadError):
-        url_download(test_config)
+        url_download(config)
