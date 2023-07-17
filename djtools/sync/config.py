@@ -4,6 +4,7 @@ of config.yaml
 """
 import getpass
 import logging
+import os
 from pathlib import Path
 from typing import List, Optional, Union
 
@@ -19,6 +20,7 @@ class SyncConfig(BaseConfig):
     """Configuration object for the sync package."""
 
     ARTIST_FIRST: bool = False
+    AWS_PROFILE: str = "default"
     AWS_USE_DATE_MODIFIED: bool = False
     DISCORD_URL: str = ""
     DOWNLOAD_COLLECTION: bool = False
@@ -71,6 +73,7 @@ class SyncConfig(BaseConfig):
                 msg = "Config must include AWS_PROFILE for sync operations"
                 logger.critical(msg)
                 raise RuntimeError(msg)
+            os.environ["AWS_PROFILE"] = self.AWS_PROFILE
 
         if (
             any([self.DOWNLOAD_MUSIC, self.UPLOAD_MUSIC]) and
