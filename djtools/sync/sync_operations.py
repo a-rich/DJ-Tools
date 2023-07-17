@@ -77,15 +77,16 @@ def download_collection(config: BaseConfig):
     """
     logger.info(f"Downloading {config.IMPORT_USER}'s collection...")
     collection_dir = config.COLLECTION_PATH.parent
-    collection_dir.mkdir(parents=True, exist_ok=True)
     _file = (
         Path(collection_dir) /
         f'{config.IMPORT_USER}_{config.COLLECTION_PATH.name}'
     )
     cmd = (
         "aws s3 cp s3://dj.beatcloud.com/dj/collections/"
-        f'{config.IMPORT_USER}/collection {_file}'
+        f'{config.IMPORT_USER}/{config.PLATFORM}_collection {_file}'
     )
+    if config.COLLECTION_PATH.is_dir():
+        cmd += " --recursive"
     logger.info(cmd)
     with Popen(cmd, shell=True) as proc:
         proc.wait()
@@ -134,8 +135,13 @@ def upload_collection(config: BaseConfig):
         config: Configuration object.
     """
     logger.info(f"Uploading {config.USER}'s collection...")
-    dst = f"s3://dj.beatcloud.com/dj/collections/{config.USER}/collection"
+    dst = (
+        f"s3://dj.beatcloud.com/dj/collections/{config.USER}/"
+        f"{config.PLATFORM}_collection"
+    )
     cmd = f"aws s3 cp {config.COLLECTION_PATH} {dst}"
+    if config.COLLECTION_PATH.is_dir():
+        cmd += " --recursive"
     logger.info(cmd)
     with Popen(cmd, shell=True) as proc:
         proc.wait()
