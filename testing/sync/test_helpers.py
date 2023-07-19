@@ -130,11 +130,11 @@ def test_run_sync(mock_popen, tmpdir):
     # been created. The WAR is to initialize a `NamedTemporaryFile` with the
     # `delete` argument set to `False` and explicitly `.close()` the object
     # before calling `open()` on it.
-    with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_file:
-        tmp_file.write(sync_output)
+    with tempfile.NamedTemporaryFile(mode="wb", delete=False) as tmp_file:
+        tmp_file.write(bytes(sync_output.encode("utf-8")))
         tmp_file.seek(0)
         tmp_file.close()
-        with open(tmp_file.name, encoding="utf-8") as tmp_file:
+        with open(tmp_file.name, mode="rb") as tmp_file:
             process = mock_popen.return_value.__enter__.return_value
             process.stdout = tmp_file
             process.wait.return_value = 0
@@ -160,11 +160,11 @@ def test_run_sync_handles_return_code(mock_popen, tmpdir, caplog):
         Path(tmpdir).as_posix(),
         "s3://dj.beatcloud.com/dj/music/",
     ]
-    with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_file:
-        tmp_file.write("")
+    with tempfile.NamedTemporaryFile(mode="wb", delete=False) as tmp_file:
+        tmp_file.write(bytes("".encode("utf-8")))
         tmp_file.seek(0)
         tmp_file.close()
-        with open(tmp_file.name, encoding="utf-8") as tmp_file:
+        with open(tmp_file.name, mode="rb") as tmp_file:
             process = mock_popen.return_value.__enter__.return_value
             process.stdout = tmp_file
             process.wait.return_value = 1

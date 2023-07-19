@@ -46,8 +46,8 @@ def test_download_music(playlist_name, config, tmpdir, caplog):
     ) as mock_run_sync:
         download_music(config)
         mock_run_sync.assert_called_with(cmd)
-    assert caplog.records[0].message == "Found 0 files"
-    assert caplog.records[1].message == "Downloading track collection..."
+    assert caplog.records[0].message == "Downloading track collection..."
+    assert caplog.records[1].message == f"Found 0 files at {config.USB_PATH}"
     assert caplog.records[2].message == " ".join(cmd)
     assert caplog.records[3].message == "Found 1 new files"
     assert Path(caplog.records[4].message).name == "file.mp3"
@@ -95,7 +95,7 @@ def test_download_collection(
     if collection_is_dir:
         cmd.append("--recursive")
     assert caplog.records[0].message == (
-        f"Downloading {config.IMPORT_USER}'s collection..."
+        f"Downloading {config.IMPORT_USER}'s {config.PLATFORM} collection..."
     )
     assert caplog.records[1].message == " ".join(cmd)
     mock_rewrite_track_paths.assert_called_once()
@@ -165,6 +165,6 @@ def test_upload_collection(
     ):
         upload_collection(config)
     assert caplog.records[0].message == (
-        f"Uploading {user}'s collection..."
+        f"Uploading {user}'s {config.PLATFORM} collection..."
     )
     assert caplog.records[1].message == cmd

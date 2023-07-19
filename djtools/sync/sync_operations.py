@@ -44,12 +44,12 @@ def download_music(config: BaseConfig, beatcloud_tracks: Optional[List[str]] = N
         ]
         config.DOWNLOAD_EXCLUDE_DIRS = []
 
+    logger.info("Downloading track collection...")
     dest = Path(config.USB_PATH) / "DJ Music"
     glob_path = (Path("**") / "*.*").as_posix()
     old = {str(p) for p in dest.rglob(glob_path)}
-    logger.info(f"Found {len(old)} files")
+    logger.info(f"Found {len(old)} files at {config.USB_PATH}")
 
-    logger.info("Downloading track collection...")
     dest.mkdir(parents=True, exist_ok=True)
     cmd = [
         "aws", "s3", "sync", "s3://dj.beatcloud.com/dj/music/", dest.as_posix()
@@ -75,23 +75,26 @@ def download_collection(config: BaseConfig):
     Args:
         config: Configuration object.
     """
-    logger.info(f"Downloading {config.IMPORT_USER}'s collection...")
+    logger.info(
+        f"Downloading {config.IMPORT_USER}'s {config.PLATFORM} collection..."
+    )
     collection_dir = config.COLLECTION_PATH.parent
-    _file = (
+    src = (
+        f"s3://dj.beatcloud.com/dj/collections/{config.IMPORT_USER}/"
+        f"{config.PLATFORM}_collection"
+    )
+    dst = (
         Path(collection_dir) /
         f'{config.IMPORT_USER}_{config.COLLECTION_PATH.name}'
     )
-    cmd = (
-        "aws s3 cp s3://dj.beatcloud.com/dj/collections/"
-        f'{config.IMPORT_USER}/{config.PLATFORM}_collection {_file}'
-    )
+    cmd = ["aws", "s3", "cp", src, dst.as_posix()]
     if config.COLLECTION_PATH.is_dir():
-        cmd += " --recursive"
-    logger.info(cmd)
-    with Popen(cmd, shell=True) as proc:
+        cmd.append("--recursive")
+    logger.info(" ".join(cmd))
+    with Popen(cmd) as proc:
         proc.wait()
     if config.USER != config.IMPORT_USER:
-        rewrite_track_paths(config, _file)
+        rewrite_track_paths(config, dst)
 
 
 def upload_music(config: BaseConfig):
@@ -134,14 +137,17 @@ def upload_collection(config: BaseConfig):
     Args:
         config: Configuration object.
     """
-    logger.info(f"Uploading {config.USER}'s collection...")
-    dst = (
-        f"s3://dj.beatcloud.com/dj/collections/{config.USER}/"
-        f"{config.PLATFORM}_collection"
+    logger.info(
+        f"Uploading {config.USER}'s {config.PLATFORM} collection..."
     )
-    cmd = f"aws s3 cp {config.COLLECTION_PATH} {dst}"
+    dst = (
+      f"s3://dj.beatcloud.com/dj/collections/{config.USER}/"
+      f"{config.PLATFORM}_collection"
+    )
+    cmd = ["aws", "s3", "cp", config.COLLECTION_PATH.as_posix(), dst]
     if config.COLLECTION_PATH.is_dir():
-        cmd += " --recursive"
-    logger.info(cmd)
-    with Popen(cmd, shell=True) as proc:
+        cmd.append("--recursive")
+    logger.info(" ".join(cmd))
+    with Popen(cmd) as proc:
+
         proc.wait()
