@@ -6,6 +6,7 @@ from unittest import mock
 
 from bs4 import BeautifulSoup
 import pytest
+import yaml
 
 from djtools.configs.config import BaseConfig
 from djtools.configs.helpers import filter_dict, pkg_cfg
@@ -41,14 +42,13 @@ def input_tmpdir(tmpdir_factory):
     return tmpdir_factory.mktemp("input")
 
 
-# @pytest.fixture
-# def playlist_config(tmpdir):
-#     """Test playlist config fixture."""
-#     src = Path("djtools/configs/collection_playlists.yaml")
-#     dst = tmpdir / src.name
-#     shutil.copyfile(str(src), str(dst))
-
-#     return dst
+@pytest.fixture
+def playlist_config():
+    """Test playlist config fixture."""
+    with open(
+        "djtools/configs/collection_playlists.yaml", mode="r", encoding="utf-8"
+    ) as _file:
+        return yaml.load(_file.read(), Loader=yaml.FullLoader)
 
 
 @pytest.fixture(scope="session")

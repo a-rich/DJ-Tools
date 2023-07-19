@@ -8,7 +8,8 @@ from pathlib import Path
 from typing import List, Optional, Union
 from typing_extensions import Literal
 
-from pydantic import BaseModel, Extra
+from pydantic import BaseModel, Extra, ValidationError
+import yaml
 
 from djtools.configs.config import BaseConfig
 
@@ -19,6 +20,7 @@ logger = logging.getLogger(__name__)
 class CollectionConfig(BaseConfig):
     """Configuration object for the collections package."""
 
+    COLLECTION_PATH: Path = None
     COLLECTION_PLAYLISTS: bool = False
     COLLECTION_PLAYLISTS_REMAINDER: Literal["folder", "playlist"] = "folder"
     COPY_PLAYLISTS:  List[str] = []
@@ -48,15 +50,23 @@ class CollectionConfig(BaseConfig):
             )
 
         if self.COLLECTION_PLAYLISTS:
-            playlist_config = (
+            playlist_config_path = (
                 Path(__file__).parent.parent / "configs" /
                 "collection_playlists.yaml"
             )
-            if not playlist_config.exists():
-                raise RuntimeError(
-                    "collection_playlists.yaml must be a valid YAML to use the "
-                    "COLLECTION_PLAYLISTS feature"
-                )
+            err = (
+                "collection_playlists.yaml must be a valid YAML to use the "
+                "COLLECTION_PLAYLISTS feature"
+            )
+            if not playlist_config_path.exists():
+                raise RuntimeError(err)
+            try:
+                with open(
+                    playlist_config_path, mode="r", encoding="utf-8"
+                ) as _file:
+                    PlaylistConfig(**yaml.load(_file, Loader=yaml.FullLoader) or {})
+            except ValidationError as exc:
+                raise RuntimeError(err) from exc
 
 
 class PlaylistConfigContent(BaseModel, extra=Extra.forbid):

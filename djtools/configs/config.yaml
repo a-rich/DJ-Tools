@@ -1,4 +1,5 @@
 collections:
+  COLLECTION_PATH: null
   COLLECTION_PLAYLISTS: false
   COLLECTION_PLAYLISTS_REMAINDER: folder
   COPY_PLAYLISTS: []
@@ -6,8 +7,6 @@ collections:
   PLATFORM: rekordbox
   SHUFFLE_PLAYLISTS: []
 configs:
-  AWS_PROFILE: default
-  COLLECTION_PATH: null
   LOG_LEVEL: INFO
   VERBOSITY: 0
 spotify:
@@ -28,6 +27,7 @@ spotify:
   SPOTIFY_USERNAME: ''
 sync:
   ARTIST_FIRST: false
+  AWS_PROFILE: default
   AWS_USE_DATE_MODIFIED: false
   DISCORD_URL: ''
   DOWNLOAD_COLLECTION: false
