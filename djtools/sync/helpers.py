@@ -96,7 +96,7 @@ def rewrite_track_paths(config: BaseConfig, other_user_collection: Path):
         path=other_user_collection
     )
     for track in collection.get_tracks().values():
-        loc = str(track.get_location())
+        loc = track.get_location().as_posix()
         common_path = (
             music_path / loc.split(str(music_path) + '/', maxsplit=-1)[-1]
         )
@@ -145,7 +145,8 @@ def run_sync(_cmd: str) -> str:
 
     new_music = ""
     for group_id, group in groupby(
-        sorted(tracks, key=lambda x: x.parent), key=lambda x: x.parent
+        sorted(tracks, key=lambda x: x.parent.as_posix()),
+        key=lambda x: x.parent.as_posix()
     ):
         group = sorted(group)
         new_music += f"{group_id}: {len(group)}\n"

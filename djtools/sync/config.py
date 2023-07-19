@@ -73,7 +73,8 @@ class SyncConfig(BaseConfig):
                 msg = "Config must include AWS_PROFILE for sync operations"
                 logger.critical(msg)
                 raise RuntimeError(msg)
-            os.environ["AWS_PROFILE"] = self.AWS_PROFILE
+        
+        os.environ["AWS_PROFILE"] = self.AWS_PROFILE
 
         if (
             any([self.DOWNLOAD_MUSIC, self.UPLOAD_MUSIC]) and

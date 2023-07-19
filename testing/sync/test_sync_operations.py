@@ -90,7 +90,7 @@ def test_download_collection(
         # NOTE(a-rich): since we could be passing a `rekordbox_xml` formatted
         # as a WindowsPath, the comparison needs to be made with `str(new_xml)`
         # (rather than `new_xml.as_posix()`).
-        str(new_xml),
+        new_xml.as_posix(),
     ]
     if collection_is_dir:
         cmd.append("--recursive")
@@ -147,11 +147,11 @@ def test_upload_collection(
     """Test for the upload_collection function."""
     caplog.set_level("INFO")
     user = "user"
-    config.USER =user
+    config.USER = user
     config.COLLECTION_PATH = rekordbox_xml
     config.PLATFORM = "rekordbox"
     cmd = (
-        f"aws s3 cp {config.COLLECTION_PATH} "
+        f"aws s3 cp {config.COLLECTION_PATH.as_posix()} "
         f"s3://dj.beatcloud.com/dj/collections/{user}/"
         f"{config.PLATFORM}_collection"
     )

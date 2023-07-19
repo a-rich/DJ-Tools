@@ -103,9 +103,9 @@ def test_rewrite_track_paths(config, rekordbox_xml):
 
     collection = RekordboxCollection(user_b_xml)
     for track in collection.get_tracks().values():
-        loc = str(track.get_location())
-        assert str(user_a_path) in loc
-        assert str(user_b_path) not in loc
+        loc = track.get_location().as_posix()
+        assert user_a_path.as_posix() in loc
+        assert user_b_path.as_posix() not in loc
 
 
 @mock.patch("djtools.sync.helpers.Popen")

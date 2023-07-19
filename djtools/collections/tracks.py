@@ -365,7 +365,7 @@ class RekordboxTrack(Track):
             if key == "Location":
                 value = (
                     f"{self.__location_prefix}"
-                    f'{quote(str(value), safe="/,()!+=#;$")}'
+                    f'{quote(value.as_posix(), safe="/,()!+=#;$:")}'
                 )
                 value = re.sub(
                     r'%[0-9A-Z]{2}', lambda x: x.group(0).lower(), value 
