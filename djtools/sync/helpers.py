@@ -117,27 +117,23 @@ def run_sync(_cmd: str) -> str:
     Returns:
         Formatted list of uploaded tracks; tracks are grouped by directory.
     """
+    line = ""
+    termination_chars = {"\n", "\r"}
     tracks = []
     try:
-        with Popen(_cmd, stdout=PIPE, universal_newlines=True) as proc:
+        with Popen(_cmd, stdout=PIPE) as proc:
             while True:
-                line = proc.stdout.readline()
-                if line == "" and proc.poll() is not None:
+                char = proc.stdout.read(1).decode()
+                if char == "" and proc.poll() is not None:
                     break
-                if "upload: " in line:
-                    print(line.strip(), flush=True)
-                    tracks.append(
-                        line.strip().split(
-                            " to s3://dj.beatcloud.com/dj/music/"
-                        )[-1]
-                    )
-                else:
-                    print(
-                        f"{line.strip()}                                  "
-                        "                        ",
-                        end="\r", flush=True
-                    )
-
+                if char not in termination_chars:
+                    line += char
+                    continue
+                print(line, end=char)
+                if char != "\r" and "upload: " in line:
+                    line = line.split("s3://dj.beatcloud.com/dj/music/")[-1]
+                    tracks.append(Path(line))
+                line = ""
             proc.stdout.close()
             return_code = proc.wait()
         if return_code:
@@ -148,22 +144,17 @@ def run_sync(_cmd: str) -> str:
         raise Exception(msg) from exc
 
     new_music = ""
-    if tracks:
-        logger.info(
-            f'Successfully {"down" if "s3://" in _cmd[3] else "up"}loaded the '
-            "following tracks:"
-        )
     for group_id, group in groupby(
-        sorted(tracks, key=lambda x: "/".join(x.split("/")[:-1])),
-        key=lambda x: "/".join(x.split("/")[:-1]),
+        sorted(tracks, key=lambda x: x.parent), key=lambda x: x.parent
     ):
         group = sorted(group)
         new_music += f"{group_id}: {len(group)}\n"
         for track in group:
-            track = track.split("/")[-1]
-            new_music += f"\t{track}\n"
+            new_music += f"\t{track.name}\n"
     if new_music:
-        logger.info(new_music)
+        logger.info(
+            f"Successfully uploaded {len(tracks)} tracks:\n{new_music}"
+        )
 
     return new_music
 
@@ -184,9 +175,9 @@ def upload_log(config: BaseConfig, log_file: Path):
         return
 
     dst = f"s3://dj.beatcloud.com/dj/logs/{config.USER}/{log_file.name}"
-    cmd = f"aws s3 cp {log_file.as_posix()} {dst}"
-    logger.info(cmd)
-    with Popen(cmd, shell=True) as proc:
+    cmd = ["aws", "s3", "cp", log_file.as_posix(), dst]
+    logger.info(" ".join(cmd))
+    with Popen(cmd) as proc:
         proc.wait()
 
     now = datetime.now()
