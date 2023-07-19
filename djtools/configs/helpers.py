@@ -4,6 +4,7 @@ overrides the corresponding configuration options with these arguments.
 """
 import argparse
 from argparse import ArgumentParser
+import json
 import logging
 from pathlib import Path
 import sys
@@ -181,7 +182,7 @@ def arg_parse() -> argparse.Namespace:
     )
     spotify_parser.add_argument(
         "--spotify-playlist-subreddits",
-        type=parse_yaml,
+        type=parse_json,
         help=(
             "List of Subreddits configs to generate playlists from; YAML "
             'strings with "name", "type", "period", and "limit" keys'
@@ -358,6 +359,12 @@ def arg_parse() -> argparse.Namespace:
 
     args = parser.parse_args()
 
+    # Allow list type args with default values to be overridden using empty
+    # strings.
+    for arg, value in args._get_kwargs():  # pylint: disable=protected-access
+        if isinstance(value, list):
+            setattr(args, arg, list(filter(None, value)))
+
     if args.log_level:
         logger.setLevel(args.log_level)
 
@@ -488,21 +495,21 @@ def filter_dict(
     }
 
 
-def parse_yaml(_yaml: str) -> Dict:
-    """Parses a YAML string and returns a YAML object.
+def parse_json(_json: str) -> Dict:
+    """Parses a JSON string and returns a dict.
 
     Args:
-        _yaml: String representing YAML.
+        _json: String representing JSON.
 
     Raises:
-        Exception: YAML string must be valid YAML.
+        Exception: JSON string must be valid JSON.
 
     Returns:
-        YAML object.
+        Dictionary.
     """
     try:
-        return yaml.safe_load(_yaml)
+        return json.loads(_json)
     except Exception as exc:
         raise ValueError(
-            f'Unable to parse YAML type argument "{_yaml}": {exc}'
+            f'Unable to parse JSON type argument "{_json}": {exc}'
         ) from Exception

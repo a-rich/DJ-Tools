@@ -12,7 +12,7 @@ from djtools.configs.helpers import (
     build_config,
     convert_to_paths,
     filter_dict,
-    parse_yaml,
+    parse_json,
     pkg_cfg,
 )
 from djtools.utils.helpers import MockOpen
@@ -134,16 +134,29 @@ def test_filter_dict(config):
     assert sub_keys.difference(super_keys) == result_keys
 
 
-def test_parse_yaml():
-    """Test for the parse_yaml function."""
-    yaml_string = "name:\n - stuff"
-    yaml_obj = parse_yaml(yaml_string)
-    assert isinstance(yaml_obj, dict)
-    assert isinstance(yaml_obj["name"], list)
+@mock.patch("builtins.open", MockOpen(
+    files=["config.yaml"],
+    content="sync:\n  UPLOAD_EXCLUDE_DIRS:\n    - some/path",
+).open)
+@mock.patch("argparse.ArgumentParser.parse_args")
+def test_overridding_list(mock_parse_args, namespace):
+    """Test for the arg_parse function."""
+    namespace.UPLOAD_EXCLUDE_DIRS = [""]
+    mock_parse_args.return_value = namespace
+    parse_args = arg_parse()
+    assert parse_args["UPLOAD_EXCLUDE_DIRS"] == []
 
 
-def test_parse_yaml_invalid():
-    """Test for the parse_yaml function."""
-    yaml_string = "name:\n\t - stuff"
+def test_parse_json():
+    """Test for the parse_json function."""
+    json_string = '{"name": ["stuff"]}'
+    json_obj = parse_json(json_string)
+    assert isinstance(json_obj, dict)
+    assert isinstance(json_obj["name"], list)
+
+
+def test_parse_json_invalid():
+    """Test for the parse_json function."""
+    json_string = '{"name": {"stuff"}}'
     with pytest.raises(ValueError):
-        parse_yaml(yaml_string)
+        parse_json(json_string)
