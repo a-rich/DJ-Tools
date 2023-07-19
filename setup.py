@@ -60,7 +60,6 @@ setup(
     url='https://github.com/a-rich/DJ-tools',
     author='Alex Richards',
     author_email='alex.richards006@gmail.com',
-    license='GNU GPLv3',
     packages=[
         "djtools",
         "djtools.configs",
