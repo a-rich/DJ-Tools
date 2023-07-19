@@ -46,8 +46,8 @@ def test_download_music(playlist_name, config, tmpdir, caplog):
     ) as mock_run_sync:
         download_music(config)
         mock_run_sync.assert_called_with(cmd)
-    assert caplog.records[0].message == "Found 0 files"
-    assert caplog.records[1].message == "Downloading track collection..."
+    assert caplog.records[0].message == "Downloading track collection..."
+    assert caplog.records[1].message == f"Found 0 files at {config.USB_PATH}"
     assert caplog.records[2].message == " ".join(cmd)
     assert caplog.records[3].message == "Found 1 new files"
     assert Path(caplog.records[4].message).name == "file.mp3"
@@ -65,6 +65,7 @@ def test_download_collection(mock_rewrite_track_paths, config, rekordbox_xml, ca
     config.USER = test_user
     config.IMPORT_USER = other_user
     config.COLLECTION_PATH = rekordbox_xml
+    config.PLATFORM = "rekordbox"
     download_collection(config)
     cmd = [
         "aws",
@@ -77,7 +78,7 @@ def test_download_collection(mock_rewrite_track_paths, config, rekordbox_xml, ca
         str(new_xml),
     ]
     assert caplog.records[0].message == (
-        f"Downloading {config.IMPORT_USER}'s collection..."
+        f"Downloading {config.IMPORT_USER}'s {config.PLATFORM} collection..."
     )
     assert caplog.records[1].message == " ".join(cmd)
     mock_rewrite_track_paths.assert_called_once()
@@ -128,12 +129,13 @@ def test_upload_collection(config, rekordbox_xml, caplog):
     user = "user"
     config.USER =user
     config.COLLECTION_PATH = rekordbox_xml
+    config.PLATFORM = "rekordbox"
     cmd = (
         f"aws s3 cp {rekordbox_xml} "
         f"s3://dj.beatcloud.com/dj/collections/{user}/collection"
     )
     upload_collection(config)
     assert caplog.records[0].message == (
-        f"Uploading {user}'s collection..."
+        f"Uploading {user}'s {config.PLATFORM} collection..."
     )
     assert caplog.records[1].message == cmd

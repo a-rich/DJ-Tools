@@ -171,8 +171,8 @@ def get_beatcloud_tracks() -> List[str]:
     Returns:
         Beatcloud track titles and artist names.
     """
-    cmd = "aws s3 ls --recursive s3://dj.beatcloud.com/dj/music/"
-    output = check_output(cmd, shell=True).decode("utf-8").split("\n")
+    cmd = ["aws", "s3", "ls", "--recursive", "s3://dj.beatcloud.com/dj/music/"]
+    output = check_output(cmd).decode("utf-8").split("\n")
     tracks = [Path(track) for track in output if track]
     logger.info(f"Got {len(tracks)} tracks from the beatcloud")
 
