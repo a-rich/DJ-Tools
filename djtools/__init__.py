@@ -66,7 +66,7 @@ def main():
     config = build_config()
     logger.setLevel(config.LOG_LEVEL)
 
-    # Run "collections", "spotify", "sync", and "utils" package operations if
+    # Run "collection", "spotify", "sync", and "utils" package operations if
     # any of the flags to do so are present in the config.
     beatcloud_cache = []
     for package in [

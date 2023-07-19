@@ -1,4 +1,4 @@
-"""This module contains helpers for the collections package."""
+"""This module contains helpers for the collection package."""
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import defaultdict

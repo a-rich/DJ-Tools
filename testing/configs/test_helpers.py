@@ -138,13 +138,13 @@ def test_filter_dict(config):
     files=["config.yaml"],
     content="sync:\n  UPLOAD_EXCLUDE_DIRS:\n    - some/path",
 ).open)
-@mock.patch("argparse.ArgumentParser.parse_args")
-def test_overridding_list(mock_parse_args, namespace):
+def test_overridding_list():
     """Test for the arg_parse function."""
-    namespace.UPLOAD_EXCLUDE_DIRS = [""]
-    mock_parse_args.return_value = namespace
-    parse_args = arg_parse()
-    assert parse_args["UPLOAD_EXCLUDE_DIRS"] == []
+    with mock.patch(
+        "sys.argv", ["__main__.py", "sync", "--upload-exclude-dirs", ""]
+    ):
+        parse_args = arg_parse()
+    assert parse_args["upload_exclude_dirs"] == []
 
 
 def test_parse_json():

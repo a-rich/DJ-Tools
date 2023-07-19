@@ -23,12 +23,36 @@ from djtools.version import __version__
 logger = logging.getLogger(__name__)
 
 pkg_cfg = {
-    "collections": CollectionConfig,
+    "collection": CollectionConfig,
     "configs": BaseConfig,
     "spotify": SpotifyConfig,
     "sync": SyncConfig,
     "utils": UtilsConfig,
 }
+
+
+class NonEmptyListElementAction(argparse.Action):
+    """This Action implementation permits overriding list defaults.
+
+    Some configuration options, like UPLOAD_EXCLUDE_DIRS, may be set to some
+    sensible default in config.yaml. Because of this users will be unable to
+    run `--upload-music` in conjunction with `--download-include-dirs` without
+    having to first make an edit to their config.yaml (because the
+    include/exclude options are mutually exclusive).
+    """
+    def __call__(self, parser, namespace, values, option_string=None):
+        """Filter list-type arguments for empty strings.
+
+        Args:
+            parser: The ArgumentParser object which contains this action.
+            namespace: The Namespace object returned by parse_args().
+            values: The associated command-line arguments.
+            option_string: The option string used to invoke this action.
+        """
+        values = values or []
+        dest = getattr(namespace, self.dest) or []
+        dest.extend(filter(None, values))
+        setattr(namespace, self.dest, dest)
 
 
 def arg_parse() -> argparse.Namespace:
@@ -72,20 +96,20 @@ def arg_parse() -> argparse.Namespace:
     subparsers = parser.add_subparsers(title="subcommands")
 
     ###########################################################################
-    # Sub-command for the collections package.
+    # Sub-command for the collection package.
     ###########################################################################
-    collections_parser = subparsers.add_parser("collections")
-    collections_parser.add_argument(
+    collection_parser = subparsers.add_parser("collection")
+    collection_parser.add_argument(
         "--collection-path",
         type=convert_to_paths,
         help='Path to a collection database',
     )
-    collections_parser.add_argument(
+    collection_parser.add_argument(
         "--collection-playlists",
         action="store_true",
         help="Trigger building collection playlists",
     )
-    collections_parser.add_argument(
+    collection_parser.add_argument(
         "--collection-playlists-remainder",
         type=str,
         choices=["folder", "playlist"],
@@ -94,27 +118,29 @@ def arg_parse() -> argparse.Namespace:
             'or a single "Other" playlist'
         ),
     )
-    collections_parser.add_argument(
+    collection_parser.add_argument(
         "--copy-playlists",
         type=str,
         nargs="+",
+        action=NonEmptyListElementAction,
         help="List of playlists to copy audio files from",
     )
-    collections_parser.add_argument(
+    collection_parser.add_argument(
         "--copy-playlists-destination",
         type=convert_to_paths,
         help="Location to copy playlists' audio files to",
     )
-    collections_parser.add_argument(
+    collection_parser.add_argument(
         "--platform",
         type=str,
         choices=["rekordbox"],
-        help="DJ platform to use for the collections package",
+        help="DJ platform to use for the collection package",
     )
-    collections_parser.add_argument(
+    collection_parser.add_argument(
         "--shuffle-playlists",
         type=str,
         nargs="+",
+        action=NonEmptyListElementAction,
         help="List of playlist names to randomize tracks in",
     )
 
@@ -247,12 +273,14 @@ def arg_parse() -> argparse.Namespace:
         "--download-exclude-dirs",
         type=convert_to_paths,
         nargs="+",
+        action=NonEmptyListElementAction,
         help="Paths to exclude when downloading from the Beatcloud",
     )
     sync_parser.add_argument(
         "--download-include-dirs",
         type=convert_to_paths,
         nargs="+",
+        action=NonEmptyListElementAction,
         help="Paths to include when downloading from the Beatcloud",
     )
     sync_parser.add_argument(
@@ -287,12 +315,14 @@ def arg_parse() -> argparse.Namespace:
         "--upload-exclude-dirs",
         type=convert_to_paths,
         nargs="+",
+        action=NonEmptyListElementAction,
         help="List of paths to exclude when uploading to the Beatcloud",
     )
     sync_parser.add_argument(
         "--upload-include-dirs",
         type=convert_to_paths,
         nargs="+",
+        action=NonEmptyListElementAction,
         help="List of paths to include when uploading to the Beatcloud",
     )
     sync_parser.add_argument(
@@ -335,6 +365,7 @@ def arg_parse() -> argparse.Namespace:
         "--check-tracks-local-dirs",
         type=convert_to_paths,
         nargs="+",
+        action=NonEmptyListElementAction,
         help="List of local directories to check against the Beatcloud",
     )
     utils_parser.add_argument(
@@ -358,12 +389,6 @@ def arg_parse() -> argparse.Namespace:
     ###########################################################################
 
     args = parser.parse_args()
-
-    # Allow list type args with default values to be overridden using empty
-    # strings.
-    for arg, value in args._get_kwargs():  # pylint: disable=protected-access
-        if isinstance(value, list):
-            setattr(args, arg, list(filter(None, value)))
 
     if args.log_level:
         logger.setLevel(args.log_level)
@@ -471,9 +496,9 @@ def convert_to_paths(paths: Union[str, List[str]]) -> Path:
         Path 
     """
     if isinstance(paths, List):
-        return list(map(Path, paths))
+        return list(map(Path, filter(None, paths)))
 
-    return Path(paths)
+    return Path(paths) if paths else ""
 
 
 def filter_dict(

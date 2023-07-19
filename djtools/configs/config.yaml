@@ -1,4 +1,4 @@
-collections:
+collection:
   COLLECTION_PATH: null
   COLLECTION_PLAYLISTS: false
   COLLECTION_PLAYLISTS_REMAINDER: folder

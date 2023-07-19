@@ -105,7 +105,6 @@ def test_copy_file(tmpdir, rekordbox_track):
     file_name = rekordbox_track.get_location().name
     copy_file(track=rekordbox_track, destination=dest_dir)
     new_file_path = dest_dir / file_name
-    print(f"[DEBUG] dest_dir: {dest_dir}, new_file_path: {new_file_path}")
     # NOTE(a-rich): `Location` attributes in the XML's `TRACK` tags always
     # have unix-style paths so comparisons made with paths created in Windows
     # must be interpreted `.as_posix()`.

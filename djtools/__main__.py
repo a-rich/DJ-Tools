@@ -1,7 +1,7 @@
 """This is the entry point for the DJ Tools library.
 
-Collections operations:
-    * COLLECTION_PLAYLISTS (collections.playlist_builder.py): Automatically
+Collection operations:
+    * COLLECTION_PLAYLISTS (collection.playlist_builder.py): Automatically
         create a playlist structure based on the tags present in a collection.
     * COPY_PLAYLISTS (copy_playlists.py): Copy audio files from
         playlists to a new location and generate a new collection with updated

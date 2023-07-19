@@ -10,7 +10,7 @@ from djtools.collection.config import (
 from djtools.utils.helpers import mock_exists, MockOpen
 
 
-def test_collectionsconfig():
+def test_collectionconfig():
     """Test for the CollectionConfig class."""
     cfg = {
         "COLLECTION_PATH": "some/path",
@@ -31,7 +31,7 @@ def test_collectionsconfig():
         content="tags: invalid-content",
     ).open,
 )
-def test_collectionsconfig_invalid_collection_playlists_config(rekordbox_xml):
+def test_collectionconfig_invalid_collection_playlists_config(rekordbox_xml):
     """Test for the CollectionConfig class."""
     cfg = {"COLLECTION_PLAYLISTS": True, "COLLECTION_PATH": rekordbox_xml}
     with pytest.raises(
@@ -52,7 +52,7 @@ def test_collectionsconfig_invalid_collection_playlists_config(rekordbox_xml):
         path,
     )
 )
-def test_collectionsconfig_no_collection_playlists_config(rekordbox_xml):
+def test_collectionconfig_no_collection_playlists_config(rekordbox_xml):
     """Test for the CollectionConfig class."""
     cfg = {"COLLECTION_PLAYLISTS": True, "COLLECTION_PATH": rekordbox_xml}
     with pytest.raises(
@@ -64,23 +64,23 @@ def test_collectionsconfig_no_collection_playlists_config(rekordbox_xml):
 
 
 
-def test_collectionsconfig_xml_is_missing():
+def test_collectionconfig_xml_is_missing():
     """Test for the CollectionConfig class."""
     cfg = {"COLLECTION_PLAYLISTS": True, "COLLECTION_PATH": "not/a/real/path"}
     with pytest.raises(
         RuntimeError,
-        match="Using the collections package requires the config option "
+        match="Using the collection package requires the config option "
             "COLLECTION_PATH to be a valid collection path",
     ):
         CollectionConfig(**cfg)
 
 
-def test_collectionsconfig_xml_is_none():
+def test_collectionconfig_xml_is_none():
     """Test for the CollectionConfig class."""
     cfg = {"COLLECTION_PLAYLISTS": True, "COLLECTION_PATH": None}
     with pytest.raises(
         RuntimeError,
-        match="Using the collections package requires the config option "
+        match="Using the collection package requires the config option "
             "COLLECTION_PATH to be a valid collection path",
     ):
         CollectionConfig(**cfg)

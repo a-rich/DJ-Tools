@@ -1,5 +1,5 @@
 """This module contains the configuration objects for the collection package.
-The attributes of this configuration object correspond with the "collections"
+The attributes of this configuration object correspond with the "collection"
 key of config.yaml
 """
 from __future__ import annotations
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class CollectionConfig(BaseConfig):
-    """Configuration object for the collections package."""
+    """Configuration object for the collection package."""
 
     COLLECTION_PATH: Path = None
     COLLECTION_PLAYLISTS: bool = False
@@ -45,7 +45,7 @@ class CollectionConfig(BaseConfig):
             ]
         ) and (not self.COLLECTION_PATH or not self.COLLECTION_PATH.exists()):
             raise RuntimeError(
-                "Using the collections package requires the config option "
+                "Using the collection package requires the config option "
                 "COLLECTION_PATH to be a valid collection path"
             )
 

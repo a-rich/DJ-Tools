@@ -1,4 +1,4 @@
-"""Testing for the collections module."""
+"""Testing for the collection module."""
 from pathlib import Path
 
 import bs4

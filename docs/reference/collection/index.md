@@ -1,4 +1,4 @@
-# Collections
+# Collection
 
 ::: djtools.collection.collections
 ::: djtools.collection.config

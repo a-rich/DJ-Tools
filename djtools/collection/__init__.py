@@ -1,6 +1,6 @@
-"""The `collections` package contains modules:
+"""The `collection` package contains modules:
     * `collections`: abstractions and implementations for collections
-    * `config`: the configuration object for the `collections` package
+    * `config`: the configuration object for the `collection` package
     * `copy_playlists`: copies audio files for tracks within a set of
         playlists to a new location and writes a new collection with these
         updated paths

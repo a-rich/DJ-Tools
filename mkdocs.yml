@@ -9,7 +9,7 @@ nav:
       - Usage: tutorials/getting_started/usage.md
       - Configuration: tutorials/getting_started/configuration.md
   - How-to Guides:
-    - Collections:
+    - Collection:
       - Shuffle Tracks in Playlists: how_to_guides/shuffle_playlists.md
       - Copy Tracks From Playlists: how_to_guides/copy_playlists.md
       - Build Playlists From Tags: how_to_guides/collection_playlists.md
@@ -30,7 +30,7 @@ nav:
     - The Importance of Standardization and Quality Control: conceptual_guides/file_standardization.md
   - Reference:
     - Config: reference/configs/index.md
-    - Collections: reference/collections/index.md
+    - Collection: reference/collection/index.md
     - Spotify: reference/spotify/index.md
     - Sync: reference/sync/index.md
     - Utils: reference/utils/index.md
