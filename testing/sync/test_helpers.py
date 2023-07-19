@@ -177,8 +177,8 @@ def test_run_sync_handles_return_code(mock_popen, tmpdir, caplog):
     assert caplog.records[0].message == msg
 
 
-@mock.patch("subprocess.Popen.wait", mock.Mock())
-def test_upload_log(tmpdir, config):
+@mock.patch("djtools.sync.helpers.Popen")
+def test_upload_log(mock_popen, tmpdir, config):
     """Test for the upload_log function."""
     config.AWS_PROFILE = "DJ"
     now = datetime.now()
@@ -196,6 +196,8 @@ def test_upload_log(tmpdir, config):
             _file.write("stuff")
         if filename != test_log:
             os.utime(file_path, (ctime, ctime))
+    process = mock_popen.return_value.__enter__.return_value
+    process.wait.return_value = 0
     upload_log(config, Path(tmpdir) / test_log)
     assert len(list(Path(tmpdir).iterdir())) == len(filenames) - 1
 

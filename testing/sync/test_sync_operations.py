@@ -53,9 +53,17 @@ def test_download_music(playlist_name, config, tmpdir, caplog):
     assert Path(caplog.records[4].message).name == "file.mp3"
 
 
+@pytest.mark.parametrize("collection_is_dir", [True, False])
 @mock.patch("djtools.sync.sync_operations.rewrite_track_paths")
-@mock.patch("subprocess.Popen.wait", mock.Mock())
-def test_download_collection(mock_rewrite_track_paths, config, rekordbox_xml, caplog):
+@mock.patch("djtools.sync.sync_operations.Popen")
+def test_download_collection(
+    mock_popen,
+    mock_rewrite_track_paths,
+    collection_is_dir,
+    config,
+    rekordbox_xml,
+    caplog,
+):
     """Test for the download_collection function."""
     caplog.set_level("INFO")
     test_user = "test_user"
@@ -66,17 +74,26 @@ def test_download_collection(mock_rewrite_track_paths, config, rekordbox_xml, ca
     config.IMPORT_USER = other_user
     config.COLLECTION_PATH = rekordbox_xml
     config.PLATFORM = "rekordbox"
-    download_collection(config)
+    process = mock_popen.return_value.__enter__.return_value
+    process.wait.return_value = 0
+    with mock.patch(
+        "djtools.sync.sync_operations.Path.is_dir",
+        lambda path: collection_is_dir,
+    ):
+        download_collection(config)
     cmd = [
         "aws",
         "s3",
         "cp",
-        f's3://dj.beatcloud.com/dj/collections/{other_user}/collection',
+        f"s3://dj.beatcloud.com/dj/collections/{other_user}/"
+        f"{config.PLATFORM}_collection",
         # NOTE(a-rich): since we could be passing a `rekordbox_xml` formatted
         # as a WindowsPath, the comparison needs to be made with `str(new_xml)`
         # (rather than `new_xml.as_posix()`).
         str(new_xml),
     ]
+    if collection_is_dir:
+        cmd.append("--recursive")
     assert caplog.records[0].message == (
         f"Downloading {config.IMPORT_USER}'s {config.PLATFORM} collection..."
     )
@@ -122,8 +139,11 @@ def test_upload_music(
         )
 
 
-@mock.patch("subprocess.Popen.wait", mock.Mock())
-def test_upload_collection(config, rekordbox_xml, caplog):
+@pytest.mark.parametrize("collection_is_dir", [True, False])
+@mock.patch("djtools.sync.sync_operations.Popen")
+def test_upload_collection(
+    mock_popen, collection_is_dir, config, rekordbox_xml, caplog
+):
     """Test for the upload_collection function."""
     caplog.set_level("INFO")
     user = "user"
@@ -131,10 +151,19 @@ def test_upload_collection(config, rekordbox_xml, caplog):
     config.COLLECTION_PATH = rekordbox_xml
     config.PLATFORM = "rekordbox"
     cmd = (
-        f"aws s3 cp {rekordbox_xml} "
-        f"s3://dj.beatcloud.com/dj/collections/{user}/collection"
+        f"aws s3 cp {config.COLLECTION_PATH} "
+        f"s3://dj.beatcloud.com/dj/collections/{user}/"
+        f"{config.PLATFORM}_collection"
     )
-    upload_collection(config)
+    if collection_is_dir:
+        cmd += " --recursive"
+    process = mock_popen.return_value.__enter__.return_value
+    process.wait.return_value = 0
+    with mock.patch(
+        "djtools.sync.sync_operations.Path.is_dir",
+        lambda path: collection_is_dir,
+    ):
+        upload_collection(config)
     assert caplog.records[0].message == (
         f"Uploading {user}'s {config.PLATFORM} collection..."
     )
