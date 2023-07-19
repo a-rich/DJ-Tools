@@ -12,7 +12,7 @@ from typing import Optional
 
 import requests
 
-from djtools.collections.helpers import PLATFORM_REGISTRY
+from djtools.collection.helpers import PLATFORM_REGISTRY
 from djtools.configs.config import BaseConfig
 
 

@@ -1,10 +1,10 @@
 # Collections
 
-::: djtools.collections.collections
-::: djtools.collections.config
-::: djtools.collections.copy_playlists
-::: djtools.collections.helpers
-::: djtools.collections.playlist_builder
-::: djtools.collections.playlists
-::: djtools.collections.shuffle_playlists
-::: djtools.collections.tracks
+::: djtools.collection.collections
+::: djtools.collection.config
+::: djtools.collection.copy_playlists
+::: djtools.collection.helpers
+::: djtools.collection.playlist_builder
+::: djtools.collection.playlists
+::: djtools.collection.shuffle_playlists
+::: djtools.collection.tracks

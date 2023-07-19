@@ -12,7 +12,7 @@ import os
 
 from tqdm import tqdm
 
-from djtools.collections.helpers import copy_file, PLATFORM_REGISTRY
+from djtools.collection.helpers import copy_file, PLATFORM_REGISTRY
 from djtools.configs.config import BaseConfig
 
 

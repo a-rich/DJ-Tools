@@ -3,10 +3,10 @@ DJ Tools is a Python library with many features for streamlining the processes a
 
 If you want to learn more about how to use DJ Tools to achieve any of the following, please visit the [How-to Guides](../../how_to_guides/index.md).
 
-## Collections
+## Collection
 This package deserializes a collection which contains tracks and playlists. Operations can be performed on this collection such as shuffling playlists and create backups of playlists and the files that they're comprised of.
 
-My favorite feature in the `collections` package builds playlists based on tags in your collection and allows you to express powerful [boolean algebra expressions](https://en.wikipedia.org/wiki/Set_theory#Basic_concepts_and_notation) that combine and filter playlists.
+My favorite feature in the `collection` package builds playlists based on tags in your collection and allows you to express powerful [boolean algebra expressions](https://en.wikipedia.org/wiki/Set_theory#Basic_concepts_and_notation) that combine and filter playlists.
 
 ## Spotify
 This package interfaces with the Spotify (and Reddit) API in order to automatically generate playlists from Reddit submission and the uploads of other users of your Beatcloud instance.

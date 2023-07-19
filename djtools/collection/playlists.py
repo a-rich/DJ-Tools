@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional
 
 import bs4
 
-from djtools.collections.tracks import RekordboxTrack, Track
+from djtools.collection.tracks import RekordboxTrack, Track
 
 
 class Playlist(ABC):

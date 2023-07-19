@@ -4,7 +4,7 @@ from unittest import mock
 import pytest
 from pydantic import ValidationError
 
-from djtools.collections.config import (
+from djtools.collection.config import (
     CollectionConfig, PlaylistConfig, PlaylistConfigContent
 )
 from djtools.utils.helpers import mock_exists, MockOpen
@@ -43,7 +43,7 @@ def test_collectionsconfig_invalid_collection_playlists_config(rekordbox_xml):
 
 
 @mock.patch(
-    "djtools.collections.config.Path.exists",
+    "djtools.collection.config.Path.exists",
     lambda path: mock_exists(
         [
             ("collection_playlists.yaml", False),

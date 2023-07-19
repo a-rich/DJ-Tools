@@ -5,7 +5,7 @@ from urllib.parse import unquote
 
 import pytest
 
-from djtools.collections.tracks import Track, RekordboxTrack
+from djtools.collection.tracks import Track, RekordboxTrack
 
 
 def test_track_raises_type_error():

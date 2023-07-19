@@ -12,7 +12,7 @@ In this guide you will learn how to automatically build playlists based off of p
 It may not be commonly known, but Rekordbox already has a very elementary version of this functionality called the "Track Filter":
 ![alt text](../../images/Rekordbox_track_filter.png "Rekordbox Track Filter")
 
-There are many shortcomings with the Track Filter which make it far inferior to the [Combiner][djtools.collections.helpers.build_combiner_playlists]:
+There are many shortcomings with the Track Filter which make it far inferior to the [Combiner][djtools.collection.helpers.build_combiner_playlists]:
 
 1. Portability
     * can only be used on a laptop running Rekordbox (not available on XDJs, CDJs, etc.)

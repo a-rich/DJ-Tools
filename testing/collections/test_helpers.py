@@ -5,8 +5,8 @@ from unittest import mock
 
 import pytest
 
-from djtools.collections.collections import RekordboxCollection
-from djtools.collections.helpers import (
+from djtools.collection.collections import RekordboxCollection
+from djtools.collection.helpers import (
     BooleanNode,
     copy_file,
     # aggregate_playlists,
@@ -18,7 +18,7 @@ from djtools.collections.helpers import (
     print_playlists_tag_statistics,
     scale_data,
 )
-from djtools.collections.tracks import RekordboxTrack
+from djtools.collection.tracks import RekordboxTrack
 
 
 def test_aggregate_playlists():
@@ -237,7 +237,7 @@ def test_print_data(capsys):
     assert cap.out == expected
 
 
-@mock.patch("djtools.collections.helpers.print_data")
+@mock.patch("djtools.collection.helpers.print_data")
 def test_print_playlists_tag_statistics(
     mock_print_data, rekordbox_xml, capsys
 ):

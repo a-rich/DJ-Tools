@@ -1,7 +1,7 @@
 """Testing for the playlists module."""
 import pytest
 
-from djtools.collections.playlists import Playlist, RekordboxPlaylist
+from djtools.collection.playlists import Playlist, RekordboxPlaylist
 
 
 @pytest.mark.parametrize(

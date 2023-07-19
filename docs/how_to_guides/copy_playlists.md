@@ -14,7 +14,7 @@ For users who keep their music collection separate from their USB devices, achie
 
 In these types of situations, you'd normally have to trace the location of the audio files for each track in your playlist(s) and copy them to the new USB. Furthermore, if you wanted the new Collection on the target USB to have the same hot cues, tags, etc., you'd have to process those tracks again on the new USB to carry that information over.
 
-Wouldn't it be nice if you make your playlists, run a command, and get a new USB with all those audio files automatically copied to it AND a generated collection that you can import from to retrieve all the track data present in your existing Collection? That's exactly what the [copy_playlists][djtools.collections.copy_playlists.copy_playlists] feature does!
+Wouldn't it be nice if you make your playlists, run a command, and get a new USB with all those audio files automatically copied to it AND a generated collection that you can import from to retrieve all the track data present in your existing Collection? That's exactly what the [copy_playlists][djtools.collection.copy_playlists.copy_playlists] feature does!
 
 ## How it's done
 

@@ -5,8 +5,8 @@ from pathlib import Path
 
 import yaml
 
-from djtools.collections.config import PlaylistConfig, PlaylistConfigContent
-from djtools.collections.helpers import (
+from djtools.collection.config import PlaylistConfig, PlaylistConfigContent
+from djtools.collection.helpers import (
     add_selectors_to_tags,
     aggregate_playlists,
     build_combiner_playlists,

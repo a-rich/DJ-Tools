@@ -2,7 +2,7 @@
 from bs4 import BeautifulSoup
 import pytest
 
-from djtools.collections.shuffle_playlists import shuffle_playlists
+from djtools.collection.shuffle_playlists import shuffle_playlists
 
 
 def test_shuffle_playlists(config, rekordbox_xml, caplog):

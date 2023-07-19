@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Union
 
 import yaml
 
-from djtools.collections.config import CollectionConfig
+from djtools.collection.config import CollectionConfig
 from djtools.configs.config import BaseConfig
 from djtools.spotify.config import SpotifyConfig
 from djtools.sync.config import SyncConfig

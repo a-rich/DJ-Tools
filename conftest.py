@@ -10,9 +10,9 @@ import yaml
 
 from djtools.configs.config import BaseConfig
 from djtools.configs.helpers import filter_dict, pkg_cfg
-from djtools.collections.collections import RekordboxCollection
-from djtools.collections.playlists import RekordboxPlaylist
-from djtools.collections.tracks import RekordboxTrack
+from djtools.collection.collections import RekordboxCollection
+from djtools.collection.playlists import RekordboxPlaylist
+from djtools.collection.tracks import RekordboxTrack
 
 
 @pytest.fixture

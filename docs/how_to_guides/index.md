@@ -1,6 +1,6 @@
 # How-to Guides
 
-## Collections
+## Collection
 
 * [Shuffle Tracks in Playlists](shuffle_playlists.md)
 * [Copy Tracks From Playlists](copy_playlists.md)

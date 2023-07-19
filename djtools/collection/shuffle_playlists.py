@@ -11,7 +11,7 @@ import random
 from tqdm import tqdm
 
 from djtools.configs.config import BaseConfig
-from djtools.collections.helpers import PLATFORM_REGISTRY
+from djtools.collection.helpers import PLATFORM_REGISTRY
 
 
 logger = logging.getLogger(__name__)

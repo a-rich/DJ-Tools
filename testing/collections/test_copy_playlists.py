@@ -5,7 +5,7 @@ from urllib.parse import unquote
 from bs4 import BeautifulSoup
 import pytest
 
-from djtools.collections.copy_playlists import copy_playlists
+from djtools.collection.copy_playlists import copy_playlists
 
 
 def test_copy_playlists(tmpdir, config, rekordbox_xml):

@@ -21,8 +21,8 @@ from bs4 import BeautifulSoup
 from bs4.dammit import EntitySubstitution
 from bs4.formatter import XMLFormatter
 
-from djtools.collections.playlists import Playlist, RekordboxPlaylist
-from djtools.collections.tracks import RekordboxTrack, Track
+from djtools.collection.playlists import Playlist, RekordboxPlaylist
+from djtools.collection.tracks import RekordboxTrack, Track
 
 
 class Collection(ABC):

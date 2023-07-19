@@ -9,7 +9,7 @@ appropriate configuration object. Finally, the log file generated from this run
 is uploaded to the Beatcloud.
 """
 from .configs import build_config
-from .collections import (
+from .collection import (
     COLLECTION_OPERATIONS,
     collection_playlists,
     copy_playlists,

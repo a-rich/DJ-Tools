@@ -3,7 +3,7 @@ from unittest import mock
 
 import pytest
 
-from djtools.collections.playlist_builder import collection_playlists
+from djtools.collection.playlist_builder import collection_playlists
 from djtools.utils.helpers import MockOpen
 
 

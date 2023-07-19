@@ -9,10 +9,10 @@ import re
 import shutil
 from typing import Dict, List, Optional, Set, Tuple, Union
 
-from djtools.collections.collections import Collection, RekordboxCollection
-from djtools.collections.config import PlaylistConfig, PlaylistConfigContent
-from djtools.collections.playlists import Playlist, RekordboxPlaylist
-from djtools.collections.tracks import Track
+from djtools.collection.collections import Collection, RekordboxCollection
+from djtools.collection.config import PlaylistConfig, PlaylistConfigContent
+from djtools.collection.playlists import Playlist, RekordboxPlaylist
+from djtools.collection.tracks import Track
 
 
 logger = logging.getLogger(__name__)

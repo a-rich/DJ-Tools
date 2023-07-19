@@ -15,10 +15,10 @@
     * `tracks`: abstractions and implementations for tracks
 """
 
-from djtools.collections.config import CollectionConfig
-from djtools.collections.copy_playlists import copy_playlists
-from djtools.collections.playlist_builder import collection_playlists
-from djtools.collections.shuffle_playlists import shuffle_playlists
+from djtools.collection.config import CollectionConfig
+from djtools.collection.copy_playlists import copy_playlists
+from djtools.collection.playlist_builder import collection_playlists
+from djtools.collection.shuffle_playlists import shuffle_playlists
 
 
 COLLECTION_OPERATIONS = {

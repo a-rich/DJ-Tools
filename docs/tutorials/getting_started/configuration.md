@@ -11,7 +11,7 @@ In fact, removing the template `config.yaml` and building a config from scratch 
 * `LOG_LEVEL`: logger log level
 * `VERBOSITY`: verbosity level for logging messages
 
-## [Collections config][djtools.collections.config.CollectionConfig]
+## [Collection config][djtools.collection.config.CollectionConfig]
 * `COLLECTION_PLAYLISTS`: boolean flag to trigger the generation of a playlist structure (as informed by `collection_playlists.yaml`) using the tags in `COLLECTION_PATH`...the resulting collection is `COLLECTION_PATH` prefixed with "`auto_`"
 * `COLLECTION_PLAYLISTS_REMAINDER`: whether tracks of remainder tags (those not specified in `collection_playlists.yaml`) will be placed in a `folder` called "Other" with individual tag playlists or a `playlist` called "Other"
 * `COPY_PLAYLISTS`: list of playlists in `COLLECTION_PATH` to (a) have audio files copied and (b) have track data written to a new collection with updated locations

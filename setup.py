@@ -63,7 +63,7 @@ setup(
     packages=[
         "djtools",
         "djtools.configs",
-        "djtools.collections",
+        "djtools.collection",
         "djtools.spotify",
         "djtools.sync",
         "djtools.utils",

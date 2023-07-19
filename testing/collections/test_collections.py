@@ -4,10 +4,10 @@ from pathlib import Path
 import bs4
 import pytest
 
-from djtools.collections.collections import (
+from djtools.collection.collections import (
     Collection, CustomSubstitution, RekordboxCollection, UnsortedAttributes
 )
-from djtools.collections.tracks import RekordboxTrack
+from djtools.collection.tracks import RekordboxTrack
 
 
 def test_collection_raises_type_error():
