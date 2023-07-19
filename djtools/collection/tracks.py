@@ -363,10 +363,9 @@ class RekordboxTrack(Track):
 
             # Re-insert the location prefix and quote the path.
             if key == "Location":
-                value = (
-                    f"{self.__location_prefix}"
-                    f'{quote(value.as_posix(), safe="/,()!+=#;$:")}'
-                )
+                track_path = quote(value.as_posix(), safe="/,()!+=#;$:")
+                slash_char = "/" if not track_path.startswith("/") else ""
+                value = f"{self.__location_prefix}{slash_char}{track_path}"
                 value = re.sub(
                     r'%[0-9A-Z]{2}', lambda x: x.group(0).lower(), value 
                 )
