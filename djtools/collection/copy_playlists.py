@@ -7,6 +7,7 @@ The purpose of this utility is to:
 * backup subsets of your library
 * ensure you have easy access to a preparation independent of the setup
 """
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 import os
 
@@ -36,30 +37,42 @@ def copy_playlists(config: BaseConfig):
     # Create destination directory.
     config.COPY_PLAYLISTS_DESTINATION.mkdir(parents=True, exist_ok=True)
 
-    # Get the set of track IDs across the provided playlists.
-    # Get the parents of playlists so they aren't removed from the output
-    # playlists.
     playlist_tracks = {}
+    lineage = defaultdict(set)
+    playlists = []
+
+    # Get the playlists from the collection.
     for playlist_name in config.COPY_PLAYLISTS:
-        playlists = collection.get_playlists(playlist_name)
-        if not playlists:
+        found_playlists = collection.get_playlists(playlist_name)
+        if not found_playlists:
             raise LookupError(f"{playlist_name} not found")
-
-        for playlist in playlists:
-            if playlist.is_folder():
-                continue
-
-            parent = playlist.get_parent()
-            while parent:
-                for child in list(parent):
-                    if child is playlist:
-                        continue
-                    parent.remove_playlist(child)
-                parent = parent.get_parent()
-
-            playlist_tracks.update(playlist.get_tracks())
+        playlists.extend(
+            [
+                playlist for playlist in found_playlists
+                if not playlist.is_folder()
+            ]
+        )
+    
+    # Traverse the playlist to get tracks for the desired playlists and mark
+    # the rest for removal.
+    for playlist in playlists:
+        playlist_tracks.update(playlist.get_tracks())
+        parent = playlist.get_parent()
+        while parent:
+            for child in list(parent):
+                if child is not playlist and child not in lineage:
+                    lineage[parent].add(child)
+                    continue
+                elif any([child in children for children in lineage.values()]):
+                    lineage[parent].discard(child)
+            parent = parent.get_parent()
     collection.set_tracks(playlist_tracks)
-
+    
+    # Remove the extra playlists.
+    for parent, children in lineage.items():
+        for child in children:
+            parent.remove_playlist(child)
+    
     # Copy tracks to the destination and update their location.
     payload = [
         playlist_tracks.values(),

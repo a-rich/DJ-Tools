@@ -101,7 +101,7 @@ def build_tag_playlists(
         A Playlist or None.
     """
     # Initialize the set of tags in case the caller didn't provide one.
-    tag_set = tag_set or set()
+    tag_set = tag_set if tag_set is not None else set()
 
     # This is not a folder so a playlist with tracks must be created.
     if isinstance(content, str):

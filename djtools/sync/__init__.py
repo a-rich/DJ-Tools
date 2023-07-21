@@ -12,10 +12,11 @@ from djtools.sync.sync_operations import (
 
 
 SYNC_OPERATIONS = {
-    'DOWNLOAD_COLLECTION': download_collection,
-    'DOWNLOAD_MUSIC': download_music,
-    'UPLOAD_COLLECTION': upload_collection,
-    'UPLOAD_MUSIC': upload_music,
+    "DOWNLOAD_COLLECTION": download_collection,
+    "DOWNLOAD_MUSIC": download_music,
+    "DOWNLOAD_SPOTIFY_PLAYLIST": download_music,
+    "UPLOAD_COLLECTION": upload_collection,
+    "UPLOAD_MUSIC": upload_music,
 }
 
 __all__ = (

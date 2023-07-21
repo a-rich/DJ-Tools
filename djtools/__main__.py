@@ -12,7 +12,7 @@ Collection operations:
 Spotify operations:
     * SPOTIFY_PLAYLISTS (spotify.playlist_builder.py): Creating and updating
         Spotify playlists using subreddit top posts.
-    * PLAYLISTS_FROM_UPLOAD (spotify.playlist_builder.py): Creating and
+    * SPOTIFY_PLAYLISTS_FROM_UPLOAD (spotify.playlist_builder.py): Creating and
         updating Spotify playlists using the Discord webhook output from users
         uploading music.
 
@@ -23,10 +23,12 @@ Utils operations:
         Soundcloud playlist).
 
 Sync operations:
-    * DOWNLOAD_MUSIC: Sync tracks from beatcloud to USB_PATH.
+    * DOWNLOAD_MUSIC: Sync tracks from Beatcloud to USB_PATH.
     * DOWNLOAD_COLLECTION: Sync IMPORT_USER's collection to COLLECTION_PATH's
         parent folder.
-    * UPLOAD_MUSIC: Sync tracks from USB_PATH to beatcloud.
+    * DOWNLOAD_SPOTIFY_PLAYLIST: Sync tracks in a Spotify playlist from
+        Beatcloud to USB_PATH.
+    * UPLOAD_MUSIC: Sync tracks from USB_PATH to Beatcloud.
     * UPLOAD_COLLECTION: Sync COLLECTION_PATH to USER's collection folder.
 """
 

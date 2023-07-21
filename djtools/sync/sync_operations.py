@@ -38,8 +38,11 @@ def download_music(config: BaseConfig, beatcloud_tracks: Optional[List[str]] = N
             beatcloud_tracks=beatcloud_tracks,
             download_spotify_playlist=config.DOWNLOAD_SPOTIFY_PLAYLIST,
         )
+        if not beatcloud_matches:
+            logger.warning("No Beatcloud matches were found! Make sure you've supplied to correct playlist name.")
+            return
         config.DOWNLOAD_INCLUDE_DIRS = [
-            (Path(user) / path.split(f"{Path(user)}/")[-1])
+            (Path(user) / path.as_posix().split(f"{Path(user)}/")[-1])
             for path in beatcloud_matches
         ]
         config.DOWNLOAD_EXCLUDE_DIRS = []
