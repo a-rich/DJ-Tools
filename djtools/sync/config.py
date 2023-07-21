@@ -76,14 +76,19 @@ class SyncConfig(BaseConfig):
 
         os.environ["AWS_PROFILE"] = self.AWS_PROFILE
 
-        if (
-            any([self.DOWNLOAD_MUSIC, self.UPLOAD_MUSIC]) and
-            (not self.USB_PATH or not self.USB_PATH.exists())
-        ):
+        if any([self.DOWNLOAD_MUSIC, self.UPLOAD_MUSIC]) and not self.USB_PATH:
             msg = (
                 "Config must include USB_PATH for both DOWNLOAD_MUSIC and "
                 "UPLOAD_MUSIC sync operations"
             )
+            logger.critical(msg)
+            raise RuntimeError(msg)
+
+        if (
+            any([self.DOWNLOAD_MUSIC, self.UPLOAD_MUSIC]) and
+            not self.USB_PATH.exists()
+        ):
+            msg = f'Configured USB_PATH "{self.USB_PATH}" was not found!'
             logger.critical(msg)
             raise RuntimeError(msg)
 
@@ -95,8 +100,7 @@ class SyncConfig(BaseConfig):
 
         if self.DOWNLOAD_COLLECTION and not self.IMPORT_USER:
             raise RuntimeError(
-                "Unable to import from collection of IMPORT_USER "
-                f'"{self.IMPORT_USER}"'
+                "IMPORT_USER must be set to download a collection"
             )
 
     @validator("USB_PATH")

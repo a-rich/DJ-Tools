@@ -9,10 +9,30 @@ from djtools.sync.config import SyncConfig
 
 
 @pytest.mark.parametrize("operations", [(True, False), (False, True)])
-@pytest.mark.parametrize("usb_path", ["", "nonexistent/path"])
-def test_syncconfig_download_or_upload_without_usb_path(operations, usb_path):
+def test_syncconfig_download_or_upload_without_usb_path(operations):
     """Test for the SyncConfig class."""
     download, upload = operations
+    cfg = {
+        "AWS_PROFILE": "myprofile",
+        "DOWNLOAD_MUSIC": download,
+        "UPLOAD_MUSIC": upload,
+        "USB_PATH": "",
+    }
+    with pytest.raises(
+        RuntimeError,
+        match=(
+            "Config must include USB_PATH for both DOWNLOAD_MUSIC and "
+            "UPLOAD_MUSIC sync operations"
+        ),
+    ):
+        SyncConfig(**cfg)
+
+
+@pytest.mark.parametrize("operations", [(True, False), (False, True)])
+def test_syncconfig_download_or_upload_with_missing_usb_path(operations):
+    """Test for the SyncConfig class."""
+    download, upload = operations
+    usb_path = "not/real/usb/path"
     cfg = {
         "AWS_PROFILE": "myprofile",
         "DOWNLOAD_MUSIC": download,
@@ -21,10 +41,7 @@ def test_syncconfig_download_or_upload_without_usb_path(operations, usb_path):
     }
     with pytest.raises(
         RuntimeError,
-        match=(
-            "Config must include USB_PATH for both DOWNLOAD_MUSIC and "
-            "UPLOAD_MUSIC sync operations"
-        ),
+        match=f'Configured USB_PATH "{usb_path}" was not found!',
     ):
         SyncConfig(**cfg)
 
@@ -38,10 +55,7 @@ def test_syncconfig_download_without_import_user():
     }
     with pytest.raises(
         RuntimeError,
-        match=(
-            "Unable to import from collection of IMPORT_USER "
-            f'"{cfg["IMPORT_USER"]}"'
-        ),
+        match="IMPORT_USER must be set to download a collection",
     ):
         SyncConfig(**cfg)
 
