@@ -1,5 +1,6 @@
 """This module contains fixtures for DJ Tools."""
 from argparse import Namespace
+import os
 from pathlib import Path
 # import time
 from unittest import mock
@@ -88,9 +89,8 @@ def rekordbox_track_tag(input_tmpdir):  # pylint: disable=redefined-outer-name
     test_dir = Path(input_tmpdir) / "input"
     test_dir.mkdir(exist_ok=True)
     track_name = Path(track_tag["Location"]).name
-    track_tag["Location"] = (
-        f"file://localhost{(test_dir / track_name).as_posix()}"
-    )
+    prefix = "file://localhost" if os.name == "posix" else "file://localhost/"
+    track_tag["Location"] = f"{prefix}{(test_dir / track_name).as_posix()}"
     with open(test_dir / track_name, mode="w", encoding="utf-8") as _file:
         _file.write("")
 

@@ -1,4 +1,6 @@
 """Testing for the config module."""
+from pathlib import Path
+import re
 from unittest import mock
 
 import getpass
@@ -32,7 +34,7 @@ def test_syncconfig_download_or_upload_without_usb_path(operations):
 def test_syncconfig_download_or_upload_with_missing_usb_path(operations):
     """Test for the SyncConfig class."""
     download, upload = operations
-    usb_path = "not/real/usb/path"
+    usb_path = Path("not/real/usb/path")
     cfg = {
         "AWS_PROFILE": "myprofile",
         "DOWNLOAD_MUSIC": download,
@@ -41,7 +43,7 @@ def test_syncconfig_download_or_upload_with_missing_usb_path(operations):
     }
     with pytest.raises(
         RuntimeError,
-        match=f'Configured USB_PATH "{usb_path}" was not found!',
+        match=re.escape(f'Configured USB_PATH "{usb_path}" was not found!'),
     ):
         SyncConfig(**cfg)
 

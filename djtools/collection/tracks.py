@@ -109,7 +109,9 @@ class RekordboxTrack(Track):
             track: BeautifulSoup Tag representing a track.
         """
         # Prefix of the path to the audio file corresponding to this track.
-        self.__location_prefix = "file://localhost"
+        self.__location_prefix = (
+            "file://localhost" if os.name == "posix" else "file://localhost/"
+        )
 
         # Set class attributes from TRACK Tag attributes.
         for key, value in track.attrs.items():
@@ -364,8 +366,7 @@ class RekordboxTrack(Track):
             # Re-insert the location prefix and quote the path.
             if key == "Location":
                 track_path = quote(value.as_posix(), safe="/,()!+=#;$:")
-                slash_char = "/" if not track_path.startswith("/") else ""
-                value = f"{self.__location_prefix}{slash_char}{track_path}"
+                value = f"{self.__location_prefix}{track_path}"
                 value = re.sub(
                     r'%[0-9A-Z]{2}', lambda x: x.group(0).lower(), value 
                 )
