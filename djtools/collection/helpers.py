@@ -33,7 +33,8 @@ def copy_file(track: Track, destination: Path):
     """
     loc = track.get_location()
     dest = destination / loc.name
-    shutil.copyfile(loc.as_posix(), dest)
+    if not dest.exists():
+        shutil.copyfile(loc.as_posix(), dest)
     track.set_location(dest)
 
 
