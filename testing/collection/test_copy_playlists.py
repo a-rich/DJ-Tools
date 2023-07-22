@@ -10,7 +10,7 @@ from djtools.collection.copy_playlists import copy_playlists
 
 def test_copy_playlists(tmpdir, config, rekordbox_xml):
     """Test for the copy_playlists function."""
-    target_playlists = ["Genres", "Hip Hop"]
+    target_playlists = ["Hip Hop", "Dark"]
     new_xml = rekordbox_xml.parent / "auto_rekordbox.xml"
     test_output_dir = Path(tmpdir) / "output"
     config.COLLECTION_PATH = rekordbox_xml

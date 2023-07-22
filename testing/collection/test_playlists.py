@@ -58,9 +58,10 @@ def test_rekordboxplaylist_get_playlists_non_folder(rekordbox_collection_tag):
 def test_rekordboxplaylist_get_playlists_root(rekordbox_collection_tag):
     """Test RekordboxPlaylist class."""
     test_playlist = rekordbox_collection_tag.find("NODE", {"Name": "ROOT"})
+    expected = len(test_playlist.find_all("NODE", recursive=False))
     playlist = RekordboxPlaylist(test_playlist, {"2": None})
     root_playlist = playlist.get_playlists()
-    assert len(root_playlist) == 2
+    assert len(root_playlist) == expected
 
 
 def test_rekordboxplaylist_get_tracks(rekordbox_track, rekordbox_playlist_tag):

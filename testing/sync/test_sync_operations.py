@@ -14,8 +14,8 @@ from djtools.sync.sync_operations import (
     "djtools.sync.sync_operations.compare_tracks",
     mock.Mock(
         return_value=(
-            ["file.mp3"],
-            ["playlist/file.mp3"],
+            [Path("file.mp3")],
+            [Path("playlist/file.mp3")],
         ),
     ),
 )
@@ -51,6 +51,26 @@ def test_download_music(playlist_name, config, tmpdir, caplog):
     assert caplog.records[2].message == " ".join(cmd)
     assert caplog.records[3].message == "Found 1 new files"
     assert Path(caplog.records[4].message).name == "file.mp3"
+
+
+@mock.patch("djtools.utils.helpers.get_spotify_client", mock.Mock())
+def test_download_spotify_playlist_handles_no_matches(config, caplog):
+    """Test for the download_music function."""
+    caplog.set_level("WARNING")
+    config.DOWNLOAD_SPOTIFY_PLAYLIST = "not-a-real-user Uploads"
+    beatcloud_tracks = download_music(config)
+    assert not beatcloud_tracks
+    assert caplog.records[0].message == (
+        "not-a-real-user Uploads not in spotify_playlists.yaml"
+    )
+    assert caplog.records[1].message == (
+        "There are no Spotify tracks; make sure CHECK_TRACKS_SPOTIFY_PLAYLISTS"
+        " has one or more keys from spotify_playlists.yaml"
+    )
+    assert caplog.records[2].message == (
+        "No Beatcloud matches were found! Make sure you've supplied to correct"
+        " playlist name."
+    )
 
 
 @pytest.mark.parametrize("collection_is_dir", [True, False])

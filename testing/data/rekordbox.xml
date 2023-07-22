@@ -17,6 +17,7 @@
           <TRACK Key="2"/>
         </NODE>
       </NODE>
+      <NODE Name="Dark" Type="1" Entries="0"/>
       <NODE Name="My Tags" Type="0" Count="1">
         <NODE Name="Dark" Type="1" Entries="0"/>
       </NODE>

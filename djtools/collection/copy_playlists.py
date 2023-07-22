@@ -52,7 +52,7 @@ def copy_playlists(config: BaseConfig):
                 if not playlist.is_folder()
             ]
         )
-    
+
     # Traverse the playlist to get tracks for the desired playlists and mark
     # the rest for removal.
     for playlist in playlists:
@@ -63,16 +63,16 @@ def copy_playlists(config: BaseConfig):
                 if child is not playlist and child not in lineage:
                     lineage[parent].add(child)
                     continue
-                elif any([child in children for children in lineage.values()]):
+                if any(child in children for children in lineage.values()):
                     lineage[parent].discard(child)
             parent = parent.get_parent()
     collection.set_tracks(playlist_tracks)
-    
+
     # Remove the extra playlists.
     for parent, children in lineage.items():
         for child in children:
             parent.remove_playlist(child)
-    
+
     # Copy tracks to the destination and update their location.
     payload = [
         playlist_tracks.values(),
