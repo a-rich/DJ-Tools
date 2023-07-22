@@ -32,17 +32,14 @@ Syncing your database files also improves reliability since you may lose, damage
 ### Downloading music
 1. Run the command `djtools --download-music`
 
-### Uploading XML
-1. [Export](../conceptual_guides/rekordbox_collection.md#representations-of-your-collection) an up-to-date copy of your Rekordbox Collection
-1. Ensure the `XML_PATH` option points to this file
-1. Run the command `djtools --upload-xml`
+### Uploading collection
+1. Export an up-to-date copy of your collection (e.g. [create a Rekordbox XML](../conceptual_guides/rekordbox_collection.md#representations-of-your-collection))
+1. Ensure the `COLLECTION_PATH` option points to this collection
+1. Run the command `djtools --upload-collection`
 
-### Downloading XML
+### Downloading collection
 1. Set the `IMPORT_USER` option to the username of another user in your Beatcloud
-    - This username must exist in `registered_users.yaml`
-        - you'll have to manually update this file
-        - when a new user runs `djtools`, you can ask them to broadcast the `key: value` mapping of their `USER: USB_PATH` which will automatically be added to their own `registered_users.yaml`
-    - This username must exist as a directory in the Beatcloud under `dj.beatcloud.com/xml` (it will if this user has ever run `--upload-xml`)
-1. Run the command `djtools --download-xml`
+    - This username must exist as a directory in the Beatcloud under `dj.beatcloud.com/collections` (it will if this user has ever run `--upload-collection`)
+1. Run the command `djtools --download-collection`
 
-`Note`: you can set `IMPORT_USER` to your own `USER` value to retrieve a backup of your XML.
+`Note`: you can set `IMPORT_USER` to your own `USER` value to retrieve a backup of your collection.

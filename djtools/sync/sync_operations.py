@@ -1,6 +1,6 @@
 """This module is responsible for syncing tracks between "USB_PATH" and the
-Beatcloud (upload and download). It also handles uploading the Rekordbox XML
-located at "XML_PATH" and downloading the Rekordbox XML uploaded to the
+Beatcloud (upload and download). It also handles uploading the collection
+located at "COLLECTION_PATH" and downloading the collection uploaded to the
 Beatcloud by "IMPORT_USER" before modifying it to point to track locations at
 "USB_PATH".
 """
@@ -12,7 +12,7 @@ from typing import List, Optional
 
 from djtools.configs.config import BaseConfig
 from djtools.sync.helpers import (
-    parse_sync_command, rewrite_xml, run_sync, webhook
+    parse_sync_command, rewrite_track_paths, run_sync, webhook
 )
 from djtools.utils.check_tracks import compare_tracks
 
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 def download_music(config: BaseConfig, beatcloud_tracks: Optional[List[str]] = None):
     """This function syncs tracks from the Beatcloud to "USB_PATH".
 
-    If "DOWNLOAD_SPOTIFY" is set to a playlist name that exists in
+    If "DOWNLOAD_SPOTIFY_PLAYLIST" is set to a playlist name that exists in
     "spotify_playlists.yaml", then "DOWNLOAD_INCLUDE_DIRS" will be populated
     with tracks in that playlist that match Beatcloud tracks.
 
@@ -31,25 +31,31 @@ def download_music(config: BaseConfig, beatcloud_tracks: Optional[List[str]] = N
         config: Configuration object.
         beatcloud_tracks: List of track artist - titles from S3.
     """
-    if config.DOWNLOAD_SPOTIFY:
-        user = config.DOWNLOAD_SPOTIFY.split("Uploads")[0].strip()
+    if config.DOWNLOAD_SPOTIFY_PLAYLIST:
+        user = config.DOWNLOAD_SPOTIFY_PLAYLIST.split("Uploads")[0].strip()
         beatcloud_tracks, beatcloud_matches = compare_tracks(
             config,
             beatcloud_tracks=beatcloud_tracks,
-            download_spotify_playlist=config.DOWNLOAD_SPOTIFY,
+            download_spotify_playlist=config.DOWNLOAD_SPOTIFY_PLAYLIST,
         )
+        if not beatcloud_matches:
+            logger.warning(
+                "No Beatcloud matches were found! Make sure you've supplied "
+                "to correct playlist name."
+            )
+            return beatcloud_tracks
         config.DOWNLOAD_INCLUDE_DIRS = [
-            (Path(user) / path.split(f"{Path(user)}/")[-1])
+            (Path(user) / path.as_posix().split(f"{Path(user)}/")[-1])
             for path in beatcloud_matches
         ]
         config.DOWNLOAD_EXCLUDE_DIRS = []
 
+    logger.info("Downloading track collection...")
     dest = Path(config.USB_PATH) / "DJ Music"
     glob_path = (Path("**") / "*.*").as_posix()
     old = {str(p) for p in dest.rglob(glob_path)}
-    logger.info(f"Found {len(old)} files")
+    logger.info(f"Found {len(old)} files at {config.USB_PATH}")
 
-    logger.info("Syncing remote track collection...")
     dest.mkdir(parents=True, exist_ok=True)
     cmd = [
         "aws", "s3", "sync", "s3://dj.beatcloud.com/dj/music/", dest.as_posix()
@@ -66,34 +72,43 @@ def download_music(config: BaseConfig, beatcloud_tracks: Optional[List[str]] = N
     return beatcloud_tracks
 
 
-def download_xml(config: BaseConfig):
-    """This function downloads the Beatcloud XML of "IMPORT_USER" and modifies
-        the "Location" field of all the tracks so that it points to USER's
-        "USB_PATH".
+def download_collection(config: BaseConfig):
+    """This function downloads the collection of "IMPORT_USER".
+    
+    After downloading "IMPORT_USER"'s collection, the location of all the
+    tracks are modified so that they point to USER's "USB_PATH".
 
     Args:
         config: Configuration object.
     """
-    logger.info("Syncing remote rekordbox.xml...")
-    xml_dir = Path(config.XML_PATH).parent
-    xml_dir.mkdir(parents=True, exist_ok=True)
-    _file = Path(xml_dir) / f'{config.IMPORT_USER}_rekordbox.xml'
-    cmd = (
-        "aws s3 cp s3://dj.beatcloud.com/dj/xml/"
-        f'{config.IMPORT_USER}/rekordbox.xml {_file}'
+    logger.info(
+        f"Downloading {config.IMPORT_USER}'s {config.PLATFORM} collection..."
     )
-    logger.info(cmd)
-    with Popen(cmd, shell=True) as proc:
+    collection_dir = config.COLLECTION_PATH.parent
+    src = (
+        f"s3://dj.beatcloud.com/dj/collections/{config.IMPORT_USER}/"
+        f"{config.PLATFORM}_collection"
+    )
+    dst = (
+        Path(collection_dir) /
+        f'{config.IMPORT_USER}_{config.COLLECTION_PATH.name}'
+    )
+    cmd = ["aws", "s3", "cp", src, dst.as_posix()]
+    if config.COLLECTION_PATH.is_dir():
+        cmd.append("--recursive")
+    logger.info(" ".join(cmd))
+    with Popen(cmd) as proc:
         proc.wait()
     if config.USER != config.IMPORT_USER:
-        rewrite_xml(config)
+        rewrite_track_paths(config, dst)
 
 
 def upload_music(config: BaseConfig):
     """This function syncs tracks from "USB_PATH" to the Beatcloud.
-        "AWS_USE_DATE_MODIFIED" can be used in order to re-upload tracks that
-        already exist in the Beatcloud but have been modified since the last
-        time they were uploaded (i.e. ID3 tags have been altered).
+
+    "AWS_USE_DATE_MODIFIED" can be used in order to re-upload tracks that
+    already exist in the Beatcloud but have been modified since the last time
+    they were uploaded (i.e. ID3 tags have been altered).
 
     Args:
         config: Configuration object.
@@ -109,7 +124,7 @@ def upload_music(config: BaseConfig):
             logger.info(f"\t{_file}")
             _file.unlink()
 
-    logger.info("Syncing track collection...")
+    logger.info("Uploading track collection...")
     src = (Path(config.USB_PATH) / "DJ Music").as_posix()
     cmd = ["aws", "s3", "sync", src, "s3://dj.beatcloud.com/dj/music/"]
 
@@ -122,15 +137,23 @@ def upload_music(config: BaseConfig):
         run_sync(parse_sync_command(cmd, config, upload=True))
 
 
-def upload_xml(config: BaseConfig):
-    """This function uploads "XML_PATH" to Beatcloud.
+def upload_collection(config: BaseConfig):
+    """This function uploads "COLLECTION_PATH" to the cloud.
 
     Args:
         config: Configuration object.
     """
-    logger.info(f"Uploading {config.USER}'s rekordbox.xml...")
-    dst = f"s3://dj.beatcloud.com/dj/xml/{config.USER}/"
-    cmd = f"aws s3 cp {config.XML_PATH} {dst}"
-    logger.info(cmd)
-    with Popen(cmd, shell=True) as proc:
+    logger.info(
+        f"Uploading {config.USER}'s {config.PLATFORM} collection..."
+    )
+    dst = (
+      f"s3://dj.beatcloud.com/dj/collections/{config.USER}/"
+      f"{config.PLATFORM}_collection"
+    )
+    cmd = ["aws", "s3", "cp", config.COLLECTION_PATH.as_posix(), dst]
+    if config.COLLECTION_PATH.is_dir():
+        cmd.append("--recursive")
+    logger.info(" ".join(cmd))
+    with Popen(cmd) as proc:
+
         proc.wait()

@@ -48,7 +48,7 @@ class MockOpen:
         Returns:
             File handler.
         """
-        file_name = os.path.basename(args[0])
+        file_name = Path(args[0]).name
         if file_name in self._files:
             if "w" in kwargs.get("mode"):
                 return tempfile.TemporaryFile(mode=kwargs["mode"])
@@ -56,11 +56,8 @@ class MockOpen:
                 return self._file_strategy(file_name, *args, **kwargs)
         return self.builtin_open(*args, **kwargs)
 
-    def _file_strategy(self, file_name, *args, **kwargs):
+    def _file_strategy(self, *args, **kwargs):
         """Apply logic for file contents based on file name.
-
-        Args:
-            file_name: Name of the file to open.
 
         Returns:
             Mock file handler object.
@@ -68,21 +65,17 @@ class MockOpen:
         data = "{}"
         if self._content:
             data = self._content
-        elif file_name == "registered_users.yaml":
-            data = (
-                f'{{"{self._user_a[0]}": "{self._user_a[1]}", '
-                f'"{self._user_b[0]}": "{self._user_b[1]}"}}'
-            )
 
         return mock.mock_open(read_data=data)(*args, **kwargs)
 
 
-def add_tracks(result: Dict[str, Any]) -> List[str]:
+def add_tracks(result: Dict[str, Any], artist_first: bool) -> List[str]:
     """Parses a page of Spotify API result tracks and returns a list of the
         track titles and artist names.
 
     Args:
         result: Paged result of Spotify tracks.
+        artist_first: Whether or not artist should come before track title.
 
     Returns:
         Spotify track titles and artist names.
@@ -91,7 +84,9 @@ def add_tracks(result: Dict[str, Any]) -> List[str]:
     for track in result["items"]:
         title = track["track"]["name"]
         artists = ", ".join([y["name"] for y in track["track"]["artists"]])
-        tracks.append(f"{title} - {artists}")
+        tracks.append(
+            f"{artists} - {title}" if artist_first else f"{title} - {artists}"
+        )
 
     return tracks
 
@@ -176,8 +171,8 @@ def get_beatcloud_tracks() -> List[str]:
     Returns:
         Beatcloud track titles and artist names.
     """
-    cmd = "aws s3 ls --recursive s3://dj.beatcloud.com/dj/music/"
-    output = check_output(cmd, shell=True).decode("utf-8").split("\n")
+    cmd = ["aws", "s3", "ls", "--recursive", "s3://dj.beatcloud.com/dj/music/"]
+    output = check_output(cmd).decode("utf-8").split("\n")
     tracks = [Path(track) for track in output if track]
     logger.info(f"Got {len(tracks)} tracks from the beatcloud")
 
@@ -212,13 +207,14 @@ def get_local_tracks(config: BaseConfig) -> Dict[str, List[str]]:
 
 
 def get_playlist_tracks(
-    spotify: spotipy.Spotify, playlist_id: str
+    spotify: spotipy.Spotify, playlist_id: str, artist_first: bool
 ) -> Set[str]:
     """Queries Spotify API for a playlist and pulls tracks from it.
 
     Args:
         spotify: Spotify client.
         playlist_id: Playlist ID of Spotify playlist to pull tracks from.
+        artist_first: Whether or not artist should come before track title.
 
     Raises:
         RuntimeError: Playlist_id must correspond with a valid Spotify playlist.
@@ -234,11 +230,11 @@ def get_playlist_tracks(
         ) from Exception
 
     result = playlist["tracks"]
-    tracks = add_tracks(result)
+    tracks = add_tracks(result, artist_first)
 
     while result["next"]:
         result = spotify.next(result)
-        tracks.extend(add_tracks(result))
+        tracks.extend(add_tracks(result, artist_first))
 
     return set(tracks)
 
@@ -264,7 +260,9 @@ def get_spotify_tracks(config: BaseConfig) -> Dict[str, Set[str]]:
             logger.error(f"{playlist} not in spotify_playlists.yaml")
             continue
 
-        playlist_tracks[playlist] = get_playlist_tracks(spotify, playlist_id)
+        playlist_tracks[playlist] = get_playlist_tracks(
+            spotify, playlist_id, config.ARTIST_FIRST
+        )
         length = len(playlist_tracks[playlist])
         logger.info(
             f'Got {length} track{"" if length == 1 else "s"} from Spotify '
@@ -275,7 +273,9 @@ def get_spotify_tracks(config: BaseConfig) -> Dict[str, Set[str]]:
         if config.VERBOSITY > 0:
             for track in playlist_tracks[playlist]:
                 logger.info(f"\t{track}")
-    logger.info(f"Got {_sum} tracks from Spotify in total")
+    logger.info(
+        f'Got {_sum} track{"" if _sum == 1 else "s"} from Spotify in total'
+    )
 
     return playlist_tracks
 
@@ -309,3 +309,22 @@ def mock_exists(files, path):
             ret = exists
             break
     return ret
+
+
+def reverse_title_and_artist(path_lookup: Dict[str, str]) -> Dict[str, str]:
+    """Reverses the title and artist parts of the filename.
+
+    Args:
+        path_lookup: Mapping of filenames to file paths.
+
+    Returns:
+        Mapping with the title and artist in the filenames reversed.
+    """
+    new_path_lookup = {}
+    for key, value in path_lookup.items():
+        split = key.split(" - ")
+        title = " - ".join(split[:-1])
+        artist = split[-1]
+        new_path_lookup[f"{artist} - {title}"] = value
+
+    return new_path_lookup

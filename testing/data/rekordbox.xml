@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<DJ_PLAYLISTS Version="1.0.0">
+  <PRODUCT Name="rekordbox" Version="6.6.4" Company="AlphaTheta"/>
+  <COLLECTION>
+    <TRACK AverageBpm="140.00" Comments="/* Dark */" DateAdded="2023-06-24" Genre="Dubstep" Location="file://localhost/track1.mp3" Rating="255" TrackID="1" TrackNumber="1">
+      <TEMPO/>
+      <POSITION_MARK/>
+    </TRACK>
+    <TRACK AverageBpm="86.00" Comments="" DateAdded="2023-06-24" Genre="Hip Hop / R&amp;B" Location="file://localhost/track2.mp3" Rating="0" TrackID="2" TrackNumber="2"/>
+    <TRACK AverageBpm="128.00" Comments="" DateAdded="2023-06-24" Genre="Techno / Minimal Deep Tech" Location="file://localhost/track3.mp3" Rating="0" TrackID="3" TrackNumber="3"/>
+  </COLLECTION>
+  <PLAYLISTS>
+    <NODE Name="ROOT" Type="0" Count="2">
+      <NODE Name="Genres" Type="0" Count="1">
+        <NODE Name="Hip Hop" Type="1" Entries="1">
+          <TRACK Key="2"/>
+        </NODE>
+      </NODE>
+      <NODE Name="Dark" Type="1" Entries="0"/>
+      <NODE Name="My Tags" Type="0" Count="1">
+        <NODE Name="Dark" Type="1" Entries="0"/>
+      </NODE>
+   </NODE>
+  </PLAYLISTS>
+</DJ_PLAYLISTS>

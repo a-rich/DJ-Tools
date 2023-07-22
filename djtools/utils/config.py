@@ -3,6 +3,7 @@ attributes of this configuration object correspond with the "utils" key of
 config.yaml
 """
 import logging
+import os
 from pathlib import Path
 from typing import List
 
@@ -33,11 +34,13 @@ class UtilsConfig(BaseConfig):
 
         super().__init__(*args, **kwargs)
         if self.CHECK_TRACKS:
-            if not self.AWS_PROFILE:
-                msg = "Config must include AWS_PROFILE for CHECK_TRACKS"
-                logger.critical(msg)
-                raise ValueError(msg)
-            logger.warning(
-                "CHECK_TRACKS depends on valid Spotify API credentials in "
-                "SpotifyConfig."
-            )
+            if not os.environ.get("AWS_PROFILE"):
+                raise RuntimeError(
+                    "Without AWS_PROFILE set to a valid profile ('default' or "
+                    "otherwise) you cannot use the CHECK_TRACKS feature"
+                )
+            if self.CHECK_TRACKS_SPOTIFY_PLAYLISTS:
+                logger.warning(
+                    "CHECK_TRACKS depends on valid Spotify API credentials in "
+                    "SpotifyConfig."
+                )

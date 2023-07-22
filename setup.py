@@ -1,5 +1,6 @@
 """Setup 'djtools' package.
 """
+from pathlib import Path
 from setuptools import setup
 
 
@@ -46,23 +47,23 @@ EXTRAS = {
         'levenshtein': ['python-Levenshtein==0.12.2']
 }
 
+version_path = Path(__file__).parent / "djtools" / "version.py"
+with open(version_path, mode="r", encoding="utf-8") as _file:
+    VERSION = _file.read().split("=")[-1].strip().replace('"', "")
+
 setup(
     name='dj_beatcloud',
-    version='2.5.0',
-    description=(
-        'DJ Tools is a library for managing a collection of music and '
-        'Rekordbox XML files.'
-    ),
+    version=VERSION,
+    description='DJ Tools is a library for managing a collection of music.',
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
     url='https://github.com/a-rich/DJ-tools',
     author='Alex Richards',
     author_email='alex.richards006@gmail.com',
-    license='GNU GPLv3',
     packages=[
         "djtools",
         "djtools.configs",
-        "djtools.rekordbox",
+        "djtools.collection",
         "djtools.spotify",
         "djtools.sync",
         "djtools.utils",
@@ -72,7 +73,7 @@ setup(
     extras_require=EXTRAS,
     python_requires=">=3.6",
     include_package_data=True,
-    keywords='MP3 Rekordbox XML spotify reddit aws s3',
+    keywords='DJ Rekordbox spotify reddit aws s3',
     entry_points={
         'console_scripts': ['djtools=djtools:main']
     },

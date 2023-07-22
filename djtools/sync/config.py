@@ -4,11 +4,11 @@ of config.yaml
 """
 import getpass
 import logging
+import os
 from pathlib import Path
 from typing import List, Optional, Union
 
 from pydantic import validator
-import yaml
 
 from djtools.configs.config import BaseConfig
 
@@ -19,19 +19,21 @@ logger = logging.getLogger(__name__)
 class SyncConfig(BaseConfig):
     """Configuration object for the sync package."""
 
+    ARTIST_FIRST: bool = False
+    AWS_PROFILE: str = "default"
     AWS_USE_DATE_MODIFIED: bool = False
     DISCORD_URL: str = ""
+    DOWNLOAD_COLLECTION: bool = False
     DOWNLOAD_EXCLUDE_DIRS: List[Path] = []
     DOWNLOAD_INCLUDE_DIRS: List[Path] = []
     DOWNLOAD_MUSIC: bool = False
-    DOWNLOAD_SPOTIFY: str = ""
-    DOWNLOAD_XML: bool = False
+    DOWNLOAD_SPOTIFY_PLAYLIST: str = ""
     DRYRUN: bool = False
     IMPORT_USER: str = ""
+    UPLOAD_COLLECTION: bool = False
     UPLOAD_EXCLUDE_DIRS: List[Path] = []
     UPLOAD_INCLUDE_DIRS: List[Path] = []
     UPLOAD_MUSIC: bool = False
-    UPLOAD_XML: bool = False
     USB_PATH: Optional[Union[str, Path]] = None
     USER: str = ""
 
@@ -42,9 +44,6 @@ class SyncConfig(BaseConfig):
             ValueError: Both include and exclude dirs can't be provided at the
                 same time.
             RuntimeError: AWS_PROFILE must be set.
-            RuntimeError: registered_users.yaml must be a valid YAML file.
-            RuntimeError: IMPORT_USER must exist in registered_users.yaml if
-                using DOWNLOAD_XML.
         """
         super().__init__(*args, **kwargs)
         if not self.USER:
@@ -64,10 +63,10 @@ class SyncConfig(BaseConfig):
 
         if any(
             [
+                self.DOWNLOAD_COLLECTION,
                 self.DOWNLOAD_MUSIC,
-                self.DOWNLOAD_XML,
+                self.UPLOAD_COLLECTION,
                 self.UPLOAD_MUSIC,
-                self.UPLOAD_XML,
             ]
         ):
             if not self.AWS_PROFILE:
@@ -75,14 +74,21 @@ class SyncConfig(BaseConfig):
                 logger.critical(msg)
                 raise RuntimeError(msg)
 
-        if (
-            any([self.DOWNLOAD_MUSIC, self.UPLOAD_MUSIC]) and
-            (not self.USB_PATH or not self.USB_PATH.exists())
-        ):
+        os.environ["AWS_PROFILE"] = self.AWS_PROFILE
+
+        if any([self.DOWNLOAD_MUSIC, self.UPLOAD_MUSIC]) and not self.USB_PATH:
             msg = (
                 "Config must include USB_PATH for both DOWNLOAD_MUSIC and "
                 "UPLOAD_MUSIC sync operations"
             )
+            logger.critical(msg)
+            raise RuntimeError(msg)
+
+        if (
+            any([self.DOWNLOAD_MUSIC, self.UPLOAD_MUSIC]) and
+            not self.USB_PATH.exists()
+        ):
+            msg = f'Configured USB_PATH "{self.USB_PATH}" was not found!'
             logger.critical(msg)
             raise RuntimeError(msg)
 
@@ -92,41 +98,10 @@ class SyncConfig(BaseConfig):
                 "discord messages!"
             )
 
-        registered_users_path = (
-            Path(__file__).parent.parent / "configs" / "registered_users.yaml"
-        )
-        if registered_users_path.exists():
-            try:
-                with open(
-                    registered_users_path, mode="r", encoding="utf-8"
-                ) as _file:
-                    registered_users = (
-                        yaml.load(_file, Loader=yaml.FullLoader) or {}
-                    )
-                logger.info(f"Registered users: {registered_users}")
-            except Exception:
-                msg = "Error reading registered_users.yaml"
-                logger.critical(msg)
-                raise RuntimeError(msg) from Exception
-        else:
-            registered_users = {}
-            logger.warning("No registered users!")
-
-        if (
-            self.DOWNLOAD_XML and (
-                not self.IMPORT_USER or self.IMPORT_USER not in
-                registered_users
-            )
-        ):
+        if self.DOWNLOAD_COLLECTION and not self.IMPORT_USER:
             raise RuntimeError(
-                "Unable to import from XML of unregistered IMPORT_USER "
-                f'"{self.IMPORT_USER}"'
+                "IMPORT_USER must be set to download a collection"
             )
-
-        # Enter USER into "registered_users.yaml".
-        registered_users[self.USER] = str(self.USB_PATH)
-        with open(registered_users_path, mode="w", encoding="utf-8") as _file:
-            yaml.dump(registered_users, _file)
 
     @validator("USB_PATH")
     @classmethod

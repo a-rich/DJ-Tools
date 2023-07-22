@@ -1,0 +1,51 @@
+combiner:
+  name: Combinations
+  playlists:
+    - "(Dubstep | Hip Hop) | (Dubstep | Hip Hop)"
+    - "{Hip Hop} & [85-87]"
+    - "{Hip Hop} & [86]"
+    - Dark & [2-5]
+    - Dark & [5]
+tags:
+  name: "Tags"
+  playlists:
+    - name: _ignore
+      playlists:
+        - Psychedelic Rock
+        - Soul
+        - Vocal
+        - Wave
+    - name: My Tags
+      playlists:
+        - Dark
+        - Uplifting 
+    - name: Genres
+      playlists:
+        - name: Bass
+          playlists:
+            - name: Breaks
+              playlists:
+                - Breakstep
+                - Neurobreaks
+            - name: Hip Hop Beats
+              playlists:
+                - Halftime
+                - Hip Hop
+                - Pure Halftime
+            - Space Bass
+            - name: "[___] Step"
+              playlists:
+                - Breakstep
+                - Dubstep
+                - Pure Dubstep
+        - Hip Hop
+        - Pure Hip Hop
+        - name: House
+          playlists:
+            - Minimal Deep Tech
+        - name: Techno
+          playlists:
+            - Hard Techno
+            - name: Other Techno
+              playlists:
+                - Minimal Deep Tech

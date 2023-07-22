@@ -14,7 +14,7 @@ Note that the addition of tracks to a Spotify playlist is done in a best effort 
 ## Why create Spotify playlists from other users' uploads?
 You're probably using DJ Tools to manage a shared track collection with friends who have a similar taste in music. Despite this, we all have our own style and don't necessarily want to indiscriminately sync every track that every other user syncs to the Beatcloud.
 
-The purpose of this feature is to allow you to build a Spotify playlist from the tracks a user uploads so that they can be previewed and filtered for compatibility with your mixing style. Once this playlist has been filtered down a bit, you can then run the [download music](sync_beatcloud.md#downloading-music) command with the `--download-from-spotify` option to sync just the tracks that remain in the playlist.
+The purpose of this feature is to allow you to build a Spotify playlist from the tracks a user uploads so that they can be previewed and filtered for compatibility with your mixing style. Once this playlist has been filtered down a bit, you can then run the `--download-spotify-playlist` option to sync just the tracks that remain in the playlist.
 
 ## How it's done
 1. Ensure that other users of your Beatcloud instance have the `DISCORD_URL` option set to this webhook URL; otherwise you won't
@@ -22,7 +22,7 @@ The purpose of this feature is to allow you to build a Spotify playlist from the
     - have the fancy formatted text output that's required to use this feature
 1. Once another user runs the [upload music](sync_beatcloud.md#uploading-music) command, a message containing a file tree of their upload results will be posted to your server
 1. Copy the complete text from that message to your system clipboard
-1. Run the command `djtools --playlist-from-upload`
+1. Run the command `djtools --spotify-playlist-from-upload`
 
 ## Example
 In the image below, I'm copying the Discord webhook output from one of my own uploads:
@@ -32,7 +32,7 @@ The top-level directory in the file tree *should* correspond with a username; it
 
 With the webhook output copied to my clipboard I now run the following command:
 
-`djtools --playlist-from-upload`
+`djtools --spotify-playlist-from-upload`
 
 As you can see in the output below, all of the tracks from the upload were able to be found on Spotify:
 ```

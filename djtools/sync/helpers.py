@@ -1,7 +1,7 @@
 """This module contains helper functions used by the "sync_operations" module.
 Helper functions include formatting "aws s3 sync" commands, formatting the
 output of "aws s3 sync" commands, posting uploaded tracks to Discord, and
-modifying IMPORT_USER's XML to point to tracks located at "USB_PATH".
+modifying IMPORT_USER's collection to point to tracks located at "USB_PATH".
 """
 from datetime import datetime, timedelta
 from itertools import groupby
@@ -10,10 +10,9 @@ from pathlib import Path
 from subprocess import Popen, PIPE, CalledProcessError
 from typing import Optional
 
-from bs4 import BeautifulSoup
 import requests
-import yaml
 
+from djtools.collection.helpers import PLATFORM_REGISTRY
 from djtools.configs.config import BaseConfig
 
 
@@ -82,36 +81,27 @@ def parse_sync_command(
     return _cmd
 
 
-def rewrite_xml(config: BaseConfig):
-    """This function modifies the "Location" field of track tags in a
-        downloaded Rekordbox XML replacing the "USB_PATH" written by
-        "IMPORT_USER" with the "USB_PATH" in "config.yaml".
+def rewrite_track_paths(config: BaseConfig, other_user_collection: Path):
+    """This function modifies the location of tracks in a collection.
+    
+    This is done by replacing the "USB_PATH" written by "IMPORT_USER" with the
+    "USB_PATH" in "config.yaml".
 
     Args:
         config: Configuration object.
+        other_user_collection: Path to another user's collection.
     """
-    registered_users_path = (
-        Path(__file__).parent.parent / "configs" / "registered_users.yaml"
+    music_path = Path("DJ Music")
+    collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
+        path=other_user_collection
     )
-
-    with open(registered_users_path, mode="r", encoding="utf-8") as _file:
-        registered_users = yaml.load(_file, Loader=yaml.FullLoader)
-        src = registered_users[config.IMPORT_USER].strip("/")
-        dst = registered_users[config.USER].strip("/")
-
-    xml_path = (
-        Path(config.XML_PATH).parent / f"{config.IMPORT_USER}_rekordbox.xml"
-    )
-
-    with open(xml_path, mode="r", encoding="utf-8") as _file:
-        soup = BeautifulSoup(_file.read(), "xml")
-        for track in soup.find_all("TRACK"):
-            if not track.get("Location"):
-                continue
-            track["Location"] = track["Location"].replace(src, dst)
-
-    with open(xml_path, mode="wb", encoding=soup.orignal_encoding) as _file:
-        _file.write(soup.prettify("utf-8"))
+    for track in collection.get_tracks().values():
+        loc = track.get_location().as_posix()
+        common_path = (
+            music_path / loc.split(str(music_path) + '/', maxsplit=-1)[-1]
+        )
+        track.set_location(config.USB_PATH / common_path)
+    collection.serialize(new_path=other_user_collection)
 
 
 def run_sync(_cmd: str) -> str:
@@ -127,27 +117,23 @@ def run_sync(_cmd: str) -> str:
     Returns:
         Formatted list of uploaded tracks; tracks are grouped by directory.
     """
+    line = ""
+    termination_chars = {"\n", "\r"}
     tracks = []
     try:
-        with Popen(_cmd, stdout=PIPE, universal_newlines=True) as proc:
+        with Popen(_cmd, stdout=PIPE) as proc:
             while True:
-                line = proc.stdout.readline()
-                if line == "" and proc.poll() is not None:
+                char = proc.stdout.read(1).decode()
+                if char == "" and proc.poll() is not None:
                     break
-                if "upload: " in line:
-                    print(line.strip(), flush=True)
-                    tracks.append(
-                        line.strip().split(
-                            " to s3://dj.beatcloud.com/dj/music/"
-                        )[-1]
-                    )
-                else:
-                    print(
-                        f"{line.strip()}                                  "
-                        "                        ",
-                        end="\r", flush=True
-                    )
-
+                if char not in termination_chars:
+                    line += char
+                    continue
+                print(line, end=char)
+                if char != "\r" and "upload: " in line:
+                    line = line.split("s3://dj.beatcloud.com/dj/music/")[-1]
+                    tracks.append(Path(line))
+                line = ""
             proc.stdout.close()
             return_code = proc.wait()
         if return_code:
@@ -158,22 +144,18 @@ def run_sync(_cmd: str) -> str:
         raise Exception(msg) from exc
 
     new_music = ""
-    if tracks:
-        logger.info(
-            f'Successfully {"down" if "s3://" in _cmd[3] else "up"}loaded the '
-            "following tracks:"
-        )
     for group_id, group in groupby(
-        sorted(tracks, key=lambda x: "/".join(x.split("/")[:-1])),
-        key=lambda x: "/".join(x.split("/")[:-1]),
+        sorted(tracks, key=lambda x: x.parent.as_posix()),
+        key=lambda x: x.parent.as_posix()
     ):
         group = sorted(group)
         new_music += f"{group_id}: {len(group)}\n"
         for track in group:
-            track = track.split("/")[-1]
-            new_music += f"\t{track}\n"
+            new_music += f"\t{track.name}\n"
     if new_music:
-        logger.info(new_music)
+        logger.info(
+            f"Successfully uploaded {len(tracks)} tracks:\n{new_music}"
+        )
 
     return new_music
 
@@ -194,9 +176,9 @@ def upload_log(config: BaseConfig, log_file: Path):
         return
 
     dst = f"s3://dj.beatcloud.com/dj/logs/{config.USER}/{log_file.name}"
-    cmd = f"aws s3 cp {log_file.as_posix()} {dst}"
-    logger.info(cmd)
-    with Popen(cmd, shell=True) as proc:
+    cmd = ["aws", "s3", "cp", log_file.as_posix(), dst]
+    logger.info(" ".join(cmd))
+    with Popen(cmd) as proc:
         proc.wait()
 
     now = datetime.now()

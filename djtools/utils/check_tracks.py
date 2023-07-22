@@ -8,7 +8,11 @@ from typing import List, Optional, Tuple
 
 from djtools.configs.config import BaseConfig
 from djtools.utils.helpers import (
-    find_matches, get_spotify_tracks, get_beatcloud_tracks, get_local_tracks
+    find_matches,
+    get_spotify_tracks,
+    get_beatcloud_tracks,
+    get_local_tracks,
+    reverse_title_and_artist,
 )
 
 
@@ -73,6 +77,8 @@ def compare_tracks(
     path_lookup = {x.stem: x for x in beatcloud_tracks}
 
     for tracks, track_type in track_sets:
+        if config.ARTIST_FIRST and track_type == "Local Directory Tracks":
+            path_lookup = reverse_title_and_artist(path_lookup)
         matches = find_matches(
             tracks,
             path_lookup.keys(),
