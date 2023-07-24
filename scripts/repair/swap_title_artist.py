@@ -66,7 +66,7 @@ try:
     import Levenshtein  # pylint: disable=unused-import
 except ImportError:
     logger.warning('NOTE: Track similarity can be made faster by running ' \
-                   '`pip install "dj-beatcloud[levenshtein]"`')
+                   '`pip install "djtools[levenshtein]"`')
 
 
 def get_bad_tracks(_args):

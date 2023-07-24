@@ -1,5 +1,5 @@
 # DJ Tools
-[![image](https://img.shields.io/pypi/v/dj-beatcloud.svg)](https://pypi.org/project/dj-beatcloud/)
+[![image](https://img.shields.io/pypi/v/djtools.svg)](https://pypi.org/project/djtools/)
 
 Please see the [docs](https://a-rich.github.io/DJ-Tools/) for tutorials, how-to guides, conceptual guides, and references!
 
