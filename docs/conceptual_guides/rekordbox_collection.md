@@ -4,15 +4,15 @@ In this guide, we'll be looking at one of the two ways your Rekordbox Collection
 
 ## Representations of your Collection
 The native representation (for Rekordbox 6 at least) is an encrypted SQLite database stored in a `master.db` file and a cryptic hierarchy of binary files:
-![alt text](../../images/PIONEER_directory.png "PIONEER directory")
+![alt text](../images/PIONEER_directory.png "PIONEER directory")
 
 While it's possible to decrypt this database and perform operations on it directly, this is not conducive to sharing with peers. For this reason, DJ Tools operates on a manually exported XML file:
-![alt text](../../images/Rekordbox_export.png "Rekordbox export to XML")
+![alt text](../images/Rekordbox_export.png "Rekordbox export to XML")
 
 ## A closer look at the Rekordbox XML file
 
 As an example, we can look at the test XML packaged in the DJ Tools repo. It's been edited to be as minimal as possible:
-![alt text](../../images/Rekordbox_XML.png "Example Rekordbox XML")
+![alt text](../images/Rekordbox_XML.png "Example Rekordbox XML")
 
 There are two primary sections in this XML; the first is the `COLLECTION` tree which houses a `TRACK` node for every track in your collection. The second section is a `PLAYLISTS` tree which contains sub-trees for all your nested folders with playlists in them. At the leaves of the tree are `TRACK` nodes which contain a single attribute, `Key`, which serves as a lookup for `TRACK` nodes in the `COLLECTION` tree via their `TrackID` attribute.
 
@@ -30,6 +30,6 @@ Also note that, upon inspecting your own XML export, the paths in the `Location`
 All of the features of the rekordbox package of DJ Tools performs reads and writes on an exported XML file. The [Shuffle Tracks in Playlists](../how_to_guides/shuffle_playlists.md) feature assigns new values to the `TrackNumber` attribute of the `TRACK` nodes appearing in the provided playlists. The [Copy Tracks From Playlists](../how_to_guides/copy_playlists.md) feature uses the `Location` attribute to copy audio files to a new destination. The [Build Playlists From Tags](../how_to_guides/collection_playlists.md) feature reads the `Genre` and `Comments` attributes to collect tracks and then manipulates the `PLAYLISTS` tree of the XML to automatically generate your desired playlist structure.
 
 Once you've run an operation that edits the XML, you must import those tracks and / or playlists to realize the changes. To do this, select the track(s), playlist(s), or folder(s) from `rekordbox XML` section of the tree view and choose "Import To Collection" or "Import Playlist"; this will overwrite any playlists, beatgrids, hot cues, tags, etc. so make sure you know what you're doing (first make a backup by exporting a fresh XML)!:
-![alt text](../../images/Pioneer_Importing.png "Import tracks to Collection")
+![alt text](../images/Pioneer_Importing.png "Import tracks to Collection")
 
 This is the same method you use to import tracks from other user's XML files (see [this guide](../how_to_guides/sync_beatcloud.md#downloading-xml) for more details).

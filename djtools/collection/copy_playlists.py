@@ -10,20 +10,25 @@ The purpose of this utility is to:
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 import os
+from pathlib import Path
+from typing import Optional
 
 from tqdm import tqdm
 
 from djtools.collection.helpers import copy_file, PLATFORM_REGISTRY
 from djtools.configs.config import BaseConfig
+from djtools.utils.helpers import make_path
 
 
-def copy_playlists(config: BaseConfig):
+@make_path
+def copy_playlists(config: BaseConfig, output_path: Optional[Path] = None):
     """Copies tracks from provided playlists to a destination.
 
     Serializes the collection with these playlists and updated locations.
 
     Args:
         config: Configuration object.
+        output_path: Path to write the new collection to.
 
     Raises:
         LookupError: Playlist names in COPY_PLAYLISTS must exist in
@@ -87,5 +92,13 @@ def copy_playlists(config: BaseConfig):
             )
         )
 
+    # Unless specified, write the output collection to the same directory that
+    # the files are being copied to.
+    if not output_path:
+        output_path = (
+            config.COPY_PLAYLISTS_DESTINATION /
+            f"copied_playlists_collection{config.COLLECTION_PATH.suffix}"
+        )
+
     # Serialize the new collection.
-    _ = collection.serialize()
+    _ = collection.serialize(output_path=output_path)

@@ -31,6 +31,8 @@ from .sync import (
 from .utils import (
     compare_tracks,
     initialize_logger,
+    normalize,
+    process_recording,
     UTILS_OPERATIONS,
     url_download,
 )
@@ -46,6 +48,8 @@ __all__ = (
     "download_collection",
     "download_music",
     "initialize_logger",
+    "normalize",
+    "process_recording",
     "shuffle_playlists",
     "spotify_playlist_from_upload",
     "spotify_playlists",
@@ -62,6 +66,7 @@ __all__ = (
 def main():
     """This is the entry point for the DJ Tools library."""
 
+    # Test ci
     logger, log_file = initialize_logger()
     config = build_config()
     logger.setLevel(config.LOG_LEVEL)

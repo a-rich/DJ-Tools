@@ -33,3 +33,42 @@ def test_utilsconfig_aws_profile_not_set():
         ),
     ):
         UtilsConfig(**cfg)
+
+
+def test_utilsconfig_recording_file_not_set():
+    """Test for the UtilsConfig class."""
+    cfg = {
+        "PROCESS_RECORDING": True,
+        "RECORDING_FILE": "notreal",
+    }
+    with pytest.raises(
+        RuntimeError, match='Could not find RECORDING_FILE "notreal"'
+    ):
+        UtilsConfig(**cfg)
+
+
+def test_utilsconfig_recording_playlist_not_set():
+    """Test for the UtilsConfig class."""
+    cfg = {
+        "PROCESS_RECORDING": True,
+        "RECORDING_FILE": "",
+        "RECORDING_PLAYLIST": "",
+    }
+    with pytest.raises(
+        RuntimeError, match=(
+            "You must provide a playlist name as RECORDING_PLAYLIST "
+            "and this name must exists in spotify_playlists.yaml."
+        ),
+    ):
+        UtilsConfig(**cfg)
+
+
+@pytest.mark.parametrize("bit_rate", [35, 321])
+def test_utilsconfig_validates_bitrate(bit_rate):
+    """Test for the UtilsConfig class."""
+    cfg = {"AUDIO_BITRATE": bit_rate}
+    with pytest.raises(
+        ValueError,
+        match=re.escape("AUDIO_BITRATE must be in the range [36, 320]"),
+    ):
+        UtilsConfig(**cfg)

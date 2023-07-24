@@ -14,10 +14,10 @@ REQUIREMENTS = [
     "fuzzywuzzy==0.18.0",
     "lxml==4.9.2",
     "pydantic==1.9.1",
+    "pydub==0.25.1",
     "pyperclip==1.8.2",
     "PyYAML==5.4.1",
     "requests==2.28.0",
-    "setuptools==58.1.0",
     "spotipy==2.21.0",
     "tqdm==4.64.0",
     "youtube-dl==2021.12.17",
@@ -52,7 +52,7 @@ with open(version_path, mode="r", encoding="utf-8") as _file:
     VERSION = _file.read().split("=")[-1].strip().replace('"', "")
 
 setup(
-    name='dj_beatcloud',
+    name='djtools',
     version=VERSION,
     description='DJ Tools is a library for managing a collection of music.',
     long_description=LONG_DESCRIPTION,

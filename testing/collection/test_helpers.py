@@ -1,24 +1,32 @@
 """Testing for the helpers module."""
+from datetime import datetime
 from pathlib import Path
 import re
 from unittest import mock
 
 import pytest
 
-from djtools.collection.collections import RekordboxCollection
+from djtools.collection.collections import Collection, RekordboxCollection
 from djtools.collection.helpers import (
     BooleanNode,
     copy_file,
     # aggregate_playlists,
+    build_combiner_playlists,
     build_tag_playlists,
     HipHopFilter,
     MinimalDeepTechFilter,
-    parse_bpms_and_ratings,
+    parse_numerical_selectors,
+    parse_string_selectors,
+    PLATFORM_REGISTRY,
     print_data,
     print_playlists_tag_statistics,
     scale_data,
 )
+from djtools.collection.playlists import Playlist
 from djtools.collection.tracks import RekordboxTrack
+
+
+# pylint: disable=duplicate-code
 
 
 def test_aggregate_playlists():
@@ -85,17 +93,24 @@ def test_booleannode_raises_runtime_eror():
         node.evaluate()
 
 
-def test_build_tag_playlists():
-    """Test the create_playlists function."""
-
-
-def test_build_tag_playlists_raises_exception_():
-    """Test the create_playlists function."""
+def test_build_combiner_playlists_raises_exception_():
+    """Test the build_combiner_playlists function."""
     with pytest.raises(
         ValueError,
         match=re.escape(f"Invalid input type {list}: {[]}"),
     ):
-        build_tag_playlists([], {}, set())
+        software_config = PLATFORM_REGISTRY[next(iter(PLATFORM_REGISTRY))]
+        build_combiner_playlists([], {}, software_config["playlist"])
+
+
+def test_build_tag_playlists_raises_exception_():
+    """Test the build_tag_playlists function."""
+    with pytest.raises(
+        ValueError,
+        match=re.escape(f"Invalid input type {list}: {[]}"),
+    ):
+        software_config = PLATFORM_REGISTRY[next(iter(PLATFORM_REGISTRY))]
+        build_tag_playlists([], {}, software_config["playlist"])
 
 
 def test_copy_file(tmpdir, rekordbox_track):
@@ -152,44 +167,103 @@ def test_minimaldeeptechfilter(techno, genre_tags, expected, rekordbox_track):
     with mock.patch.object(
         track_filter, '_techno', techno, create=True
     ), mock.patch.object(
+        track_filter, '_house', not techno, create=True
+    ), mock.patch.object(
         RekordboxTrack, "get_genre_tags", lambda x: genre_tags
     ):
         result = track_filter.filter_track(rekordbox_track)
         assert result == expected
 
 
-def test_parse_bpms_and_ratings():
-    """Test for the parse_bpms_and_ratings function."""
-    matches = ["1", "2-3", "4,5", "140", "141-142", "143,144"]
-    bpm_ratings_lookup = {}
-    bpms, ratings = parse_bpms_and_ratings(matches, bpm_ratings_lookup)
-    assert bpms == ["140", "141", "142", "143", "144"]
-    assert ratings == ["1", "2", "3", "4", "5"]
+def test_parse_numerical_selectors():
+    """Test for the parse_numerical_selectors function."""
+    matches = ["1", "2-4", "140", "141-143", "2021", "2021-2023"]
+    numerical_lookup = {}
+    values = parse_numerical_selectors(matches, numerical_lookup)
+    assert values == {
+        "1", "2", "3", "4", "140", "141", "142", "143", "2021", "2022", "2023"
+    }
     for match in matches:
         key = match
         if "-" in match:
-            key = tuple(match.split("-"))
-        elif "," in match:
-            for key in match.split(","):
-                assert key in bpm_ratings_lookup
-                assert bpm_ratings_lookup[key] == f"[{key}]"
-            continue
-        assert key in bpm_ratings_lookup
-        assert bpm_ratings_lookup[key] == f"[{match}]"
+            value_range = list(map(int, match.split("-")))
+            value_range[-1] += 1
+            key = tuple(map(str, range(*value_range)))
+        assert key in numerical_lookup
+        assert numerical_lookup[key] == f"[{match}]"
 
 
 @pytest.mark.parametrize(
     "matches,expected",
     [
-        (["5-6"], "Bad BPM or rating number range: 5-6"),
-        (["bad"], "Malformed BPM or rating filter part: bad"),
+        (["5-6"], "Bad numerical range selector: 5-6"),
+        (["bad"], "Malformed numerical selector: bad"),
     ],
 )
-def test_parse_bpms_and_ratings_warns_bad(matches, expected, caplog):
-    """Test for the parse_bpms_and_ratings function."""
+def test_parse_numerical_selectors_warns_bad(matches, expected, caplog):
+    """Test for the parse_numerical_selectors function."""
     caplog.set_level("WARNING")
-    parse_bpms_and_ratings(matches, {})
+    parse_numerical_selectors(matches, {})
     assert caplog.records[0].message == expected
+
+
+def test_parse_string_selectors():
+    """Test for the parse_string_selectors function."""
+    matches = [
+        "artist:*Tribe*",
+        "comment:*Dark*",
+        "date:2022",
+        # TODO(a-rich): test with key with lambda in string_lookup.
+        # "date:<2022",
+        "key:7A",
+        "label:Some Label",
+    ]
+    string_lookup = {}
+    type_map = {
+        "artist": "get_artists",
+        "comment": "get_comments",
+        "date": "get_date_added",
+        "key": "get_key",
+        "label": "get_label",
+    }
+    playlists = set()
+    parse_string_selectors(
+        matches, string_lookup, type_map, playlists
+    )
+    for match in matches:
+        key = tuple(map(str.strip, match.split(":")))
+        if key[0] == "date":
+            key = list(key)
+            key[1] = tuple([None, datetime.strptime(key[1], "%Y"), "%Y"])
+            key = tuple(key)
+        assert key in string_lookup
+        assert string_lookup[key] == f"{{{match}}}"
+
+
+@pytest.mark.parametrize(
+    "matches,expected",
+    [
+        (["bad thing:stuff"], "bad thing is not a supported selector!"),
+        (["date:12345"], "Date selector 12345 is invalid!"),
+    ],
+)
+def test_parse_string_selectors_warns_bad(matches, expected, caplog):
+    """Test for the parse_string_selectors function."""
+    caplog.set_level("WARNING")
+    parse_string_selectors(matches, {}, {"date": "get_date_added"}, set())
+    assert caplog.records[0].message == expected
+
+
+def test_platform_registry():
+    """Test for the PLATFORM_REGISTRY object."""
+    assert isinstance(PLATFORM_REGISTRY, dict)
+    assert len(PLATFORM_REGISTRY)
+    for registered_software, impls in PLATFORM_REGISTRY.items():
+        assert isinstance(registered_software, str)
+        assert isinstance(impls, dict)
+        for impl_type, impl_class in impls.items():
+            assert impl_type in ["collection", "playlist"]
+            assert set(impl_class.__bases__).intersection(set((Collection, Playlist)))
 
 
 def test_print_data(capsys):

@@ -1,11 +1,21 @@
 combiner:
   name: Combinations
   playlists:
-    - "(Dubstep | Hip Hop) | (Dubstep | Hip Hop)"
-    - "{Hip Hop} & [85-87]"
-    - "{Hip Hop} & [86]"
-    - Dark & [2-5]
-    - Dark & [5]
+    - name: Empty playlists folder
+      playlists: [] 
+    - name: Dark
+      playlists: 
+        - Dark & [2-5]
+        - Dark & [5]
+    - name: Hip Hop
+      playlists:
+        - "{playlist:Hip Hop} & [85-87]"
+        - "{playlist:Hip Hop} & [86]"
+    - name: Dubstep
+      playlists:
+        - "(Dubstep | Hip Hop) | (Dubstep | Hip Hop)"
+        - "Dubstep & {date:<2022} & [5]"
+    - "{artist:*Tribe*} | {comment:*Dark*} | {date:2022} | {date:<2022} | {key:7A} | {label:Some Label}"
 tags:
   name: "Tags"
   playlists:
@@ -25,7 +35,6 @@ tags:
           playlists:
             - name: Breaks
               playlists:
-                - Breakstep
                 - Neurobreaks
             - name: Hip Hop Beats
               playlists:
@@ -35,7 +44,6 @@ tags:
             - Space Bass
             - name: "[___] Step"
               playlists:
-                - Breakstep
                 - Dubstep
                 - Pure Dubstep
         - Hip Hop

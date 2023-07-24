@@ -2,12 +2,12 @@
 from datetime import datetime
 from pathlib import Path
 import logging
+from typing import Optional
 from unittest import mock
 
 import pytest
 
 from djtools.utils.helpers import (
-    add_tracks,
     compute_distance,
     find_matches,
     get_beatcloud_tracks,
@@ -15,53 +15,11 @@ from djtools.utils.helpers import (
     get_playlist_tracks,
     get_spotify_tracks,
     initialize_logger,
-    MockOpen,
+    make_path,
     reverse_title_and_artist,
 )
 
-
-def test_add_tracks():
-    """Test for the add_tracks function."""
-    test_input = {
-        "items": [
-            {
-                "track": {
-                    "name": "track title",
-                    "artists": [ 
-                        {"name": "artist name"},
-                    ],
-                },
-            },
-            {
-                "track": {
-                    "name": "another track title",
-                    "artists": [ 
-                        {"name": "another artist name"},
-                        {"name": "a second artist name"},
-                    ],
-                },
-            },
-        ],
-    }
-    expected = [
-        "track title - artist name",
-        "another track title - another artist name, a second artist name"
-    ]
-    output = add_tracks(test_input, False)
-    assert output == expected
-
-
-def test_add_tracks_with_reverse_title_and_artist():
-    """Test for the add_tracks function."""
-    test_input = {
-        "items": [
-            {"track": {"name": "title", "artists": [{"name": "artist"}]}},
-        ],
-    }
-    expected = ["artist - title"]
-    output = add_tracks(test_input, True)
-    assert output == expected
-
+from ..test_utils import MockOpen
 
 
 @pytest.mark.parametrize("track_a", ["some track", "another track"])
@@ -143,7 +101,7 @@ def test_get_local_tracks(tmpdir, config):
         path = tmpdir / _dir
         path.mkdir(parents=True, exist_ok=True)
         check_dirs.append(path)
-    config.CHECK_TRACKS_LOCAL_DIRS = check_dirs + [Path("nonexistent_dir")]
+    config.LOCAL_DIRS = check_dirs + [Path("nonexistent_dir")]
     beatcloud_tracks = ["test_file1.mp3", "test_file2.mp3"]
     for index, track in enumerate(beatcloud_tracks):
         with open(
@@ -160,7 +118,7 @@ def test_get_local_tracks(tmpdir, config):
 def test_get_local_tracks_empty(tmpdir, config, caplog):
     """Test for the get_local_tracks function."""
     caplog.set_level("INFO")
-    config.CHECK_TRACKS_LOCAL_DIRS = [Path(tmpdir)]
+    config.LOCAL_DIRS = [Path(tmpdir)]
     local_dir_tracks = get_local_tracks(config)
     assert not local_dir_tracks
     assert caplog.records[0].message == "Got 0 files under local directories"
@@ -174,7 +132,7 @@ def test_get_local_tracks_empty(tmpdir, config, caplog):
             {
                 "track": {
                     "name": "last track title",
-                    "artists": [ 
+                    "artists": [
                         {"name": "final artist name"},
                     ],
                 },
@@ -191,7 +149,7 @@ def test_get_local_tracks_empty(tmpdir, config, caplog):
                 {
                     "track": {
                         "name": "track title",
-                        "artists": [ 
+                        "artists": [
                             {"name": "artist name"},
                         ],
                     },
@@ -199,7 +157,7 @@ def test_get_local_tracks_empty(tmpdir, config, caplog):
                 {
                     "track": {
                         "name": "another track title",
-                        "artists": [ 
+                        "artists": [
                             {"name": "another artist name"},
                             {"name": "a second artist name"},
                         ],
@@ -216,12 +174,9 @@ def test_get_playlist_tracks(
     """Test for the get_playlist_tracks function."""
     mock_spotipy.playlist.return_value = mock_spotipy_playlist.return_value
     mock_spotipy.next.return_value = mock_spotipy_next.return_value
-    expected = sorted(set([
-        "track title - artist name",
-        "another track title - another artist name, a second artist name",
-        "last track title - final artist name"
-    ]))
-    tracks = sorted(get_playlist_tracks(mock_spotipy, "some ID", False))
+    expected = list(mock_spotipy_playlist.return_value["tracks"]["items"])
+    expected.extend(list(mock_spotipy_next.return_value["items"]))
+    tracks = get_playlist_tracks(mock_spotipy, "some ID")
     assert tracks == expected
 
 
@@ -239,7 +194,7 @@ def test_get_playlist_tracks_handles_spotipy_exception(
     with pytest.raises(
         Exception, match=f"Failed to get playlist with ID {test_playlist_id}"
     ):
-        get_playlist_tracks(mock_spotipy, test_playlist_id, False)
+        get_playlist_tracks(mock_spotipy, test_playlist_id)
 
 
 @pytest.mark.parametrize("verbosity", [0, 1])
@@ -263,7 +218,7 @@ def test_get_spotify_tracks(
         "playlist A", "r/techno | Top weekly Posts"
     ]
     config.VERBOSITY = verbosity
-    tracks = get_spotify_tracks(config)
+    tracks = get_spotify_tracks(config, config.CHECK_TRACKS_SPOTIFY_PLAYLISTS)
     assert isinstance(tracks, dict)
     assert caplog.records[0].message == (
         "playlist A not in spotify_playlists.yaml"
@@ -282,6 +237,53 @@ def test_initialize_logger():
     logger, log_file = initialize_logger()
     assert isinstance(logger, logging.Logger)
     assert log_file.name == today
+
+
+@pytest.mark.parametrize(
+    "kwargs, expected_str_kwarg, expected_path_kwarg",
+    [
+        ({"str_kwarg": "string kwarg", "path_kwarg": "path kwarg"}, str, Path),
+        ({}, type(None), type(None))
+    ]
+)
+def test_make_path_decorator(
+    kwargs, expected_str_kwarg, expected_path_kwarg
+):
+    """Test for the make_path decorator function."""
+    @make_path
+    def foo(  # pylint: disable=disallowed-name
+            str_arg: str,
+            path_arg: Path,
+            str_kwarg: Optional[str] = None,
+            path_kwarg: Optional[Path] = None,
+    ):
+        assert isinstance(str_arg, str)
+        assert isinstance(path_arg, Path)
+        assert isinstance(str_kwarg, expected_str_kwarg)
+        assert isinstance(path_kwarg, expected_path_kwarg)
+
+    foo("a string arg", "a string arg path", **kwargs)
+
+
+@pytest.mark.parametrize(
+    "arg, kwarg, expected",
+    [
+        (1, "", 'Error creating Path in function "foo" from positional'),
+        ("", 1, 'Error creating Path in function "foo" from keyword'),
+    ],
+)
+def test_make_path_decorator_raises_error(arg, kwarg, expected):
+    """Test for the make_path decorator function."""
+    @make_path
+    def foo(path_arg: Path, path_kwarg: Path):  # pylint: disable=disallowed-name
+        assert isinstance(path_arg, Path)
+        assert isinstance(path_kwarg, Path)
+
+    with pytest.raises(
+        RuntimeError,
+        match=expected,
+    ):
+        foo(arg, path_kwarg=kwarg)
 
 
 def test_reverse_title_and_artist():

@@ -28,8 +28,8 @@ def test_shuffle_playlists(config, rekordbox_xml, caplog):
     original_track_numbers = [
         track_lookup[key]["TrackNumber"] for key in original_tracks
     ]
-    shuffle_playlists(config)
-    new_xml = rekordbox_xml.parent / f"auto_{rekordbox_xml.name}"
+    new_xml = rekordbox_xml.parent / "test_collection"
+    shuffle_playlists(config, output_path=new_xml)
     with open(new_xml, mode="r", encoding="utf-8") as _file:
         database = BeautifulSoup(_file.read(), "xml")
     track_lookup = {

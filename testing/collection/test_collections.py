@@ -49,34 +49,34 @@ def test_rekordboxcollection(
     repr(collection)
     str(collection)
     playlist = collection.get_playlists(playlist)
-    serialized_collection = collection.serialize()
-    assert serialized_collection.exists()
+    new_path = rekordbox_xml.parent / "test_collection"
+    serialized_collection = collection.serialize(output_path=new_path)
+    assert new_path.exists()
     RekordboxCollection.validate(rekordbox_xml, serialized_collection)
 
 
 def test_rekordboxcollection_add_playlist(rekordbox_xml):
     """Test RekordboxCollection class."""
     collection = RekordboxCollection(path=rekordbox_xml)
-    collection.reset_playlists()
-    assert len(collection.get_playlists()) == 0
+    num_playlists = len(collection.get_playlists())
     collection.add_playlist([])
-    assert len(collection.get_playlists()) == 1
+    assert len(collection.get_playlists()) == num_playlists + 1
 
 
-def test_rekordboxcollection_reset_playlists(
-    rekordbox_xml, rekordbox_collection_tag
-):
+def test_rekordboxcollection_get_all_tags(rekordbox_collection):
     """Test RekordboxCollection class."""
-    collection = RekordboxCollection(path=rekordbox_xml)
-    top_level_playlists = [
-        child for child in rekordbox_collection_tag.find(
-            "NODE", {"Name": "ROOT"}
-        ).children
-        if isinstance(child, bs4.element.Tag)
-    ]
-    assert len(collection.get_playlists()) == len(top_level_playlists)
-    collection.reset_playlists()
-    assert len(collection.get_playlists()) == 0
+    tracks = rekordbox_collection.get_tracks().values()
+    genre_tags, all_tags = set(), set()
+    for track in tracks:
+        genre_tags.update(track.get_genre_tags())
+        all_tags.update(track.get_tags())
+    other_tags = all_tags.difference(genre_tags)
+    expected = {
+        "genres": sorted(genre_tags),
+        "other": sorted(other_tags),
+    }
+    tags = rekordbox_collection.get_all_tags()
+    assert tags == expected
 
 
 def test_unsortedattributes_formatter():

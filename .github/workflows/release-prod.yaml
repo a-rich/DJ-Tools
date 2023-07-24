@@ -1,0 +1,53 @@
+name: Release prod version 
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'requirements.txt'
+      - '**.py'
+      - '!**/*version.py'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set GitHub Actions as Commit Author
+        run: |
+          git config --global user.name github-actions
+          git config --global user.email github-actions@github.com
+
+      - name: Checkout repo 
+        uses: actions/checkout@main
+        with:
+          token: ${{ secrets.DJTOOLS_WORKFLOWS }}
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@main
+        with:
+          python-version: 3.9
+          cache: 'pip'
+
+      - uses: actions/cache@v2
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}-${{ hashFiles('dev-requirements.txt') }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r development-requirements.txt
+
+      - name: Bump version
+        run: |
+          NEXT_VERSION=`python -c "import semver; from djtools.version import __version__; ver = semver.Version.parse(__version__).finalize_version(); print(ver)"`
+          SEMVER_REGEX="([0-9]+)\.([0-9]+)\.([0-9])-*b*([0-9]+)"
+          sed -i -E "s/$SEMVER_REGEX/$NEXT_VERSION/g" djtools/version.py
+          git add djtools/version.py
+          git commit -m "Release $NEXT_VERSION: $GITHUB_SHA"
+          git push --force
+
+      - name: Build and publish wheel
+        run: |
+          python -m build
+          twine upload dist/* -u 'aweeeezy' -p '${{ secrets.PYPI_PASSWORD }}'
