@@ -52,7 +52,7 @@ with open(version_path, mode="r", encoding="utf-8") as _file:
     VERSION = _file.read().split("=")[-1].strip().replace('"', "")
 
 setup(
-    name='dj_beatcloud',
+    name='djtools',
     version=VERSION,
     description='DJ Tools is a library for managing a collection of music.',
     long_description=LONG_DESCRIPTION,
