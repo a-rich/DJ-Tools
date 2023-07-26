@@ -279,16 +279,18 @@ class MinimalDeepTechFilter(PlaylistFilter):
         Returns:
             Whether or not this track should be included in the playlist.
         """
-        genre_tags = track.get_genre_tags()
-        index = genre_tags.index("Minimal Deep Tech")
-        prefix_tag = genre_tags[index - 1]
-        techno_with_no_techno_prefix = (
-            self._techno and prefix_tag.lower() != "techno"
-        )
-        not_techno_with_techno_prefix = (
-            not self._techno and prefix_tag.lower() == "techno"
-        )
-        if techno_with_no_techno_prefix or not_techno_with_techno_prefix:
+        house_exp = re.compile(r".*house.*")
+        techno_exp = re.compile(r".*techno.*")
+        house_tag = techno_tag = False
+        for tag in track.get_genre_tags():
+            if re.search(house_exp, tag.lower()):
+                house_tag = True
+            if re.search(techno_exp, tag.lower()):
+                techno_tag = True
+        if (
+            (self._techno and not techno_tag) or
+            (self._house and not house_tag)
+        ):
             return False
 
         return True
@@ -306,10 +308,13 @@ class MinimalDeepTechFilter(PlaylistFilter):
             return False
 
         self._techno = False  #pylint: disable=attribute-defined-outside-init
+        self._house = False  #pylint: disable=attribute-defined-outside-init
         parent = playlist.get_parent()
         while parent:
             if parent.get_name() == "Techno":
                 self._techno = True  #pylint: disable=attribute-defined-outside-init
+            if parent.get_name() == "House":
+                self._house = True  #pylint: disable=attribute-defined-outside-init
             parent = parent.get_parent()
 
         return True
