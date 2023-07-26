@@ -152,6 +152,8 @@ def test_minimaldeeptechfilter(techno, genre_tags, expected, rekordbox_track):
     with mock.patch.object(
         track_filter, '_techno', techno, create=True
     ), mock.patch.object(
+        track_filter, '_house', not techno, create=True
+    ), mock.patch.object(
         RekordboxTrack, "get_genre_tags", lambda x: genre_tags
     ):
         result = track_filter.filter_track(rekordbox_track)
