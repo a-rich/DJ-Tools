@@ -21,6 +21,9 @@ class CollectionConfig(BaseConfig):
     """Configuration object for the collection package."""
 
     COLLECTION_PATH: Path = None
+    COLLECTION_PLAYLIST_FILTERS: List[
+        Literal["HipHopFilter", "MinimalDeepTechFilter"]
+    ] = []
     COLLECTION_PLAYLISTS: bool = False
     COLLECTION_PLAYLISTS_REMAINDER: Literal["folder", "playlist"] = "folder"
     COPY_PLAYLISTS:  List[str] = []

@@ -12,6 +12,9 @@ from djtools.utils.helpers import MockOpen
 )
 def test_collection_playlists(remainder_type, config, rekordbox_xml):
     """Test for the collection_playlists function."""
+    config.COLLECTION_PLAYLIST_FILTERS = [
+        "HipHopFilter", "MinimalDeepTechFilter"
+    ]
     config.COLLECTION_PLAYLISTS_REMAINDER = remainder_type
     config.COLLECTION_PATH = rekordbox_xml
     config.VERBOSITY = 1

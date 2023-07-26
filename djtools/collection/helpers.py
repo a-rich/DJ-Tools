@@ -47,8 +47,8 @@ def copy_file(track: Track, destination: Path):
 #   - PlaylistFilter: abstraction for filtering Tracks from Playlists
 #   - HipHopFilter: used to distinguish between actual hip hop tracks and bass
 #       tracks that have hip hop influences
-#   - MinimalDeepTech: used to distinguish between minimal deep tech tracks
-#       with predominately house and techno influences
+#   - MinimalDeepTechFilter: used to distinguish between minimal deep tech
+#       tracks with predominately house and techno influences
 #   - filter_tag_playlists: applies PlaylistFilter implementations to built tag
 #       playlists
 #   - aggregate_playlists: aggregates tracks from playlists in folders to
