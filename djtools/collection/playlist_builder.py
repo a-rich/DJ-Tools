@@ -6,14 +6,13 @@ from pathlib import Path
 import yaml
 
 from djtools.collection.config import PlaylistConfig, PlaylistConfigContent
+from djtools.collection import helpers
 from djtools.collection.helpers import (
     add_selectors_to_tags,
     aggregate_playlists,
     build_combiner_playlists,
     build_tag_playlists,
     filter_tag_playlists,
-    HipHopFilter,
-    MinimalDeepTechFilter,
     PLATFORM_REGISTRY,
     print_playlists_tag_statistics,
 )
@@ -120,9 +119,13 @@ def collection_playlists(config: BaseConfig):
         # relative position of the playlist with the playlist tree.
         tag_playlists.set_parent()
 
-        # Apply the filtering logic of these PlaylistFilter implementations.
+        # Apply the filtering logic of the configured PlaylistFilter implementations.
         filter_tag_playlists(
-            tag_playlists, [HipHopFilter(), MinimalDeepTechFilter()]
+            tag_playlists,
+            [
+                getattr(helpers, playlist_filter)()
+                for playlist_filter in config.COLLECTION_PLAYLIST_FILTERS
+            ]
         )
 
         # Recursively traverse the playlist tree and create "all" playlists
