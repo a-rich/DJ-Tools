@@ -5,9 +5,9 @@ Please see the [docs](https://a-rich.github.io/DJ-Tools/) for tutorials, how-to 
 
 # Release Plan
 * 2.6.1
-    - [ ] Script for removing situation tags and resolving album, label, and year for tracks
-    - [ ] Allow `build_config` to accept an override for the path to `config.yaml`
-    - [ ] Fix missing typehints for the `NonEmptyListElementAction` class
+    - [x] Script for removing situation tags and resolving album, label, and year for tracks
+    - [x] Allow `build_config` to accept an override for the path to `config.yaml`
+    - [x] Fix missing typehints for the `NonEmptyListElementAction` class
     - [ ] [Make PlaylistFilter implementations configurable](https://github.com/a-rich/DJ-Tools/issues/120)
     - [ ] [Make MinimalDeepTechFilter more robust to the relative position of House and Techno tags](https://github.com/a-rich/DJ-Tools/issues/122)
     - [ ] [Stability issues with requests to the search endpoint of the Spotify API](https://github.com/a-rich/DJ-Tools/issues/58)
