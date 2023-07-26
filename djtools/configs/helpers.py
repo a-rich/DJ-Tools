@@ -7,7 +7,7 @@ import json
 import logging
 from pathlib import Path
 import sys
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 import yaml
 
@@ -39,7 +39,13 @@ class NonEmptyListElementAction(Action):
     having to first make an edit to their config.yaml (because the
     include/exclude options are mutually exclusive).
     """
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(
+        self,
+        parser: ArgumentParser,
+        namespace: Namespace,
+        values: List[str],
+        option_string: Optional[str] = None,
+    ):
         """Filter list-type arguments for empty strings.
 
         Args:
@@ -500,11 +506,14 @@ def arg_parse() -> Namespace:
     return vars(args)
 
 
-def build_config() -> BaseConfig:
+def build_config(config_file: Optional[Path] = None) -> BaseConfig:
     """This function loads configurations for the library.
     
     Configurations are loaded from config.yaml. If command-line arguments are
     provided, these override the configuration options set in config.yaml.
+
+    Args:
+        config_file: Optional path to a config.yaml.
 
     Raises:
         RuntimeError: config.yaml must be a valid YAML.
@@ -513,8 +522,9 @@ def build_config() -> BaseConfig:
         Global configuration object.
     """
     # Load "config.yaml".
-    config_dir = Path(__file__).parent.parent / "configs"
-    config_file = config_dir / "config.yaml"
+    if not config_file:
+        config_dir = Path(__file__).parent.parent / "configs"
+        config_file = config_dir / "config.yaml"
     if config_file.exists():
         try:
             with open(config_file, mode="r", encoding="utf-8") as _file:
