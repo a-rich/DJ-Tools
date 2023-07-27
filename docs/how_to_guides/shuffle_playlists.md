@@ -23,14 +23,14 @@ I noticed that I kept mixing the same pairs of songs together because they catch
 
 ## Example
 In the image below, you can see that the first 20 tracks of my "Jungle" playlist have track numbers in the set `{1, 2, 3}`:
-![alt text](../../images/Rekordbox_pre_shuffle.png "Pre-shuffled playlist")
+![alt text](../images/Rekordbox_pre_shuffle.png "Pre-shuffled playlist")
 
 Next, I run the command:
 
 `djtools --shuffle-playlists Jungle`
 
 Now I can import the tracks from the `SHUFFLE` playlist in the generated collection:
-![alt text](../../images/Rekordbox_shuffle_import.png "Import shuffled playlist")
+![alt text](../images/Rekordbox_shuffle_import.png "Import shuffled playlist")
 
 Once importing the tracks is complete, I can now view the "Jungle" playlist and see that the `Track Number` attributes have been overwritten, enabling an emulation of playlist shuffling via sorting of this column:
-![alt text](../../images/Rekordbox_post_shuffle.png "Post-shuffled playlist")
+![alt text](../images/Rekordbox_post_shuffle.png "Post-shuffled playlist")

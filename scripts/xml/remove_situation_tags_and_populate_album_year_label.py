@@ -56,12 +56,11 @@ def thread(track):
         return
     comment_prefix = comments.split("/* ")[0].strip()
     comment_suffix = comments.split(" */")[-1].strip()
-    new_tags = " / ".join(
-        [
-            tag.strip() for tag in tags.group().split("/")
-            if tag.strip() not in remove_tags
-        ]
-    )
+    new_tags = [
+        tag.strip() for tag in tags.group().split("/")
+        if tag.strip() not in remove_tags
+    ]
+    new_tags = " / ".join(new_tags)
     if new_tags:
         setattr(track, "_Comments", f'{comment_prefix} /* {new_tags} */ {comment_suffix}')
     else:

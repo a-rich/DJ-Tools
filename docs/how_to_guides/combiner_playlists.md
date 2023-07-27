@@ -10,7 +10,7 @@ In this guide you will learn how to automatically build playlists based off of p
 
 ## Why combine playlists with boolean algebra?
 It may not be commonly known, but Rekordbox already has a very elementary version of this functionality called the "Track Filter":
-![alt text](../../images/Rekordbox_track_filter.png "Rekordbox Track Filter")
+![alt text](../images/Rekordbox_track_filter.png "Rekordbox Track Filter")
 
 There are many shortcomings with the Track Filter which make it far inferior to the [Combiner][djtools.collection.helpers.build_combiner_playlists]:
 
@@ -60,8 +60,8 @@ The `Combiner` solves all these issues in the following ways:
 1. Import the `PLAYLIST_BUILDER` folder from the generated collection
 
 ## Example
-As is done in the [Build Playlists From Tags](collection_playlists.md#example) how-to guide, we'll start by looking at some simple expressions configured in the pre-packaged [collection_playlists.yaml](https://github.com/a-rich/DJ-Tools/blob/main/djtools/configs/collection_playlists.yaml), but this time we'll focus only on the `Combiner` section:
-![alt text](../../images/Rekordbox_playlists_yaml.png "Collection playlists YAML")
+As is done in the [Build Playlists From Tags](collection_playlists.md#example) how-to guide, we'll start by looking at some simple expressions configured in the pre-packaged [collection_playlists.yaml](https://github.com/a-rich/DJ-Tools/blob/main/djtools/configs/collection_playlists.yaml), but this time we'll focus only on the `combiner` section:
+![alt text](../images/Rekordbox_playlists_yaml.png "Collection playlists YAML")
 
 Note that the examples above are trivial ones designed to get 100% code coverage in unit tests.
 
