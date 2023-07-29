@@ -25,11 +25,11 @@ Wouldn't it be nice if you make your playlists, run a command, and get a new USB
 
 ## Example
 In the image below, you can see that the "Tech Trance" playlist has it's tracks located across a variety of paths under `/Volumes/AWEEEEZY/DJ Music/aweeeezy/Techno/`:
-![alt text](../../images/Rekordbox_pre_copy.png "Pre-copied playlist")
+![alt text](../images/Rekordbox_pre_copy.png "Pre-copied playlist")
 
 Next, I run the command:
 
 `djtools --copy-playlists "Tech Trance" --copy-playlists-destination ~/Desktop/new_track_location`
 
 Now I can view the `location` of the tracks in the "Tech Trance" playlist in the generated collection and see that they point to the `new_track_location` directory on my desktop:
-![alt text](../../images/Rekordbox_post_copy.png "Post-copied playlist")
+![alt text](../images/Rekordbox_post_copy.png "Post-copied playlist")

@@ -19,7 +19,7 @@ The idea to create a Reddit --> Spotify track scraper came from the [r/Techno](h
 
 ## Example
 In the example below, you can see a portion of `config.yaml` which shows all of the options relating to the `--spotify-playlists` feature.
-![alt text](../../images/Spotify_subreddit_config.png "Spotify Subreddit config")
+![alt text](../images/Spotify_subreddit_config.png "Spotify Subreddit config")
 
 The `SPOTIFY_PLAYLIST_SUBREDDITS` option is where you configure the subreddits from which you'd like to build Spotify playlists from. It accepts a list of `SubredditConfig` objects. The minimum attribute set required for each of the `SubredditConfig` objects is the `name` attribute which is a case-insenstive exact match of the subreddit. The other attributes are as follows:
 

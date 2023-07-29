@@ -26,7 +26,7 @@ The purpose of this feature is to allow you to build a Spotify playlist from the
 
 ## Example
 In the image below, I'm copying the Discord webhook output from one of my own uploads:
-![alt text](../../images/Spotify_playlist_from_upload_discord.png "Spotify playlist from upload Discord")
+![alt text](../images/Spotify_playlist_from_upload_discord.png "Spotify playlist from upload Discord")
 
 The top-level directory in the file tree *should* correspond with a username; it's this value that's used to name the playlist `<Username> Uploads`. In this example, a playlist called `Aweeeezy Uploads` will be created since the top-level directory is `aweeeezy`.
 
@@ -56,4 +56,4 @@ Matched Vital Force - Chlär to Vital Force - Chlar
 ```
 
 Finally, the below image shows the automatically generated playlist:
-![alt text](../../images/Spotify_playlist_from_upload_finished.png "Spotify playlist from upload completed")
+![alt text](../images/Spotify_playlist_from_upload_finished.png "Spotify playlist from upload completed")
