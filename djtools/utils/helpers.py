@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 from subprocess import check_output
 import tempfile
-from typing import Any, Dict, IO, List, Optional, Set, Tuple
+from typing import Dict, IO, List, Optional, Set, Tuple
 from unittest import mock
 
 from fuzzywuzzy import fuzz
@@ -67,28 +67,6 @@ class MockOpen:
             data = self._content
 
         return mock.mock_open(read_data=data)(*args, **kwargs)
-
-
-def add_tracks(result: Dict[str, Any], artist_first: bool) -> List[str]:
-    """Parses a page of Spotify API result tracks and returns a list of the
-        track titles and artist names.
-
-    Args:
-        result: Paged result of Spotify tracks.
-        artist_first: Whether or not artist should come before track title.
-
-    Returns:
-        Spotify track titles and artist names.
-    """
-    tracks = []
-    for track in result["items"]:
-        title = track["track"]["name"]
-        artists = ", ".join([y["name"] for y in track["track"]["artists"]])
-        tracks.append(
-            f"{artists} - {title}" if artist_first else f"{title} - {artists}"
-        )
-
-    return tracks
 
 
 def compute_distance(
@@ -190,14 +168,14 @@ def get_local_tracks(config: BaseConfig) -> Dict[str, List[str]]:
         Local file names keyed by parent directory.
     """
     local_dir_tracks = {}
-    for _dir in config.CHECK_TRACKS_LOCAL_DIRS:
+    for _dir in config.LOCAL_DIRS:
         if not _dir.exists():
             logger.warning(
                 f"{_dir} does not exist; will not be able to check its "
                 "contents against the beatcloud"
             )
             continue
-        files = [_file.stem for _file in _dir.rglob("**/*.*")]
+        files = list(_dir.rglob("**/*.*"))
         if files:
             local_dir_tracks[_dir] = files
     local_tracks_count = sum(len(x) for x in local_dir_tracks.values())
@@ -207,20 +185,18 @@ def get_local_tracks(config: BaseConfig) -> Dict[str, List[str]]:
 
 
 def get_playlist_tracks(
-    spotify: spotipy.Spotify, playlist_id: str, artist_first: bool
-) -> Set[str]:
+    spotify: spotipy.Spotify, playlist_id: str) -> List[Dict]:
     """Queries Spotify API for a playlist and pulls tracks from it.
 
     Args:
         spotify: Spotify client.
         playlist_id: Playlist ID of Spotify playlist to pull tracks from.
-        artist_first: Whether or not artist should come before track title.
 
     Raises:
         RuntimeError: Playlist_id must correspond with a valid Spotify playlist.
 
     Returns:
-        Spotify track titles and artist names from a given playlist.
+        List of Spotify track results.
     """
     try:
         playlist = spotify.playlist(playlist_id)
@@ -230,39 +206,38 @@ def get_playlist_tracks(
         ) from Exception
 
     result = playlist["tracks"]
-    tracks = add_tracks(result, artist_first)
-
+    tracks = list(result["items"])
     while result["next"]:
         result = spotify.next(result)
-        tracks.extend(add_tracks(result, artist_first))
+        tracks.extend(list(result["items"]))
 
-    return set(tracks)
+    return tracks
 
 
-def get_spotify_tracks(config: BaseConfig) -> Dict[str, Set[str]]:
+def get_spotify_tracks(
+    config: BaseConfig, playlists: List[str]
+) -> Dict[str, List[Dict]]:
     """Aggregates the tracks from one or more Spotify playlists into a
         dictionary mapped with playlist names.
 
     Args:
         config: Configuration object.
+        playlists: List of Spotify playlist name.
     
     Returns:
-        Spotify track titles and artist names keyed by playlist name.
+        Spotify tracks keyed by playlist name.
     """
     spotify = get_spotify_client(config)
     playlist_ids = get_playlist_ids()
 
     playlist_tracks = {}
     _sum = 0
-    for playlist in config.CHECK_TRACKS_SPOTIFY_PLAYLISTS:
+    for playlist in playlists:
         playlist_id = playlist_ids.get(playlist)
         if not playlist_id:
             logger.error(f"{playlist} not in spotify_playlists.yaml")
             continue
-
-        playlist_tracks[playlist] = get_playlist_tracks(
-            spotify, playlist_id, config.ARTIST_FIRST
-        )
+        playlist_tracks[playlist] = get_playlist_tracks(spotify, playlist_id)
         length = len(playlist_tracks[playlist])
         logger.info(
             f'Got {length} track{"" if length == 1 else "s"} from Spotify '

@@ -64,8 +64,8 @@ def test_download_spotify_playlist_handles_no_matches(config, caplog):
         "not-a-real-user Uploads not in spotify_playlists.yaml"
     )
     assert caplog.records[1].message == (
-        "There are no Spotify tracks; make sure CHECK_TRACKS_SPOTIFY_PLAYLISTS"
-        " has one or more keys from spotify_playlists.yaml"
+        "There are no Spotify tracks; make sure DOWNLOAD_SPOTIFY_PLAYLIST is "
+        "a key from spotify_playlists.yaml"
     )
     assert caplog.records[2].message == (
         "No Beatcloud matches were found! Make sure you've supplied to correct"

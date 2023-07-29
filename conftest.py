@@ -6,6 +6,7 @@ from pathlib import Path
 from unittest import mock
 
 from bs4 import BeautifulSoup
+from pydub import AudioSegment, generators
 import pytest
 import yaml
 
@@ -35,6 +36,21 @@ def config():
     )
 
     return joined_config
+
+
+@pytest.fixture
+def audio_file(tmpdir):
+    """Test audio file fixture."""
+    headroom = -2
+    audio = AudioSegment.silent(duration=1000).overlay(
+        generators.WhiteNoise().to_audio_segment(duration=1000).apply_gain(
+            headroom
+        )
+    )
+    _file = Path(tmpdir) / "file.mp3"
+    audio.export(_file, format="mp3")
+
+    return _file
 
 
 @pytest.fixture(scope="session")

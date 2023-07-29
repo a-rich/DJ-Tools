@@ -24,6 +24,8 @@ nav:
       - Sync Tracks From Spotify Playlists: how_to_guides/sync_spotify.md
     - Utils:
       - Check the Beatcloud for Tracks in Spotify Playlists or Local Directories: how_to_guides/check_beatcloud.md
+      - Standardize Audio Files: how_to_guides/standardize_audio.md
+      - Process Recorded Files Using Spotify Playlists: how_to_guides/process_recordings.md
       - Extract Audio Files From URLs: how_to_guides/extract_from_url.md
   - Conceptual Guides: 
     - Get to Know Your Rekordbox Collection: conceptual_guides/rekordbox_collection.md

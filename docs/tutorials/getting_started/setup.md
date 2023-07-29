@@ -48,6 +48,9 @@ If you are using any of the following features, you are required to have a Disco
 * [Create Spotify playlists from other users' uploads](../../how_to_guides/spotify_playlist_from_upload.md)
 * [not strictly required, but uploading music is the corollary feature to the above] [Sync files with the Beatcloud](../../how_to_guides/sync_beatcloud.md#uploading-music)
 
+## FFmpeg
+If you're using any of the features which leverage the `pydub` package (`NORMALIZE_AUDIO`, `PROCESS_RECORDING`, etc.), and you're exporting in any format other than `wav` or `raw`, you'll need to install FFmpeg to support those codecs. For more info about installing FFmpeg, you can look at the note about it on the `pydub` [README](https://github.com/jiaaro/pydub#getting-ffmpeg-set-up).
+
 ## Rekordbox settings
 
 ### Writing "My Tag" data to the Comments field

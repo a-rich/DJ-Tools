@@ -14,6 +14,7 @@ REQUIREMENTS = [
     "fuzzywuzzy==0.18.0",
     "lxml==4.9.2",
     "pydantic==1.9.1",
+    "pydub==0.25.1",
     "pyperclip==1.8.2",
     "PyYAML==5.4.1",
     "requests==2.28.0",

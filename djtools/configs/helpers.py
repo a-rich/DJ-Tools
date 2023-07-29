@@ -434,12 +434,21 @@ def arg_parse() -> Namespace:
         formatter_class=RawTextHelpFormatter,
     )
     utils_parser.add_argument(
+        "--audio-bitrate",
+        type=str,
+        help='Bitrate used to save files output by "--process-recording"',
+    )
+    utils_parser.add_argument(
+        "--audio-format",
+        type=str,
+        help='File format to save files output by "--process-recording"',
+    )
+    utils_parser.add_argument(
         "--check-tracks",
         action="store_true",
         help=(
             "Flag to trigger checking for track overlap between the Beatcloud "
-            'and "--check-tracks-local-dirs" and / or '
-            '"--check-tracks-spotify-playlists".'
+            'and "--local-dirs" and / or "--check-tracks-spotify-playlists".'
         ),
     )
     utils_parser.add_argument(
@@ -451,17 +460,45 @@ def arg_parse() -> Namespace:
         ),
     )
     utils_parser.add_argument(
-        "--check-tracks-local-dirs",
+        "--check-tracks-spotify-playlists",
+        type=str,
+        nargs="+",
+        help="List of Spotify playlist names to check against the Beatcloud.",
+    )
+    utils_parser.add_argument(
+        "--local-dirs",
         type=convert_to_paths,
         nargs="+",
         action=NonEmptyListElementAction,
         help="List of local directories to check against the Beatcloud.",
     )
     utils_parser.add_argument(
-        "--check-tracks-spotify-playlists",
+        "--normalize-audio",
+        action="store_true",
+        help='Flag to trigger normalizing audio files at "--local-dirs".',
+    )
+    utils_parser.add_argument(
+        "--normalize-audio-headroom",
+        type=float,
+        help="Amount of headroom in decibels to leave when normalizing audio.",
+    )
+    utils_parser.add_argument(
+        "--process-recording",
+        action="store_true",
+        help=(
+            "Flag to trigger processing an audio recording using a Spotify "
+            "playlist."
+        ),
+    )
+    utils_parser.add_argument(
+        "--recording-file",
+        type=convert_to_paths,
+        help='Audio recording to pair with "--recording-playlist".',
+    )
+    utils_parser.add_argument(
+        "--recording-playlist",
         type=str,
-        nargs="+",
-        help="List of Spotify playlist names to check against the Beatcloud.",
+        help='Spotify playlist to pair with "--recording-file".',
     )
     utils_parser.add_argument(
         "--url-download",
