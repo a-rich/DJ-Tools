@@ -36,26 +36,34 @@ def test_compare_tracks(
     tmpdir = Path(tmpdir)
     config.CHECK_TRACKS = True
     config.CHECK_TRACKS_SPOTIFY_PLAYLISTS = [spotify_playlist]
-    config.CHECK_TRACKS_LOCAL_DIRS = [tmpdir]
+    config.LOCAL_DIRS = [tmpdir]
     config.DOWNLOAD_SPOTIFY_PLAYLIST = download_spotify_playlist
     if get_spotify_tracks_flag or download_spotify_playlist:
-        mock_get_spotify_tracks.return_value = {"playlist": ["track - artist"]}
+        mock_get_spotify_tracks.return_value = {
+            "playlist": [
+                {"track": {"name": "track", "artists": [{"name": "artist"}]}},
+            ]
+        }
     if get_local_tracks_flag:
-        mock_get_local_tracks.return_value = {tmpdir: ["track - artist"]}
+        mock_get_local_tracks.return_value = {
+            tmpdir: [Path("track - artist.mp3")]
+        }
     compare_tracks(
         config,
         beatcloud_tracks,
-        download_spotify_playlist=download_spotify_playlist,
     )
     if not get_spotify_tracks_flag and not download_spotify_playlist:
+        if download_spotify_playlist:
+            substring = "DOWNLOAD_SPOTIFY_PLAYLIST is a key"
+        else:
+            substring = "CHECK_TRACKS_SPOTIFY_PLAYLISTS has one or more keys"
         assert caplog.records.pop(0).message == (
-            "There are no Spotify tracks; make sure "
-            "CHECK_TRACKS_SPOTIFY_PLAYLISTS has one or more keys from "
+            f"There are no Spotify tracks; make sure {substring} from "
             "spotify_playlists.yaml"
         )
     if not get_local_tracks_flag and not download_spotify_playlist:
         assert caplog.records.pop(0).message == (
-            "There are no local tracks; make sure CHECK_TRACKS_LOCAL_DIRS has "
+            "There are no local tracks; make sure LOCAL_DIRS has "
             'one or more directories containing one or more tracks'
         )
     if not beatcloud_tracks and (
@@ -136,7 +144,7 @@ def test_compare_tracks_spotify_with_artist_first(
 
 @mock.patch(
     "djtools.utils.check_tracks.get_local_tracks",
-    mock.Mock(return_value={"dir": ["title - artist"]}),
+    mock.Mock(return_value={"dir": [Path("title - artist.mp3")]}),
 )
 @mock.patch(
     "djtools.utils.check_tracks.get_beatcloud_tracks",
@@ -147,7 +155,7 @@ def test_compare_tracks_local_dirs_with_artist_first(config, caplog):
     caplog.set_level("INFO")
     config.ARTIST_FIRST = True
     config.CHECK_TRACKS = True
-    config.CHECK_TRACKS_LOCAL_DIRS = ["dir"]
+    config.LOCAL_DIRS = ["dir"]
     compare_tracks(config)
     assert caplog.records[0].message == (
         "\nLocal Directory Tracks / Beatcloud Matches: 1"

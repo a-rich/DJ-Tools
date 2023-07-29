@@ -27,8 +27,9 @@ As mentioned under the [Spotify](#spotify) section above, the `sync` package off
 ## Utils
 This package contains utilities that either don't fit into any of the other packages or are otherwise used by multiple packages.
 
-The primary utility offered by this package checks the contents of your Beatcloud instance and compares the filenames with either/both tracks in one or more Spotify playlists and files in one or more local directories.
+The `utils` package has the following features:
 
-This is very useful for predetermining if you're about to sync duplicate tracks to the Beatcloud.
-
-The `utils` package also offers a simple wrapper around the [youtube-dl](https://github.com/ytdl-org/youtube-dl) package for extracting audio files from URLs.
+-  `CHECK_TRACKS` which will compare the filenames of tracks in the Beatcloud with both / either tracks in `CHECK_TRACKS_SPOTIFY_PLAYLISTS` and / or filenames globbed from `LOCAL_DIRS`. This is very useful for predetermining if you're about to sync duplicate tracks to the Beatcloud.
+- `NORMALIZE_AUDIO` which will transform the files globbed from `LOCAL_DIRS` such that their peak amplitude leaves `NORMALIZE_AUDIO_HEADROOM` and exports them in `AUDIO_FORMAT` at `AUDIO_BITRATE`. This is very useful for ensuring all the tracks you add to the Beatcloud are standardized; say `320k` `mp3` files with uniform volume.
+- `PROCESS_RECORDING`: given a recording file and Spotify playlist, chunk the recording into individual tracks, name the files, and export with tags using data from the Spotify API. Tracks are normalized with `NORMALIZE_AUDIO_HEADROOM` and exported in `AUDIO_FORMAT` at `AUDIO_BITRATE`.
+- `URL_DOWNLOAD` which is a simple wrapper around the [youtube-dl](https://github.com/ytdl-org/youtube-dl) package for extracting audio files from URLs.

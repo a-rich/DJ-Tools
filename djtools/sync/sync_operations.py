@@ -36,7 +36,6 @@ def download_music(config: BaseConfig, beatcloud_tracks: Optional[List[str]] = N
         beatcloud_tracks, beatcloud_matches = compare_tracks(
             config,
             beatcloud_tracks=beatcloud_tracks,
-            download_spotify_playlist=config.DOWNLOAD_SPOTIFY_PLAYLIST,
         )
         if not beatcloud_matches:
             logger.warning(

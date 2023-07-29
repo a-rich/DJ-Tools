@@ -33,3 +33,31 @@ def test_utilsconfig_aws_profile_not_set():
         ),
     ):
         UtilsConfig(**cfg)
+
+
+def test_utilsconfig_recording_file_not_set():
+    """Test for the UtilsConfig class."""
+    cfg = {
+        "PROCESS_RECORDING": True,
+        "RECORDING_FILE": "notreal",
+    }
+    with pytest.raises(
+        RuntimeError, match='Could not find RECORDING_FILE "notreal"'
+    ):
+        UtilsConfig(**cfg)
+
+
+def test_utilsconfig_recording_playlist_not_set():
+    """Test for the UtilsConfig class."""
+    cfg = {
+        "PROCESS_RECORDING": True,
+        "RECORDING_FILE": "",
+        "RECORDING_PLAYLIST": "",
+    }
+    with pytest.raises(
+        RuntimeError, match=(
+            "You must provide a playlist name as RECORDING_PLAYLIST "
+            "and this name must exists in spotify_playlists.yaml."
+        ),
+    ):
+        UtilsConfig(**cfg)
