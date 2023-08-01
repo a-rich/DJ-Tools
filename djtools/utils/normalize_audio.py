@@ -14,8 +14,7 @@ logger = logging.getLogger(__name__)
 def normalize(config: BaseConfig):
     """Gets local tracks and normalizes them.
 
-    Tracks will be overwritten and have a headroom equal to
-    NORMALIZE_AUDIO_HEADROOM.
+    Tracks will be overwritten and have a headroom equal to AUDIO_HEADROOM.
 
     Args:
         config: Configuration object.
@@ -32,19 +31,22 @@ def normalize(config: BaseConfig):
 
     for track in [
         track for tracks in folder_tracks.values() for track in tracks
+        if track.is_file() and not track.name.startswith(".")
     ]:
-        audio = AudioSegment.from_file(track)
+        try:
+            audio = AudioSegment.from_file(track)
+        except Exception as exc:
+            logger.error(f"Couldn't decode {track}: {exc}")
+            continue
 
-        if abs(audio.max_dBFS + config.NORMALIZE_AUDIO_HEADROOM) > 0.001:
+        if abs(audio.max_dBFS + config.AUDIO_HEADROOM) > 0.001:
             logger.info(
                 f"{track} has a max dB of {audio.max_dBFS}, normalizing to "
-                f"have a headroom of {config.NORMALIZE_AUDIO_HEADROOM}..."
+                f"have a headroom of {config.AUDIO_HEADROOM}..."
             )
-            audio = effects.normalize(
-                audio, headroom=config.NORMALIZE_AUDIO_HEADROOM
-            )
+            audio = effects.normalize(audio, headroom=config.AUDIO_HEADROOM)
             audio.export(
-                track,
+                track.parent / f"{track.stem}.{config.AUDIO_FORMAT}",
                 tags=utils.mediainfo(track).get("TAG", {}),
                 bitrate=config.AUDIO_BITRATE,
                 format=config.AUDIO_FORMAT,
@@ -52,6 +54,5 @@ def normalize(config: BaseConfig):
             continue
 
         logger.info(
-            f"{track} already has a headroom of "
-            f"{config.NORMALIZE_AUDIO_HEADROOM}"
+            f"{track} already has a headroom of {config.AUDIO_HEADROOM}"
         )

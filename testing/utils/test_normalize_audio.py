@@ -12,7 +12,7 @@ from djtools.utils.normalize_audio import normalize
 def test_normalize(target_headroom, audio_file, config, tmpdir):
     """Test for the normalize function."""
     config.LOCAL_DIRS = [Path(tmpdir)]
-    config.NORMALIZE_AUDIO_HEADROOM = target_headroom
+    config.AUDIO_HEADROOM = target_headroom
     audio = AudioSegment.from_file(audio_file)
     with mock.patch(
         "djtools.utils.normalize_audio.AudioSegment.from_file"
@@ -24,6 +24,20 @@ def test_normalize(target_headroom, audio_file, config, tmpdir):
     # See this issue:
     # https://stackoverflow.com/questions/76791317/pydub-how-to-retain-headroom-across-export-and-from-file"  pylint: disable=line-too-long
     # assert abs(audio.max_dBFS + target_headroom) < 0.001
+
+
+def test_normalize_handles_decode_error(config, tmpdir, caplog):
+    """Test for the normalize function."""
+    caplog.set_level("ERROR")
+    tmpdir = Path(tmpdir)
+    filename = tmpdir / "bad_audio_file.txt"
+    filename.write_text("something")
+    config.LOCAL_DIRS = [tmpdir]
+    normalize(config)
+    assert caplog.records[0].message.startswith(
+        f"Couldn't decode {filename}: Decoding failed. ffmpeg returned error "
+        "code: 1"
+    )
 
 
 def test_normalize_handles_no_local_tracks(config):
