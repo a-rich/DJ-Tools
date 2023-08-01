@@ -20,12 +20,12 @@ class UtilsConfig(BaseConfig):
 
     AUDIO_BITRATE: str = '320k'
     AUDIO_FORMAT: str = 'mp3'
+    AUDIO_HEADROOM: NonNegativeFloat = 0.0
     CHECK_TRACKS: bool = False
     CHECK_TRACKS_FUZZ_RATIO: NonNegativeInt = 80
     CHECK_TRACKS_SPOTIFY_PLAYLISTS:  List[str] = []
     LOCAL_DIRS: List[Path] = []
     NORMALIZE_AUDIO: bool = False
-    NORMALIZE_AUDIO_HEADROOM: NonNegativeFloat = 0.0
     PROCESS_RECORDING: bool = False
     RECORDING_FILE: Path = None
     RECORDING_PLAYLIST: str = ""

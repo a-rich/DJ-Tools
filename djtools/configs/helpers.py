@@ -444,6 +444,11 @@ def arg_parse() -> Namespace:
         help='File format to save files output by "--process-recording"',
     )
     utils_parser.add_argument(
+        "--audio-headroom",
+        type=float,
+        help="Amount of headroom in decibels to leave when normalizing audio.",
+    )
+    utils_parser.add_argument(
         "--check-tracks",
         action="store_true",
         help=(
@@ -476,11 +481,6 @@ def arg_parse() -> Namespace:
         "--normalize-audio",
         action="store_true",
         help='Flag to trigger normalizing audio files at "--local-dirs".',
-    )
-    utils_parser.add_argument(
-        "--normalize-audio-headroom",
-        type=float,
-        help="Amount of headroom in decibels to leave when normalizing audio.",
     )
     utils_parser.add_argument(
         "--process-recording",

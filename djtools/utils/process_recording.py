@@ -6,7 +6,7 @@ information from the Spotify API to:
 - split the recording into individual files
 - name these files with the title and artist(s)
 - populate the title, artist, and album tags
-- normalize the audio so the headroom is NORMALIZE_AUDIO_HEADROOM decibels
+- normalize the audio so the headroom is AUDIO_HEADROOM decibels
 - export the files with the configured AUDIO_BITRATE and AUDIO_FORMAT
 """
 from datetime import datetime
@@ -89,10 +89,10 @@ def process(config: BaseConfig):
         audio = audio[track["duration"]:]
 
         # Normalize the audio such that the headroom is
-        # NORMALIZE_AUDIO_HEADROOM dB.
-        if abs(track_audio.max_dBFS + config.NORMALIZE_AUDIO_HEADROOM) > 0.001:
+        # AUDIO_HEADROOM dB.
+        if abs(track_audio.max_dBFS + config.AUDIO_HEADROOM) > 0.001:
             track_audio = effects.normalize(
-                track_audio, headroom=config.NORMALIZE_AUDIO_HEADROOM
+                track_audio, headroom=config.AUDIO_HEADROOM
             )
 
         # Build the filename using the title, artist(s) and configured format.
