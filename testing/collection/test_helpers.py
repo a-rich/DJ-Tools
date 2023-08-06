@@ -1,4 +1,5 @@
 """Testing for the helpers module."""
+from datetime import datetime
 from pathlib import Path
 import re
 from unittest import mock
@@ -13,12 +14,16 @@ from djtools.collection.helpers import (
     build_tag_playlists,
     HipHopFilter,
     MinimalDeepTechFilter,
-    parse_bpms_and_ratings,
+    parse_numerical_selectors,
+    parse_string_selectors,
     print_data,
     print_playlists_tag_statistics,
     scale_data,
 )
 from djtools.collection.tracks import RekordboxTrack
+
+
+# pylint: disable=duplicate-code
 
 
 def test_aggregate_playlists():
@@ -160,37 +165,82 @@ def test_minimaldeeptechfilter(techno, genre_tags, expected, rekordbox_track):
         assert result == expected
 
 
-def test_parse_bpms_and_ratings():
-    """Test for the parse_bpms_and_ratings function."""
-    matches = ["1", "2-3", "4,5", "140", "141-142", "143,144"]
-    bpm_ratings_lookup = {}
-    bpms, ratings = parse_bpms_and_ratings(matches, bpm_ratings_lookup)
-    assert bpms == ["140", "141", "142", "143", "144"]
-    assert ratings == ["1", "2", "3", "4", "5"]
+def test_parse_numerical_selectors():
+    """Test for the parse_numerical_selectors function."""
+    matches = ["1", "2-4", "140", "141-143", "2021", "2021-2023"]
+    numerical_lookup = {}
+    values = parse_numerical_selectors(matches, numerical_lookup)
+    assert values == {
+        "1", "2", "3", "4", "140", "141", "142", "143", "2021", "2022", "2023"
+    }
     for match in matches:
         key = match
         if "-" in match:
-            key = tuple(match.split("-"))
-        elif "," in match:
-            for key in match.split(","):
-                assert key in bpm_ratings_lookup
-                assert bpm_ratings_lookup[key] == f"[{key}]"
-            continue
-        assert key in bpm_ratings_lookup
-        assert bpm_ratings_lookup[key] == f"[{match}]"
+            value_range = list(map(int, match.split("-")))
+            value_range[-1] += 1
+            key = tuple(map(str, range(*value_range)))
+        assert key in numerical_lookup
+        assert numerical_lookup[key] == f"[{match}]"
 
 
 @pytest.mark.parametrize(
     "matches,expected",
     [
-        (["5-6"], "Bad BPM or rating number range: 5-6"),
-        (["bad"], "Malformed BPM or rating filter part: bad"),
+        (["5-6"], "Bad numerical range selector: 5-6"),
+        (["bad"], "Malformed numerical selector: bad"),
     ],
 )
-def test_parse_bpms_and_ratings_warns_bad(matches, expected, caplog):
-    """Test for the parse_bpms_and_ratings function."""
+def test_parse_numerical_selectors_warns_bad(matches, expected, caplog):
+    """Test for the parse_numerical_selectors function."""
     caplog.set_level("WARNING")
-    parse_bpms_and_ratings(matches, {})
+    parse_numerical_selectors(matches, {})
+    assert caplog.records[0].message == expected
+
+
+def test_parse_string_selectors():
+    """Test for the parse_string_selectors function."""
+    matches = [
+        "artist:*Tribe*",
+        "comment:*Dark*",
+        "date:2022",
+        # TODO(a-rich): test with key with lambda in string_lookup.
+        # "date:<2022",
+        "key:7A",
+        "label:Some Label",
+    ]
+    string_lookup = {}
+    type_map = {
+        "artist": "get_artists",
+        "comment": "get_comments",
+        "date": "get_date_added",
+        "key": "get_key",
+        "label": "get_label",
+    }
+    playlists = set()
+    parse_string_selectors(
+        matches, string_lookup, type_map, playlists
+    )
+    for match in matches:
+        key = tuple(map(str.strip, match.split(":")))
+        if key[0] == "date":
+            key = list(key)
+            key[1] = tuple([None, datetime.strptime(key[1], "%Y"), "%Y"])
+            key = tuple(key)
+        assert key in string_lookup
+        assert string_lookup[key] == f"{{{match}}}"
+
+
+@pytest.mark.parametrize(
+    "matches,expected",
+    [
+        (["bad thing:stuff"], "bad thing is not a supported selector!"),
+        (["date:12345"], "Date selector 12345 is invalid!"),
+    ],
+)
+def test_parse_string_selectors_warns_bad(matches, expected, caplog):
+    """Test for the parse_string_selectors function."""
+    caplog.set_level("WARNING")
+    parse_string_selectors(matches, {}, {"date": "get_date_added"}, set())
     assert caplog.records[0].message == expected
 
 

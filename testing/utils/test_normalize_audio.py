@@ -2,27 +2,31 @@
 from pathlib import Path
 from unittest import mock
 
-from pydub import AudioSegment
 import pytest
 
 from djtools.utils.normalize_audio import normalize
 
 
+@mock.patch("djtools.utils.normalize_audio.effects.normalize")
 @pytest.mark.parametrize("target_headroom", [0, 2, 5])
-def test_normalize(target_headroom, audio_file, config, tmpdir):
+def test_normalize(mock_normalize, target_headroom, audio_file, config, input_tmpdir):
     """Test for the normalize function."""
-    config.LOCAL_DIRS = [Path(tmpdir)]
     config.AUDIO_HEADROOM = target_headroom
-    audio = AudioSegment.from_file(audio_file)
+    audio, _ = audio_file
     with mock.patch(
         "djtools.utils.normalize_audio.AudioSegment.from_file"
-    ) as mock_audio_segment:
+    ) as mock_audio_segment, mock.patch(
+        "djtools.utils.normalize_audio.get_local_tracks",
+        mock.Mock(return_value={"playlist": [Path(input_tmpdir) / "file.mp3"]}),
+    ):
         mock_audio_segment.return_value = audio
         normalize(config)
-    audio = AudioSegment.from_file(audio_file)
+        if target_headroom != 2:
+            mock_normalize.assert_called_once()
     # TODO(a-rich): Getting unexpected headroom readings after exporting.
     # See this issue:
     # https://stackoverflow.com/questions/76791317/pydub-how-to-retain-headroom-across-export-and-from-file"  pylint: disable=line-too-long
+    # audio = AudioSegment.from_file(_file)
     # assert abs(audio.max_dBFS + target_headroom) < 0.001
 
 

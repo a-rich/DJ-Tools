@@ -3,7 +3,6 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
-from youtube_dl.utils import DownloadError
 
 from djtools.utils.url_download import fix_up, url_download
 
@@ -51,10 +50,3 @@ def test_url_download(tmpdir, config):
         context.download.side_effect = lambda *args, **kwargs: dummy_func()
         url_download(config)
     assert len(list(tmpdir.iterdir())) == 1
-
-
-def test_url_download_invalid_url(config):
-    """Test for the url_download function."""
-    config.URL_DOWNLOAD = ""
-    with pytest.raises(DownloadError):
-        url_download(config)

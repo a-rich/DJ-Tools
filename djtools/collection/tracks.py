@@ -19,6 +19,9 @@ from urllib.parse import quote, unquote
 import bs4
 
 
+# pylint: disable=no-member
+
+
 class Track(ABC):
     "Abstract base class for a track."
 
@@ -27,11 +30,35 @@ class Track(ABC):
         "Deserializes a track from the native format of a DJ software."
 
     @abstractmethod
+    def get_artists(self) -> str:
+        """Gets the track artists.
+
+        Returns:
+            A string representing the track's artists.
+        """
+
+    @abstractmethod
     def get_bpm(self) -> float:
         """Gets the track BPM.
 
         Returns:
             A float representing BPM.
+        """
+
+    @abstractmethod
+    def get_comments(self) -> str:
+        """Gets the track comments.
+
+        Returns:
+            A string representing the track's comments.
+        """
+
+    @abstractmethod
+    def get_date_added(self) -> str:
+        """Gets the track's date added.
+
+        Returns:
+            A datetime representing the track's date added.
         """
 
     @abstractmethod
@@ -48,6 +75,22 @@ class Track(ABC):
 
         Returns:
             The ID of this track.
+        """
+
+    @abstractmethod
+    def get_key(self) -> Any:
+        """Gets the track key.
+
+        Returns:
+            The key of this track.
+        """
+
+    @abstractmethod
+    def get_label(self) -> Any:
+        """Gets the track label.
+
+        Returns:
+            The label of this track.
         """
 
     @abstractmethod
@@ -72,6 +115,14 @@ class Track(ABC):
 
         Returns:
             A set of the track's tags.
+        """
+
+    @abstractmethod
+    def get_year(self) -> str:
+        """Gets the year of the track.
+
+        Returns:
+            The year of the track.
         """
 
     @abstractmethod
@@ -145,13 +196,13 @@ class RekordboxTrack(Track):
             setattr(self, f"_{key}", value)
 
         # Parse MyTag data from Comments attribute.
-        my_tags = re.search(r"(?<=\/\*).*(?=\*\/)", self._Comments)  # pylint: disable=no-member
+        my_tags = re.search(r"(?<=\/\*).*(?=\*\/)", self._Comments)
         self._MyTags = (  # pylint: disable=invalid-name
             [x.strip() for x in my_tags.group().split("/")] if my_tags else []
         )
 
         # Merge Genre and MyTag data into a new attribute.
-        self._Tags = set(self._Genre + self._MyTags)  # pylint: disable=no-member, invalid-name
+        self._Tags = set(self._Genre + self._MyTags)  # pylint: disable=invalid-name
 
         # Parse TEMPO Tags as the beat grid attribute.
         self._beat_grid = track.find_all("TEMPO")
@@ -221,13 +272,37 @@ class RekordboxTrack(Track):
         """
         return str(self.serialize())
 
+    def get_artists(self) -> str:
+        """Gets the track artists.
+
+        Returns:
+            A string representing the track's artists.
+        """
+        return self._Artist
+
     def get_bpm(self) -> float:
         """Gets the track BPM.
 
         Returns:
             A float representing BPM.
         """
-        return self._AverageBpm  # pylint: disable=no-member
+        return self._AverageBpm
+
+    def get_comments(self) -> str:
+        """Gets the track comments.
+
+        Returns:
+            A string representing the track's comments.
+        """
+        return self._Comments
+
+    def get_date_added(self) -> str:
+        """Gets the track's date added.
+
+        Returns:
+            A datetime representing the track's date added.
+        """
+        return self._DateAdded
 
     def get_genre_tags(self) -> List[str]:
         """Gets the genre tags of the track.
@@ -235,7 +310,7 @@ class RekordboxTrack(Track):
         Returns:
             A list of the track's genre tags.            
         """
-        return self._Genre  # pylint: disable=no-member
+        return self._Genre
 
     def get_id(self) -> str:
         """Get the track ID.
@@ -243,7 +318,23 @@ class RekordboxTrack(Track):
         Returns:
             The ID of this track.
         """
-        return self._TrackID  # pylint: disable=no-member
+        return self._TrackID
+
+    def get_key(self) -> Any:
+        """Gets the track key.
+
+        Returns:
+            The key of this track.
+        """
+        return self._Tonality
+
+    def get_label(self) -> Any:
+        """Gets the track label.
+
+        Returns:
+            The label of this track.
+        """
+        return self._Label
 
     def get_location(self) -> Path:
         """Gets the location of the track.
@@ -259,7 +350,7 @@ class RekordboxTrack(Track):
         Returns:
             The rating of the track.
         """
-        return self._Rating  # pylint: disable=no-member
+        return self._Rating
 
     def get_tags(self) -> Set[str]:
         """Gets the tags of the track.
@@ -268,6 +359,14 @@ class RekordboxTrack(Track):
             A set of the track's tags.
         """
         return self._Tags
+
+    def get_year(self) -> str:
+        """Gets the year of the track.
+
+        Returns:
+            The year of the track.
+        """
+        return self._Year
 
     def serialize(
         self, *args, playlist: bool = False, **kwargs
@@ -400,7 +499,7 @@ class RekordboxTrack(Track):
         Args:
             number: Number to set for TrackNumber.
         """
-        self._TrackNumber = number  # pylint: disable=invalid-name,attribute-defined-outside-init
+        self._TrackNumber = number  # pylint: disable=attribute-defined-outside-init,invalid-name
 
     @classmethod
     def validate(cls, original: bs4.element.Tag, serializable: RekordboxTrack):

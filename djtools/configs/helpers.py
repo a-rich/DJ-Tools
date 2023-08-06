@@ -523,6 +523,8 @@ def arg_parse() -> Namespace:
         print(__version__)
         sys.exit()
 
+    logger.info(f"djtools version: {__version__}")
+
     if args.link_configs:
         args.link_configs = Path(args.link_configs)
         if args.link_configs.exists():

@@ -27,12 +27,12 @@ There are many shortcomings with the Track Filter which make it far inferior to 
 The `Combiner` solves all these issues in the following ways:
 
 1. Portability
-    * generates regular playlists which can be exported to a device for use on any Pioneer system
-    * combining this with the [Copy Tracks From Playlists](../how_to_guides/copy_playlists.md) feature gives you portability on non-Pioneer systems
+    * generates regular playlists which can be exported to a device for use on any system
 1. Operands
-    * works on `My Tags` and `Genre` tags (and is extensible so other tags can be used as well)
-    * includes selector syntax to choose arbitrary number of BPM / rating values as well as arbitrary ranges of values
-    * includes selector syntax to choose playlists in your Collection
+    * works on any tag data that `djtools` knows of (e.g. genres, `My Tags`, etc.)
+    * includes numerical selector syntax to choose arbitrary rating, BPM, and year values as well as arbitrary ranges of values
+    * includes string selector syntax to choose playlists in your Collection as well as artists, comments, dates added, keys, and record labels
+    * any of the string selectors (except for `date`) support wildcard globbing with the `*` character
 1. Operators
     * adds a `NOT` operator to take the set difference
     * allows you to apply logic operators to *any* of the operands, not just `My Tags`
@@ -40,18 +40,68 @@ The `Combiner` solves all these issues in the following ways:
 
 ## Syntax
 
-* logical operators:
-    - `AND` = `&`
-    - `OR` = `|`
-    - `NOT` = `~`
-* playlist selectors:
-    - `{playlist name}`
-* BPM selectors (values > 5 are considered BPMs):
-    - `[80, 90, 130-150]`
-* rating selectors (values <= 5 are considered ratings):
-    - `[0, 1, 3-5]`
+* logical operators ("AND", "OR", "NOT"):
+    - `&`
+    - `|`
+    - `~`
+* string selectors:
+    - `{artist:*Eprom*}`
+    - `{comment:*hollaback*}`
+    - `{date:2022}`
+    - `{date:>2021-10-05}`
+    - `{date:<2020-05}`
+    - `{key:7A}`
+    - `{label:duploc}`
+    - `{playlist: Deep House}`
+* numerical selectors:
+    - `[0]`
+    - `[3-5]`
+    - `[80]`
+    - `[130-150]`
+    - `[1973]`
+    - `[2013-2023]`
 * grouping:
-    - `(`, `)`
+    - `(`
+    - `)`
+
+Let's look at an example playlist to see how the syntax works.
+
+Suppose we want a playlist with tracks that _all have_ the following properties:
+- from the years 2000 to 2023
+- and have a rating of 5
+- and with BPMs in the range 130 to 150
+
+The expression a.k.a. the combiner playlist name will look this:
+
+    [2000-2023] & [5] & [130-150]
+
+Now let's say we want to supplement that playlist with tracks that have _any one of_ the following properties:
+- have a genre tag called "Jungle"
+- or have another tag called "Dark"
+- or come from a playlist called "New Years 1999"
+- or come from the record label "Dispatch"
+
+The playlist for this set of tracks is expressed like this:
+
+    Jungle | Dark | {playlist: New Years 1999} | {label: Dispatch}
+
+Now we want to throw in a few more tracks using the other supported string selectors. We're also going to demonstrate the set difference operator `~` which will remove matching tracks from the resulting playlist. This subset of tracks will _all have_ the following properties:
+- have come from the artist "Eprom"
+- and have been added to the collection after 2010
+- and have the words "absolute banger" in the comments
+- and not have a major musical key (using [Camelot notation](https://mixedinkey.com/harmonic-mixing-guide/))
+
+The playlist for these tracks is written like this:
+
+    {artist: *Eprom*} & {date:>2010} & {comment:*absolute banger*} ~ {key:*A}
+
+Finally, let's see how we can create one master playlist from all three of these sub-expressions using groupings to ensure the proper order of operations:
+
+    ([2000-2023] & [5] & [130-150]) |
+    (Jungle | Dark | {playlist: New Years 1999} | {label: Dispatch}) |
+    ({artist: *Eprom*} & {date:>2010} & {comment:*absolute banger*} ~ {key:*A})
+    
+I hope you see how powerful the `Combiner` can become when used with a well indexed collection!
 
 ## How it's done
 

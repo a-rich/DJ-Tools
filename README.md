@@ -15,6 +15,7 @@ Please see the [docs](https://a-rich.github.io/DJ-Tools/) for tutorials, how-to 
     - [x] [Make MinimalDeepTechFilter more robust to the relative position of House and Techno tags](https://github.com/a-rich/DJ-Tools/issues/122)
     - [x] [Standardize audio files](https://github.com/a-rich/DJ-Tools/issues/126)
     - [x] [Process recorded file using Spotify playlist](https://github.com/a-rich/DJ-Tools/issues/127)
+    - [x] [Improve selectors for Combiner playlists](https://github.com/a-rich/DJ-Tools/issues/131)
     - [ ] [Create graphic user interface for djtools](https://github.com/a-rich/DJ-Tools/issues/118)
     - [ ] [Derive boolean algebra expressions that generate a given playlist](https://github.com/a-rich/DJ-Tools/issues/106)
     - [ ] [Improve Reddit submission title parsing in order to improve precision and recall of Spotify API search results](https://github.com/a-rich/DJ-Tools/issues/59)

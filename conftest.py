@@ -38,8 +38,14 @@ def config():
     return joined_config
 
 
-@pytest.fixture
-def audio_file(tmpdir):
+@pytest.fixture(scope="session")
+def input_tmpdir(tmpdir_factory):
+    """Test tmpdir fixture."""
+    return tmpdir_factory.mktemp("input")
+
+
+@pytest.fixture(scope="session")
+def audio_file(input_tmpdir):  # pylint: disable=redefined-outer-name
     """Test audio file fixture."""
     headroom = -2
     audio = AudioSegment.silent(duration=1000).overlay(
@@ -47,16 +53,10 @@ def audio_file(tmpdir):
             headroom
         )
     )
-    _file = Path(tmpdir) / "file.mp3"
+    _file = Path(input_tmpdir) / "file.mp3"
     audio.export(_file, format="mp3")
 
-    return _file
-
-
-@pytest.fixture(scope="session")
-def input_tmpdir(tmpdir_factory):
-    """Test tmpdir fixture."""
-    return tmpdir_factory.mktemp("input")
+    return audio, _file
 
 
 @pytest.fixture

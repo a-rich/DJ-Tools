@@ -12,6 +12,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import inspect
 from pathlib import Path
+import re
 from typing import Any, Dict, List, Optional
 
 import bs4
@@ -92,11 +93,14 @@ class Playlist(ABC):
         """
         return self._parent
 
-    def get_playlists(self, name: Optional[str] = None) -> List[Playlist]:
+    def get_playlists(
+        self, name: Optional[str] = None, glob: Optional[bool] = False
+    ) -> List[Playlist]:
         """Returns Playlists with a matching name.
 
         Args:
             name: Name of the Playlists to return.
+            glob: Glob on playlist name containing "*".
 
         Returns:
             The Playlists with the same name.
@@ -109,12 +113,16 @@ class Playlist(ABC):
                 )
             return list(self)
 
+        exp = re.compile(r".*".join(name.split("*")))
         playlists = []
-        if self.get_name() == name:
+        if (
+            (glob and re.search(exp, self.get_name())) or
+            (not glob and self.get_name() == name)
+        ):
             playlists.append(self)
         if self.is_folder():
             for playlist in self:
-                playlists.extend(playlist.get_playlists(name))
+                playlists.extend(playlist.get_playlists(name, glob=glob))
 
         return [playlist for playlist in playlists if playlist is not None]
 

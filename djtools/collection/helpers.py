@@ -2,6 +2,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from datetime import datetime
 import logging
 from operator import itemgetter
 from pathlib import Path
@@ -53,9 +54,10 @@ def copy_file(track: Track, destination: Path):
 #       playlists
 #   - aggregate_playlists: aggregates tracks from playlists in folders to
 #       create an "All <folder name>" playlist in each folder
-#   - add_selectors_to_tags: parses combiner playlist names and finds BPM,
-#       rating, and playlist selectors to update the tag -> track lookup
-#   - parse_bpms_and_ratings: used to parse BPM and rating selectors
+#   - add_selectors_to_tags: parses combiner playlist names and finds numerical
+#       and string selectors to update the tag -> track lookup
+#   - parse_numerical_selectors: used to parse numerical selectors like
+#       ratings, BPMs, and years
 #   - build_combiner_playlists: builds collection playlists using "combiner"
 #       component of the PlaylistConfig
 #   - parse_expression: evaluates the boolean algebra logic in combiner
@@ -406,36 +408,72 @@ def add_selectors_to_tags(
         collection: Collection object.
         auto_playlists: Tag playlists built in this same run.
     """
+    numerical_selector_regex = re.compile(r"(?<=\[)[^\[\]]*(?=\])")
+    numerical_value_lookup = {}
+    numerical_value_set = set()
+    string_selector_regex = re.compile(r"(?<={)[^{}]+:[^{}]+(?=})")
+    string_selector_type_map = {
+        "artist": "get_artists",
+        "comment": "get_comments",
+        "date": "get_date_added",
+        "key": "get_key",
+        "label": "get_label",
+    }
+    string_value_lookup = {}
     playlists = set()
-    values_set = set()
-    bpm_rating_lookup = {}
-    playlist_selector_regex = r"(?<={)[^{}]*(?=})"
-    bpm_rating_selector_regex = r"(?<=\[)[^\[\]]*(?=\])"
 
     # Grab selectors from Combiner playlists' names.
     for playlist in playlist_config.combiner.playlists:
-        playlists.update(re.findall(playlist_selector_regex, playlist))
-        bpm_rating_matches = re.findall(bpm_rating_selector_regex, playlist)
-        if not bpm_rating_matches:
-            continue
-        parsed_bpms, parsed_ratings = parse_bpms_and_ratings(
-            bpm_rating_matches, bpm_rating_lookup
+        numerical_value_set.update(
+            parse_numerical_selectors(
+                re.findall(numerical_selector_regex, playlist),
+                numerical_value_lookup,
+            )
         )
-        values_set.update(parsed_bpms)
-        values_set.update(parsed_ratings)
+        parse_string_selectors(
+            re.findall(string_selector_regex, playlist),
+            string_value_lookup,
+            string_selector_type_map,
+            playlists,
+        )
 
-    # Add keys for BPM and rating selectors for tracks having those values.
-    for track_id, track in collection.get_tracks().items():
-        values = map(str, [round(track.get_bpm()), track.get_rating()])
-        for val in values:
-            if val not in values_set:
-                continue
-            for value, tag in bpm_rating_lookup.items():
+    # Add keys for numerical selectors for tracks having those values.
+    for value, tag in numerical_value_lookup.items():
+        for track_id, track in collection.get_tracks().items():
+            values = map(
+                str, [round(track.get_bpm()), track.get_rating(), track.get_year()]
+            )
+            for val in values:
                 if (
                     (isinstance(value, str) and value == val) or
                     (isinstance(value, tuple) and val in value)
                 ):
                     tags_tracks[tag][track_id] = track
+
+    # Add keys for string selectors for tracks having those values.
+    for selector, tag in string_value_lookup.items():
+        selector_type, selector_value = selector
+        for track_id, track in collection.get_tracks().items():
+            value = getattr(track, string_selector_type_map[selector_type])()
+            if not value:
+                continue
+            if selector_type == "date":
+                inequality, date, date_format = selector_value
+                if not inequality:
+                    if value.strftime(date_format) == date.strftime(date_format):
+                        tags_tracks[tag][track_id] = track
+                    continue
+                if not inequality(value, date):
+                    continue
+                tags_tracks[tag][track_id] = track
+                continue
+            if "*" in selector_value:
+                exp = re.compile(r".*".join(selector_value.lower().split("*")))
+                if re.search(exp, value.lower()):
+                    tags_tracks[tag][track_id] = track
+                    continue
+            if value.lower() == selector_value.lower():
+                tags_tracks[tag][track_id] = track
 
     # Get playlists for the identified playlist selectors. Not only must we get
     # playlists from the collection, but we must also get playlists from the
@@ -445,65 +483,138 @@ def add_selectors_to_tags(
     for playlist_name in playlists:
         for playlist_object in [collection, *auto_playlists]:
             for playlist in playlist_object.get_playlists(playlist_name):
-                tags_tracks[f"{{{playlist_name}}}"].update(
+                tags_tracks[f"{{playlist:{playlist_name}}}"].update(
                     playlist.get_tracks()
                 )
 
 
-def parse_bpms_and_ratings(
-    bpm_rating_match: List[str],
-    bpm_rating_lookup: Dict[Union[str, Tuple], str],
-) -> List[Tuple]:
-    """Parses a string match of one or more BPM and / or rating selectors.
+def parse_numerical_selectors(
+    numerical_matches: List[str],
+    numerical_value_lookup: Dict[Union[str, Tuple], str],
+) -> Set[str]:
+    """Parses a string match of one or more numerical selectors.
 
     Args:
-        bpm_rating_match: List of BPM or rating strings.
-        bpm_rating_lookup: Empty dict to populate with tuples or strings
-            mapping bpm or rating ranges or values to their "tag"
-            representation.
+        numerical_matches: List of numerical strings.
+        numerical_value_lookup: Empty dict to populate with tuples or strings
+            mapping numerical ranges or values to their "tag" representation.
 
     Returns:
-        Tuple of BPM and rating lists.
+        Set of numerical selector values.
     """
-    bpms, ratings = [], []
-    for bpm_rating in bpm_rating_match:
-        parts = map(str.strip, bpm_rating.split(","))
-        for part in parts:
-            number = _range = None
-            # If "part" is a digit, then it's an explicit BPM or rating to
-            # filter for.
-            if part.isdigit():
-                number = int(part)
-                if 0 <= number <= 5:
-                    ratings.append(str(number))
-                elif number > 5:
-                    bpms.append(str(number))
-            # If "part" is two digits separated by a "-", then it's a range
-            # of BPMs or ratings to filter for.
-            elif (
-                len(part.split("-")) == 2 and
-                all(x.isdigit() for x in part.split("-"))
+    numerical_values = set()
+    for match in numerical_matches:
+        _range = None
+        # If "match" is a digit, then it's an explicit numerical value.
+        if match.isdigit():
+            numerical_values.add(match)
+        # If "match" is two digits separated by a "-", then it's a range.
+        elif (
+            len(match.split("-")) == 2 and
+            all(x.isdigit() for x in match.split("-"))
+        ):
+            _range = list(map(int, match.split("-")))
+            _range = range(min(_range), max(_range) + 1)
+            if not (
+                all(0 <= x <= 5 for x in _range) or    # range for ratings
+                all(6 <= x <= 999 for x in _range) or  # range for BPMs
+                all(x >= 1000 for x in _range)         # range for years
             ):
-                _range = list(map(int, part.split("-")))
-                _range = range(min(_range), max(_range) + 1)
-                if all(0 <= x <= 5 for x in _range):
-                    ratings.extend(map(str, _range))
-                elif all(x > 5 for x in _range):
-                    bpms.extend(map(str, _range))
-                else:
-                    logger.error(f"Bad BPM or rating number range: {part}")
-                    continue
-            else:
-                logger.error(
-                    f"Malformed BPM or rating filter part: {part}"
-                )
+                logger.error(f"Bad numerical range selector: {match}")
+                continue
+            numerical_values.update(map(str, _range))
+        else:
+            logger.error(
+                f"Malformed numerical selector: {match}"
+            )
+            continue
+
+        numerical_value_lookup[
+            tuple(map(str, _range or [])) or match
+        ] = f"[{match}]"
+
+    return numerical_values
+
+
+def parse_string_selectors(
+    string_matches: List[str],
+    string_value_lookup:  Dict[Union[str, Tuple], str],
+    string_selector_type_map: Dict[str],
+    playlists: Set(str),
+):
+    """_summary_
+
+    Args:
+        string_matches: List of strings for string selectors.
+        string_value_lookup: Empty dict to populate with strings mapping string
+            selectors to their "tag" representation.
+        string_selector_type_map: Maps a selector type to a Track method name.
+        playlists: Set for storing playlist names.
+    """
+    date_selector_regex = re.compile(r"(>=|>|<=|<)")
+    date_formats = ["%Y-%m-%d", "%Y-%m", "%Y"]
+    inequality_map = {
+        ">": lambda x, y: x > y,
+        "<": lambda x, y: x < y,
+        ">=": lambda x, y: x >= y,
+        "<=": lambda x, y: x <= y,
+    }
+
+    for match in string_matches:
+        selector_type, selector_value = map(str.strip, match.split(":"))
+        if selector_type == "playlist":
+            playlists.add(selector_value)
+            continue
+        if not string_selector_type_map.get(selector_type):
+            logger.warning(f"{selector_type} is not a supported selector!")
+            continue
+        if selector_type != "date":
+            string_value_lookup[(selector_type, selector_value)] = (
+                f"{{{match}}}"
+            )
+            continue
+
+        dates, formats, inequalities = [], [], []
+        skip_date_selector = False
+        for part in filter(
+            None, re.split(date_selector_regex, selector_value)
+        ):
+            if re.search(date_selector_regex, part):
+                inequalities.append(inequality_map[part])
                 continue
 
-            bpm_rating_lookup[
-                tuple(map(str, _range or [])) or str(number)
-            ] = f"[{part}]"
+            date = None
+            for date_format in date_formats:
+                try:
+                    date = datetime.strptime(part, date_format)
+                except ValueError:
+                    continue
+                break
+            if not date:
+                skip_date_selector = True
+                break
+            dates.append(date)
+            formats.append(date_format)
 
-    return bpms, ratings
+        if (
+            skip_date_selector or
+            len(dates) != 1  or
+            (len(inequalities) not in [0, 1])
+        ):
+            logger.warning(f"Date selector {selector_value} is invalid!")
+            continue
+
+
+        string_value_lookup[
+            (
+                selector_type,
+                (
+                    None if not inequalities else inequalities[0],
+                    dates[0],
+                    formats[0]
+                )
+            )
+        ] = f"{{{match}}}"
 
 
 def build_combiner_playlists(
@@ -589,6 +700,8 @@ class BooleanNode:
         self._tags = []
         self._tracks = []
         self._tags_tracks = tags_tracks
+        self._numerical_selector_regex = re.compile(r"(?<=\[)[^\[\]]*(?=\])")
+        self._string_selector_regex = re.compile(r"(?<={)[^{}]+:[^{}]+(?=})")
 
     def _get_tracks(self, tag: str) -> Set[str]:
         """Gets set of track IDs for the provided tag.
@@ -603,7 +716,10 @@ class BooleanNode:
         Returns:
             Set of track IDs for the provided tag.
         """
-        if "*" in tag:
+        if "*" in tag and not (
+            re.search(self._numerical_selector_regex, tag) or
+            re.search(self._string_selector_regex, tag)
+        ):
             exp = re.compile(r".*".join(tag.split("*")))
             tracks = {}
             for key in self._tags_tracks:
