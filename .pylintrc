@@ -10,7 +10,7 @@ max-attributes=15
 
 max-branches=25
 
-max-locals=30
+max-locals=35
 
 max-statements=100
 

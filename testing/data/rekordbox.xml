@@ -3,12 +3,12 @@
 <DJ_PLAYLISTS Version="1.0.0">
   <PRODUCT Name="rekordbox" Version="6.6.4" Company="AlphaTheta"/>
   <COLLECTION>
-    <TRACK AverageBpm="140.00" Comments="/* Dark */" DateAdded="2023-06-24" Genre="Dubstep" Location="file://localhost/track1.mp3" Rating="255" TrackID="1" TrackNumber="1">
+    <TRACK Artist="Biome" AverageBpm="140.00" Comments="/* Dark */" DateAdded="2023-06-24" Genre="Dubstep" Label="Label" Location="file://localhost/track1.mp3" Tonality="7A" Rating="255" TrackID="1" TrackNumber="1" Year="2023">
       <TEMPO/>
       <POSITION_MARK/>
     </TRACK>
-    <TRACK AverageBpm="86.00" Comments="" DateAdded="2023-06-24" Genre="Hip Hop / R&amp;B" Location="file://localhost/track2.mp3" Rating="0" TrackID="2" TrackNumber="2"/>
-    <TRACK AverageBpm="128.00" Comments="" DateAdded="2023-06-24" Genre="Techno / Minimal Deep Tech" Location="file://localhost/track3.mp3" Rating="0" TrackID="3" TrackNumber="3"/>
+    <TRACK Artist="A Tribe Called Quest" AverageBpm="86.00" Comments="" DateAdded="2022-06-24" Genre="Hip Hop / R&amp;B" Label="Label" Location="file://localhost/track2.mp3" Tonality="7B" Rating="0" TrackID="2" TrackNumber="2" Year="2022"/>
+    <TRACK Artist="Carbon" AverageBpm="128.00" Comments="" DateAdded="2021-06-24" Genre="Techno / Minimal Deep Tech" Label="Some Label" Location="file://localhost/track3.mp3" Tonality="8A" Rating="0" TrackID="3" TrackNumber="3" Year="2021"/>
   </COLLECTION>
   <PLAYLISTS>
     <NODE Name="ROOT" Type="0" Count="2">

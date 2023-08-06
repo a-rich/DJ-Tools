@@ -45,7 +45,7 @@ class Collection(ABC):
         self._playlists.add_playlist(playlist)  # pylint:disable=no-member
 
     def get_playlists(
-        self, name: Optional[str] = None
+        self, name: Optional[str] = None, glob: Optional[bool] = False
     ) -> Union[Playlist, List[Playlist]]:
         """Returns Playlists with a matching name.
 
@@ -53,6 +53,7 @@ class Collection(ABC):
 
         Args:
             name: Name of the Playlists to return.
+            glob: Glob on playlist name containing "*".
 
         Returns:
             The Playlists with the same name.
@@ -60,13 +61,17 @@ class Collection(ABC):
         if not name:
             return self._playlists  # pylint:disable=no-member
 
+        exp = re.compile(r".*".join(name.split("*")))
         playlists = []
         for playlist in self._playlists:  # pylint:disable=no-member
-            if playlist.get_name() == name:
+            if (
+                (glob and re.search(exp, playlist.get_name())) or
+                (not glob and playlist.get_name() == name)
+            ):
                 playlists.append(playlist)
             if playlist.is_folder():
                 for playlist in playlist:
-                    playlists.extend(playlist.get_playlists(name))
+                    playlists.extend(playlist.get_playlists(name, glob=glob))
 
         return [playlist for playlist in playlists if playlist is not None]
 
