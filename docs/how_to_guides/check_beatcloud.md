@@ -16,7 +16,7 @@ Once tracks are acquired, it may be necessary to compare a location on my comput
 
 ## How it's done
 1. If using the `CHECK_TRACKS_SPOTIFY_PLAYLISTS` option, ensure that the playlist names configured for that option exist as `playlist name: playlist ID` mappings in `spotify_playlists.yaml`
-    - you'll have to add these manually (grab the playlist ID from the URL when opening the playlist in the browser)
+    - you'll have to add these manually (grab the playlist ID from the URL when opening the playlist in the browser or from the link copied when sharing a playlist in the app)
     - playlist names don't necessarily have to match the actual name of the playlist...they're just used to lookup the IDs when configuring `utils` options
 1. Configure `CHECK_TRACKS_SPOTIFY_PLAYLISTS` and / or `LOCAL_DIRS` to contain the playlist names and / or absolute paths, respectively, to the tracks you want to compare with the Beatcloud
 1. If your files are stored in the Beatcloud using the format `Artist1, Artist2 - Title (Artist2 Remix)` instead of the default `Title (Artist2 Remix) - Artist1, Artist2`, make sure you set `ARTIST_FIRST` to `true` (see [Configuration](../tutorials/getting_started/configuration.md#sync-config) for more detail)

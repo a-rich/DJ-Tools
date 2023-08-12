@@ -44,6 +44,24 @@ class Collection(ABC):
         """
         self._playlists.add_playlist(playlist)  # pylint:disable=no-member
 
+    def get_all_tags(self) -> Dict[str, List[str]]:
+        """Returns the all tags in the collection.
+
+        Returns:
+            Dict containing all track tags keyed by "genres" and "other".
+        """
+        all_tags = {
+            tag for track in self.get_tracks().values()
+            for tag in track.get_tags()
+        }
+        genre_tags = {
+            tag for track in self.get_tracks().values()
+            for tag in track.get_genre_tags()
+        }
+        other_tags = all_tags.difference(genre_tags)
+
+        return {"genres": sorted(genre_tags), "other": sorted(other_tags)}
+
     def get_playlists(
         self, name: Optional[str] = None, glob: Optional[bool] = False
     ) -> Union[Playlist, List[Playlist]]:

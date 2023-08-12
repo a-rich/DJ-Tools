@@ -4,7 +4,7 @@ In this guide you will learn how to automatically build playlists based off of p
 
 ## Prerequisites
 
-* [Rekordbox settings](../tutorials/getting_started/setup.md#importing-tracks-from-xml)
+* [Rekordbox settings](../tutorials/getting_started/setup.md#rekordbox-settings)
 * [Get to Know Your Rekordbox Collection](../conceptual_guides/rekordbox_collection.md)
 * [A light review of set theory](https://en.wikipedia.org/wiki/Set_theory#Basic_concepts_and_notation)
 
@@ -30,7 +30,7 @@ The `Combiner` solves all these issues in the following ways:
     * generates regular playlists which can be exported to a device for use on any system
 1. Operands
     * works on any tag data that `djtools` knows of (e.g. genres, `My Tags`, etc.)
-    * includes numerical selector syntax to choose arbitrary rating, BPM, and year values as well as arbitrary ranges of values
+    * includes numerical selector syntax to choose arbitrary rating, BPM, and year values as well as arbitrary ranges of those values
     * includes string selector syntax to choose playlists in your Collection as well as artists, comments, dates added, keys, and record labels
     * any of the string selectors (except for `date`) support wildcard globbing with the `*` character
 1. Operators
@@ -44,12 +44,12 @@ The `Combiner` solves all these issues in the following ways:
     - `&`
     - `|`
     - `~`
-* string selectors:
+* string selectors (not case-sensative):
     - `{artist:*Eprom*}`
     - `{comment:*hollaback*}`
     - `{date:2022}`
     - `{date:>2021-10-05}`
-    - `{date:<2020-05}`
+    - `{date:<=2020-05}`
     - `{key:7A}`
     - `{label:duploc}`
     - `{playlist: Deep House}`
@@ -67,6 +67,7 @@ The `Combiner` solves all these issues in the following ways:
 Let's look at an example playlist to see how the syntax works.
 
 Suppose we want a playlist with tracks that _all have_ the following properties:
+
 - from the years 2000 to 2023
 - and have a rating of 5
 - and with BPMs in the range 130 to 150
@@ -75,7 +76,8 @@ The expression a.k.a. the combiner playlist name will look this:
 
     [2000-2023] & [5] & [130-150]
 
-Now let's say we want to supplement that playlist with tracks that have _any one of_ the following properties:
+Now let's say we want a playlist with tracks that have _any one of_ the following properties:
+
 - have a genre tag called "Jungle"
 - or have another tag called "Dark"
 - or come from a playlist called "New Years 1999"
@@ -85,8 +87,9 @@ The playlist for this set of tracks is expressed like this:
 
     Jungle | Dark | {playlist: New Years 1999} | {label: Dispatch}
 
-Now we want to throw in a few more tracks using the other supported string selectors. We're also going to demonstrate the set difference operator `~` which will remove matching tracks from the resulting playlist. This subset of tracks will _all have_ the following properties:
-- have come from the artist "Eprom"
+Now let's say we want to create a playlist using the other supported string selectors. We're also going to demonstrate the set difference operator `~` which will remove matching tracks from the resulting playlist. This subset of tracks will _all have_ the following properties:
+
+- have at least one of the artists as "Eprom"
 - and have been added to the collection after 2010
 - and have the words "absolute banger" in the comments
 - and not have a major musical key (using [Camelot notation](https://mixedinkey.com/harmonic-mixing-guide/))
@@ -111,11 +114,12 @@ I hope you see how powerful the `Combiner` can become when used with a well inde
 
 ## Example
 As is done in the [Build Playlists From Tags](collection_playlists.md#example) how-to guide, we'll start by looking at some simple expressions configured in the pre-packaged [collection_playlists.yaml](https://github.com/a-rich/DJ-Tools/blob/main/djtools/configs/collection_playlists.yaml), but this time we'll focus only on the `combiner` section:
+
+Note that the examples below are trivial ones designed to get 100% code coverage in unit tests.
+
 ![alt text](../images/Rekordbox_playlists_yaml.png "Collection playlists YAML")
 
-Note that the examples above are trivial ones designed to get 100% code coverage in unit tests.
-
-This configuration contains a single named folder with a flat list of playlists. Each playlists' name is a boolean algebra expression that uses the syntax noted above to describe how different tags and selectors are to be unioned, intersected, and differenced to produce the final playlist of tracks. Valid expressions must contain at least two operands and must have one less operator than there are operands. 
+The `combiner` configuration must contain a single named folder with a flat list of playlists. Each playlists' name is a boolean algebra expression that uses the syntax noted above to describe how different tags and selectors are to be unioned, intersected, and differenced to produce the final playlist of tracks. Valid expressions must contain at least two operands and must have one less operator than there are operands. 
 
 Once you've finalized your playlist configuration, run the following command to build the playlists:
 

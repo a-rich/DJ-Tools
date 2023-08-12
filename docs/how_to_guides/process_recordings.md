@@ -8,11 +8,12 @@ In this guide you will learn how to automate splitting a recorded file into indi
 
 ## Why process recorded files
 
-Manually splitting a recorded audio file into individual tracks is both time consuming and error prone. Users may forget to apply amplitude normalization or mistype the filenames which are inputs to downstream processes like extracting title and artist tags.
+Manually splitting a recorded audio file into individual tracks is both time consuming and error prone. Users may forget to apply amplitude normalization or mistype the filenames which are inputs to downstream processes like extracting title and artist tags. Users may also forget to export files with an acceptable file format or bit rate which can degrade the quality of your collection.
 
 ## How it's done
 
 1. Ensure your `USB_PATH` is configured and available as the exported files are placed in `<USB_PATH>/DJ Music/New Music/`
 1. Configure `RECORDING_FILE` to point to your recorded audio file
 1. Configure `RECORDING_PLAYLIST` to a valid Spotify playlist name present in your `spotify_playlists.yaml`
+1. Configure `AUDIO_BITRATE`, `AUDIO_FORMAT`, and `AUDIO_HEADROOM` to the desired values (defaults are `320k`, `mp3`, and `0.0` respectively)
 1. Run the command `--process-recording`

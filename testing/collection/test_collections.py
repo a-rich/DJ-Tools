@@ -63,6 +63,22 @@ def test_rekordboxcollection_add_playlist(rekordbox_xml):
     assert len(collection.get_playlists()) == 1
 
 
+def test_rekordboxcollection_get_all_tags(rekordbox_collection):
+    """Test RekordboxCollection class."""
+    tracks = rekordbox_collection.get_tracks().values()
+    genre_tags, all_tags = set(), set()
+    for track in tracks:
+        genre_tags.update(track.get_genre_tags())
+        all_tags.update(track.get_tags())
+    other_tags = all_tags.difference(genre_tags)
+    expected = {
+        "genres": sorted(genre_tags),
+        "other": sorted(other_tags),
+    }
+    tags = rekordbox_collection.get_all_tags()
+    assert tags == expected
+
+
 def test_rekordboxcollection_reset_playlists(
     rekordbox_xml, rekordbox_collection_tag
 ):

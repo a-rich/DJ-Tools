@@ -23,18 +23,8 @@ Note that, at the time of writing, Python versions up through 3.7 have reached [
 If you are using any of the following features, you are required to have an AWS S3 API compliant cloud storage account setup (see [this guide](../../how_to_guides/setup_object_storage.md) for more details):
 
 * [Sync files with the Beatcloud](../../how_to_guides/sync_beatcloud.md)
-* [Check the Beatcloud for tracks in Spotify playlists or local directories](../../how_to_guides/check_beatcloud.md)
-
-## Spotify (and Reddit) API
-If you are using any of the following features, you are required to have a registered Spotify API application (see [this guide](../../how_to_guides/reddit_spotify_api_access.md) for more details):
-
-* [Create Spotify playlists from other users' uploads](../../how_to_guides/spotify_playlist_from_upload.md)
 * [Sync tracks from Spotify playlists](../../how_to_guides/sync_spotify.md)
-* [only if using the `CHECK_TRACKS_SPOTIFY_PLAYLISTS` option] [Check the Beatcloud for tracks in Spotify playlists or local directories](../../how_to_guides/check_beatcloud.md)
-
-Additionally, if you're using any of the following features, you are required to have a registered Reddit API application (see [this guide](../../how_to_guides/reddit_spotify_api_access.md) for more details):
-
-* [Create Spotify playlists from Reddit posts](../../how_to_guides/spotify_playlist_from_reddit.md)
+* [Check the Beatcloud for tracks in Spotify playlists or local directories](../../how_to_guides/check_beatcloud.md)
 
 ## Spotify user account
 If you are using any of the following features, you are required to have a Spotify account to add playlists to:
@@ -42,14 +32,28 @@ If you are using any of the following features, you are required to have a Spoti
 * [Create Spotify playlists from Reddit posts](../../how_to_guides/spotify_playlist_from_reddit.md)
 * [Create Spotify playlists from other users' uploads](../../how_to_guides/spotify_playlist_from_upload.md)
 
+## Spotify and Reddit APIs
+If you are using any of the following features, you are required to have a registered Spotify API application (see [this guide](../../how_to_guides/reddit_spotify_api_access.md) for more details):
+
+* [Create Spotify playlists from other users' uploads](../../how_to_guides/spotify_playlist_from_upload.md)
+* [Sync tracks from Spotify playlists](../../how_to_guides/sync_spotify.md)
+* [Check the Beatcloud for tracks in Spotify playlists or local directories](../../how_to_guides/check_beatcloud.md) (if Spotify playlists are configured)
+
+Additionally, if you're using any of the following features, you are required to have a registered Reddit API application (see [this guide](../../how_to_guides/reddit_spotify_api_access.md) for more details):
+
+* [Create Spotify playlists from Reddit posts](../../how_to_guides/spotify_playlist_from_reddit.md)
+
 ## Discord webhook
 If you are using any of the following features, you are required to have a Discord server with a registered webhook integration (see [this guide](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks) for more details):
 
 * [Create Spotify playlists from other users' uploads](../../how_to_guides/spotify_playlist_from_upload.md)
-* [not strictly required, but uploading music is the corollary feature to the above] [Sync files with the Beatcloud](../../how_to_guides/sync_beatcloud.md#uploading-music)
+* [Sync files with the Beatcloud](../../how_to_guides/sync_beatcloud.md#uploading-music)
+    * `NOTE`: this isn't strictly required but:
+        1. [Create Spotify playlists from other users' uploads](../../how_to_guides/spotify_playlist_from_upload.md) isn't possible without it 
+        1. It's really useful to automatically notify other users when and what tracks are uploaded
 
 ## FFmpeg
-If you're using any of the features which leverage the `pydub` package (`NORMALIZE_AUDIO`, `PROCESS_RECORDING`, etc.), and you're exporting in any format other than `wav` or `raw`, you'll need to install FFmpeg to support those codecs. For more info about installing FFmpeg, you can look at the note about it on the `pydub` [README](https://github.com/jiaaro/pydub#getting-ffmpeg-set-up).
+If you're using any of the features which leverage the `pydub` package (`NORMALIZE_AUDIO`, `PROCESS_RECORDING`, etc.), and you're exporting in any format other than `wav` or `raw`, you'll need to install [FFmpeg](https://www.ffmpeg.org/) to support those codecs. For more info about installing FFmpeg, you can look at the note about it on the `pydub` [README](https://github.com/jiaaro/pydub#getting-ffmpeg-set-up).
 
 ## Rekordbox settings
 

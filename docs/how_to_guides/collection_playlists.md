@@ -4,7 +4,7 @@ In this guide you will learn how to automatically build playlists based off of t
 
 ## Prerequisites
 
-* [Rekordbox settings](../tutorials/getting_started/setup.md#importing-tracks-from-xml)
+* [Rekordbox settings](../tutorials/getting_started/setup.md#rekordbox-settings)
 * [Get to Know Your Rekordbox Collection](../conceptual_guides/rekordbox_collection.md)
 
 ## Why build playlists from tags?
@@ -12,9 +12,9 @@ It's not uncommon, while mixing, to navigate playlists that contain tracks simil
 
 If a user diligently tags their Collection using, say, the `Genre` tag, they then have the ability to search individual genres and create playlists based on the results of those searches. Unfortunately, this strategy has several shortcomings:
 
-* the manual process of moving tracks into playlists can be both time consuming and error prone
-* having a change of heart with respect to the genre that a particular track belongs to means that that track must be removed from some existing playlist(s) and added to some different playlist(s)
-* searching, for example, "Techno" will show not only tracks that contain the word "techno" in their `Genre` tag but also any track that has *any* mention of the word "techno" associated with it (like a dubstep track whose title is "This track is not techno")
+* The manual process of moving tracks into playlists can be both time consuming and error prone
+* Having a change of heart with respect to the genre that a particular track belongs to means that that track must be removed from some existing playlist(s) and added to some different playlist(s)
+* Searching, for example, "Techno" will show not only tracks that contain the word "techno" in their `Genre` tag but also any track that has *any* mention of the word "techno" associated with it (like a dubstep track whose title is "This track is not techno")
 
 The [collection_playlists][djtools.collection.playlist_builder.collection_playlists] feature solves all of these issues! It allows the wisest of users to configure a YAML file with a specification of arbitrary folders and playlists. The playlists' names match the tags that exist in your Collection.
 
@@ -28,7 +28,7 @@ The [collection_playlists][djtools.collection.playlist_builder.collection_playli
 Let's start by examining the pre-packaged [YAML](https://en.wikipedia.org/wiki/YAML) file [collection_playlists.yaml](https://github.com/a-rich/DJ-Tools/blob/main/djtools/configs/collection_playlists.yaml):
 ![alt text](../images/Rekordbox_playlists_yaml.png "Collection playlists YAML")
 
-You can ignore the `combiner` part of the YAML for now. Although it's similar to the `tags` section, it's covered in a [separate how-to guide](combiner_playlists.md).
+You can ignore the `combiner` part of the YAML for now. Although it's similar to the `tags` section, it's covered in the [Combine Playlists With Boolean Algebra](combiner_playlists.md) how-to guide.
 
 The configuration above specifies a set of `name` folders with lists of playlists and / or folders inside of them. The leaves of this playlist tree are the actual playlists themselves named after the tag that the playlist will contain tracks for. Note that you can reference the same tag multiple times.
 
