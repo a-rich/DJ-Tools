@@ -59,14 +59,16 @@ def collection_playlists(config: BaseConfig):
     boolean algebra expressions used to construct them.
 
     Here's an example combiner playlist to illustrate this:
+
         ((Dubstep ~ [1-3]) | {My Favorites} | (*Techno & [135-145])) & Dark
 
     The resulting combiner playlist will be comprised of tracks that are:
-      - tagged as "Dubstep" but NOT having a rating less than 4
-      - OR in the playlist called "My Favorites"
-      - OR tagged as something ending with "Techno" AND in the BPM range of 135
-        to 145
-      - AND tagged as "Dark"
+
+    - tagged as "Dubstep" but NOT having a rating less than 4
+    - OR in the playlist called "My Favorites"
+    - OR tagged as something ending with "Techno" AND in the BPM range of 135
+    to 145
+    - AND tagged as "Dark"
 
     Args:
         config: Configuration object.

@@ -542,7 +542,7 @@ def parse_string_selectors(
     string_selector_type_map: Dict[str],
     playlists: Set(str),
 ):
-    """_summary_
+    """Parses a string match of one or more string selectors.
 
     Args:
         string_matches: List of strings for string selectors.

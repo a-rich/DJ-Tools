@@ -4,7 +4,7 @@ In this guide you will learn how to copy tracks from your playlists to a new loc
 
 ## Prerequisites
 
-* [Rekordbox settings](../tutorials/getting_started/setup.md#importing-tracks-from-xml)
+* [Rekordbox settings](../tutorials/getting_started/setup.md#rekordbox-settings)
 * [Get to Know Your Rekordbox Collection](../conceptual_guides/rekordbox_collection.md)
 
 ## Why copy playlists?

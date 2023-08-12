@@ -4,7 +4,7 @@ In this guide you will learn how to shuffle your collection's playlists.
 
 ## Prerequisites
 
-* [Rekordbox settings](../tutorials/getting_started/setup.md#importing-tracks-from-xml)
+* [Rekordbox settings](../tutorials/getting_started/setup.md#rekordbox-settings)
 * [Get to Know Your Rekordbox Collection](../conceptual_guides/rekordbox_collection.md)
 
 ## Why shuffle playlists?
@@ -19,7 +19,7 @@ I noticed that I kept mixing the same pairs of songs together because they catch
 1. Import either the `SHUFFLE` playlist or else all of the tracks within it from the generated collection
 1. Make sure you have the `Track Number` column enabled in Rekordbox and sort by it to realize the shuffling
 
-`NOTE`: if you have multiple playlists with the same name, the first one will have its tracks shuffled!
+`NOTE`: if you have multiple playlists with the same name, all of those playlists will have their tracks shuffled!
 
 ## Example
 In the image below, you can see that the first 20 tracks of my "Jungle" playlist have track numbers in the set `{1, 2, 3}`:
