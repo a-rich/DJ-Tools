@@ -49,8 +49,9 @@ def test_rekordboxcollection(
     repr(collection)
     str(collection)
     playlist = collection.get_playlists(playlist)
-    serialized_collection = collection.serialize()
-    assert serialized_collection.exists()
+    new_path = rekordbox_xml.parent / "test_collection"
+    serialized_collection = collection.serialize(output_path=new_path)
+    assert new_path.exists()
     RekordboxCollection.validate(rekordbox_xml, serialized_collection)
 
 

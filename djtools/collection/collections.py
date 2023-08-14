@@ -218,12 +218,12 @@ class RekordboxCollection(Collection):
         self._playlists = RekordboxPlaylist(root, tracks=self._tracks)
 
     def serialize(
-        self, *args, new_path: Optional[Path] = None, **kwargs
+        self, *args, output_path: Optional[Path] = None, **kwargs
     ) -> Path:
         """Serializes this Collection as an XML file.
 
         Args:
-            new_path: Path to output serialized collection to.
+            output_path: Path to output serialized collection to.
 
         Returns:
             Path to the serialized collection XML file.
@@ -287,13 +287,12 @@ class RekordboxCollection(Collection):
         )
         doc.append(root_tag)
 
-        # If no new path is provided, use the original but prefix the file name
-        # with "auto_".
-        if not new_path:
-            new_path = self._path.parent / f"auto_{self._path.name}"
+        # If no new path is provided, use the original.
+        if not output_path:
+            output_path = self._path
 
         # Write the serialized Collection to a new file.
-        with open(new_path, mode="w", encoding="utf-8") as _file:
+        with open(output_path, mode="w", encoding="utf-8") as _file:
             _file.write(
                 doc.prettify(
                     # UnsortedAttributes formatter ensures attributes are
@@ -307,7 +306,7 @@ class RekordboxCollection(Collection):
                 )
             )
 
-        return new_path
+        return output_path
 
     @classmethod
     def validate(cls, input_xml: Path, output_xml: Path):

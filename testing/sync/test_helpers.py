@@ -88,7 +88,7 @@ def test_rewrite_track_paths(config, rekordbox_xml):
         track.set_location(
             loc.parent / str(user_a_path).strip("/") / "DJ Music" / loc.name
         )
-    collection.serialize(new_path=user_a_xml)
+    collection.serialize(output_path=user_a_xml)
 
     # Write the second user's USB_PATH into each track.
     collection = RekordboxCollection(user_b_xml)
@@ -97,7 +97,7 @@ def test_rewrite_track_paths(config, rekordbox_xml):
         track.set_location(
             loc.parent / str(user_b_path).strip("/") / "DJ Music" / loc.name
         )
-    collection.serialize(new_path=user_b_xml)
+    collection.serialize(output_path=user_b_xml)
 
     rewrite_track_paths(config, user_b_xml)
 

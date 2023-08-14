@@ -16,7 +16,7 @@ def test_copy_playlists(tmpdir, config, rekordbox_xml):
     config.COLLECTION_PATH = rekordbox_xml
     config.COPY_PLAYLISTS = target_playlists
     config.COPY_PLAYLISTS_DESTINATION = Path(test_output_dir)
-    copy_playlists(config)
+    copy_playlists(config, output_path=new_xml)
     assert list(test_output_dir.iterdir())
     assert new_xml.exists()
     with open(new_xml, mode="r", encoding="utf-8") as _file:

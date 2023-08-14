@@ -2,6 +2,7 @@
 from collections import defaultdict
 import logging
 from pathlib import Path
+from typing import Optional
 
 import yaml
 
@@ -22,7 +23,9 @@ from djtools.configs.config import BaseConfig
 logger = logging.getLogger(__name__)
 
 
-def collection_playlists(config: BaseConfig):
+def collection_playlists(
+    config: BaseConfig, output_path: Optional[Path] = None
+):
     """Builds playlists automatically.
 
     By maintaining a collection with tracks having tag data (e.g. genre tags,
@@ -72,6 +75,7 @@ def collection_playlists(config: BaseConfig):
 
     Args:
         config: Configuration object.
+        output_path: Path to write the new collection to.
     """
     # Load the playlist config.
     with open(
@@ -193,4 +197,4 @@ def collection_playlists(config: BaseConfig):
     auto_playlist.set_parent(collection.get_playlists())
     collection.reset_playlists()
     collection.add_playlist(auto_playlist)
-    collection.serialize()
+    collection.serialize(output_path=output_path)

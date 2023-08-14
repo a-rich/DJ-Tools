@@ -18,7 +18,9 @@ def test_collection_playlists(remainder_type, config, rekordbox_xml):
     config.COLLECTION_PLAYLISTS_REMAINDER = remainder_type
     config.COLLECTION_PATH = rekordbox_xml
     config.VERBOSITY = 1
-    collection_playlists(config)
+    collection_playlists(
+        config, output_path=rekordbox_xml.parent / "test_collection"
+    )
 
 
 @mock.patch(
@@ -31,7 +33,9 @@ def test_collection_playlists_with_empty_playlistconfig_returns_early(
     """Test for the collection_playlists function."""
     caplog.set_level("WARNING")
     config.COLLECTION_PATH = rekordbox_xml
-    collection_playlists(config)
+    collection_playlists(
+        config, output_path=rekordbox_xml.parent / "test_collection"
+    )
     assert caplog.records[0].message == (
         "Not building playlists because the playlist config is empty."
     )
