@@ -129,7 +129,7 @@ def rekordbox_xml(input_tmpdir):  # pylint: disable=redefined-outer-name
         with open(track.get_location(), mode="w", encoding="utf-8") as _file:
             _file.write("")
 
-    return collection.serialize(new_path=input_tmpdir / "rekordbox.xml")
+    return collection.serialize(output_path=input_tmpdir / "rekordbox.xml")
 
 
 @pytest.fixture(scope="session")
