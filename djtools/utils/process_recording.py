@@ -81,7 +81,7 @@ def process(config: BaseConfig):
         )
 
     # Iterate through the track data and export chunks of the recording.
-    write_path = config.USB_PATH / "DJ Music" / "New Music"
+    write_path = config.AUDIO_DESTINATION
     write_path.mkdir(parents=True, exist_ok=True)
     for track in track_data:
         # Slice the portion of the recording for the track.

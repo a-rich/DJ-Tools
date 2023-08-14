@@ -37,7 +37,7 @@ def test_url_download(tmpdir, config):
     config.URL_DOWNLOAD = (
         "https://soundcloud.com/aweeeezy_music/sets/test-download"
     )
-    config.URL_DOWNLOAD_DESTINATION = tmpdir
+    config.AUDIO_DESTINATION = tmpdir
 
     def dummy_func():
         with open(tmpdir / "file.mp3", mode="w", encoding="utf-8") as _file:

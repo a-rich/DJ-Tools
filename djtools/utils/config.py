@@ -19,6 +19,7 @@ class UtilsConfig(BaseConfig):
     """Configuration object for the utils package."""
 
     AUDIO_BITRATE: str = '320k'
+    AUDIO_DESTINATION: Path = None
     AUDIO_FORMAT: str = 'mp3'
     AUDIO_HEADROOM: NonNegativeFloat = 0.0
     CHECK_TRACKS: bool = False
@@ -30,7 +31,6 @@ class UtilsConfig(BaseConfig):
     RECORDING_FILE: Path = None
     RECORDING_PLAYLIST: str = ""
     URL_DOWNLOAD: str = ""
-    URL_DOWNLOAD_DESTINATION: Path = None
 
     def __init__(self, *args, **kwargs):
         """Constructor.

@@ -64,11 +64,11 @@ def test_process(mock_get_spotify_tracks, config, tmpdir):
             },
         ],
     }
-    config.USB_PATH = Path(tmpdir)
+    config.AUDIO_DESTINATION = Path(tmpdir)
     config.RECORDING_FILE= "file.mp3"
     config.RECORDING_PLAYLIST = "playlist"
     process(config)
-    output_files = list((config.USB_PATH / "DJ Music" / "New Music").iterdir())
+    output_files = list(config.AUDIO_DESTINATION.iterdir())
     assert (
         len(output_files) == len(
             mock_get_spotify_tracks.return_value["playlist"]
@@ -108,7 +108,7 @@ def test_process_warns_when_recording_is_too_short(
     """Test for the process function."""
     config.RECORDING_FILE= "file.mp3"
     config.RECORDING_PLAYLIST = "playlist"
-    config.USB_PATH = Path(tmpdir)
+    config.AUDIO_DESTINATION = Path(tmpdir)
     caplog.set_level("WARNING")
     mock_audio_segment.return_value = AudioSegment.silent(duration=90_000)
     mock_spotify_tracks.return_value = {
@@ -180,12 +180,10 @@ def test_process_warns_when_filename_is_malformed(
 ):
     """Test for the process function."""
     config.RECORDING_PLAYLIST = "playlist"
-    config.USB_PATH = Path(tmpdir)
+    config.AUDIO_DESTINATION = Path(tmpdir)
     caplog.set_level("WARNING")
     process(config)
-    filename = (
-        tmpdir / "DJ Music" / "New Music" / "some - bad name - artist.mp3"
-    )
+    filename = tmpdir / "some - bad name - artist.mp3"
     assert caplog.records[0].message == (
         f'{filename} has at more than one occurrence of " - "! '
         "Because djtools splits on this sequence of characters to "

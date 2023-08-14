@@ -38,7 +38,7 @@ def url_download(config: BaseConfig):
     Args:
         config: Configuration object.
     """
-    dl_loc = config.URL_DOWNLOAD_DESTINATION or Path(".")
+    dl_loc = config.AUDIO_DESTINATION or Path(".")
     dl_loc.mkdir(parents=True, exist_ok=True)
 
     ydl_opts = {
