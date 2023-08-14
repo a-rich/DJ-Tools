@@ -57,8 +57,9 @@ In fact, removing the template `config.yaml` and building a config from scratch 
 
 ## [Utils config][djtools.utils.config.UtilsConfig]
 * `AUDIO_BITRATE`: string representing the bitrate to write audio at e.g. `"320k"`
+* `AUDIO_DESTINATION`: path to where downloaded and / or exported files go to
 * `AUDIO_FORMAT`: string representing the file format write audio in e.g. `"mp3"`
-* `ADUIO_HEADROOM`: amount of headroom in decibels to leave when normalizing audio
+* `AUDIO_HEADROOM`: amount of headroom in decibels to leave when normalizing audio
 * `CHECK_TRACKS`: boolean flag to trigger checking the contents of the `beatcloud` (to identify redundancies)
 * `CHECK_TRACKS_FUZZ_RATIO`: the minimum Levenshtein similarity for indicating potential redundancies between Spotify playlists / local directories and the `beatcloud`
 * `CHECK_TRACKS_SPOTIFY_PLAYLISTS`: list of Spotify playlists to use with `CHECK_TRACKS` (must exist in `spotify_playlists.yaml`)
@@ -68,4 +69,3 @@ In fact, removing the template `config.yaml` and building a config from scratch 
 * `RECORDING_FILE`: Audio recording to pair with `RECORDING_PLAYLIST`
 * `RECORDING_PLAYLIST`: Spotify playlist to pair with `RECORDING_FILE`
 * `URL_DOWNLOAD`: URL from which music files should be downloaded (i.e. a Soundcloud playlist)
-* `URL_DOWNLOAD_DESTINATION`: path to download files to
