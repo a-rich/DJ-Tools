@@ -189,12 +189,10 @@ def collection_playlists(
         if config.VERBOSITY and combiner_playlists:
             print_playlists_tag_statistics(combiner_playlists)
 
-    # Reset the collection's playlists and insert a new playlist containing
-    # the built playlists.
+    # Insert a new playlist containing the built playlists.
     auto_playlist = playlist_class.new_playlist(
         name="PLAYLIST_BUILDER", playlists=auto_playlists
     )
     auto_playlist.set_parent(collection.get_playlists())
-    collection.reset_playlists()
     collection.add_playlist(auto_playlist)
     collection.serialize(output_path=output_path)

@@ -102,10 +102,6 @@ class Collection(ABC):
         return self._tracks
 
     @abstractmethod
-    def reset_playlists(self):
-        """Resets the Playlists in the Collection to be empty."""
-
-    @abstractmethod
     def serialize(self, *args, **kwargs) -> Path:
         """Serialize a collection into the native format of a DJ software.
 
@@ -209,13 +205,6 @@ class RekordboxCollection(Collection):
             Collection represented as a string.
         """
         return str(self.serialize())
-
-    def reset_playlists(self):
-        """Resets the Playlists in the Collection to be empty."""
-        root = self._collection.find("NODE", {"Name": "ROOT", "Type": "0"})
-        for child in list(root.children):
-            child.extract()
-        self._playlists = RekordboxPlaylist(root, tracks=self._tracks)
 
     def serialize(
         self, *args, output_path: Optional[Path] = None, **kwargs

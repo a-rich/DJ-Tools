@@ -59,9 +59,7 @@ def shuffle_playlists(config: BaseConfig, output_path: Optional[Path] = None):
         ):
             _ = future.result()
 
-    # Reset the collection's playlists and insert a new playlist containing
-    # just the shuffled tracks.
-    collection.reset_playlists()
+    # Insert a new playlist containing just the shuffled tracks.
     collection.add_playlist(
         PLATFORM_REGISTRY[config.PLATFORM]["playlist"].new_playlist(
             name="SHUFFLE",

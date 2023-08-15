@@ -58,10 +58,9 @@ def test_rekordboxcollection(
 def test_rekordboxcollection_add_playlist(rekordbox_xml):
     """Test RekordboxCollection class."""
     collection = RekordboxCollection(path=rekordbox_xml)
-    collection.reset_playlists()
-    assert len(collection.get_playlists()) == 0
+    num_playlists = len(collection.get_playlists())
     collection.add_playlist([])
-    assert len(collection.get_playlists()) == 1
+    assert len(collection.get_playlists()) == num_playlists + 1
 
 
 def test_rekordboxcollection_get_all_tags(rekordbox_collection):
@@ -78,22 +77,6 @@ def test_rekordboxcollection_get_all_tags(rekordbox_collection):
     }
     tags = rekordbox_collection.get_all_tags()
     assert tags == expected
-
-
-def test_rekordboxcollection_reset_playlists(
-    rekordbox_xml, rekordbox_collection_tag
-):
-    """Test RekordboxCollection class."""
-    collection = RekordboxCollection(path=rekordbox_xml)
-    top_level_playlists = [
-        child for child in rekordbox_collection_tag.find(
-            "NODE", {"Name": "ROOT"}
-        ).children
-        if isinstance(child, bs4.element.Tag)
-    ]
-    assert len(collection.get_playlists()) == len(top_level_playlists)
-    collection.reset_playlists()
-    assert len(collection.get_playlists()) == 0
 
 
 def test_unsortedattributes_formatter():
