@@ -42,13 +42,12 @@ def url_download(config: BaseConfig):
     dl_loc.mkdir(parents=True, exist_ok=True)
 
     ydl_opts = {
-        "format": "bestaudio/best",
         "postprocessors": [{
             "key": "FFmpegExtractAudio",
-            "preferredcodec": "mp3",
-            "preferredquality": "320",
+            "preferredcodec": config.AUDIO_FORMAT,
+            "preferredquality": config.AUDIO_BITRATE.rstrip("k"),
         }],
-        "outtmpl": (dl_loc / "%(title)s.%(ext)s").as_posix()
+        "outtmpl": (dl_loc / "%(title)s.tmp").as_posix()
     }
 
     with ytdl.YoutubeDL(ydl_opts) as ydl:

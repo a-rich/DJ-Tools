@@ -9,6 +9,9 @@ from djtools.utils.normalize_audio import normalize
 
 @mock.patch("djtools.utils.normalize_audio.effects.normalize")
 @pytest.mark.parametrize("target_headroom", [0, 2, 5])
+@mock.patch(
+    "djtools.utils.process_recording.AudioSegment.export", mock.Mock()
+)
 def test_normalize(mock_normalize, target_headroom, audio_file, config, input_tmpdir):
     """Test for the normalize function."""
     config.AUDIO_HEADROOM = target_headroom

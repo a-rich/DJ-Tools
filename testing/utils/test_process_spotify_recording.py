@@ -8,12 +8,13 @@ import pytest
 from djtools.utils.process_recording import process
 
 
-@mock.patch("djtools.utils.process_recording.get_spotify_tracks")
 @mock.patch(
     "djtools.utils.process_recording.AudioSegment.from_file",
     mock.Mock(return_value=AudioSegment.silent(duration=30000)),
 )
-def test_process(mock_get_spotify_tracks, config, tmpdir):
+@mock.patch("djtools.utils.process_recording.get_spotify_tracks")
+@mock.patch("djtools.utils.process_recording.AudioSegment.export")
+def test_process(mock_export, mock_get_spotify_tracks, config, tmpdir):
     """Test for the process function."""
     mock_get_spotify_tracks.return_value = {
         "playlist": [
@@ -64,6 +65,10 @@ def test_process(mock_get_spotify_tracks, config, tmpdir):
             },
         ],
     }
+    def mock_export_function(filename, **kwargs):  # pylint: disable=unused-argument
+        with open(filename, mode="wb") as _file:
+            _file.write(b"")
+    mock_export.side_effect = mock_export_function
     config.AUDIO_DESTINATION = Path(tmpdir)
     config.RECORDING_FILE= "file.mp3"
     config.RECORDING_PLAYLIST = "playlist"
@@ -185,7 +190,7 @@ def test_process_warns_when_filename_is_malformed(
     process(config)
     filename = tmpdir / "some - bad name - artist.mp3"
     assert caplog.records[0].message == (
-        f'{filename} has at more than one occurrence of " - "! '
+        f'{filename} has more than one occurrence of " - "! '
         "Because djtools splits on this sequence of characters to "
         "separate track title and artist(s), you might get unexpected "
         'behavior while using features like "--check-tracks".'
