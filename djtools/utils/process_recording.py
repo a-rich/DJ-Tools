@@ -19,6 +19,8 @@ from djtools.utils.helpers import get_spotify_tracks
 
 
 logger = logging.getLogger(__name__)
+pydub_logger = logging.getLogger("pydub.converter")
+pydub_logger.setLevel(logging.CRITICAL)
 
 
 def process(config: BaseConfig):
@@ -106,7 +108,7 @@ def process(config: BaseConfig):
         # of djtools.
         if str(filename).count(" - ") > 1:
             logger.warning(
-                f'{filename} has at more than one occurrence of " - "! '
+                f'{filename} has more than one occurrence of " - "! '
                 "Because djtools splits on this sequence of characters to "
                 "separate track title and artist(s), you might get unexpected "
                 'behavior while using features like "--check-tracks".'
