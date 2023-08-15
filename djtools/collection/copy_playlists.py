@@ -90,5 +90,10 @@ def copy_playlists(config: BaseConfig, output_path: Optional[Path] = None):
             )
         )
 
+    # Unless specified, write the output collection to the same directory that
+    # the files are being copied to.
+    if not output_path:
+        output_path = config.COPY_PLAYLISTS_DESTINATION / "copied_playlists_collection"
+
     # Serialize the new collection.
     _ = collection.serialize(output_path=output_path)
