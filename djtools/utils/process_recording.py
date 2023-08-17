@@ -119,7 +119,7 @@ def process(config: BaseConfig):
         track_audio.export(
             filename,
             format=config.AUDIO_FORMAT,
-            bitrate=config.AUDIO_BITRATE,
+            bitrate=f"{config.AUDIO_BITRATE}k",
             tags={
                 key: value for key, value in track.items()
                 if key != "duration"

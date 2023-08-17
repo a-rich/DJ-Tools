@@ -6,8 +6,9 @@ import logging
 import os
 from pathlib import Path
 from typing import List
+from typing_extensions import Literal
 
-from pydantic import NonNegativeFloat, NonNegativeInt
+from pydantic import NonNegativeFloat, NonNegativeInt, validator
 
 from djtools.configs.config import BaseConfig
 
@@ -18,9 +19,11 @@ logger = logging.getLogger(__name__)
 class UtilsConfig(BaseConfig):
     """Configuration object for the utils package."""
 
-    AUDIO_BITRATE: str = '320k'
+    AUDIO_BITRATE: int = 320
     AUDIO_DESTINATION: Path = None
-    AUDIO_FORMAT: str = 'mp3'
+    AUDIO_FORMAT: Literal[
+        "aac", "aiff", "alac", "flac", "mp3", "ogg", "pcm", "wav", "wma"
+    ] = "mp3"
     AUDIO_HEADROOM: NonNegativeFloat = 0.0
     CHECK_TRACKS: bool = False
     CHECK_TRACKS_FUZZ_RATIO: NonNegativeInt = 80
@@ -62,3 +65,40 @@ class UtilsConfig(BaseConfig):
                     "You must provide a playlist name as RECORDING_PLAYLIST "
                     "and this name must exists in spotify_playlists.yaml."
                 )
+
+    @validator("AUDIO_BITRATE")
+    @classmethod
+    def bitrate_validation(cls, value: int) -> str:
+        """Validates AUDIO_BITRATE is in the range and casts it to a string.
+
+        Args:
+            value: AUDIO_BITRATE field
+
+        Raises:
+            ValueError: AUDIO_BITRATE must be in the range [36, 320]
+
+        Returns:
+            String representing the bit rate.
+        """
+        if value < 36 or value > 320:
+            raise ValueError("AUDIO_BITRATE must be in the range [36, 320]")
+
+        return str(value)
+
+    @validator("AUDIO_FORMAT")
+    @classmethod
+    def format_validation(cls, value: str) -> str:
+        """Logs a warning message to install FFmpeg if AUDIO_FORMAT isn't wav.
+
+        Args:
+            value: AUDIO_FORMAT field
+
+        Returns:
+            The AUDIO_FORMAT field.
+        """
+        if value != "wav":
+            logger.warning(
+                "You must install FFmpeg in order to use non-wav file formats."
+            )
+
+        return value

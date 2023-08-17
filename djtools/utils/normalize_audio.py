@@ -50,7 +50,7 @@ def normalize(config: BaseConfig):
             audio.export(
                 track.parent / f"{track.stem}.{config.AUDIO_FORMAT}",
                 tags=utils.mediainfo(track).get("TAG", {}),
-                bitrate=config.AUDIO_BITRATE,
+                bitrate=f"{config.AUDIO_BITRATE}k",
                 format=config.AUDIO_FORMAT,
             )
             continue

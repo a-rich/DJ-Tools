@@ -61,3 +61,14 @@ def test_utilsconfig_recording_playlist_not_set():
         ),
     ):
         UtilsConfig(**cfg)
+
+
+@pytest.mark.parametrize("bit_rate", [35, 321])
+def test_utilsconfig_validates_bitrate(bit_rate):
+    """Test for the UtilsConfig class."""
+    cfg = {"AUDIO_BITRATE": bit_rate}
+    with pytest.raises(
+        ValueError,
+        match=re.escape("AUDIO_BITRATE must be in the range [36, 320]"),
+    ):
+        UtilsConfig(**cfg)
