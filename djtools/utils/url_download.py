@@ -45,7 +45,7 @@ def url_download(config: BaseConfig):
         "postprocessors": [{
             "key": "FFmpegExtractAudio",
             "preferredcodec": config.AUDIO_FORMAT,
-            "preferredquality": config.AUDIO_BITRATE.rstrip("k"),
+            "preferredquality": config.AUDIO_BITRATE,
         }],
         "outtmpl": (dl_loc / "%(title)s.tmp").as_posix()
     }
