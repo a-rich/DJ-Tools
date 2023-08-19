@@ -41,7 +41,7 @@ def copy_file(track: Track, destination: Path):
 
 # #############################################################################
 # This section includes helpers for the playlist_builder module.
-#   - PLATFROM_REGISTRY: used to determine which abstraction implementations to
+#   - PLATFORM_REGISTRY: used to determine which abstraction implementations to
 #       use e.g. "rekordbox"
 #   - build_tag_playlists: builds collection playlists using "tags" component
 #       of the PlaylistConfig
@@ -63,7 +63,7 @@ def copy_file(track: Track, destination: Path):
 #   - parse_expression: evaluates the boolean algebra logic in combiner
 #       playlists names to populate them with the appropriate tracks
 #   - BooleanNode: used to build and evaluate the boolean algebra parse tree
-#   - print_playlist_tag_statistics: prints ASCII histograms showing tag
+#   - print_playlists_tag_statistics: prints ASCII histograms showing tag
 #       frequencies in combiner playlists split by genre and other tag types
 #   - scale_data: scales tag frequencies to normalize histogram height
 #   - print_data: formats the string representing ASCII histograms
@@ -86,7 +86,7 @@ def build_tag_playlists(
     tags_tracks: Dict[str, Dict[str, Track]],
     playlist_class: Playlist,
     tag_set: Optional[Set] = None,
-) -> Union[None, Playlist]:
+) -> Optional[Playlist]:
     """Recursively traverses a playlist config to generate playlists from tags.
 
     Args:
@@ -103,58 +103,11 @@ def build_tag_playlists(
     Returns:
         A Playlist or None.
     """
+    if not isinstance(content, (PlaylistConfigContent, str)):
+        raise ValueError(f"Invalid input type {type(content)}: {content}")
+
     # Initialize the set of tags in case the caller didn't provide one.
     tag_set = tag_set if tag_set is not None else set()
-
-    # This is not a folder so a playlist with tracks must be created.
-    if isinstance(content, str):
-        # Apply special logic for creating a "pure" playlist. "Pure" playlists
-        # are those that contain tracks with a set of genre tags that all
-        # contain the sub-string indicated by the suffix of the playlist name.
-        # For example, "Pure Techno" will contain tracks that have genres
-        # {"Hard Techno", "Melodic Techno"} but will not contain tracks that
-        # contain {"Hard Techno", "Tech House"} because "Tech House" does not
-        # contain "Techno" as a sub-string.
-        if content.startswith("Pure "):
-            # Isolate the tag to create a pure playlist for.
-            tag = content.split("Pure ")[-1]
-            tracks_with_tag = tags_tracks.get(tag)
-            if not tracks_with_tag:
-                logger.warning(
-                    f'Can\'t make a "Pure {tag}" playlist because there are '
-                    "no tracks with that tag."
-                )
-                return None
-
-            # Filter out tracks that aren't pure.
-            pure_tag_tracks = {
-                track_id: track for track_id, track in tracks_with_tag.items()
-                if all(
-                    tag.lower() in _.lower() for _ in track.get_genre_tags()
-                )
-            }
-            if not pure_tag_tracks:
-                logger.warning(
-                    f'Can\'t make a "Pure {tag}" playlist because there are '
-                    f"no tracks that are pure {tag}."
-                )
-                return None
-
-            return playlist_class.new_playlist(
-                name=content, tracks=pure_tag_tracks
-            )
-
-        # Get tracks with this tag and index it so that it's not added to the
-        # "Other" playlists.
-        tracks_with_tag = tags_tracks.get(content)
-        tag_set.add(content)
-        if not tracks_with_tag:
-            logger.warning(f'There are no tracks with the tag "{content}"')
-            return None
-
-        return playlist_class.new_playlist(
-            name=content, tracks=tracks_with_tag
-        )
 
     # This is a folder so create playlists for those playlists within it.
     if isinstance(content, PlaylistConfigContent):
@@ -177,10 +130,52 @@ def build_tag_playlists(
             return None
 
         return playlist_class.new_playlist(
-            name=content.name, playlists=playlists,
+            name=content.name, playlists=playlists
         )
 
-    raise ValueError(f"Invalid input type {type(content)}: {content}")
+    # This is not a folder so a playlist with tracks must be created.
+
+    # Apply special logic for creating a "pure" playlist. "Pure" playlists are
+    # those that contain tracks with a set of genre tags that all contain the
+    # sub-string indicated by the suffix of the playlist name. For example,
+    # "Pure Techno" will contain tracks that have genres {"Hard Techno",
+    # "Melodic Techno"} but will not contain tracks that contain
+    # {"Hard Techno", "Tech House"} because "Tech House" does not contain
+    # "Techno" as a sub-string.
+    if content.startswith("Pure "):
+        # Isolate the tag to create a pure playlist for.
+        tag = content.split("Pure ")[-1]
+        tracks_with_tag = tags_tracks.get(tag)
+        if not tracks_with_tag:
+            logger.warning(
+                f'Can\'t make a "Pure {tag}" playlist because there are no '
+                "tracks with that tag."
+            )
+            return None
+
+        # Filter out tracks that aren't pure.
+        pure_tag_tracks = {
+            track_id: track for track_id, track in tracks_with_tag.items()
+            if all(tag.lower() in _.lower() for _ in track.get_genre_tags())
+        }
+        if not pure_tag_tracks:
+            logger.warning(
+                f'Can\'t make a "Pure {tag}" playlist because there are no '
+                f"tracks that are pure {tag}."
+            )
+            return None
+
+        return playlist_class.new_playlist(name=content, tracks=pure_tag_tracks)
+
+    # Get tracks with this tag and index it so that it's not added to the
+    # "Other" playlists.
+    tracks_with_tag = tags_tracks.get(content)
+    tag_set.add(content)
+    if not tracks_with_tag:
+        logger.warning(f'There are no tracks with the tag "{content}"')
+        return None
+
+    return playlist_class.new_playlist(name=content, tracks=tracks_with_tag)
 
 
 class PlaylistFilter(ABC):
@@ -395,19 +390,28 @@ def aggregate_playlists(
 
 
 def add_selectors_to_tags(
-    playlist_config: PlaylistConfig,
+    content: Union[PlaylistConfigContent, str],
     tags_tracks: Dict[str, Dict[str, Track]],
     collection: Collection,
     auto_playlists: List[Playlist],
 ):
-    """Parse the Combiner playlists for selectors and update track lookup.
+    """Recursively update the track lookup with selectors.
 
     Args:
-        playlist_config: PlaylistConfig object.
+        content: A component of a playlist config to create a playlist for.
         tags_tracks: Dict of tags to tracks.
         collection: Collection object.
         auto_playlists: Tag playlists built in this same run.
     """
+    # This is a folder so parse selectors from playlists within it.
+    if isinstance(content, PlaylistConfigContent):
+        for playlist in content.playlists:
+            add_selectors_to_tags(
+                playlist, tags_tracks, collection, auto_playlists
+            )
+        return
+
+    # This is not a folder so these playlists must have their selectors parsed.
     numerical_selector_regex = re.compile(r"(?<=\[)[^\[\]]*(?=\])")
     numerical_value_lookup = {}
     numerical_value_set = set()
@@ -422,23 +426,25 @@ def add_selectors_to_tags(
     string_value_lookup = {}
     playlists = set()
 
-    # Grab selectors from Combiner playlists' names.
-    for playlist in playlist_config.combiner.playlists:
-        numerical_value_set.update(
-            parse_numerical_selectors(
-                re.findall(numerical_selector_regex, playlist),
-                numerical_value_lookup,
-            )
+    # Grab selectors from Combiner playlist name.
+    numerical_value_set.update(
+        parse_numerical_selectors(
+            re.findall(numerical_selector_regex, content),
+            numerical_value_lookup,
         )
-        parse_string_selectors(
-            re.findall(string_selector_regex, playlist),
-            string_value_lookup,
-            string_selector_type_map,
-            playlists,
-        )
+    )
+    parse_string_selectors(
+        re.findall(string_selector_regex, content),
+        string_value_lookup,
+        string_selector_type_map,
+        playlists,
+    )
 
     # Add keys for numerical selectors for tracks having those values.
     for value, tag in numerical_value_lookup.items():
+        if tag in tags_tracks:
+            continue
+
         for track_id, track in collection.get_tracks().items():
             values = map(
                 str, [round(track.get_bpm()), track.get_rating(), track.get_year()]
@@ -452,6 +458,9 @@ def add_selectors_to_tags(
 
     # Add keys for string selectors for tracks having those values.
     for selector, tag in string_value_lookup.items():
+        if tag in tags_tracks:
+            continue
+
         selector_type, selector_value = selector
         for track_id, track in collection.get_tracks().items():
             value = getattr(track, string_selector_type_map[selector_type])()
@@ -481,9 +490,13 @@ def add_selectors_to_tags(
     # This is because the playlists being selected may include those generated
     # by the playlist_builder.
     for playlist_name in playlists:
+        playlist_key = f"{{playlist:{playlist_name}}}"
+        if playlist_key in tags_tracks:
+            continue
+
         for playlist_object in [collection, *auto_playlists]:
             for playlist in playlist_object.get_playlists(playlist_name):
-                tags_tracks[f"{{playlist:{playlist_name}}}"].update(
+                tags_tracks[playlist_key].update(
                     playlist.get_tracks()
                 )
 
@@ -618,29 +631,44 @@ def parse_string_selectors(
 
 
 def build_combiner_playlists(
-    playlist_config: PlaylistConfig,
+    content: Union[PlaylistConfig, str],
     tags_tracks: Dict[str, Dict[str, Track]],
     playlist_class: Playlist,
-) -> Playlist:
-    """Creates Combiner playlists.
+) -> Optional[Playlist]:
+    """Recursively traverses a playlist config to generate playlists from tags.
 
     Args:
-        playlist_config: PlaylistConfig object.
+        content: A component of a playlist config to create a playlist for.
         tags_tracks: Dict of tags to tracks.
         playlist_class: Playlist implementation class.
 
+    Raises:
+        ValueError: The user's playlist config must not be malformed.
+
     Returns:
-        Combiner playlists.
+        A Playlist or None.
     """
-    return playlist_class.new_playlist(
-        name=playlist_config.combiner.name, playlists=[
-            playlist_class.new_playlist(
-                name=expression,
-                tracks=parse_expression(expression, tags_tracks),
-            )
-            for expression in playlist_config.combiner.playlists
-        ]
-    )
+    if not isinstance(content, (PlaylistConfigContent, str)):
+        raise ValueError(f"Invalid input type {type(content)}: {content}")
+
+    # This is not a folder so a playlist with tracks must be created.
+    if isinstance(content, str):
+        return playlist_class.new_playlist(
+            name=content, tracks=parse_expression(content, tags_tracks)
+        )
+
+    # This is a folder so create playlists for those playlists within it.
+    playlists = [
+        build_combiner_playlists(item, tags_tracks, playlist_class)
+        for item in content.playlists
+    ]
+    playlists = [playlist for playlist in playlists if playlist]
+    if not playlists:
+        logger.warning(
+            f'There were no playlists created from "{content.playlists}"'
+        )
+
+    return playlist_class.new_playlist(name=content.name, playlists=playlists)
 
 
 def parse_expression(
@@ -826,7 +854,16 @@ def print_playlists_tag_statistics(combiner_playlists: Playlist) -> None:
     Args:
         combiner_playlists: Playlist object for Combiner playlists.
     """
-    for playlist in combiner_playlists:
+    playlists = []
+    playlist_stack = [combiner_playlists]
+    while playlist_stack:
+        item = playlist_stack.pop()
+        if item.is_folder():
+            playlist_stack.extend(item.get_playlists())
+            continue
+        playlists.append(item)
+
+    for playlist in playlists:
         tracks = playlist.get_tracks()
         if tracks:
             print(f"\n{playlist.get_name()} tag statistics:")

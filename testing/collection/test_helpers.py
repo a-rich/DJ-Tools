@@ -6,20 +6,23 @@ from unittest import mock
 
 import pytest
 
-from djtools.collection.collections import RekordboxCollection
+from djtools.collection.collections import Collection, RekordboxCollection
 from djtools.collection.helpers import (
     BooleanNode,
     copy_file,
     # aggregate_playlists,
+    build_combiner_playlists,
     build_tag_playlists,
     HipHopFilter,
     MinimalDeepTechFilter,
     parse_numerical_selectors,
     parse_string_selectors,
+    PLATFORM_REGISTRY,
     print_data,
     print_playlists_tag_statistics,
     scale_data,
 )
+from djtools.collection.playlists import Playlist
 from djtools.collection.tracks import RekordboxTrack
 
 
@@ -90,17 +93,24 @@ def test_booleannode_raises_runtime_eror():
         node.evaluate()
 
 
-def test_build_tag_playlists():
-    """Test the create_playlists function."""
-
-
-def test_build_tag_playlists_raises_exception_():
-    """Test the create_playlists function."""
+def test_build_combiner_playlists_raises_exception_():
+    """Test the build_combiner_playlists function."""
     with pytest.raises(
         ValueError,
         match=re.escape(f"Invalid input type {list}: {[]}"),
     ):
-        build_tag_playlists([], {}, set())
+        software_config = PLATFORM_REGISTRY[next(iter(PLATFORM_REGISTRY))]
+        build_combiner_playlists([], {}, software_config["playlist"])
+
+
+def test_build_tag_playlists_raises_exception_():
+    """Test the build_tag_playlists function."""
+    with pytest.raises(
+        ValueError,
+        match=re.escape(f"Invalid input type {list}: {[]}"),
+    ):
+        software_config = PLATFORM_REGISTRY[next(iter(PLATFORM_REGISTRY))]
+        build_tag_playlists([], {}, software_config["playlist"])
 
 
 def test_copy_file(tmpdir, rekordbox_track):
@@ -242,6 +252,18 @@ def test_parse_string_selectors_warns_bad(matches, expected, caplog):
     caplog.set_level("WARNING")
     parse_string_selectors(matches, {}, {"date": "get_date_added"}, set())
     assert caplog.records[0].message == expected
+
+
+def test_platform_registry():
+    """Test for the PLATFORM_REGISTRY object."""
+    assert isinstance(PLATFORM_REGISTRY, dict)
+    assert len(PLATFORM_REGISTRY)
+    for registered_software, impls in PLATFORM_REGISTRY.items():
+        assert isinstance(registered_software, str)
+        assert isinstance(impls, dict)
+        for impl_type, impl_class in impls.items():
+            assert impl_type in ["collection", "playlist"]
+            assert set(impl_class.__bases__).intersection(set((Collection, Playlist)))
 
 
 def test_print_data(capsys):

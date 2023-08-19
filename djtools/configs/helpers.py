@@ -21,7 +21,7 @@ from djtools.version import __version__
 
 logger = logging.getLogger(__name__)
 
-pkg_cfg = {
+PKG_CFG = {
     "collection": CollectionConfig,
     "configs": BaseConfig,
     "spotify": SpotifyConfig,
@@ -580,7 +580,7 @@ def build_config(config_file: Optional[Path] = None) -> BaseConfig:
                 k: v.default for k, v in cfg.__fields__.items()
                 if pkg == "configs" or k not in base_config_fields
             }
-            for pkg, cfg in pkg_cfg.items()
+            for pkg, cfg in PKG_CFG.items()
         }
         with open(config_file, mode="w", encoding="utf-8") as _file:
             yaml.dump(initial_config, _file)
@@ -593,7 +593,7 @@ def build_config(config_file: Optional[Path] = None) -> BaseConfig:
     if args:
         logger.info(f"Args: {args}")
         args_set = set(args)
-        for pkg, cfg_class in pkg_cfg.items():
+        for pkg, cfg_class in PKG_CFG.items():
             args_intersection = set(cfg_class.__fields__).intersection(args_set)
             if args_intersection:
                 args_subset = {
@@ -608,7 +608,7 @@ def build_config(config_file: Optional[Path] = None) -> BaseConfig:
     base_cfg_options = config["configs"] if config else {}
     configs = {
         pkg: cfg(**{**base_cfg_options, **config.get(pkg, {})})
-        for pkg, cfg in pkg_cfg.items() if pkg != "configs"
+        for pkg, cfg in PKG_CFG.items() if pkg != "configs"
     }
     joined_config = BaseConfig(
         **base_cfg_options,

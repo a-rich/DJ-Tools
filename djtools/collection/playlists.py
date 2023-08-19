@@ -399,13 +399,13 @@ class RekordboxPlaylist(Playlist):
         playlist_tag = bs4.Tag(
             name="NODE",
             attrs=(
-               {"Name": name, "Type": "0", "Count": len(playlists)}
-               if playlists else {
-                   "Name": name,
-                   "Type": "1",
-                   "KeyType": "0",
-                   "Entries": len(tracks),
-               }
+            {"Name": name, "Type": "0", "Count": len(playlists)}
+            if playlists is not None else {
+                "Name": name,
+                "Type": "1",
+                "KeyType": "0",
+                "Entries": len(tracks),
+            }
             ),
         )
         playlist = RekordboxPlaylist(
