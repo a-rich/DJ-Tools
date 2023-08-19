@@ -5,10 +5,12 @@ config.yaml
 import logging
 import os
 from pathlib import Path
-from typing import List
+from typing import Dict, List
 from typing_extensions import Literal
 
-from pydantic import NonNegativeFloat, NonNegativeInt, validator
+from pydantic import (
+    NonNegativeFloat, NonNegativeInt, root_validator, validator
+)
 
 from djtools.configs.config import BaseConfig
 
@@ -85,20 +87,22 @@ class UtilsConfig(BaseConfig):
 
         return str(value)
 
-    @validator("AUDIO_FORMAT")
+    @root_validator
     @classmethod
-    def format_validation(cls, value: str) -> str:
+    def format_validation(cls, values: Dict) -> str:
         """Logs a warning message to install FFmpeg if AUDIO_FORMAT isn't wav.
 
         Args:
-            value: AUDIO_FORMAT field
+            values: All model fields.
 
         Returns:
-            The AUDIO_FORMAT field.
+            Dict of all model fields.
         """
-        if value != "wav":
+        if values["AUDIO_FORMAT"] != "wav" and (
+            values["NORMALIZE_AUDIO"] or values["PROCESS_RECORDING"]
+        ):
             logger.warning(
                 "You must install FFmpeg in order to use non-wav file formats."
             )
 
-        return value
+        return values

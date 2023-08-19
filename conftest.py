@@ -11,7 +11,7 @@ import pytest
 import yaml
 
 from djtools.configs.config import BaseConfig
-from djtools.configs.helpers import filter_dict, pkg_cfg
+from djtools.configs.helpers import filter_dict, PKG_CFG
 from djtools.collection.collections import RekordboxCollection
 from djtools.collection.playlists import RekordboxPlaylist
 from djtools.collection.tracks import RekordboxTrack
@@ -27,7 +27,7 @@ def namespace():
 @mock.patch("djtools.spotify.helpers.get_spotify_client", mock.MagicMock())
 def config():
     """Test config fixture."""
-    configs = {pkg: cfg() for pkg, cfg in pkg_cfg.items() if pkg != "configs"}
+    configs = {pkg: cfg() for pkg, cfg in PKG_CFG.items() if pkg != "configs"}
     joined_config = BaseConfig(
         **{
             k: v for cfg in configs.values()

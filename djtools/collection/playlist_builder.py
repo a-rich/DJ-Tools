@@ -175,12 +175,12 @@ def collection_playlists(
         # Parse selectors from the combiner playlist names and update the
         # tags_tracks mapping.
         add_selectors_to_tags(
-            playlist_config, tags_tracks, collection, auto_playlists
+            playlist_config.combiner, tags_tracks, collection, auto_playlists
         )
 
         # Evaluate the boolean logic of the combiner playlists.
         combiner_playlists = build_combiner_playlists(
-            playlist_config, tags_tracks, playlist_class
+            playlist_config.combiner, tags_tracks, playlist_class
         )
 
         auto_playlists.append(combiner_playlists)

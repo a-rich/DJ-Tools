@@ -13,7 +13,7 @@ from djtools.configs.helpers import (
     convert_to_paths,
     filter_dict,
     parse_json,
-    pkg_cfg,
+    PKG_CFG,
 )
 from djtools.utils.helpers import MockOpen
 from djtools.version import __version__
@@ -118,7 +118,7 @@ def test_convert_to_paths(paths):
         assert isinstance(paths, Path)
 
 
-@pytest.mark.parametrize("config", pkg_cfg.values())
+@pytest.mark.parametrize("config", PKG_CFG.values())
 @mock.patch("djtools.spotify.helpers.get_spotify_client", mock.Mock())
 def test_filter_dict(config):
     """Test for the filter_dict function."""
