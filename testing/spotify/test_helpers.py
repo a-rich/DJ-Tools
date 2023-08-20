@@ -22,7 +22,8 @@ from djtools.spotify.helpers import (
     update_existing_playlist,
     write_playlist_ids
 )
-from djtools.utils.helpers import MockOpen
+
+from ..test_utils import MockOpen
 
 
 async def aiter(obj, num_subs):

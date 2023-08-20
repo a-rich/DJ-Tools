@@ -14,9 +14,10 @@ from djtools.utils.helpers import (
     get_playlist_tracks,
     get_spotify_tracks,
     initialize_logger,
-    MockOpen,
     reverse_title_and_artist,
 )
+
+from ..test_utils import MockOpen
 
 
 @pytest.mark.parametrize("track_a", ["some track", "another track"])
