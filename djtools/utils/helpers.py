@@ -3,13 +3,17 @@ particular sub-package of this library.
 """
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+from functools import wraps
+import inspect
 from itertools import product
 import logging
 import logging.config
 import os
+import pathlib
 from pathlib import Path
 from subprocess import check_output
-from typing import Dict, List, Set, Tuple
+import typing
+from typing import Callable, Dict, List, Set, Tuple
 
 from fuzzywuzzy import fuzz
 import spotipy
@@ -227,6 +231,91 @@ def initialize_logger() -> Tuple[logging.Logger, str]:
     )
 
     return logging.getLogger(__name__), log_file
+
+
+def make_path(func: Callable) -> Callable:
+    """Decorator for converting Path-typed args to Paths.
+
+    Args:
+        func: Callable being decorated with this function.
+
+    Raises:
+        RuntimeError: args annotated with a pathlib.Path need to be able to
+            have Paths created from them.
+        RuntimeError: kwargs annotated with a pathlib.Path need to be able to
+            have Paths created from them.
+
+    Returns:
+        The Callable being wrapped by this decorator.
+    """
+    @wraps(make_path)
+    def str_to_path(*args, **kwargs):
+        """Converts non-Path type args into Paths if annotated as Paths.
+
+        Raises:
+            RuntimeError: args annotated with a pathlib.Path need to be able to
+                have Paths created from them.
+            RuntimeError: kwargs annotated with a pathlib.Path need to be able
+                to have Paths created from them.
+        """
+        # Get the function's type annotations and partition them by args and
+        # kwargs.
+        path_types = (pathlib.Path, typing.Union[pathlib.Path, None])
+        num_args= 0
+        num_kwargs = 0
+        type_hints = list(typing.get_type_hints(func).values())
+        sig = inspect.signature(func)
+        for parameter in sig.parameters.values():
+            if parameter.name == "self":
+                type_hints.insert(0, "self")
+            if parameter.name in kwargs:
+                num_kwargs += 1
+            else:
+                num_args += 1
+        arg_type_hints = type_hints[:num_args]
+        kwarg_type_hints = type_hints[:num_kwargs]
+
+        # Convert each arg to a Path if the annotation type is pathlib.Path.
+        args = list(args)
+        for index, (arg, arg_type) in enumerate(zip(args, arg_type_hints)):
+            # Skip if the arg shouldn't be a path or it should be a Path but
+            # already is.
+            if arg_type not in path_types or (
+                arg_type in path_types and isinstance(arg, Path)
+            ):
+                continue
+
+            try:
+                args[index] = Path(arg)
+            except Exception as exc:
+                raise RuntimeError(
+                    "Error creating Path in function "
+                    f'"{func.__name__}" from positional arg "{arg}" annotated '
+                    f'with type "{arg_type}": {exc}'
+                ) from Exception
+        args = tuple(args)
+
+        # Convert each kwarg to a Path if the annotation type is pathlib.Path.
+        for (key, value), arg_type in zip(kwargs.items(), kwarg_type_hints):
+            # Skip if the arg value shouldn't be a path or it should be a Path
+            # but already is.
+            if arg_type not in path_types or (
+                arg_type in path_types and isinstance(value, Path)
+            ):
+                continue
+
+            try:
+                kwargs[key] = Path(value)
+            except Exception as exc:
+                raise RuntimeError(
+                    "Error creating Path in function "
+                    f'"{func.__name__}" from keyword arg "{key}={value}" '
+                    f'annotated with type "{arg_type}": {exc}'
+                ) from Exception
+
+        return func(*args, **kwargs)
+
+    return str_to_path
 
 
 def reverse_title_and_artist(path_lookup: Dict[str, str]) -> Dict[str, str]:

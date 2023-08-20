@@ -16,6 +16,7 @@ from djtools.configs.config import BaseConfig
 from djtools.spotify.config import SpotifyConfig
 from djtools.sync.config import SyncConfig
 from djtools.utils.config import UtilsConfig
+from djtools.utils.helpers import make_path
 from djtools.version import __version__
 
 
@@ -545,6 +546,7 @@ def arg_parse() -> Namespace:
     return vars(args)
 
 
+@make_path
 def build_config(config_file: Optional[Path] = None) -> BaseConfig:
     """This function loads configurations for the library.
     

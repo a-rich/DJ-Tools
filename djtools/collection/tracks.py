@@ -13,10 +13,12 @@ from datetime import datetime
 import os
 from pathlib import Path
 import re
-from typing import Any, List, Union, Set
+from typing import Any, List, Set
 from urllib.parse import quote, unquote
 
 import bs4
+
+from djtools.utils.helpers import make_path
 
 
 # pylint: disable=no-member
@@ -134,7 +136,7 @@ class Track(ABC):
         """
 
     @abstractmethod
-    def set_location(self, location: Union[Path, str]):
+    def set_location(self, location: Path):
         """Sets the path of the track to location.
 
         Args:
@@ -485,13 +487,14 @@ class RekordboxTrack(Track):
 
         return track_tag
 
-    def set_location(self, location: Union[Path, str]):
+    @make_path
+    def set_location(self, location: Path):
         """Sets the path of the track to location.
 
         Args:
             location: New location of the track.
         """
-        self._Location = Path(location)  # pylint: disable=attribute-defined-outside-init,invalid-name
+        self._Location = location  # pylint: disable=attribute-defined-outside-init,invalid-name
 
     def set_track_number(self, number: int):
         """Sets the track number of a track.

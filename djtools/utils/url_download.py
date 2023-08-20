@@ -10,11 +10,13 @@ import re
 import youtube_dl as ytdl
 
 from djtools.configs.config import BaseConfig
+from djtools.utils.helpers import make_path
 
 
 logger = logging.getLogger(__name__)
 
 
+@make_path
 def fix_up(_file: Path) -> Path:
     """Removes digits appended to file name by youtube-dl.
 

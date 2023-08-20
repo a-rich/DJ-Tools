@@ -18,11 +18,13 @@ from djtools.collection.helpers import (
     print_playlists_tag_statistics,
 )
 from djtools.configs.config import BaseConfig
+from djtools.utils.helpers import make_path
 
 
 logger = logging.getLogger(__name__)
 
 
+@make_path
 def collection_playlists(
     config: BaseConfig, output_path: Optional[Path] = None
 ):

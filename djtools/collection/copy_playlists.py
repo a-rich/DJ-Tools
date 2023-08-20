@@ -17,8 +17,10 @@ from tqdm import tqdm
 
 from djtools.collection.helpers import copy_file, PLATFORM_REGISTRY
 from djtools.configs.config import BaseConfig
+from djtools.utils.helpers import make_path
 
 
+@make_path
 def copy_playlists(config: BaseConfig, output_path: Optional[Path] = None):
     """Copies tracks from provided playlists to a destination.
 
