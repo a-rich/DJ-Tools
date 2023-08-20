@@ -14,6 +14,7 @@ from djtools.collection.collections import Collection, RekordboxCollection
 from djtools.collection.config import PlaylistConfig, PlaylistConfigContent
 from djtools.collection.playlists import Playlist, RekordboxPlaylist
 from djtools.collection.tracks import Track
+from djtools.utils.helpers import make_path
 
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,7 @@ logger = logging.getLogger(__name__)
 # #############################################################################
 
 
+@make_path
 def copy_file(track: Track, destination: Path):
     """Copies a track to a destination and updates its location.
 

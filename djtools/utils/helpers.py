@@ -3,15 +3,17 @@ particular sub-package of this library.
 """
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+from functools import wraps
+import inspect
 from itertools import product
 import logging
 import logging.config
 import os
+import pathlib
 from pathlib import Path
 from subprocess import check_output
-import tempfile
-from typing import Dict, IO, List, Optional, Set, Tuple
-from unittest import mock
+import typing
+from typing import Callable, Dict, List, Set, Tuple
 
 from fuzzywuzzy import fuzz
 import spotipy
@@ -22,51 +24,6 @@ from djtools.spotify.helpers import get_playlist_ids, get_spotify_client
 
 
 logger = logging.getLogger(__name__)
-
-
-class MockOpen:
-    """Class for mocking the builtin open function."""
-    builtin_open = open
-
-    def __init__(
-        self,
-        files: List[str],
-        user_a: Optional[Tuple[str]] = None,
-        user_b: Optional[Tuple[str]] = None,
-        content: Optional[str] = "",
-        write_only: Optional[bool] = False,
-    ):
-        self._user_a = user_a
-        self._user_b = user_b
-        self._files = files
-        self._content = content
-        self._write_only = write_only
-
-    def open(self, *args, **kwargs) -> IO:
-        """Function to replace the builtin open function.
-
-        Returns:
-            File handler.
-        """
-        file_name = Path(args[0]).name
-        if file_name in self._files:
-            if "w" in kwargs.get("mode"):
-                return tempfile.TemporaryFile(mode=kwargs["mode"])
-            if not self._write_only:
-                return self._file_strategy(file_name, *args, **kwargs)
-        return self.builtin_open(*args, **kwargs)
-
-    def _file_strategy(self, *args, **kwargs):
-        """Apply logic for file contents based on file name.
-
-        Returns:
-            Mock file handler object.
-        """
-        data = "{}"
-        if self._content:
-            data = self._content
-
-        return mock.mock_open(read_data=data)(*args, **kwargs)
 
 
 def compute_distance(
@@ -276,14 +233,89 @@ def initialize_logger() -> Tuple[logging.Logger, str]:
     return logging.getLogger(__name__), log_file
 
 
-def mock_exists(files, path):
-    """Function for mocking the existence of pathlib.Path object."""
-    ret = True
-    for file_name, exists in files:
-        if file_name == path.name:
-            ret = exists
-            break
-    return ret
+def make_path(func: Callable) -> Callable:
+    """Decorator for converting Path-typed args to Paths.
+
+    Args:
+        func: Callable being decorated with this function.
+
+    Raises:
+        RuntimeError: args annotated with a pathlib.Path need to be able to
+            have Paths created from them.
+        RuntimeError: kwargs annotated with a pathlib.Path need to be able to
+            have Paths created from them.
+
+    Returns:
+        The Callable being wrapped by this decorator.
+    """
+    @wraps(make_path)
+    def str_to_path(*args, **kwargs):
+        """Converts non-Path type args into Paths if annotated as Paths.
+
+        Raises:
+            RuntimeError: args annotated with a pathlib.Path need to be able to
+                have Paths created from them.
+            RuntimeError: kwargs annotated with a pathlib.Path need to be able
+                to have Paths created from them.
+        """
+        # Get the function's type annotations and partition them by args and
+        # kwargs.
+        path_types = (pathlib.Path, typing.Union[pathlib.Path, None])
+        num_args= 0
+        num_kwargs = 0
+        type_hints = list(typing.get_type_hints(func).values())
+        sig = inspect.signature(func)
+        for parameter in sig.parameters.values():
+            if parameter.name == "self":
+                type_hints.insert(0, "self")
+            if parameter.name in kwargs:
+                num_kwargs += 1
+            else:
+                num_args += 1
+        arg_type_hints = type_hints[:num_args]
+        kwarg_type_hints = type_hints[:num_kwargs]
+
+        # Convert each arg to a Path if the annotation type is pathlib.Path.
+        args = list(args)
+        for index, (arg, arg_type) in enumerate(zip(args, arg_type_hints)):
+            # Skip if the arg shouldn't be a path or it should be a Path but
+            # already is.
+            if arg_type not in path_types or (
+                arg_type in path_types and isinstance(arg, Path)
+            ):
+                continue
+
+            try:
+                args[index] = Path(arg)
+            except Exception as exc:
+                raise RuntimeError(
+                    "Error creating Path in function "
+                    f'"{func.__name__}" from positional arg "{arg}" annotated '
+                    f'with type "{arg_type}": {exc}'
+                ) from Exception
+        args = tuple(args)
+
+        # Convert each kwarg to a Path if the annotation type is pathlib.Path.
+        for (key, value), arg_type in zip(kwargs.items(), kwarg_type_hints):
+            # Skip if the arg value shouldn't be a path or it should be a Path
+            # but already is.
+            if arg_type not in path_types or (
+                arg_type in path_types and isinstance(value, Path)
+            ):
+                continue
+
+            try:
+                kwargs[key] = Path(value)
+            except Exception as exc:
+                raise RuntimeError(
+                    "Error creating Path in function "
+                    f'"{func.__name__}" from keyword arg "{key}={value}" '
+                    f'annotated with type "{arg_type}": {exc}'
+                ) from Exception
+
+        return func(*args, **kwargs)
+
+    return str_to_path
 
 
 def reverse_title_and_artist(path_lookup: Dict[str, str]) -> Dict[str, str]:

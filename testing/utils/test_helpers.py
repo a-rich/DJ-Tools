@@ -2,6 +2,7 @@
 from datetime import datetime
 from pathlib import Path
 import logging
+from typing import Optional
 from unittest import mock
 
 import pytest
@@ -14,9 +15,11 @@ from djtools.utils.helpers import (
     get_playlist_tracks,
     get_spotify_tracks,
     initialize_logger,
-    MockOpen,
+    make_path,
     reverse_title_and_artist,
 )
+
+from ..test_utils import MockOpen
 
 
 @pytest.mark.parametrize("track_a", ["some track", "another track"])
@@ -234,6 +237,53 @@ def test_initialize_logger():
     logger, log_file = initialize_logger()
     assert isinstance(logger, logging.Logger)
     assert log_file.name == today
+
+
+@pytest.mark.parametrize(
+    "kwargs, expected_str_kwarg, expected_path_kwarg",
+    [
+        ({"str_kwarg": "string kwarg", "path_kwarg": "path kwarg"}, str, Path),
+        ({}, type(None), type(None))
+    ]
+)
+def test_make_path_decorator(
+    kwargs, expected_str_kwarg, expected_path_kwarg
+):
+    """Test for the make_path decorator function."""
+    @make_path
+    def foo(  # pylint: disable=disallowed-name
+            str_arg: str,
+            path_arg: Path,
+            str_kwarg: Optional[str] = None,
+            path_kwarg: Optional[Path] = None,
+    ):
+        assert isinstance(str_arg, str)
+        assert isinstance(path_arg, Path)
+        assert isinstance(str_kwarg, expected_str_kwarg)
+        assert isinstance(path_kwarg, expected_path_kwarg)
+
+    foo("a string arg", "a string arg path", **kwargs)
+
+
+@pytest.mark.parametrize(
+    "arg, kwarg, expected",
+    [
+        (1, "", 'Error creating Path in function "foo" from positional'),
+        ("", 1, 'Error creating Path in function "foo" from keyword'),
+    ],
+)
+def test_make_path_decorator_raises_error(arg, kwarg, expected):
+    """Test for the make_path decorator function."""
+    @make_path
+    def foo(path_arg: Path, path_kwarg: Path):  # pylint: disable=disallowed-name
+        assert isinstance(path_arg, Path)
+        assert isinstance(path_kwarg, Path)
+
+    with pytest.raises(
+        RuntimeError,
+        match=expected,
+    ):
+        foo(arg, path_kwarg=kwarg)
 
 
 def test_reverse_title_and_artist():

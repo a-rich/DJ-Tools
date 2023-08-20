@@ -14,11 +14,13 @@ from tqdm import tqdm
 
 from djtools.configs.config import BaseConfig
 from djtools.collection.helpers import PLATFORM_REGISTRY
+from djtools.utils.helpers import make_path
 
 
 logger = logging.getLogger(__name__)
 
 
+@make_path
 def shuffle_playlists(config: BaseConfig, output_path: Optional[Path] = None):
     """For each playlist in "SHUFFLE_PLAYLISTS", shuffle the tracks and
     sequentially set the track number to emulate shuffling.

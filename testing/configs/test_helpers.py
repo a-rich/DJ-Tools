@@ -15,8 +15,9 @@ from djtools.configs.helpers import (
     parse_json,
     PKG_CFG,
 )
-from djtools.utils.helpers import MockOpen
 from djtools.version import __version__
+
+from ..test_utils import MockOpen
 
 
 @mock.patch("argparse.ArgumentParser.parse_args")

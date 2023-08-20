@@ -10,7 +10,8 @@ from djtools.spotify.playlist_builder import (
     spotify_playlist_from_upload,
     spotify_playlists,
 )
-from djtools.utils.helpers import MockOpen
+
+from ..test_utils import MockOpen
 
 
 @pytest.mark.asyncio

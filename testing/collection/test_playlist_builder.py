@@ -4,7 +4,8 @@ from unittest import mock
 import pytest
 
 from djtools.collection.playlist_builder import collection_playlists
-from djtools.utils.helpers import MockOpen
+
+from ..test_utils import MockOpen
 
 
 @pytest.mark.parametrize(

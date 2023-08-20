@@ -23,6 +23,7 @@ from bs4.formatter import XMLFormatter
 
 from djtools.collection.playlists import Playlist, RekordboxPlaylist
 from djtools.collection.tracks import RekordboxTrack, Track
+from djtools.utils.helpers import make_path
 
 
 class Collection(ABC):
@@ -121,6 +122,7 @@ class Collection(ABC):
 class RekordboxCollection(Collection):
     "Collection implementation for usage with Rekordbox."
 
+    @make_path
     def __init__(self, path: Path):
         """Deserializes a Collection from an XML file.
 
@@ -206,6 +208,7 @@ class RekordboxCollection(Collection):
         """
         return str(self.serialize())
 
+    @make_path
     def serialize(
         self, *args, output_path: Optional[Path] = None, **kwargs
     ) -> Path:
