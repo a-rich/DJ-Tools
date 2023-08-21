@@ -114,7 +114,7 @@ def process(config: BaseConfig):
                 'behavior while using features like "--check-tracks".'
             )
 
-        # Export the audio with the configured format and bitrate with the tag
+        # Export the audio with the configured format and bit rate with the tag
         # data collected from the Spotify response.
         track_audio.export(
             filename,

@@ -300,7 +300,7 @@ class RekordboxPlaylist(Playlist):
 
         # Build a representation of this playlist.
         for key, value in repr_attrs.items():
-            # Skip representing this playlists's tracks.
+            # Skip representing this playlist's tracks.
             # Defer representation of the playlists attribute until the end.
             if key in ["playlists", "tracks"]:
                 continue

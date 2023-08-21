@@ -26,7 +26,7 @@ The [collection_playlists][djtools.collection.playlist_builder.collection_playli
 
 ## Example
 Let's start by examining the pre-packaged [YAML](https://en.wikipedia.org/wiki/YAML) file [collection_playlists.yaml](https://github.com/a-rich/DJ-Tools/blob/main/djtools/configs/collection_playlists.yaml):
-![alt text](../images/Rekordbox_playlists_yaml.png "Collection playlists YAML")
+![alt text](../images/Rekordbox_playlists_tags_yaml.png "Collection playlists YAML")
 
 You can ignore the `combiner` part of the YAML for now. Although it's similar to the `tags` section, it's covered in the [Combine Playlists With Boolean Algebra](combiner_playlists.md) how-to guide.
 
@@ -49,4 +49,4 @@ Once you've finalized your playlist configuration, run the following command to 
 `djtools --collection-playlists`
 
 Now you can import the `PLAYLIST_BUILDER` folder to load these playlists into your Collection:
-![alt text](../images/Rekordbox_post_playlists.png "Generated collection playlists")
+![alt text](../images/Rekordbox_post_playlists_tags.png "Generated tag playlists")

@@ -50,8 +50,8 @@ def collection_playlists(
     COLLECTION_PLAYLISTS_REMAINDER).
 
     A special folder with the name "_ignore" may be included anywhere within
-    the playlist config's "tags" specification with playlists matching the set
-    of tags to ignore when creating the "Other" folder / playlist.
+    the "tags" specification with playlists matching the set of tags to ignore
+    when creating the "Other" folder / playlist.
 
     In addition to creating playlists from tags, this function also supports
     creating "combiner" playlists by evaluating boolean algebra expressions.
@@ -60,8 +60,8 @@ def collection_playlists(
     of operands {tag, playlists, BPM ranges, rating ranges}.
 
     Combiner playlists are declared in the "combiner" specification of the
-    playlist config as an unnested folder with a playlists whose names are the
-    boolean algebra expressions used to construct them.
+    playlist config with playlists whose names are the boolean algebra
+    expressions used to construct them.
 
     Here's an example combiner playlist to illustrate this:
 
@@ -101,7 +101,7 @@ def collection_playlists(
         path=config.COLLECTION_PATH
     )
 
-    # Dereference the Playlist implementation to use for this collection.
+    # Get the Playlist implementation to use for this collection.
     playlist_class = PLATFORM_REGISTRY[config.PLATFORM]["playlist"]
 
     # Create a dict of tracks keyed by their individual tags.

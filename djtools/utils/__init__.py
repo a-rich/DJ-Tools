@@ -5,11 +5,11 @@
     * `helpers`: helper functions for the `utils` package and the `djtools`
         library in general
     * `normalize_audio`: sets the peak amplitude of tracks go a configured
-        headroom and exports them with a configured bitrate and file format.
+        headroom and exports them with a configured bit rate and file format.
     * `process_recording`: given a Spotify playlist and a recording file, chunk
         the recording into individual tracks, normalize their peak amplitude
         with the configured headroom, and export them with the configured
-        bitrate and file format.
+        bit rate and file format.
     * `url_download`: download tracks from a URL (e.g. Soundcloud playlist).
 """
 from djtools.utils.config import UtilsConfig
