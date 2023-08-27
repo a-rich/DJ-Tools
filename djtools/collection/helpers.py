@@ -895,10 +895,10 @@ def scale_data(
 
     Args:
         data: Tag names to tag counts.
-        maximum: Upper bound for rescaled data.
+        maximum: Upper bound for re-scaled data.
 
     Returns:
-        Rescaled dictionary of tag names and tag counts.
+        Re-scaled dictionary of tag names and tag counts.
     """
     data_max = max(data.items(), key=itemgetter(1))[1]
 

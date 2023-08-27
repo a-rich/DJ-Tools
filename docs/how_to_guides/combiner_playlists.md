@@ -117,12 +117,13 @@ As is done in the [Build Playlists From Tags](collection_playlists.md#example) h
 
 Note that the examples below are trivial ones designed to get 100% code coverage in unit tests.
 
-![alt text](../images/Rekordbox_playlists_yaml.png "Collection playlists YAML")
+![alt text](../images/Rekordbox_playlists_combiner_yaml.png "Collection playlists YAML")
 
-The `combiner` configuration must contain a single named folder with a flat list of playlists. Each playlists' name is a boolean algebra expression that uses the syntax noted above to describe how different tags and selectors are to be unioned, intersected, and differenced to produce the final playlist of tracks. Valid expressions must contain at least two operands and must have one less operator than there are operands. 
+The `combiner` configuration specifies a set of `name` folders with lists of playlists and / or folders inside of them. The leaves of this playlist tree are the actual playlists themselves whose names are boolean algebra expressions that use the syntax noted above to describe how different tags and selectors are to be combined to produce the final playlist of tracks. Valid expressions must contain at least two operands and must have one less operator than there are operands. 
 
 Once you've finalized your playlist configuration, run the following command to build the playlists:
 
 `djtools --collection-playlists`
 
-Now you can import the `PLAYLIST_BUILDER` folder to load these playlists into your Collection.
+Now you can import the `PLAYLIST_BUILDER` folder to load these playlists into your Collection:
+![alt text](../images/Rekordbox_post_playlists_combiner.png "Generated combiner playlists")

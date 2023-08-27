@@ -56,10 +56,10 @@ In fact, removing the template `config.yaml` and building a config from scratch 
 * `USER`: this is the username of the current user...if left as an empty string, then your operating system username will be used...it's recommended that you only override this if your username changes from what other users of your `beatcloud` instance are expecting (to ensure consistency...i.e. when you get a new computer with a different username)
 
 ## [Utils config][djtools.utils.config.UtilsConfig]
-* `AUDIO_BITRATE`: string representing the bitrate to write audio at e.g. `"320k"`
+* `AUDIO_BITRATE`: integer in the range [`36`, `320`] representing the bitrate to write audio at e.g. `320`
 * `AUDIO_DESTINATION`: path to where downloaded and / or exported files go to
 * `AUDIO_FORMAT`: string representing the file format write audio in e.g. `"mp3"`
-* `AUDIO_HEADROOM`: amount of headroom in decibels to leave when normalizing audio
+* `AUDIO_HEADROOM`: non-negative float representing the amount of headroom in decibels to leave when normalizing audio
 * `CHECK_TRACKS`: boolean flag to trigger checking the contents of the `beatcloud` (to identify redundancies)
 * `CHECK_TRACKS_FUZZ_RATIO`: the minimum Levenshtein similarity for indicating potential redundancies between Spotify playlists / local directories and the `beatcloud`
 * `CHECK_TRACKS_SPOTIFY_PLAYLISTS`: list of Spotify playlists to use with `CHECK_TRACKS` (must exist in `spotify_playlists.yaml`)

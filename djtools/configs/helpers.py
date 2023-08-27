@@ -68,7 +68,7 @@ def arg_parse() -> Namespace:
     library's configs folder via the --link-configs argument.
 
     Returns:
-        NameSpace with command-line arguments.
+        Namespace with command-line arguments.
     """
     parser = ArgumentParser(
         description=(
@@ -524,7 +524,7 @@ def arg_parse() -> Namespace:
         print(__version__)
         sys.exit()
 
-    logger.info(f"djtools version: {__version__}")
+    logger.info(__version__)
 
     if args.link_configs:
         args.link_configs = Path(args.link_configs)
@@ -538,10 +538,9 @@ def arg_parse() -> Namespace:
         parent_dir = args.link_configs.parent
         if not parent_dir.exists():
             parent_dir.mkdir(parents=True, exist_ok=True)
-
-        package_root = Path(__file__).parent.parent
-        configs_dir = package_root / "configs"
-        args.link_configs.symlink_to(configs_dir, target_is_directory=True)
+        args.link_configs.symlink_to(
+            Path(__file__).parent, target_is_directory=True
+        )
 
     return vars(args)
 
@@ -564,8 +563,7 @@ def build_config(config_file: Optional[Path] = None) -> BaseConfig:
     """
     # Load "config.yaml".
     if not config_file:
-        config_dir = Path(__file__).parent.parent / "configs"
-        config_file = config_dir / "config.yaml"
+        config_file = Path(__file__).parent / "config.yaml"
     if config_file.exists():
         try:
             with open(config_file, mode="r", encoding="utf-8") as _file:

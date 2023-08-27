@@ -3,7 +3,7 @@
 More specifically, it queries Spotify for each track and attempts to resolve
 the year, album, and label. In addition, it removes "situation" tags
 {"Opener", "Build", "Peak Time"} from the Comments field. This is done because
-I'm now repurposing the "Rating" field to convey the energy level of tracks.
+I'm now re-purposing the "Rating" field to convey the energy level of tracks.
 """
 from argparse import ArgumentParser
 from concurrent.futures import as_completed, ThreadPoolExecutor

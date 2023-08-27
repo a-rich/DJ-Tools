@@ -78,7 +78,7 @@ def get_bad_tracks(_args):
     returned as a list of "bad" tracks.
 
     Args:
-        _args (argparser.NameSpace): command-line arguments
+        _args (argparser.Namespace): command-line arguments
 
     Returns:
         list: paths to files whose ID3 title tag has a Levenshtein similarity
