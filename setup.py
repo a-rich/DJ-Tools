@@ -18,7 +18,6 @@ REQUIREMENTS = [
     "pyperclip==1.8.2",
     "PyYAML==5.4.1",
     "requests==2.28.0",
-    "setuptools==58.1.0",
     "spotipy==2.21.0",
     "tqdm==4.64.0",
     "youtube-dl==2021.12.17",
