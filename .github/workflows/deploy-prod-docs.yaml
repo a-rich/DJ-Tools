@@ -1,0 +1,27 @@
+names: Deploy Production Docs
+on:
+  push:
+    branches: [ main ]
+    paths: [ '**.md' ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Python 3.9
+        uses: actions/setup-python@main
+        with:
+          python-version: 3.9
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r development-requirements.txt
+
+      - name: Checkout repo 
+        uses: actions/checkout@v2
+
+      - name: Deploy docs
+        run: |
+          mkdocs gh-deploy

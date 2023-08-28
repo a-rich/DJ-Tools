@@ -11,34 +11,36 @@ jobs:
       COVERAGE_TOTAL: 100
 
     steps:
-    - uses: actions/checkout@main
-    - name: Set up Python 3.9
-      uses: actions/setup-python@main
-      with:
-        python-version: 3.9
-        cache: 'pip'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8 pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Checkout repo
+        uses: actions/checkout@main
 
-    - name: pytester-cov
-      id: pytester-cov
-      uses: programmingwithalex/pytester-cov@main
-      with:
-        pytest-root-dir: 'djtools/'
-        cov-omit-list: 'djtools/__main__.py'
-        cov-threshold-single: ${{ env.COVERAGE_SINGLE }}
-        cov-threshold-total: ${{ env.COVERAGE_TOTAL }}
+      - name: Set up Python 3.9
+        uses: actions/setup-python@main
+        with:
+          python-version: 3.9
+          cache: 'pip'
 
-    - name: Coverage total fail - exit
-      if: ${{ steps.pytester-cov.outputs.cov-threshold-total-fail == 'true' }}
-      run: |
-        echo "cov total fail ${{ steps.pytester-cov.outputs.cov-threshold-total-fail }}"
-        exit 1
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r development-requirements.txt
 
-    - name: Commit pytest coverage table
-      uses: peter-evans/commit-comment@main
-      with:
-        body: ${{ steps.pytester-cov.outputs.output-table }}
+      - name: pytester-cov
+        id: pytester-cov
+        uses: programmingwithalex/pytester-cov@main
+        with:
+          pytest-root-dir: 'djtools/'
+          cov-omit-list: 'djtools/__main__.py'
+          cov-threshold-single: ${{ env.COVERAGE_SINGLE }}
+          cov-threshold-total: ${{ env.COVERAGE_TOTAL }}
+
+      - name: Coverage total fail - exit
+        if: ${{ steps.pytester-cov.outputs.cov-threshold-total-fail == 'true' }}
+        run: |
+          echo "cov total fail ${{ steps.pytester-cov.outputs.cov-threshold-total-fail }}"
+          exit 1
+
+      - name: Commit pytest coverage table
+        uses: peter-evans/commit-comment@main
+        with:
+          body: ${{ steps.pytester-cov.outputs.output-table }}
