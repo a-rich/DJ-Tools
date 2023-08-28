@@ -1,4 +1,4 @@
-names: Deploy Development Docs
+name: Deploy Development Docs
 on:
   push:
     branches: [ releases/* ]

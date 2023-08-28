@@ -1,4 +1,4 @@
-names: Deploy Production Docs
+name: Deploy Production Docs
 on:
   push:
     branches: [ main ]
