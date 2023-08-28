@@ -1,0 +1,31 @@
+names: Release beta version 
+on:
+  push:
+    branches: [ releases/* ]
+    paths: [ '**.py' ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Python 3.9
+        uses: actions/setup-python@main
+        with:
+          python-version: 3.9
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r development-requirements.txt
+
+      - name: Checkout repo 
+        uses: actions/checkout@v2
+
+      - name: Build and publish wheel
+        run: |
+          NEXT_VERSION=`python -c "import semver; from djtools.version import __version__; ver = semver.Version.parse(__version__).bump_prerelease(); print(ver)"`
+          SEMVER_REGEX="([0-9]+)\.([0-9]+)\.([0-9])-*b*([0-9]+)"
+          sed -i "" -E "s/$SEMVER_REGEX/$NEXT_VERSION/g" djtools/version.py
+          python -m build
+          twine upload dist/* -u a-rich -p ${{ secrets.PYPI_PASSWORD }}
