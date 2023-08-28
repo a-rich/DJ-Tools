@@ -1,4 +1,4 @@
-names: Release prod version 
+name: Release prod version 
 on:
   push:
     branches: [ main ]
@@ -27,5 +27,8 @@ jobs:
           NEXT_VERSION=`python -c "import semver; from djtools.version import __version__; ver = semver.Version.parse(__version__).bump_minor(); print(ver)"`
           SEMVER_REGEX="([0-9]+)\.([0-9]+)\.([0-9])-*b*([0-9]+)"
           sed -i "" -E "s/$SEMVER_REGEX/$NEXT_VERSION/g" djtools/version.py
+          git add djtools/version.py
+          git commit -m $GITHUB_SHA
+          git push
           python -m build
           twine upload dist/* -u a-rich -p ${{ secrets.PYPI_PASSWORD }}
