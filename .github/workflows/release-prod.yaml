@@ -38,4 +38,4 @@ jobs:
           git commit -m $GITHUB_SHA
           git push --force
           python -m build
-          twine upload dist/* -u a-rich -p ${{ secrets.PYPI_PASSWORD }}
+          twine upload dist/* -u 'a-rich' -p '${{ secrets.PYPI_PASSWORD }}'
