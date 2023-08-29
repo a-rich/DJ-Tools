@@ -16,5 +16,3 @@ Every capability of DJ Tools is demonstrated in the [How-to Guides](how_to_guide
 You'll find exposition on relevant topics in [Conceptual Guides](conceptual_guides/index.md) such as [Get to Know Your Rekordbox Collection](conceptual_guides/rekordbox_collection.md) and [The Importance of Standardization and Quality Control](conceptual_guides/file_standardization.md).
 
 ### [Interested in contributing](https://github.com/a-rich/DJ-Tools/blob/main/CONTRIBUTING.md)?
-
-Test deploy docs workflow
