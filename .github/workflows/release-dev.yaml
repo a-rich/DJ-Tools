@@ -41,4 +41,4 @@ jobs:
       - name: Build and publish wheel
         run: |
           python -m build
-          twine upload dist/* -u 'a-rich' -p '${{ secrets.PYPI_PASSWORD }}'
+          twine upload dist/* -u 'aweeeezy' -p '${{ secrets.PYPI_PASSWORD }}'
