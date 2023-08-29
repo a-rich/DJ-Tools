@@ -1,8 +1,10 @@
 name: Release prod version 
 on:
   push:
-    branches: [ main ]
-    paths: [ '**.py' ]
+    branches:
+      - main
+    paths:
+      - '**.py'
 
 jobs:
   build:

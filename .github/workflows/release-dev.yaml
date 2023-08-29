@@ -1,8 +1,10 @@
 name: Release beta version 
 on:
   push:
-    branches: [ releases/* ]
-    paths: [ '**.py' ]
+    branches:
+      - 'releases/*'
+    paths:
+      - '**.py'
 
 jobs:
   build:

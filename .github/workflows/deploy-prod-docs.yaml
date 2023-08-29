@@ -1,8 +1,10 @@
 name: Deploy Production Docs
 on:
   push:
-    branches: [ main ]
-    paths: [ '**.md' ]
+    branches:
+      - main
+    paths:
+      - '**.md'
 
 jobs:
   build:
