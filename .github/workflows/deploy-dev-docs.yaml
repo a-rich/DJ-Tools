@@ -1,8 +1,10 @@
 name: Deploy Development Docs
 on:
   push:
-    branches: [ releases/* ]
-    paths: [ '**.md' ]
+    branches:
+      - 'releases/**'
+    paths:
+      - '**.md'
 
 jobs:
   build:
