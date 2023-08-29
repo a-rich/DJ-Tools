@@ -45,5 +45,5 @@ jobs:
           cp -r ../main-repo/docs docs
           git add .
           git commit -m $GITHUB_SHA
-          git push
+          git push --force
           mkdocs gh-deploy

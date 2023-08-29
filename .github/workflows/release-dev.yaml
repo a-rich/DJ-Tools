@@ -36,6 +36,6 @@ jobs:
           sed -i -E "s/$SEMVER_REGEX/$NEXT_VERSION/g" djtools/version.py
           git add djtools/version.py
           git commit -m $GITHUB_SHA
-          git push
+          git push --force
           python -m build
           twine upload dist/* -u a-rich -p ${{ secrets.PYPI_PASSWORD }}
