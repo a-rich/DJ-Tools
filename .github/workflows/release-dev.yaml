@@ -29,7 +29,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r development-requirements.txt
 
-      - name: Build and publish wheel
+      - name: Bump version
         run: |
           NEXT_VERSION=`python -c "import semver; from djtools.version import __version__; ver = semver.Version.parse(__version__).bump_prerelease(); print(ver)"`
           SEMVER_REGEX="([0-9]+)\.([0-9]+)\.([0-9])-*b*([0-9]+)"
@@ -37,5 +37,8 @@ jobs:
           git add djtools/version.py
           git commit -m $GITHUB_SHA
           git push --force
+
+      - name: Build and publish wheel
+        run: |
           python -m build
           twine upload dist/* -u a-rich -p ${{ secrets.PYPI_PASSWORD }}
