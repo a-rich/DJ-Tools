@@ -5,8 +5,7 @@ on:
       - main
     paths:
       - '**.py'
-    paths-ignore:
-      - '**/*version.py'
+      - '!**/*version.py'
 
 jobs:
   build:
