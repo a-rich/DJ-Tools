@@ -17,6 +17,8 @@ jobs:
 
       - name: Checkout repo 
         uses: actions/checkout@main
+        with:
+          token: ${{ secrets.DJTOOLS_WORKFLOWS }}
 
       - name: Set up Python 3.9
         uses: actions/setup-python@main
