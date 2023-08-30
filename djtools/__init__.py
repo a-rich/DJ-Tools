@@ -66,7 +66,6 @@ __all__ = (
 def main():
     """This is the entry point for the DJ Tools library."""
 
-    # Test bypassing branch protections with PAT.
     logger, log_file = initialize_logger()
     config = build_config()
     logger.setLevel(config.LOG_LEVEL)

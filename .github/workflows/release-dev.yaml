@@ -5,6 +5,8 @@ on:
       - 'releases/*'
     paths:
       - '**.py'
+    paths-ignore:
+      - '**/*version.py'
 
 jobs:
   build:
