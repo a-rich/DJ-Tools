@@ -4,8 +4,12 @@ on:
 
 jobs:
   build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-2022]  # there's no docker container support on Windows runners :(
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+
     env:
       COVERAGE_SINGLE: 0
       COVERAGE_TOTAL: 100
