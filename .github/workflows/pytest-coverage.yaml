@@ -1,5 +1,4 @@
-name: pytester-cov workflow
-
+name: Pytest Coverage
 on:
   - pull_request
 
