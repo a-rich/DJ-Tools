@@ -1,7 +1,6 @@
 """Testing for the helpers module."""
 from pathlib import Path
 import re
-from typing import List
 from unittest import mock
 
 import pytest
@@ -10,9 +9,7 @@ from djtools.configs.helpers import (
     arg_parse,
     BaseConfig,
     build_config,
-    convert_to_paths,
     filter_dict,
-    parse_json,
     PKG_CFG,
 )
 from djtools.version import __version__
@@ -108,17 +105,6 @@ def test_build_config_version(mock_parse_args, namespace, capsys):
     assert capsys.readouterr().out == f"{__version__}\n"
 
 
-@pytest.mark.parametrize("paths", ["path", ["path1", "path2"]])
-def test_convert_to_paths(paths):
-    """Test for the convert_to_paths function."""
-    paths = convert_to_paths(paths)
-    if isinstance(paths, List):
-        for path in paths:
-            assert isinstance(path, Path)
-    else:
-        assert isinstance(paths, Path)
-
-
 @pytest.mark.parametrize("config", PKG_CFG.values())
 @mock.patch("djtools.spotify.helpers.get_spotify_client", mock.Mock())
 def test_filter_dict(config):
@@ -146,18 +132,3 @@ def test_overridding_list():
     ):
         parse_args = arg_parse()
     assert parse_args["upload_exclude_dirs"] == []
-
-
-def test_parse_json():
-    """Test for the parse_json function."""
-    json_string = '{"name": ["stuff"]}'
-    json_obj = parse_json(json_string)
-    assert isinstance(json_obj, dict)
-    assert isinstance(json_obj["name"], list)
-
-
-def test_parse_json_invalid():
-    """Test for the parse_json function."""
-    json_string = '{"name": {"stuff"}}'
-    with pytest.raises(ValueError):
-        parse_json(json_string)
