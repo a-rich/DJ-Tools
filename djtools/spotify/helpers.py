@@ -57,7 +57,7 @@ async def catch(generator: AsyncGenerator, message: Optional[str] = "") -> Any:
     """
     while True:
         try:
-            yield await next(generator)  # pylint: disable=stop-iteration-return
+            yield await generator.__anext__()  # pylint: disable=stop-iteration-return,unnecessary-dunder-call
         except StopAsyncIteration:
             return
         except Exception as exc:
