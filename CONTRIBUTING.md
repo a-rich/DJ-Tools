@@ -28,5 +28,5 @@ pytest --cov --cov-report term-missing
 
 ### Linting check:
 ```
-pylint **/*.py
+pylint $(git ls-files '*.py')
 ```
