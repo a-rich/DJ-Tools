@@ -31,7 +31,7 @@ jobs:
 
       - name: Run pylint
         run: |
-          PYLINT=`pylint $(git ls-files '*.py')`
+          PYLINT=`pylint **/*.py`
           PASS=`echo $PYLINT | grep "Your code has been rated at ${{ env.PYLINT_PASS_SCORE}}/10"`
           if [ -z $PASS ]; then
             echo $PYLINT
