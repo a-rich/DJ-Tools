@@ -57,7 +57,7 @@ async def catch(generator: AsyncGenerator, message: Optional[str] = "") -> Any:
     """
     while True:
         try:
-            yield await generator.__anext__()
+            yield await next(generator)  # pylint: disable=stop-iteration-return
         except StopAsyncIteration:
             return
         except Exception as exc:
@@ -83,7 +83,7 @@ def filter_results(
         artist: Potential artist of a track.
 
     Returns:
-        Tuple of track object and Levenshtein distance. 
+        Tuple of track object and Levenshtein distance.
     """
     track, dist = {}, 0.0
     tracks = filter_tracks(
@@ -119,7 +119,7 @@ def filter_tracks(
         artist: Potential artist of a track.
 
     Returns:
-        List of tuple of track object and Levenshtein distance. 
+        List of tuple of track object and Levenshtein distance.
     """
     results = []
     artist = ", ".join(sorted([x.strip() for x in artist.split(",")]))
@@ -190,7 +190,7 @@ def get_playlist_ids() -> Dict[str, str]:
     """Load Spotify playlist names -> IDs lookup.
 
     Returns:
-        Dictionary of Spotify playlist names mapped to playlist IDs. 
+        Dictionary of Spotify playlist names mapped to playlist IDs.
     """
     playlist_ids = {}
     ids_path = Path(__file__).parent.parent / "configs" / "spotify_playlists.yaml"
@@ -531,7 +531,7 @@ def write_playlist_ids(playlist_ids: Dict[str, str]):
 
     Args:
         playlist_ids: Dictionary of Spotify playlist names mapped to playlist
-            IDs. 
+            IDs.
     """
     ids_path = (
         Path(__file__).parent.parent / "configs" / "spotify_playlists.yaml"

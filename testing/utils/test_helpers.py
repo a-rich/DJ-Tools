@@ -132,7 +132,7 @@ def test_get_local_tracks_empty(tmpdir, config, caplog):
             {
                 "track": {
                     "name": "last track title",
-                    "artists": [ 
+                    "artists": [
                         {"name": "final artist name"},
                     ],
                 },
@@ -149,7 +149,7 @@ def test_get_local_tracks_empty(tmpdir, config, caplog):
                 {
                     "track": {
                         "name": "track title",
-                        "artists": [ 
+                        "artists": [
                             {"name": "artist name"},
                         ],
                     },
@@ -157,7 +157,7 @@ def test_get_local_tracks_empty(tmpdir, config, caplog):
                 {
                     "track": {
                         "name": "another track title",
-                        "artists": [ 
+                        "artists": [
                             {"name": "another artist name"},
                             {"name": "a second artist name"},
                         ],

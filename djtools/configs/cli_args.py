@@ -14,7 +14,7 @@ def convert_to_paths(paths: Union[str, List[str]]) -> Path:
         paths: String(s) representing path(s).
 
     Returns:
-        Path 
+        Path
     """
     if isinstance(paths, List):
         return list(map(Path, filter(None, paths)))
@@ -125,7 +125,7 @@ def get_arg_parser() -> ArgumentParser:
         help=(
             "Perform operations on your DJ collection such as building "
             "playlists based on your tags, shuffling track numbers, and "
-            "copying playlists to another location." 
+            "copying playlists to another location."
         ),
         formatter_class=RawTextHelpFormatter,
     )

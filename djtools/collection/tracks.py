@@ -68,7 +68,7 @@ class Track(ABC):
         """Gets the genre tags of the track.
 
         Returns:
-            A list of the track's genre tags.            
+            A list of the track's genre tags.
         """
 
     @abstractmethod
@@ -310,7 +310,7 @@ class RekordboxTrack(Track):
         """Gets the genre tags of the track.
 
         Returns:
-            A list of the track's genre tags.            
+            A list of the track's genre tags.
         """
         return self._Genre
 
@@ -378,7 +378,7 @@ class RekordboxTrack(Track):
         Args:
             playlist: Whether or not to serialize this track as a member of a
                 playlist.
-        
+
         Raises:
             ValueError: The DateAdded attribute must serialize into its
                 original format.
@@ -469,7 +469,7 @@ class RekordboxTrack(Track):
                 track_path = quote(value.as_posix(), safe="/,()!+=#;$:")
                 value = f"{self.__location_prefix}{track_path}"
                 value = re.sub(
-                    r'%[0-9A-Z]{2}', lambda x: x.group(0).lower(), value 
+                    r'%[0-9A-Z]{2}', lambda x: x.group(0).lower(), value
                 )
 
             # Reverse the rating value to the range recognized by Rekordbox.
@@ -506,7 +506,7 @@ class RekordboxTrack(Track):
 
     @classmethod
     def validate(cls, original: bs4.element.Tag, serializable: RekordboxTrack):
-        """Validate the serialized track matches the original. 
+        """Validate the serialized track matches the original.
 
         Args:
             original: BeautifulSoup Tag representing a track.

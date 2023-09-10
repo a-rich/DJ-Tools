@@ -92,7 +92,7 @@ def filter_dict(
 @make_path
 def build_config(config_file: Optional[Path] = None) -> BaseConfig:
     """This function loads configurations for the library.
-    
+
     Configurations are loaded from config.yaml. If command-line arguments are
     provided, these override the configuration options set in config.yaml.
 

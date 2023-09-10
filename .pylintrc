@@ -1,6 +1,6 @@
 [DESIGN]
 
-disable=abstract-class-instantiated,broad-exception-caught,broad-exception-raised,import-outside-toplevel,no-name-in-module
+disable=abstract-class-instantiated,broad-except,import-outside-toplevel,no-name-in-module
 
 good-names=USER
 

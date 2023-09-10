@@ -102,7 +102,7 @@ def find_matches(
 def get_beatcloud_tracks() -> List[str]:
     """Lists all the music files in S3 and parses out the track titles and
         artist names.
-    
+
     Returns:
         Beatcloud track titles and artist names.
     """
@@ -180,7 +180,7 @@ def get_spotify_tracks(
     Args:
         config: Configuration object.
         playlists: List of Spotify playlist name.
-    
+
     Returns:
         Spotify tracks keyed by playlist name.
     """

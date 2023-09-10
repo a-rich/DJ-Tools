@@ -98,7 +98,7 @@ def test_compare_tracks(
                 {
                     "track": {
                         "name": "title",
-                        "artists": [ 
+                        "artists": [
                             {"name": "artist"},
                         ],
                     },

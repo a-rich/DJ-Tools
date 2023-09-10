@@ -24,7 +24,7 @@ def compare_tracks(
     beatcloud_tracks: Optional[List[str]] = None,
 ) -> Tuple[List[str], List[str]]:
     """Compares tracks from Spotify / local with Beatcloud tracks.
-    
+
     Gets track titles and artists from Spotify playlist(s) and / or file names
     from local directories, and get file names from the beatcloud. Then compute
     the Levenshtein similarity between their product in order to identify any

@@ -85,7 +85,7 @@ def parse_sync_command(
 @make_path
 def rewrite_track_paths(config: BaseConfig, other_user_collection: Path):
     """This function modifies the location of tracks in a collection.
-    
+
     This is done by replacing the "USB_PATH" written by "IMPORT_USER" with the
     "USB_PATH" in "config.yaml".
 

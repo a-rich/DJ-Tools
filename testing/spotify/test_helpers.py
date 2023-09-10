@@ -102,7 +102,7 @@ async def test_catch(message, caplog):
             {
                 "id": "some_id",
                 "name": "Arctic Oscillations",
-                "artists": [ 
+                "artists": [
                     {"name": "Fanu"},
                 ],
             },
@@ -119,7 +119,7 @@ def test_filter_results(mock_spotify, mock_filter_tracks, spotify_next_fails):
                 {
                     "track": {
                         "name": "Arctic Oscillations",
-                        "artists": [ 
+                        "artists": [
                             {"name": "Fanu"},
                         ],
                     },
@@ -127,7 +127,7 @@ def test_filter_results(mock_spotify, mock_filter_tracks, spotify_next_fails):
                 {
                     "track": {
                         "name": "definitely not a matching title",
-                        "artists": [ 
+                        "artists": [
                             {"name": "not the right artist"},
                         ],
                     },
@@ -148,7 +148,7 @@ def test_filter_results(mock_spotify, mock_filter_tracks, spotify_next_fails):
                     {
                         "track": {
                             "name": "last track title",
-                            "artists": [ 
+                            "artists": [
                                 {"name": "final artist name"},
                             ],
                         },
@@ -165,7 +165,7 @@ def test_filter_results(mock_spotify, mock_filter_tracks, spotify_next_fails):
         {
             "id": "some_id",
             "name": "Arctic Oscillations",
-            "artists": [ 
+            "artists": [
                 {"name": "Fanu"},
             ],
         },
@@ -179,13 +179,13 @@ def test_filter_tracks():
     tracks = [
         {
             "name": "Arctic Oscillations",
-            "artists": [ 
+            "artists": [
                 {"name": "Fanu"},
             ],
         },
         {
             "name": "definitely not a matching title",
-            "artists": [ 
+            "artists": [
                 {"name": "not the right artist"},
             ],
         },
@@ -198,7 +198,7 @@ def test_filter_tracks():
         (
             {
                 "name": title,
-                "artists": [ 
+                "artists": [
                     {"name": artist},
                 ],
             },
@@ -227,7 +227,7 @@ def test_filter_tracks():
                 {
                     "track": {
                         "name": "Arctic Oscillations",
-                        "artists": [ 
+                        "artists": [
                             {"name": "Fanu"},
                         ],
                     },
@@ -235,7 +235,7 @@ def test_filter_tracks():
                 {
                     "track": {
                         "name": "definitely not a matching title",
-                        "artists": [ 
+                        "artists": [
                             {"name": "not the right artist"},
                         ],
                     },
@@ -258,7 +258,7 @@ def test_fuzzy_match(mock_spotify_search, mock_spotify, title, match_result):
             {
                 "id": "some_id",
                 "name": "Arctic Oscillations",
-                "artists": [ 
+                "artists": [
                     {"name": "Fanu"},
                 ],
             },
@@ -374,7 +374,7 @@ async def test_get_subreddit_posts(
     )
     if not num_subs:
         assert caplog.records[1].message == (
-            'No new submissions from "r/techno"'        
+            'No new submissions from "r/techno"'
         )
     else:
         assert caplog.records[1].message == (
@@ -557,7 +557,7 @@ def test_track_name_too_similar(playlist_track_names, caplog):
                             "1lps8esDJ9M6rG3HBjhuux",
                         ),
                         "name": "last track title",
-                        "artists": [ 
+                        "artists": [
                             {"name": "final artist name"},
                         ],
                     },
@@ -577,7 +577,7 @@ def test_track_name_too_similar(playlist_track_names, caplog):
                         "uri": "test_uri",
                         "id": "test_id",
                         "name": "last track title",
-                        "artists": [ 
+                        "artists": [
                             {"name": "final artist name"},
                         ],
                     },

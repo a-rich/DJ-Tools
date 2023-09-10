@@ -3,7 +3,7 @@ platforms.
 
 Playlist is an abstract base class which defines the interface expected of a
 playlist; namely methods for (de)serialization to/from the representation
-recognized by the DJ software for which Playlist is being sub-classed. 
+recognized by the DJ software for which Playlist is being sub-classed.
 
 RekordboxPlaylist is an implementation of Playlist which operates on the XML
 format that Rekordbox exports.

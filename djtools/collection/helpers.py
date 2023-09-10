@@ -323,7 +323,7 @@ def filter_tag_playlists(
     playlist: Playlist, playlist_filters: List[PlaylistFilter]
 ) -> None:
     """Applies a list of PlaylistFilter implementations to the playlist.
-    
+
     If the PlaylistFilter implementations' is_filter_playlist method evaluates
     to True, then the filter_track method is applied to each track in the
     playlist. The playlist's tracks are set to remove the tracks that have been

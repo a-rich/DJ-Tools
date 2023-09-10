@@ -33,7 +33,7 @@ class CollectionConfig(BaseConfig):
 
     def __init__(self, *args, **kwargs):
         """Constructor.
-        
+
         Raises:
             RuntimeError: COLLECTION_PATH must be a valid collection path.
             RuntimeError: collection_playlists.yaml must be a valid YAML file.

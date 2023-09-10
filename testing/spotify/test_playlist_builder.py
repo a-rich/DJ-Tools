@@ -80,7 +80,7 @@ async def test_async_spotify_playlists(
             {
                 "id": "some_id",
                 "name": "some_name",
-                "artists": [ 
+                "artists": [
                     {"name": "some_artist"},
                 ],
             },

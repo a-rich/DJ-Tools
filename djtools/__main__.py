@@ -17,7 +17,7 @@ Spotify operations:
         uploading music.
 
 Utils operations:
-    * CHECK_TRACKS (check_tracks.py): Identify overlap between Spotify 
+    * CHECK_TRACKS (check_tracks.py): Identify overlap between Spotify
         playlists and / or local directories and and the Beatcloud.
     * URL_DOWNLOAD (url_download.py): Download tracks from a URL (e.g.
         Soundcloud playlist).
