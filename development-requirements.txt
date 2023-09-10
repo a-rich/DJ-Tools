@@ -9,7 +9,7 @@ mkdocs-material==9.1.8
 mkdocstrings-python==1.6.0
 pydantic==1.9.1
 pydub==0.25.1
-pylint==2.17.3
+pylint<=2.15.0  # Windows requires a specific colorama version for awscli that conflicts with >=2.15.0
 pyperclip==1.8.2
 pytest==7.2.0
 pytest-asyncio==0.20.3
