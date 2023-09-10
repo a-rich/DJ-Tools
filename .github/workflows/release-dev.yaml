@@ -4,6 +4,7 @@ on:
     branches:
       - 'releases/*'
     paths:
+      - 'requirements.txt'
       - '**.py'
       - '!**/*version.py'
 
