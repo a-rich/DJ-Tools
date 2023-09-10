@@ -3,7 +3,7 @@ platforms.
 
 Playlist is an abstract base class which defines the interface expected of a
 playlist; namely methods for (de)serialization to/from the representation
-recognized by the DJ software for which Playlist is being sub-classed. 
+recognized by the DJ software for which Playlist is being sub-classed.
 
 RekordboxPlaylist is an implementation of Playlist which operates on the XML
 format that Rekordbox exports.
@@ -12,6 +12,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import inspect
 from pathlib import Path
+import re
 from typing import Any, Dict, List, Optional
 
 import bs4
@@ -92,11 +93,14 @@ class Playlist(ABC):
         """
         return self._parent
 
-    def get_playlists(self, name: Optional[str] = None) -> List[Playlist]:
+    def get_playlists(
+        self, name: Optional[str] = None, glob: Optional[bool] = False
+    ) -> List[Playlist]:
         """Returns Playlists with a matching name.
 
         Args:
             name: Name of the Playlists to return.
+            glob: Glob on playlist name containing "*".
 
         Returns:
             The Playlists with the same name.
@@ -109,12 +113,16 @@ class Playlist(ABC):
                 )
             return list(self)
 
+        exp = re.compile(r".*".join(name.split("*")))
         playlists = []
-        if self.get_name() == name:
+        if (
+            (glob and re.search(exp, self.get_name())) or
+            (not glob and self.get_name() == name)
+        ):
             playlists.append(self)
         if self.is_folder():
             for playlist in self:
-                playlists.extend(playlist.get_playlists(name))
+                playlists.extend(playlist.get_playlists(name, glob=glob))
 
         return [playlist for playlist in playlists if playlist is not None]
 
@@ -292,7 +300,7 @@ class RekordboxPlaylist(Playlist):
 
         # Build a representation of this playlist.
         for key, value in repr_attrs.items():
-            # Skip representing this playlists's tracks.
+            # Skip representing this playlist's tracks.
             # Defer representation of the playlists attribute until the end.
             if key in ["playlists", "tracks"]:
                 continue
@@ -391,13 +399,13 @@ class RekordboxPlaylist(Playlist):
         playlist_tag = bs4.Tag(
             name="NODE",
             attrs=(
-               {"Name": name, "Type": "0", "Count": len(playlists)}
-               if playlists else {
-                   "Name": name,
-                   "Type": "1",
-                   "KeyType": "0",
-                   "Entries": len(tracks),
-               }
+            {"Name": name, "Type": "0", "Count": len(playlists)}
+            if playlists is not None else {
+                "Name": name,
+                "Type": "1",
+                "KeyType": "0",
+                "Entries": len(tracks),
+            }
             ),
         )
         playlist = RekordboxPlaylist(

@@ -7,7 +7,8 @@ from pydantic import ValidationError
 from djtools.collection.config import (
     CollectionConfig, PlaylistConfig, PlaylistConfigContent
 )
-from djtools.utils.helpers import mock_exists, MockOpen
+
+from ..test_utils import mock_exists, MockOpen
 
 
 def test_collectionconfig():

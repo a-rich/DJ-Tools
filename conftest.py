@@ -6,11 +6,12 @@ from pathlib import Path
 from unittest import mock
 
 from bs4 import BeautifulSoup
+from pydub import AudioSegment, generators
 import pytest
 import yaml
 
 from djtools.configs.config import BaseConfig
-from djtools.configs.helpers import filter_dict, pkg_cfg
+from djtools.configs.helpers import filter_dict, PKG_CFG
 from djtools.collection.collections import RekordboxCollection
 from djtools.collection.playlists import RekordboxPlaylist
 from djtools.collection.tracks import RekordboxTrack
@@ -26,7 +27,7 @@ def namespace():
 @mock.patch("djtools.spotify.helpers.get_spotify_client", mock.MagicMock())
 def config():
     """Test config fixture."""
-    configs = {pkg: cfg() for pkg, cfg in pkg_cfg.items() if pkg != "configs"}
+    configs = {pkg: cfg() for pkg, cfg in PKG_CFG.items() if pkg != "configs"}
     joined_config = BaseConfig(
         **{
             k: v for cfg in configs.values()
@@ -41,6 +42,21 @@ def config():
 def input_tmpdir(tmpdir_factory):
     """Test tmpdir fixture."""
     return tmpdir_factory.mktemp("input")
+
+
+@pytest.fixture(scope="session")
+def audio_file(input_tmpdir):  # pylint: disable=redefined-outer-name
+    """Test audio file fixture."""
+    headroom = -2
+    audio = AudioSegment.silent(duration=1000).overlay(
+        generators.WhiteNoise().to_audio_segment(duration=1000).apply_gain(
+            headroom
+        )
+    )
+    _file = Path(input_tmpdir) / "file.mp3"
+    audio.export(_file, format="mp3")
+
+    return audio, _file
 
 
 @pytest.fixture
@@ -113,7 +129,7 @@ def rekordbox_xml(input_tmpdir):  # pylint: disable=redefined-outer-name
         with open(track.get_location(), mode="w", encoding="utf-8") as _file:
             _file.write("")
 
-    return collection.serialize(new_path=input_tmpdir / "rekordbox.xml")
+    return collection.serialize(output_path=input_tmpdir / "rekordbox.xml")
 
 
 @pytest.fixture(scope="session")

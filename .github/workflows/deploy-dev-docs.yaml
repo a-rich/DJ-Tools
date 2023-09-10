@@ -1,0 +1,55 @@
+name: Deploy Development Docs
+on:
+  push:
+    branches:
+      - 'releases/**'
+    paths:
+      - '**.md'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set GitHub Actions as Commit Author
+        run: |
+          git config --global user.name github-actions
+          git config --global user.email github-actions@github.com
+
+      - name: Checkout main repo 
+        uses: actions/checkout@main
+        with:
+          path: 'main-repo'
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@main
+        with:
+          python-version: 3.9
+          cache: 'pip'
+
+      - uses: actions/cache@v2
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}-${{ hashFiles('dev-requirements.txt') }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r main-repo/development-requirements.txt
+
+      - name: Checkout dev docs repo 
+        uses: actions/checkout@main
+        with:
+          repository: a-rich/DJ-Tools-dev-docs
+          path: 'dev-docs-repo'
+          token: ${{ secrets.DJTOOLS_WORKFLOWS }}
+
+      - name: Update and deploy docs
+        run: |
+          cd dev-docs-repo/
+          rm -rf docs && rm -rf djtools
+          cp -r ../main-repo/docs docs && cp -r ../main-repo/djtools djtools 
+          cp ../main-repo/mkdocs.yml mkdocs.yml
+          git add .
+          git commit -m "Deploy docs: $GITHUB_SHA"
+          git push --force
+          mkdocs gh-deploy --force

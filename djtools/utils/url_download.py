@@ -10,11 +10,13 @@ import re
 import youtube_dl as ytdl
 
 from djtools.configs.config import BaseConfig
+from djtools.utils.helpers import make_path
 
 
 logger = logging.getLogger(__name__)
 
 
+@make_path
 def fix_up(_file: Path) -> Path:
     """Removes digits appended to file name by youtube-dl.
 
@@ -38,17 +40,16 @@ def url_download(config: BaseConfig):
     Args:
         config: Configuration object.
     """
-    dl_loc = config.URL_DOWNLOAD_DESTINATION or Path(".")
+    dl_loc = config.AUDIO_DESTINATION or Path(".")
     dl_loc.mkdir(parents=True, exist_ok=True)
 
     ydl_opts = {
-        "format": "bestaudio/best",
         "postprocessors": [{
             "key": "FFmpegExtractAudio",
-            "preferredcodec": "mp3",
-            "preferredquality": "320",
+            "preferredcodec": config.AUDIO_FORMAT,
+            "preferredquality": config.AUDIO_BITRATE,
         }],
-        "outtmpl": (dl_loc / "%(title)s.%(ext)s").as_posix()
+        "outtmpl": (dl_loc / "%(title)s.tmp").as_posix()
     }
 
     with ytdl.YoutubeDL(ydl_opts) as ydl:

@@ -3,9 +3,9 @@ What follows is a basic introduction to using DJ Tools. For detailed usage of th
 
 DJ Tools is a command-line interface (CLI) tool so it must be run from the command-line! The command `djtools` should be available to you from any directory, however, Windows users may need to add their Python installation to their [PATH environment variable](https://www.wikihow.com/Change-the-PATH-Environment-Variable-on-Windows) depending on how they installed Python.
 
-Upon a fresh installation, running `djtools` without any options should do nothing. All of the configuration options will take on the default values defined in the [configuration objects](configuration.md) which are the same values present in the pre-packaged [config.yaml](https://github.com/a-rich/DJ-Tools/blob/main/djtools/configs/config.yaml).
+Upon a fresh installation, running `djtools` without any options should do nothing. All of the configuration options will take on the default values defined in the [configuration objects](configuration.md) which are the same values present in the pre-packaged [YAML](https://en.wikipedia.org/wiki/YAML) file, [config.yaml](https://github.com/a-rich/DJ-Tools/blob/main/djtools/configs/config.yaml).
 
-Any of these options can be overridden from the CLI by providing the equivalent lowercase and dash-delimited option. For example, activating the `collection_playlists` function, overriding whatever may be set for `COLLECTION_PLAYLISTS` in `config.yaml`, can be done by running `djtools --collection-playlists`. The same options in `config.yaml` are UPPERCASE and underscore-delimited. For example, configuring the `collection_playlists` function to run every time you call `djtools` can be done by setting `COLLECTION_PLAYLISTS: true`.
+Any of these options can be overridden from the CLI by providing the equivalent lowercase and dash-delimited option. For example, to activate the `collection_playlists` function, overriding whatever may be set for `COLLECTION_PLAYLISTS` in `config.yaml` can be done by running `djtools --collection-playlists`. The same options in `config.yaml` are UPPERCASE and underscore-delimited. For example, configuring the `collection_playlists` function to run every time you call `djtools` can be done by setting `COLLECTION_PLAYLISTS: true`.
 
 Many of the configuration options are set only when first installing DJ Tools. Below are some example options that fit this category:
 
@@ -15,7 +15,7 @@ Many of the configuration options are set only when first installing DJ Tools. B
 * `DISCORD_URL`
 * `USB_PATH`
 
-Other options you will likely want to set on a case-by-case basis and, therefore, keep them configured at their default value and overriding them with the associated CLI option as needed. Some examples for this category include:
+For some other options, you will likely want to set them on a case-by-case basis and keep them configured at their default value, overriding them with the associated CLI option as needed. Some examples for this category include:
 
 * `COLLECTION_PLAYLISTS`
 * `SPOTIFY_PLAYLIST_UPDATE`
@@ -25,7 +25,7 @@ Other options you will likely want to set on a case-by-case basis and, therefore
 * `CHECK_TRACKS`
 * `IMPORT_USER`
 
-Other options may change on occasion but are too difficult to format for the CLI. Some example options that fit this category are:
+Other options may change on occasion but are too difficult to format using the CLI, meaning you'll want to handle setting those options in `config.yaml`. Some example options that fit this category are:
 
 * `SPOTIFY_PLAYLIST_SUBREDDITS`
 * `DOWNLOAD_EXCLUDE_DIRS`
@@ -39,7 +39,7 @@ For example, whenever I install the newest version of DJ Tools, I remove my link
 
 `rm -rf ~/Desktop/dj-tools-configs/live/`
 
-then I run the following command to link the installed configs directory to a known location on my desktop:
+then I run the following command to re-link the installed configs directory to the folder I just removed:
 
 `djtools --link-configs ~/Desktop/dj-tools-configs/live/`
 

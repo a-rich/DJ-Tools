@@ -2,28 +2,32 @@
 from collections import defaultdict
 import logging
 from pathlib import Path
+from typing import Optional
 
 import yaml
 
 from djtools.collection.config import PlaylistConfig, PlaylistConfigContent
+from djtools.collection import helpers
 from djtools.collection.helpers import (
     add_selectors_to_tags,
     aggregate_playlists,
     build_combiner_playlists,
     build_tag_playlists,
     filter_tag_playlists,
-    HipHopFilter,
-    MinimalDeepTechFilter,
     PLATFORM_REGISTRY,
     print_playlists_tag_statistics,
 )
 from djtools.configs.config import BaseConfig
+from djtools.utils.helpers import make_path
 
 
 logger = logging.getLogger(__name__)
 
 
-def collection_playlists(config: BaseConfig):
+@make_path
+def collection_playlists(
+    config: BaseConfig, output_path: Optional[Path] = None
+):
     """Builds playlists automatically.
 
     By maintaining a collection with tracks having tag data (e.g. genre tags,
@@ -46,8 +50,8 @@ def collection_playlists(config: BaseConfig):
     COLLECTION_PLAYLISTS_REMAINDER).
 
     A special folder with the name "_ignore" may be included anywhere within
-    the playlist config's "tags" specification with playlists matching the set
-    of tags to ignore when creating the "Other" folder / playlist.
+    the "tags" specification with playlists matching the set of tags to ignore
+    when creating the "Other" folder / playlist.
 
     In addition to creating playlists from tags, this function also supports
     creating "combiner" playlists by evaluating boolean algebra expressions.
@@ -56,21 +60,24 @@ def collection_playlists(config: BaseConfig):
     of operands {tag, playlists, BPM ranges, rating ranges}.
 
     Combiner playlists are declared in the "combiner" specification of the
-    playlist config as an unnested folder with a playlists whose names are the
-    boolean algebra expressions used to construct them.
+    playlist config with playlists whose names are the boolean algebra
+    expressions used to construct them.
 
     Here's an example combiner playlist to illustrate this:
+
         ((Dubstep ~ [1-3]) | {My Favorites} | (*Techno & [135-145])) & Dark
 
     The resulting combiner playlist will be comprised of tracks that are:
-      - tagged as "Dubstep" but NOT having a rating less than 4
-      - OR in the playlist called "My Favorites"
-      - OR tagged as something ending with "Techno" AND in the BPM range of 135
-        to 145
-      - AND tagged as "Dark"
+
+    - tagged as "Dubstep" but NOT having a rating less than 4
+    - OR in the playlist called "My Favorites"
+    - OR tagged as something ending with "Techno" AND in the BPM range of 135
+    to 145
+    - AND tagged as "Dark"
 
     Args:
         config: Configuration object.
+        output_path: Path to write the new collection to.
     """
     # Load the playlist config.
     with open(
@@ -94,7 +101,7 @@ def collection_playlists(config: BaseConfig):
         path=config.COLLECTION_PATH
     )
 
-    # Dereference the Playlist implementation to use for this collection.
+    # Get the Playlist implementation to use for this collection.
     playlist_class = PLATFORM_REGISTRY[config.PLATFORM]["playlist"]
 
     # Create a dict of tracks keyed by their individual tags.
@@ -120,9 +127,13 @@ def collection_playlists(config: BaseConfig):
         # relative position of the playlist with the playlist tree.
         tag_playlists.set_parent()
 
-        # Apply the filtering logic of these PlaylistFilter implementations.
+        # Apply the filtering logic of the configured PlaylistFilter implementations.
         filter_tag_playlists(
-            tag_playlists, [HipHopFilter(), MinimalDeepTechFilter()]
+            tag_playlists,
+            [
+                getattr(helpers, playlist_filter)()
+                for playlist_filter in config.COLLECTION_PLAYLIST_FILTERS
+            ]
         )
 
         # Recursively traverse the playlist tree and create "all" playlists
@@ -166,12 +177,12 @@ def collection_playlists(config: BaseConfig):
         # Parse selectors from the combiner playlist names and update the
         # tags_tracks mapping.
         add_selectors_to_tags(
-            playlist_config, tags_tracks, collection, auto_playlists
+            playlist_config.combiner, tags_tracks, collection, auto_playlists
         )
 
         # Evaluate the boolean logic of the combiner playlists.
         combiner_playlists = build_combiner_playlists(
-            playlist_config, tags_tracks, playlist_class
+            playlist_config.combiner, tags_tracks, playlist_class
         )
 
         auto_playlists.append(combiner_playlists)
@@ -180,12 +191,10 @@ def collection_playlists(config: BaseConfig):
         if config.VERBOSITY and combiner_playlists:
             print_playlists_tag_statistics(combiner_playlists)
 
-    # Reset the collection's playlists and insert a new playlist containing
-    # the built playlists.
+    # Insert a new playlist containing the built playlists.
     auto_playlist = playlist_class.new_playlist(
         name="PLAYLIST_BUILDER", playlists=auto_playlists
     )
     auto_playlist.set_parent(collection.get_playlists())
-    collection.reset_playlists()
     collection.add_playlist(auto_playlist)
-    collection.serialize()
+    collection.serialize(output_path=output_path)

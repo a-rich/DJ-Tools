@@ -36,7 +36,6 @@ def download_music(config: BaseConfig, beatcloud_tracks: Optional[List[str]] = N
         beatcloud_tracks, beatcloud_matches = compare_tracks(
             config,
             beatcloud_tracks=beatcloud_tracks,
-            download_spotify_playlist=config.DOWNLOAD_SPOTIFY_PLAYLIST,
         )
         if not beatcloud_matches:
             logger.warning(
@@ -74,7 +73,7 @@ def download_music(config: BaseConfig, beatcloud_tracks: Optional[List[str]] = N
 
 def download_collection(config: BaseConfig):
     """This function downloads the collection of "IMPORT_USER".
-    
+
     After downloading "IMPORT_USER"'s collection, the location of all the
     tracks are modified so that they point to USER's "USB_PATH".
 

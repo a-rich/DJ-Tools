@@ -5,7 +5,7 @@ In this guide you will learn how to setup access to an AWS S3 API compliant obje
 ## Why sync files in the first place?
 There are two primary reasons to sync your files to the cloud:
 
-1. Creating a reliable backup for your audio files
+1. Creating a reliable backup for your files
 1. Enabling remote sharing of your collection with other DJs
 
 ## How it's done

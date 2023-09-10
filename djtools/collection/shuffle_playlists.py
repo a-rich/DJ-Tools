@@ -6,23 +6,28 @@ playlist(s).
 from concurrent.futures import as_completed, ThreadPoolExecutor
 import logging
 import os
+from pathlib import Path
 import random
+from typing import Optional
 
 from tqdm import tqdm
 
 from djtools.configs.config import BaseConfig
 from djtools.collection.helpers import PLATFORM_REGISTRY
+from djtools.utils.helpers import make_path
 
 
 logger = logging.getLogger(__name__)
 
 
-def shuffle_playlists(config: BaseConfig):
+@make_path
+def shuffle_playlists(config: BaseConfig, output_path: Optional[Path] = None):
     """For each playlist in "SHUFFLE_PLAYLISTS", shuffle the tracks and
     sequentially set the track number to emulate shuffling.
 
     Args:
         config: Configuration object.
+        output_path: Path to write the new collection to.
     """
     # Load collection.
     collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
@@ -56,13 +61,11 @@ def shuffle_playlists(config: BaseConfig):
         ):
             _ = future.result()
 
-    # Reset the collection's playlists and insert a new playlist containing
-    # just the shuffled tracks.
-    collection.reset_playlists()
+    # Insert a new playlist containing just the shuffled tracks.
     collection.add_playlist(
         PLATFORM_REGISTRY[config.PLATFORM]["playlist"].new_playlist(
             name="SHUFFLE",
             tracks={track.get_id(): track for track in shuffled_tracks},
         )
     )
-    _ = collection.serialize()
+    _ = collection.serialize(output_path=output_path)

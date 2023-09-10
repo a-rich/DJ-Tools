@@ -3,15 +3,17 @@ particular sub-package of this library.
 """
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+from functools import wraps
+import inspect
 from itertools import product
 import logging
 import logging.config
 import os
+import pathlib
 from pathlib import Path
 from subprocess import check_output
-import tempfile
-from typing import Any, Dict, IO, List, Optional, Set, Tuple
-from unittest import mock
+import typing
+from typing import Callable, Dict, List, Set, Tuple
 
 from fuzzywuzzy import fuzz
 import spotipy
@@ -22,73 +24,6 @@ from djtools.spotify.helpers import get_playlist_ids, get_spotify_client
 
 
 logger = logging.getLogger(__name__)
-
-
-class MockOpen:
-    """Class for mocking the builtin open function."""
-    builtin_open = open
-
-    def __init__(
-        self,
-        files: List[str],
-        user_a: Optional[Tuple[str]] = None,
-        user_b: Optional[Tuple[str]] = None,
-        content: Optional[str] = "",
-        write_only: Optional[bool] = False,
-    ):
-        self._user_a = user_a
-        self._user_b = user_b
-        self._files = files
-        self._content = content
-        self._write_only = write_only
-
-    def open(self, *args, **kwargs) -> IO:
-        """Function to replace the builtin open function.
-
-        Returns:
-            File handler.
-        """
-        file_name = Path(args[0]).name
-        if file_name in self._files:
-            if "w" in kwargs.get("mode"):
-                return tempfile.TemporaryFile(mode=kwargs["mode"])
-            if not self._write_only:
-                return self._file_strategy(file_name, *args, **kwargs)
-        return self.builtin_open(*args, **kwargs)
-
-    def _file_strategy(self, *args, **kwargs):
-        """Apply logic for file contents based on file name.
-
-        Returns:
-            Mock file handler object.
-        """
-        data = "{}"
-        if self._content:
-            data = self._content
-
-        return mock.mock_open(read_data=data)(*args, **kwargs)
-
-
-def add_tracks(result: Dict[str, Any], artist_first: bool) -> List[str]:
-    """Parses a page of Spotify API result tracks and returns a list of the
-        track titles and artist names.
-
-    Args:
-        result: Paged result of Spotify tracks.
-        artist_first: Whether or not artist should come before track title.
-
-    Returns:
-        Spotify track titles and artist names.
-    """
-    tracks = []
-    for track in result["items"]:
-        title = track["track"]["name"]
-        artists = ", ".join([y["name"] for y in track["track"]["artists"]])
-        tracks.append(
-            f"{artists} - {title}" if artist_first else f"{title} - {artists}"
-        )
-
-    return tracks
 
 
 def compute_distance(
@@ -167,7 +102,7 @@ def find_matches(
 def get_beatcloud_tracks() -> List[str]:
     """Lists all the music files in S3 and parses out the track titles and
         artist names.
-    
+
     Returns:
         Beatcloud track titles and artist names.
     """
@@ -190,14 +125,14 @@ def get_local_tracks(config: BaseConfig) -> Dict[str, List[str]]:
         Local file names keyed by parent directory.
     """
     local_dir_tracks = {}
-    for _dir in config.CHECK_TRACKS_LOCAL_DIRS:
+    for _dir in config.LOCAL_DIRS:
         if not _dir.exists():
             logger.warning(
                 f"{_dir} does not exist; will not be able to check its "
                 "contents against the beatcloud"
             )
             continue
-        files = [_file.stem for _file in _dir.rglob("**/*.*")]
+        files = list(_dir.rglob("**/*.*"))
         if files:
             local_dir_tracks[_dir] = files
     local_tracks_count = sum(len(x) for x in local_dir_tracks.values())
@@ -207,20 +142,18 @@ def get_local_tracks(config: BaseConfig) -> Dict[str, List[str]]:
 
 
 def get_playlist_tracks(
-    spotify: spotipy.Spotify, playlist_id: str, artist_first: bool
-) -> Set[str]:
+    spotify: spotipy.Spotify, playlist_id: str) -> List[Dict]:
     """Queries Spotify API for a playlist and pulls tracks from it.
 
     Args:
         spotify: Spotify client.
         playlist_id: Playlist ID of Spotify playlist to pull tracks from.
-        artist_first: Whether or not artist should come before track title.
 
     Raises:
         RuntimeError: Playlist_id must correspond with a valid Spotify playlist.
 
     Returns:
-        Spotify track titles and artist names from a given playlist.
+        List of Spotify track results.
     """
     try:
         playlist = spotify.playlist(playlist_id)
@@ -230,39 +163,38 @@ def get_playlist_tracks(
         ) from Exception
 
     result = playlist["tracks"]
-    tracks = add_tracks(result, artist_first)
-
+    tracks = list(result["items"])
     while result["next"]:
         result = spotify.next(result)
-        tracks.extend(add_tracks(result, artist_first))
+        tracks.extend(list(result["items"]))
 
-    return set(tracks)
+    return tracks
 
 
-def get_spotify_tracks(config: BaseConfig) -> Dict[str, Set[str]]:
+def get_spotify_tracks(
+    config: BaseConfig, playlists: List[str]
+) -> Dict[str, List[Dict]]:
     """Aggregates the tracks from one or more Spotify playlists into a
         dictionary mapped with playlist names.
 
     Args:
         config: Configuration object.
-    
+        playlists: List of Spotify playlist name.
+
     Returns:
-        Spotify track titles and artist names keyed by playlist name.
+        Spotify tracks keyed by playlist name.
     """
     spotify = get_spotify_client(config)
     playlist_ids = get_playlist_ids()
 
     playlist_tracks = {}
     _sum = 0
-    for playlist in config.CHECK_TRACKS_SPOTIFY_PLAYLISTS:
+    for playlist in playlists:
         playlist_id = playlist_ids.get(playlist)
         if not playlist_id:
             logger.error(f"{playlist} not in spotify_playlists.yaml")
             continue
-
-        playlist_tracks[playlist] = get_playlist_tracks(
-            spotify, playlist_id, config.ARTIST_FIRST
-        )
+        playlist_tracks[playlist] = get_playlist_tracks(spotify, playlist_id)
         length = len(playlist_tracks[playlist])
         logger.info(
             f'Got {length} track{"" if length == 1 else "s"} from Spotify '
@@ -301,14 +233,89 @@ def initialize_logger() -> Tuple[logging.Logger, str]:
     return logging.getLogger(__name__), log_file
 
 
-def mock_exists(files, path):
-    """Function for mocking the existence of pathlib.Path object."""
-    ret = True
-    for file_name, exists in files:
-        if file_name == path.name:
-            ret = exists
-            break
-    return ret
+def make_path(func: Callable) -> Callable:
+    """Decorator for converting Path-typed args to Paths.
+
+    Args:
+        func: Callable being decorated with this function.
+
+    Raises:
+        RuntimeError: args annotated with a pathlib.Path need to be able to
+            have Paths created from them.
+        RuntimeError: kwargs annotated with a pathlib.Path need to be able to
+            have Paths created from them.
+
+    Returns:
+        The Callable being wrapped by this decorator.
+    """
+    @wraps(make_path)
+    def str_to_path(*args, **kwargs):
+        """Converts non-Path type args into Paths if annotated as Paths.
+
+        Raises:
+            RuntimeError: args annotated with a pathlib.Path need to be able to
+                have Paths created from them.
+            RuntimeError: kwargs annotated with a pathlib.Path need to be able
+                to have Paths created from them.
+        """
+        # Get the function's type annotations and partition them by args and
+        # kwargs.
+        path_types = (pathlib.Path, typing.Union[pathlib.Path, None])
+        num_args= 0
+        num_kwargs = 0
+        type_hints = list(typing.get_type_hints(func).values())
+        sig = inspect.signature(func)
+        for parameter in sig.parameters.values():
+            if parameter.name == "self":
+                type_hints.insert(0, "self")
+            if parameter.name in kwargs:
+                num_kwargs += 1
+            else:
+                num_args += 1
+        arg_type_hints = type_hints[:num_args]
+        kwarg_type_hints = type_hints[:num_kwargs]
+
+        # Convert each arg to a Path if the annotation type is pathlib.Path.
+        args = list(args)
+        for index, (arg, arg_type) in enumerate(zip(args, arg_type_hints)):
+            # Skip if the arg shouldn't be a path or it should be a Path but
+            # already is.
+            if arg_type not in path_types or (
+                arg_type in path_types and isinstance(arg, Path)
+            ):
+                continue
+
+            try:
+                args[index] = Path(arg)
+            except Exception as exc:
+                raise RuntimeError(
+                    "Error creating Path in function "
+                    f'"{func.__name__}" from positional arg "{arg}" annotated '
+                    f'with type "{arg_type}": {exc}'
+                ) from Exception
+        args = tuple(args)
+
+        # Convert each kwarg to a Path if the annotation type is pathlib.Path.
+        for (key, value), arg_type in zip(kwargs.items(), kwarg_type_hints):
+            # Skip if the arg value shouldn't be a path or it should be a Path
+            # but already is.
+            if arg_type not in path_types or (
+                arg_type in path_types and isinstance(value, Path)
+            ):
+                continue
+
+            try:
+                kwargs[key] = Path(value)
+            except Exception as exc:
+                raise RuntimeError(
+                    "Error creating Path in function "
+                    f'"{func.__name__}" from keyword arg "{key}={value}" '
+                    f'annotated with type "{arg_type}": {exc}'
+                ) from Exception
+
+        return func(*args, **kwargs)
+
+    return str_to_path
 
 
 def reverse_title_and_artist(path_lookup: Dict[str, str]) -> Dict[str, str]:

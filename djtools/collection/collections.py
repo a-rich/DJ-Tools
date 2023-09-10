@@ -23,6 +23,7 @@ from bs4.formatter import XMLFormatter
 
 from djtools.collection.playlists import Playlist, RekordboxPlaylist
 from djtools.collection.tracks import RekordboxTrack, Track
+from djtools.utils.helpers import make_path
 
 
 class Collection(ABC):
@@ -44,8 +45,26 @@ class Collection(ABC):
         """
         self._playlists.add_playlist(playlist)  # pylint:disable=no-member
 
+    def get_all_tags(self) -> Dict[str, List[str]]:
+        """Returns the all tags in the collection.
+
+        Returns:
+            Dict containing all track tags keyed by "genres" and "other".
+        """
+        all_tags = {
+            tag for track in self.get_tracks().values()
+            for tag in track.get_tags()
+        }
+        genre_tags = {
+            tag for track in self.get_tracks().values()
+            for tag in track.get_genre_tags()
+        }
+        other_tags = all_tags.difference(genre_tags)
+
+        return {"genres": sorted(genre_tags), "other": sorted(other_tags)}
+
     def get_playlists(
-        self, name: Optional[str] = None
+        self, name: Optional[str] = None, glob: Optional[bool] = False
     ) -> Union[Playlist, List[Playlist]]:
         """Returns Playlists with a matching name.
 
@@ -53,6 +72,7 @@ class Collection(ABC):
 
         Args:
             name: Name of the Playlists to return.
+            glob: Glob on playlist name containing "*".
 
         Returns:
             The Playlists with the same name.
@@ -60,13 +80,17 @@ class Collection(ABC):
         if not name:
             return self._playlists  # pylint:disable=no-member
 
+        exp = re.compile(r".*".join(name.split("*")))
         playlists = []
         for playlist in self._playlists:  # pylint:disable=no-member
-            if playlist.get_name() == name:
+            if (
+                (glob and re.search(exp, playlist.get_name())) or
+                (not glob and playlist.get_name() == name)
+            ):
                 playlists.append(playlist)
             if playlist.is_folder():
                 for playlist in playlist:
-                    playlists.extend(playlist.get_playlists(name))
+                    playlists.extend(playlist.get_playlists(name, glob=glob))
 
         return [playlist for playlist in playlists if playlist is not None]
 
@@ -77,10 +101,6 @@ class Collection(ABC):
             Dict of tracks.
         """
         return self._tracks
-
-    @abstractmethod
-    def reset_playlists(self):
-        """Resets the Playlists in the Collection to be empty."""
 
     @abstractmethod
     def serialize(self, *args, **kwargs) -> Path:
@@ -102,6 +122,7 @@ class Collection(ABC):
 class RekordboxCollection(Collection):
     "Collection implementation for usage with Rekordbox."
 
+    @make_path
     def __init__(self, path: Path):
         """Deserializes a Collection from an XML file.
 
@@ -187,20 +208,14 @@ class RekordboxCollection(Collection):
         """
         return str(self.serialize())
 
-    def reset_playlists(self):
-        """Resets the Playlists in the Collection to be empty."""
-        root = self._collection.find("NODE", {"Name": "ROOT", "Type": "0"})
-        for child in list(root.children):
-            child.extract()
-        self._playlists = RekordboxPlaylist(root, tracks=self._tracks)
-
+    @make_path
     def serialize(
-        self, *args, new_path: Optional[Path] = None, **kwargs
+        self, *args, output_path: Optional[Path] = None, **kwargs
     ) -> Path:
         """Serializes this Collection as an XML file.
 
         Args:
-            new_path: Path to output serialized collection to.
+            output_path: Path to output serialized collection to.
 
         Returns:
             Path to the serialized collection XML file.
@@ -264,13 +279,12 @@ class RekordboxCollection(Collection):
         )
         doc.append(root_tag)
 
-        # If no new path is provided, use the original but prefix the file name
-        # with "auto_".
-        if not new_path:
-            new_path = self._path.parent / f"auto_{self._path.name}"
+        # If no new path is provided, use the original.
+        if not output_path:
+            output_path = self._path
 
         # Write the serialized Collection to a new file.
-        with open(new_path, mode="w", encoding="utf-8") as _file:
+        with open(output_path, mode="w", encoding="utf-8") as _file:
             _file.write(
                 doc.prettify(
                     # UnsortedAttributes formatter ensures attributes are
@@ -284,7 +298,7 @@ class RekordboxCollection(Collection):
                 )
             )
 
-        return new_path
+        return output_path
 
     @classmethod
     def validate(cls, input_xml: Path, output_xml: Path):
