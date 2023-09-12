@@ -40,7 +40,11 @@ jobs:
 
       - name: Bump version
         run: |
-          NEXT_VERSION=`echo ${GITHUB_REF##*/}`
+          echo github.ref
+          echo ${{ github.ref }}
+          echo github.ref##*/
+          NEXT_VERSION=`echo ${{ github.ref##*/ }}`
+          echo $NEXT_VERSION
           SEMVER_REGEX="([0-9]+)\.([0-9]+)\.([0-9])-*b*([0-9]+)"
           sed -i -E "s/$SEMVER_REGEX/$NEXT_VERSION/g" djtools/version.py
           git add djtools/version.py
