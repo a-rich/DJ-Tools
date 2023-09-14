@@ -5,8 +5,8 @@ on:
       - 'releases/*'
     paths:
       - 'requirements.txt'
-      - '**.py'
-      - '!**/*version.py'
+      - 'djtools/**.py'
+      - '!djtools/version.py'
 
 jobs:
   build:
