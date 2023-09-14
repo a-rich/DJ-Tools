@@ -4,7 +4,7 @@ on:
     branches:
       - 'releases/**'
     paths:
-      - '**.md'
+      - 'docs/**.md'
 
 jobs:
   build:

@@ -1,6 +1,8 @@
 name: Pytest Coverage
 on:
-  - pull_request
+  pull_request:
+    paths:
+      - 'djtools/**.py'
 
 jobs:
   build:
