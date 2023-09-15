@@ -7,7 +7,6 @@ from typing import Optional
 import yaml
 
 from djtools.collection.config import PlaylistConfig, PlaylistConfigContent
-from djtools.collection import helpers
 from djtools.collection.helpers import (
     add_selectors_to_tags,
     aggregate_playlists,
@@ -17,6 +16,7 @@ from djtools.collection.helpers import (
     PLATFORM_REGISTRY,
     print_playlists_tag_statistics,
 )
+from djtools.collection import playlist_filters
 from djtools.configs.config import BaseConfig
 from djtools.utils.helpers import make_path
 
@@ -131,7 +131,7 @@ def collection_playlists(
         filter_tag_playlists(
             tag_playlists,
             [
-                getattr(helpers, playlist_filter)()
+                getattr(playlist_filters, playlist_filter)()
                 for playlist_filter in config.COLLECTION_PLAYLIST_FILTERS
             ]
         )
