@@ -23,6 +23,9 @@ jobs:
       - name: Bump version
         run: |
           NEXT_VERSION=${{ env.BRACH_NAME }}
+          echo "NEXT_VERSION=$NEXT_VERSION"
+          echo "ref_name=${{ github.ref_name }}"
+          echo "BRANCH_NAME=${{ env.BRANCH_NAME }}"
           sed -i -E "s/$SEMVER_REGEX/$NEXT_VERSION/g" djtools/version.py
           git add djtools/version.py
           git commit -m "Initialize $NEXT_VERSION: $GITHUB_SHA"
