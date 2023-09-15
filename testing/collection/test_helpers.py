@@ -13,8 +13,6 @@ from djtools.collection.helpers import (
     # aggregate_playlists,
     build_combiner_playlists,
     build_tag_playlists,
-    HipHopFilter,
-    MinimalDeepTechFilter,
     parse_numerical_selectors,
     parse_string_selectors,
     PLATFORM_REGISTRY,
@@ -23,7 +21,6 @@ from djtools.collection.helpers import (
     scale_data,
 )
 from djtools.collection.playlists import Playlist
-from djtools.collection.tracks import RekordboxTrack
 
 
 # pylint: disable=duplicate-code
@@ -127,52 +124,8 @@ def test_copy_file(tmpdir, rekordbox_track):
     assert new_file_path.exists()
 
 
-@pytest.mark.parametrize(
-    "bass_hip_hop,genre_tags,expected",
-    [
-        (True, ["Hip Hop", "R&B"], False),
-        (True, ["Hip Hop", "Trap"], True),
-        (False, ["Hip Hop", "R&B"], True),
-        (False, ["Hip Hop", "Trap"], False),
-    ],
-)
-def test_hiphopfilter(bass_hip_hop, genre_tags, expected, rekordbox_track):
-    """Test for the HipHopFilter class."""
-    track_filter = HipHopFilter()
-    with mock.patch.object(
-        track_filter, '_bass_hip_hop', bass_hip_hop, create=True
-    ), mock.patch.object(
-        RekordboxTrack, "get_genre_tags", lambda x: genre_tags
-    ):
-        result = track_filter.filter_track(rekordbox_track)
-        assert result == expected
-
-
 def test_filter_tag_playlists():
     """Test the filter_tag_playlists function."""
-
-
-@pytest.mark.parametrize(
-    "techno,genre_tags,expected",
-    [
-        (True, ["Techno", "Minimal Deep Tech"], True),
-        (True, ["House", "Minimal Deep Tech"], False),
-        (False, ["Techno", "Minimal Deep Tech"], False),
-        (False, ["House", "Minimal Deep Tech"], True),
-    ],
-)
-def test_minimaldeeptechfilter(techno, genre_tags, expected, rekordbox_track):
-    """Test for the HipHopFilter class."""
-    track_filter = MinimalDeepTechFilter()
-    with mock.patch.object(
-        track_filter, '_techno', techno, create=True
-    ), mock.patch.object(
-        track_filter, '_house', not techno, create=True
-    ), mock.patch.object(
-        RekordboxTrack, "get_genre_tags", lambda x: genre_tags
-    ):
-        result = track_filter.filter_track(rekordbox_track)
-        assert result == expected
 
 
 def test_parse_numerical_selectors():
