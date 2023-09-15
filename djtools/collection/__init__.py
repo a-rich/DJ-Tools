@@ -15,10 +15,12 @@
     * `tracks`: abstractions and implementations for tracks
 """
 
-from djtools.collection.config import CollectionConfig
+from djtools.collection.collections import RekordboxCollection
 from djtools.collection.copy_playlists import copy_playlists
 from djtools.collection.playlist_builder import collection_playlists
+from djtools.collection.playlists import RekordboxPlaylist
 from djtools.collection.shuffle_playlists import shuffle_playlists
+from djtools.collection.tracks import RekordboxTrack
 
 
 COLLECTION_OPERATIONS = {
@@ -30,8 +32,9 @@ COLLECTION_OPERATIONS = {
 
 __all__ = (
     "collection_playlists",
-    "CollectionConfig",
     "copy_playlists",
+    "RekordboxCollection",
+    "RekordboxPlaylist",
+    "RekordboxTrack",
     "shuffle_playlists",
-    "COLLECTION_OPERATIONS",
 )
