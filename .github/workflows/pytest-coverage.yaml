@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'djtools/**.py'
+      - 'testing/**.py'
 
 jobs:
   build:
