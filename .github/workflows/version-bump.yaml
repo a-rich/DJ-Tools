@@ -1,14 +1,13 @@
 name: Version Bump
-on:
-  create:
-    branches:
-      - 'releases/**'
+
+on: create
     
 env:
   BRANCH_NAME: ${{ github.ref_name }}
 
 jobs:
-  checkout:
+  bump:
+    if: ${{ contains(github.ref, 'refs/heads/releases/') }}
     runs-on: ubuntu-latest
     steps:
       - name: Set GitHub Actions as Commit Author
