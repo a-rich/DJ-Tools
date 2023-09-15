@@ -12,7 +12,6 @@
         bit rate and file format.
     * `url_download`: download tracks from a URL (e.g. Soundcloud playlist).
 """
-from djtools.utils.config import UtilsConfig
 from djtools.utils.check_tracks import compare_tracks
 from djtools.utils.normalize_audio import normalize
 from djtools.utils.process_recording import process
@@ -29,10 +28,7 @@ UTILS_OPERATIONS = {
 
 __all__ = (
     "compare_tracks",
-    "initialize_logger",
     "normalize",
     "process",
     "url_download",
-    "UtilsConfig",
-    "UTILS_OPERATIONS",
 )
