@@ -10,6 +10,12 @@ nav:
       - Setup: tutorials/getting_started/setup.md
       - Usage: tutorials/getting_started/usage.md
       - Configuration: tutorials/getting_started/configuration.md
+    - Developer Docs:
+      - Home: tutorials/developer_docs/index.md
+      - System Overview: tutorials/developer_docs/system_overview.md
+      - Adding DJ Software Support to the Collections Package: tutorials/developer_docs/new_collections.md
+      - Using the Collections API: tutorials/developer_docs/collections_api.md
+      - Adding Custom PlaylistFilters: tutorials/developer_docs/playlist_filters.md
   - How-to Guides:
     - Home: how_to_guides/index.md
     - Collection:
