@@ -107,11 +107,26 @@ The `__init__` method must take an input that's either a playlist folder or a pl
 
 As with `Track`, `Playlist` subclasses must implement a `serialize` which returns an exact match of the input object used with `__init__`. In other words, it must be the case that `input == Playlist(input).serialize()`:
 
+::: djtools.collection.playlists.Playlist.serialize
+    options:
+        show_docstring_description: false
+        show_docstring_returns: false
+
 ---
 
 The other abstract methods that must be implemented are:
 
-The `get_name` and the `is_folder` methods which are a simple getter and condition check, so they won't be shown here.
+The `get_name` and the `is_folder` methods are a simple getter and condition check:
+
+::: djtools.collection.playlists.Playlist.get_name
+    options:
+        show_docstring_description: false
+        show_docstring_returns: false
+
+::: djtools.collection.playlists.Playlist.is_folder
+    options:
+        show_docstring_description: false
+        show_docstring_returns: false
 
 A class method called `new_playlist` which can create a `Playlist` object from either a list of `Playlist` objects or a dictionary of `Track` objects:
 
@@ -169,7 +184,7 @@ The `serialize` method of `RekordboxTrack` builds a new XML tag for a TRACK and 
 
 
 #### RekordboxPlaylist
-A playlist in an XML is a NODE tag which is a recursive structure that contains other NODE tags. The leaves of this tree are NODE tags which contain only TRACK tags with just a single attribute, KEY, which maps to the trackID attribute of the TRACK tags under the COLLECTION tag.
+A playlist in an XML is a NODE tag which is a recursive structure that contains other NODE tags. The leaves of this tree are NODE tags which contain only TRACK tags with just a single attribute, KEY, which maps to the TrackID attribute of the TRACK tags under the COLLECTION tag.
 
 NODE tags also have attributes for the Name and Type (folder or not) and either a Count or an Entries attribute which has the number of playlists or number of tracks, respectively.
 
