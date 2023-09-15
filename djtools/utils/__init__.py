@@ -15,7 +15,6 @@
 from djtools.utils.check_tracks import compare_tracks
 from djtools.utils.normalize_audio import normalize
 from djtools.utils.process_recording import process
-from djtools.utils.helpers import initialize_logger
 from djtools.utils.url_download import url_download
 
 

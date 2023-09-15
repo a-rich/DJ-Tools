@@ -10,6 +10,7 @@ is uploaded to the Beatcloud.
 """
 from .configs import build_config
 from .collection import (
+    COLLECTION_OPERATIONS,
     collection_playlists,
     copy_playlists,
     RekordboxCollection,
@@ -17,27 +18,26 @@ from .collection import (
     RekordboxTrack,
     shuffle_playlists,
 )
-from .collection.__init__ import COLLECTION_OPERATIONS
 from .spotify import (
+    SPOTIFY_OPERATIONS,
     spotify_playlist_from_upload,
     spotify_playlists,
 )
-from .spotify.__init__ import SPOTIFY_OPERATIONS
 from .sync import (
+    SYNC_OPERATIONS,
     download_collection,
     download_music,
     upload_collection,
     upload_music,
 )
-from .sync.__init__ import SYNC_OPERATIONS
 from .sync.helpers import upload_log
 from .utils import (
+    UTILS_OPERATIONS,
     compare_tracks,
     normalize,
     process,
     url_download,
 )
-from .utils.__init__ import UTILS_OPERATIONS
 from .utils.helpers import initialize_logger
 from .version import __version__
 
