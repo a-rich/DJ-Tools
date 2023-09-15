@@ -1,0 +1,30 @@
+name: Version Bump
+on:
+  create:
+    branches:
+      - 'releases/**'
+    
+env:
+  BRANCH_NAME: ${{ github.ref_name }}
+
+jobs:
+  checkout:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set GitHub Actions as Commit Author
+        run: |
+          git config --global user.name github-actions
+          git config --global user.email github-actions@github.com
+
+      - name: Checkout repo 
+        uses: actions/checkout@main
+        with:
+          token: ${{ secrets.DJTOOLS_WORKFLOWS }}
+
+      - name: Bump version
+        run: |
+          NEXT_VERSION=${{ env.BRACH_NAME }}
+          sed -i -E "s/$SEMVER_REGEX/$NEXT_VERSION/g" djtools/version.py
+          git add djtools/version.py
+          git commit -m "Initialize $NEXT_VERSION: $GITHUB_SHA"
+          git push --force
