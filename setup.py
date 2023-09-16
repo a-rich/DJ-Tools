@@ -8,7 +8,7 @@ with open('README.md', encoding='utf-8') as _file:
     LONG_DESCRIPTION = _file.read()
 
 REQUIREMENTS = [
-    "asyncpraw==7.6.1",
+    "asyncpraw==7.6.0",
     "awscli==1.27.45",
     "beautifulsoup4==4.11.1",
     "fuzzywuzzy==0.18.0",
@@ -16,7 +16,7 @@ REQUIREMENTS = [
     "pydantic==1.9.1",
     "pydub==0.25.1",
     "pyperclip==1.8.2",
-    "PyYAML==5.4.1",
+    "PyYAML==5.3.1",
     "requests==2.28.0",
     "spotipy==2.21.0",
     "tqdm==4.64.0",
