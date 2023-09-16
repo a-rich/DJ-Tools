@@ -4,7 +4,10 @@ on:
     branches:
       - main
     paths:
-      - '**.md'
+      - 'djtools/**.py'
+      - 'docs/**.md'
+      - 'development-requirements.txt'
+      - 'mkdocs.yml'
 
 jobs:
   build:
