@@ -4,6 +4,11 @@ on:
     paths:
       - 'djtools/**.py'
       - 'testing/**.py'
+      - '.pylintrc'
+      - 'development-requirements.txt'
+      - 'pyproject.toml'
+      - 'setup.cfg'
+      - 'setup.py'
 
 jobs:
   build:

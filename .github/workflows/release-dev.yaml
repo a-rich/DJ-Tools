@@ -4,9 +4,13 @@ on:
     branches:
       - 'releases/*'
     paths:
-      - 'requirements.txt'
       - 'djtools/**.py'
       - '!djtools/version.py'
+      - 'MANIFEST.in'
+      - 'pyproject.toml'
+      - 'requirements.txt'
+      - 'setup.cfg'
+      - 'setup.py'
 
 jobs:
   build:
