@@ -5,7 +5,7 @@ on:
       - main
     paths:
       - 'djtools/**.py'
-      - 'pyproject.toml'
+      - '!pyproject.toml'
 
 jobs:
   build:
