@@ -19,7 +19,7 @@ On `push` events to `releases/**`, changes to `**.md` files trigger the [deploy-
 ## Local testing 
 ### Setup dev environment:
 ```
-pyenv virtualenv 3.9 djtools-dev && pyenv activate djtools-dev && pip install -r development-requirements.txt
+pyenv virtualenv 3.9 djtools-dev && pyenv activate djtools-dev && pip install "djtools[dev]"
 ```
 ### Test suite & coverage reporting:
 ```

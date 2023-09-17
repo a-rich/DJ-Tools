@@ -5,11 +5,104 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+
+[project]
+name = "djtools"
+version = "2.7.2"
+authors = [
+    {name = "Alex Richards", email = "alex.richards006@gmail.com"},
+]
+description = "DJ Tools is a library for managing a collection of music."
+readme = {file = "README.md", content-type = "text/markdown"}
+# long_description = file: "README.md"
+keywords = [
+    "DJ",
+    "Collections",
+    "Rekordbox",
+    "Playlists",
+    "Spotify",
+    "Reddit",
+    "Audio", 
+]
+requires-python=">=3.6"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Other Audience",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Natural Language :: English",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Multimedia :: Sound/Audio",
+    "Topic :: Other/Nonlisted Topic"
+]
+dependencies = [
+    "asyncpraw==7.6.0",
+    "awscli==1.27.45",
+    "beautifulsoup4==4.11.1",
+    "fuzzywuzzy==0.18.0",
+    "lxml==4.9.2",
+    "pydantic==1.9.1",
+    "pydub==0.25.1",
+    "pyperclip==1.8.2",
+    "PyYAML==5.3.1",
+    "requests==2.28.0",
+    "spotipy==2.21.0",
+    "tqdm==4.64.0",
+    "youtube-dl==2021.12.17"
+]
+
+
+[project.urls]
+"Repository" = "https://github.com/a-rich/DJ-tools"
+"Documentation" = "https://a-rich.github.io/DJ-Tools"
+"Documentation (development environment)" = "https://a-rich.github.io/DJ-Tools-dev-docs"
+
+
+[project.optional-dependencies]
+dev = [
+    "build==0.8.0",
+    "mkdocs==1.4.2",
+    "mkdocs-material==9.1.8",
+    "mkdocstrings-python==1.6.0",
+    "semver==3.0.1",
+    "setuptools==58.1.0",
+    "twine==4.0.1",
+]
+accelerated = [
+    "python-Levenshtein==0.12.2" 
+]
+
+
+[project.scripts]
+djtools = "djtools:main"
+
+
+[tool.setuptools]
+packages = [
+    "djtools",
+    "djtools.configs",
+    "djtools.collection",
+    "djtools.spotify",
+    "djtools.sync",
+    "djtools.utils",
+]
+
+
 [tool.pytest.ini_options]
 filterwarnings = [
     "ignore::pytest.PytestAssertRewriteWarning",
     "ignore::RuntimeWarning"
 ]
+
 
 [tool.coverage.run]
 source = ["djtools/"]

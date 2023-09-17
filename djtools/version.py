@@ -1,2 +1,4 @@
 """This module is the single source for this package's version."""
-__version__ = "2.7.2"
+import importlib.metadata
+
+__version__ = importlib.metadata.version(__package__)
