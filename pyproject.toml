@@ -162,3 +162,9 @@ packages = [
     "djtools.sync",
     "djtools.utils",
 ]
+
+[tool.setuptools.package-data]
+djtools = [
+    "djtools/configs/*",
+    "djtools/logs/empty.txt",
+]
