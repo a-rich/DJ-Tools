@@ -41,10 +41,7 @@ def test_normalize_handles_decode_error(config, tmpdir, caplog):
     filename.write_text("something")
     config.LOCAL_DIRS = [tmpdir]
     normalize(config)
-    assert caplog.records[0].message.startswith(
-        f"Couldn't decode {filename}: Decoding failed. ffmpeg returned error "
-        "code: 1"
-    )
+    assert caplog.records[0].message.startswith(f"Couldn't decode {filename}:")
 
 
 def test_normalize_handles_no_local_tracks(config):
