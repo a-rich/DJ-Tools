@@ -43,6 +43,11 @@ jobs:
           cov-omit-list: 'djtools/__main__.py'
           cov-threshold-single: ${{ env.COVERAGE_SINGLE }}
           cov-threshold-total: ${{ env.COVERAGE_TOTAL }}
+      
+      - name: Debug cov
+        run: |
+          echo "debug cov"
+          echo ${{ steps.pytester-cov.outputs }}
 
       - name: Coverage total fail - exit
         if: ${{ steps.pytester-cov.outputs.cov-threshold-total-fail == 'true' }}
