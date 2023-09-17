@@ -43,7 +43,7 @@ jobs:
           SEMVER_REGEX="version = \"([0-9]+)\.([0-9]+)\.([0-9])((-b[0-9]+)*|(-rc\.[0-9]+)*)\""
           sed -i -E "s/$SEMVER_REGEX/version = $NEXT_VERSION/g" pyproject.toml
           echo "pyproject.toml contents"
-          cat pyproject.toml | grep -C version
+          cat pyproject.toml | grep -C 3 version
 
       - name: Build and publish wheel
         run: |
