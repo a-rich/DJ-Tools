@@ -20,7 +20,7 @@ def test_normalize(mock_normalize, target_headroom, audio_file, config, input_tm
         "djtools.utils.normalize_audio.AudioSegment.from_file"
     ) as mock_audio_segment, mock.patch(
         "djtools.utils.normalize_audio.get_local_tracks",
-        mock.Mock(return_value={"playlist": [Path(input_tmpdir) / "file.mp3"]}),
+        mock.Mock(return_value={"playlist": [Path(input_tmpdir) / "file.wav"]}),
     ):
         mock_audio_segment.return_value = audio
         normalize(config)

@@ -53,8 +53,8 @@ def audio_file(input_tmpdir):  # pylint: disable=redefined-outer-name
             headroom
         )
     )
-    _file = Path(input_tmpdir) / "file.mp3"
-    audio.export(_file, format="mp3")
+    _file = Path(input_tmpdir) / "file.wav"
+    audio.export(_file, format="wav")
 
     return audio, _file
 
