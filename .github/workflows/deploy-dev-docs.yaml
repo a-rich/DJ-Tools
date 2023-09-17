@@ -37,7 +37,7 @@ jobs:
         run: |
           cd main-repo
           python -m pip install --upgrade pip
-          pip install "djtools[dev]"
+          pip install --editable ".[dev]"
 
       - name: Checkout dev docs repo 
         uses: actions/checkout@main
