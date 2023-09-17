@@ -10,3 +10,7 @@ filterwarnings = [
     "ignore::pytest.PytestAssertRewriteWarning",
     "ignore::RuntimeWarning"
 ]
+
+[tool.coverage.run]
+source = ["djtools/"]
+omit = ["djtools/__main__.py"]

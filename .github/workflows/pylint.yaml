@@ -7,7 +7,6 @@ on:
       - '.pylintrc'
       - 'development-requirements.txt'
       - 'pyproject.toml'
-      - 'setup.cfg'
       - 'setup.py'
 
 jobs:

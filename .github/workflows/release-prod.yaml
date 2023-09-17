@@ -9,7 +9,6 @@ on:
       - 'MANIFEST.in'
       - 'pyproject.toml'
       - 'requirements.txt'
-      - 'setup.cfg'
       - 'setup.py'
 
 jobs:

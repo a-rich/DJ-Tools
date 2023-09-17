@@ -7,7 +7,6 @@ on:
       - 'conftest.py'
       - 'development-requirements.txt'
       - 'pyproject.toml'
-      - 'setup.cfg'
       - 'setup.py'
 
 jobs:
