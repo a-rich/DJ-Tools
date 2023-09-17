@@ -5,12 +5,7 @@ on:
       - 'releases/*'
     paths:
       - 'djtools/**.py'
-      - '!djtools/version.py'
-      - 'MANIFEST.in'
-      - 'pyproject.toml'
-      - 'requirements.txt'
-      - 'setup.cfg'
-      - 'setup.py'
+      - '!pyproject.toml'
 
 jobs:
   build:
@@ -35,19 +30,19 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}-${{ hashFiles('dev-requirements.txt') }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r development-requirements.txt
+          pip install --editable ".[dev]"
 
       - name: Bump version
         run: |
           NEXT_VERSION=`python -c "import semver; from djtools.version import __version__; ver = semver.Version.parse(__version__).bump_prerelease(); print(ver)"`
-          SEMVER_REGEX="([0-9]+)\.([0-9]+)\.([0-9])((-b[0-9]+)*|(-rc\.[0-9]+)*)"
-          sed -i -E "s/$SEMVER_REGEX/$NEXT_VERSION/g" djtools/version.py
-          git add djtools/version.py
+          SEMVER_REGEX="version = ([0-9]+)\.([0-9]+)\.([0-9])((-b[0-9]+)*|(-rc\.[0-9]+)*)"
+          sed -i -E "s/$SEMVER_REGEX/$NEXT_VERSION/g" pyproject.toml
+          git add pyproject.toml
           git commit -m "Release $NEXT_VERSION: $GITHUB_SHA"
           git push --force
 

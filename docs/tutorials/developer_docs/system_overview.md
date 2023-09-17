@@ -55,7 +55,7 @@ The [pytest-coverage](https://github.com/a-rich/DJ-Tools/blob/main/.github/workf
 Passing both of these workflows is a check for merges into release branches or `main`.
 A pass rate of 100% is required.
 
-On pushes to `releases/**` branches, changes to `requirements.txt` or `.py` files trigger the [release-dev](https://github.com/a-rich/DJ-Tools/blob/main/.github/workflows/release-dev.yaml) workflow which performs a pre-release version bump and wheel release.
+On pushes to `releases/**` branches, changes to `pyproject.toml` or `.py` files trigger the [release-dev](https://github.com/a-rich/DJ-Tools/blob/main/.github/workflows/release-dev.yaml) workflow which performs a pre-release version bump and wheel release.
 Changes to `.md` files trigger the [deploy-dev-docs](https://github.com/a-rich/DJ-Tools/blob/main/.github/workflows/deploy-dev-docs.yaml) workflow which copies files to a shadow repository and deploys docs on that repo's GitHub Pages.
 
 On pushes to `main`, the [release-prod](https://github.com/a-rich/DJ-Tools/blob/main/.github/workflows/release-prod.yaml) and [deploy-prod-docs](https://github.com/a-rich/DJ-Tools/blob/main/.github/workflows/deploy-prod-docs.yaml) workflows are triggered which perform essentially the same steps as the equivalent dev workflows except the version is finalized instead of bumped and the docs are deployed on the main repository's GitHub Pages. 

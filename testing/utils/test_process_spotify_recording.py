@@ -70,7 +70,7 @@ def test_process(mock_export, mock_get_spotify_tracks, config, tmpdir):
             _file.write(b"")
     mock_export.side_effect = mock_export_function
     config.AUDIO_DESTINATION = Path(tmpdir)
-    config.RECORDING_FILE= "file.mp3"
+    config.RECORDING_FILE= "file.wav"
     config.RECORDING_PLAYLIST = "playlist"
     process(config)
     output_files = list(config.AUDIO_DESTINATION.iterdir())
@@ -111,7 +111,7 @@ def test_process_warns_when_recording_is_too_short(
     mock_audio_segment, mock_spotify_tracks, config, caplog, tmpdir
 ):
     """Test for the process function."""
-    config.RECORDING_FILE= "file.mp3"
+    config.RECORDING_FILE= "file.wav"
     config.RECORDING_PLAYLIST = "playlist"
     config.AUDIO_DESTINATION = Path(tmpdir)
     caplog.set_level("WARNING")
@@ -143,7 +143,7 @@ def test_process_warns_when_recording_is_too_short(
     )
     process(config)
     assert caplog.records[0].message == (
-        f"file.mp3 has a duration of {audio_duration} milliseconds which is "
+        f"file.wav has a duration of {audio_duration} milliseconds which is "
         "less than the sum of track lengths in the Spotify playlist playlist "
         f"which is {playlist_duration} milliseconds. Please confirm your "
         "recording went as expected!"

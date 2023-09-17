@@ -46,10 +46,18 @@ def normalize(config: BaseConfig):
                 f"{track} has a max dB of {audio.max_dBFS}, normalizing to "
                 f"have a headroom of {config.AUDIO_HEADROOM}..."
             )
+            try:
+                tags = utils.mediainfo(track).get("TAG", {})
+            except FileNotFoundError as exc:
+                logger.warning(
+                    f"Couldn't export {track.stem} with ID3 tags; ensure "
+                    f'"ffmpeg" is installed: {exc}'
+                )
+                tags = {}
             audio = effects.normalize(audio, headroom=config.AUDIO_HEADROOM)
             audio.export(
                 track.parent / f"{track.stem}.{config.AUDIO_FORMAT}",
-                tags=utils.mediainfo(track).get("TAG", {}),
+                tags=tags,
                 bitrate=f"{config.AUDIO_BITRATE}k",
                 format=config.AUDIO_FORMAT,
             )

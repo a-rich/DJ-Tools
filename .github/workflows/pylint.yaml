@@ -4,11 +4,7 @@ on:
     paths:
       - 'djtools/**.py'
       - 'testing/**.py'
-      - '.pylintrc'
-      - 'development-requirements.txt'
       - 'pyproject.toml'
-      - 'setup.cfg'
-      - 'setup.py'
 
 jobs:
   build:
@@ -30,12 +26,12 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}-${{ hashFiles('dev-requirements.txt') }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r development-requirements.txt
+          pip install --editable ".[dev]"
 
       - name: Run pylint
         run: |
