@@ -38,7 +38,7 @@ class BaseConfig(BaseModel, extra=Extra.allow):
         calling_frame = stack[2]
         show_full_config = True
         if (
-            entry_frame[1].endswith("main/bin/djtools") and
+            entry_frame[1].endswith("bin/djtools") and
             calling_frame[3] == "build_config"
         ):
             show_full_config = False

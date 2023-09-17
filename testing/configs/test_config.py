@@ -13,7 +13,7 @@ def test_baseconfig_aws_profile():
     "inspect.stack",
     new=mock.Mock(
         return_value=[
-            "", "", ["", "", "", "build_config"], ["", "main/bin/djtools"]
+            "", "", ["", "", "", "build_config"], ["", "bin/djtools"]
         ],
     )
 )

@@ -51,10 +51,6 @@ Note that, while `build_config` accepts an optional path to a `config.yaml`, fea
 ## CI
 There are several GitHub Actions bound to the lifecycle of `djtools`.
 
-The [version-bump](https://github.com/a-rich/DJ-Tools/blob/releases/2.8.0/.github/workflows/version-bump.yaml) workflow triggers when a branch with a name matching the pattern `releases/**` is created.
-The suffix of the branch name is interpreted as a version number and used to edit `djtools/version.py` before the change is committed.
-As an example, if a branch named `releases/2.8.1` is created, then `__version__ = "2.8.1"` will be set.
-
 The [pytest-coverage](https://github.com/a-rich/DJ-Tools/blob/main/.github/workflows/pytest-coverage.yaml) and [pylint](https://github.com/a-rich/DJ-Tools/blob/main/.github/workflows/pylint.yaml) workflows are triggered on pull request events.
 Passing both of these workflows is a check for merges into release branches or `main`.
 A pass rate of 100% is required.
