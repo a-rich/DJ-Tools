@@ -52,7 +52,10 @@ jobs:
           rm -rf docs && rm -rf djtools
           cp -r ../main-repo/docs docs && cp -r ../main-repo/djtools djtools 
           cp ../main-repo/mkdocs.yml mkdocs.yml
+          mkdocs gh-deploy --force
+
+      - name: Commit changes
+        run: |
           git add .
           git commit -m "Deploy docs: $GITHUB_SHA"
           git push --force
-          mkdocs gh-deploy --force
