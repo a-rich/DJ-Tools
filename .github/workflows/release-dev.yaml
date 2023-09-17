@@ -41,7 +41,9 @@ jobs:
         run: |
           NEXT_VERSION=`python -c "import semver; from djtools.version import __version__; ver = semver.Version.parse(__version__).bump_prerelease(); print(ver)"`
           SEMVER_REGEX="version = \"([0-9]+)\.([0-9]+)\.([0-9])((-b[0-9]+)*|(-rc\.[0-9]+)*)\""
-          sed -i -E "s/$SEMVER_REGEX/version = $NEXT_VERSION\n/g" pyproject.toml
+          sed -i -E "s/$SEMVER_REGEX/version = $NEXT_VERSION/g" pyproject.toml
+          echo "pyproject.toml contents"
+          cat pyproject.toml | grep -C version
 
       - name: Build and publish wheel
         run: |
