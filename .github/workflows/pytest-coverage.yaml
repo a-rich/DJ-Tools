@@ -33,6 +33,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install --editable ".[dev]"
+          pip freeze > requirements.txt
 
       - name: pytester-cov
         id: pytester-cov
