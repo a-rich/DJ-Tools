@@ -4,7 +4,7 @@ on:
     paths:
       - 'djtools/**.py'
       - 'testing/**.py'
-      - '.pylintrc'
+      - 'pyproject.toml'
 
 jobs:
   build:

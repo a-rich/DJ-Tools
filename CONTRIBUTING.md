@@ -16,10 +16,10 @@ On `push` events to `releases/**`, changes to `**.md` files trigger the [deploy-
 
 `push` events to `main` trigger [deploy-prod-docs](https://github.com/a-rich/DJ-Tools/blob/pylint-check/.github/workflows/deploy-prod-docs.yaml) and [release-prod](https://github.com/a-rich/DJ-Tools/blob/pylint-check/.github/workflows/release-prod.yaml).
 
-## Local testing 
+## Local testing (run from DJ-Tools repo)
 ### Setup dev environment:
 ```
-pyenv virtualenv 3.9 djtools-dev && pyenv activate djtools-dev && pip install "djtools[dev]"
+pyenv virtualenv $(pyenv global) djtools-dev; pyenv activate djtools-dev; pip install -e ".[dev]"
 ```
 ### Test suite & coverage reporting:
 ```

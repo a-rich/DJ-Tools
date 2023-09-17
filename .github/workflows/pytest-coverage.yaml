@@ -5,6 +5,7 @@ on:
       - 'djtools/**.py'
       - 'testing/**.py'
       - 'conftest.py'
+      - 'pyproject.toml'
 
 jobs:
   build:
