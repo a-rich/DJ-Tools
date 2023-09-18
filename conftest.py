@@ -63,7 +63,7 @@ def audio_file(input_tmpdir):  # pylint: disable=redefined-outer-name
 def playlist_config():
     """Test playlist config fixture."""
     with open(
-        "djtools/configs/collection_playlists.yaml", mode="r", encoding="utf-8"
+        "testing/data/collection_playlists.yaml", mode="r", encoding="utf-8"
     ) as _file:
         return yaml.load(_file.read(), Loader=yaml.FullLoader)
 
