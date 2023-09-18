@@ -15,4 +15,4 @@
 site/
 
 # allow test data
-!testing/data/*
+!tests/data/*

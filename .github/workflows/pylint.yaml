@@ -3,7 +3,7 @@ on:
   pull_request:
     paths:
       - 'djtools/**.py'
-      - 'testing/**.py'
+      - 'tests/**.py'
       - 'pyproject.toml'
 
 jobs:

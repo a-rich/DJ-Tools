@@ -3,7 +3,7 @@ on:
   pull_request:
     paths:
       - 'djtools/**.py'
-      - 'testing/**.py'
+      - 'tests/**.py'
       - 'conftest.py'
       - 'pyproject.toml'
 
@@ -41,7 +41,7 @@ jobs:
         uses: programmingwithalex/pytester-cov@main
         with:
           pytest-root-dir: 'djtools/'
-          pytest-tests-dir: 'testing/'
+          pytest-tests-dir: 'tests/'
           requirements-file: 'requirements.txt'
           cov-omit-list: 'djtools/__main__.py'
           cov-threshold-single: ${{ env.COVERAGE_SINGLE }}

@@ -63,7 +63,7 @@ def audio_file(input_tmpdir):  # pylint: disable=redefined-outer-name
 def playlist_config():
     """Test playlist config fixture."""
     with open(
-        "testing/data/collection_playlists.yaml", mode="r", encoding="utf-8"
+        "tests/data/collection_playlists.yaml", mode="r", encoding="utf-8"
     ) as _file:
         return yaml.load(_file.read(), Loader=yaml.FullLoader)
 
@@ -123,7 +123,7 @@ def rekordbox_track(rekordbox_track_tag):  # pylint: disable=redefined-outer-nam
 def rekordbox_xml(input_tmpdir):  # pylint: disable=redefined-outer-name
     """Fixture for XML file."""
     input_tmpdir = Path(input_tmpdir)
-    collection = RekordboxCollection("testing/data/rekordbox.xml")
+    collection = RekordboxCollection("tests/data/rekordbox.xml")
     for track in collection.get_tracks().values():
         track.set_location(input_tmpdir / track.get_location().name)
         with open(track.get_location(), mode="w", encoding="utf-8") as _file:
