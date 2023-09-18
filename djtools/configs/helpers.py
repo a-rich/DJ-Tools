@@ -16,7 +16,7 @@ from djtools.spotify.config import SpotifyConfig
 from djtools.sync.config import SyncConfig
 from djtools.utils.config import UtilsConfig
 from djtools.utils.helpers import make_path
-from djtools.version import __version__
+from djtools.version import get_version
 
 
 logger = logging.getLogger(__name__)
@@ -46,10 +46,10 @@ def arg_parse() -> Dict:
         logger.setLevel(args.log_level)
 
     if args.version:
-        print(__version__)
+        print(get_version())
         sys.exit()
 
-    logger.info(__version__)
+    logger.info(get_version())
 
     if args.link_configs:
         args.link_configs = Path(args.link_configs)
