@@ -87,7 +87,9 @@ def test_build_config_invalid_config_yaml(caplog):
 def test_build_config_no_config_yaml(mock_parse_args, namespace):
     """Test for the build_config function."""
     mock_parse_args.return_value = namespace
-    config_dir = Path(__file__).parent.parent.parent / "djtools" / "configs"
+    config_dir = (
+        Path(__file__).parent.parent.parent / "src" / "djtools" / "configs"
+    )
     config_file = config_dir / "config.yaml"
     with mock.patch.object(Path, "exists", return_value=False):
         assert not config_file.exists()
