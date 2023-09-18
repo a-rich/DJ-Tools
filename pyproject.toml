@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "djtools"
-version = "2.7.3"
+version = "2.7.4"
 authors = [
     {name = "Alex Richards", email = "alex.richards006@gmail.com"},
 ]
@@ -90,7 +90,10 @@ djtools = "djtools:main"
 
 [tool.coverage.run]
 source = ["djtools/"]
-omit = ["djtools/__main__.py"]
+omit = [
+    "djtools/__main__.py",
+    "djtools/version.py",
+]
 
 [tool.pylint.DESIGN]
 disable = [
@@ -158,6 +161,7 @@ packages = [
     "djtools",
     "djtools.configs",
     "djtools.collection",
+    "djtools.logs",
     "djtools.spotify",
     "djtools.sync",
     "djtools.utils",
