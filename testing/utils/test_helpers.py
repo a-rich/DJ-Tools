@@ -19,7 +19,7 @@ from djtools.utils.helpers import (
     reverse_title_and_artist,
 )
 
-from ..test_utils import MockOpen
+from ..test_utils import mock_exists, MockOpen
 
 
 @pytest.mark.parametrize("track_a", ["some track", "another track"])
@@ -198,6 +198,15 @@ def test_get_playlist_tracks_handles_spotipy_exception(
 
 
 @pytest.mark.parametrize("verbosity", [0, 1])
+@mock.patch(
+    "djtools.collection.config.Path.exists",
+    lambda path: mock_exists(
+        [
+            ("spotify_playlists.yaml", True),
+        ],
+        path,
+    )
+)
 @mock.patch("builtins.open", MockOpen(
     files=["spotify_playlists.yaml"],
     content='{"r/techno | Top weekly Posts": "5gex4eBgWH9nieoVuV8hDC"}',

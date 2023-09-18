@@ -222,13 +222,38 @@ def initialize_logger() -> Tuple[logging.Logger, str]:
         Path(__file__).parent.parent / "logs" /
         f'{datetime.now().strftime("%Y-%m-%d")}.log'
     )
-    log_conf = Path(__file__).parent.parent / "configs" / "logging.conf"
-    logging.config.fileConfig(
-        fname=log_conf,
-        # NOTE(a-rich): the `logfilename` needs a unix-style path.
-        defaults={"logfilename": log_file.as_posix()},
-        disable_existing_loggers=False,
-    )
+    logging_config = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'baseFormatter': {
+                'format': '%(asctime)s - %(name)s:%(lineno)s - %(levelname)s - %(message)s',
+                'datefmt': '%Y-%m-%d %H:%M:%S',
+            },
+        },
+        'handlers': {
+            'fileHandler': {
+                'class': 'logging.FileHandler',
+                'level': 'DEBUG',
+                'formatter': 'baseFormatter',
+                'filename': log_file.as_posix(),
+            },
+            'streamHandler': {
+                'class': 'logging.StreamHandler',
+                'level': 'DEBUG',
+                'formatter': 'baseFormatter',
+                'stream': 'ext://sys.stdout',
+            },
+        },
+        'loggers': {
+            '': {  # root logger
+                'handlers': ['fileHandler', 'streamHandler'],
+                'level': 'DEBUG',
+                'propagate': False
+            },
+        }
+    }
+    logging.config.dictConfig(logging_config)
 
     return logging.getLogger(__name__), log_file
 

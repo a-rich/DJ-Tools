@@ -11,7 +11,7 @@ from ..test_utils import MockOpen
 @pytest.mark.parametrize(
     "remainder_type", ["", "folder", "playlist", "invalid"]
 )
-def test_collection_playlists(remainder_type, config, rekordbox_xml):
+def test_collection_playlists(remainder_type, config, rekordbox_xml, playlist_config):
     """Test for the collection_playlists function."""
     config.COLLECTION_PLAYLIST_FILTERS = [
         "HipHopFilter", "MinimalDeepTechFilter"
@@ -19,9 +19,15 @@ def test_collection_playlists(remainder_type, config, rekordbox_xml):
     config.COLLECTION_PLAYLISTS_REMAINDER = remainder_type
     config.COLLECTION_PATH = rekordbox_xml
     config.VERBOSITY = 1
-    collection_playlists(
-        config, output_path=rekordbox_xml.parent / "test_collection"
-    )
+    with mock.patch(
+        "builtins.open",
+        MockOpen(
+            files=["collection_playlists.yaml"], content=f"{playlist_config}"
+        ).open,
+    ):
+        collection_playlists(
+            config, output_path=rekordbox_xml.parent / "test_collection"
+        )
 
 
 @mock.patch(

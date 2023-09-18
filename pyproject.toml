@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "djtools"
-version = "2.7.2"
+version = "2.7.3-rc2"
 authors = [
     {name = "Alex Richards", email = "alex.richards006@gmail.com"},
 ]
@@ -161,10 +161,4 @@ packages = [
     "djtools.spotify",
     "djtools.sync",
     "djtools.utils",
-]
-
-[tool.setuptools.package-data]
-djtools = [
-    "djtools/configs/*",
-    "djtools/logs/empty.txt",
 ]
