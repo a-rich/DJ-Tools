@@ -9,10 +9,10 @@ from djtools.utils.normalize_audio import normalize
 
 @mock.patch("djtools.utils.normalize_audio.effects.normalize")
 @pytest.mark.parametrize("target_headroom", [0, 2, 5])
-@mock.patch(
-    "djtools.utils.process_recording.AudioSegment.export", mock.Mock()
-)
-def test_normalize(mock_normalize, target_headroom, audio_file, config, input_tmpdir):
+@mock.patch("djtools.utils.process_recording.AudioSegment.export", mock.Mock())
+def test_normalize(
+    mock_normalize, target_headroom, audio_file, config, input_tmpdir
+):
     """Test for the normalize function."""
     config.AUDIO_HEADROOM = target_headroom
     audio, _ = audio_file
@@ -42,6 +42,30 @@ def test_normalize_handles_decode_error(config, tmpdir, caplog):
     config.LOCAL_DIRS = [tmpdir]
     normalize(config)
     assert caplog.records[0].message.startswith(f"Couldn't decode {filename}:")
+
+
+@mock.patch(
+    "djtools.utils.normalize_audio.utils.mediainfo",
+    mock.Mock(side_effect=FileNotFoundError()),
+)
+@mock.patch("djtools.utils.normalize_audio.effects.normalize", mock.Mock())
+@mock.patch("djtools.utils.process_recording.AudioSegment.export", mock.Mock())
+def test_normalize_handles_missing_ffmpeg(config, audio_file, input_tmpdir, caplog):
+    """Test for the normalize function."""
+    caplog.set_level("WARNING")
+    config.AUDIO_HEADROOM = 0.0
+    audio, _ = audio_file
+    with mock.patch(
+        "djtools.utils.normalize_audio.AudioSegment.from_file"
+    ) as mock_audio_segment, mock.patch(
+        "djtools.utils.normalize_audio.get_local_tracks",
+        mock.Mock(return_value={"playlist": [Path(input_tmpdir) / "file.wav"]}),
+    ):
+        mock_audio_segment.return_value = audio
+        normalize(config)
+        assert caplog.records[0].message.startswith(
+            'Couldn\'t export file with ID3 tags; ensure "ffmpeg" is installed'
+        )
 
 
 def test_normalize_handles_no_local_tracks(config):

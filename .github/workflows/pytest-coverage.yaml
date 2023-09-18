@@ -43,7 +43,7 @@ jobs:
           pytest-root-dir: 'djtools/'
           pytest-tests-dir: 'testing/'
           requirements-file: 'requirements.txt'
-          cov-omit-list: 'djtools/__main__.py'
+          cov-omit-list: 'djtools/__main__.py, djtools/version.py'
           cov-threshold-single: ${{ env.COVERAGE_SINGLE }}
           cov-threshold-total: ${{ env.COVERAGE_TOTAL }}
       
