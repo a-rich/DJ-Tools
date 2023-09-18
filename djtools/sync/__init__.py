@@ -4,8 +4,6 @@
     * `sync_operations`: for syncing audio and collection files to the
         Beatcloud
 """
-from djtools.sync.config import SyncConfig
-from djtools.sync.helpers import upload_log
 from djtools.sync.sync_operations import (
     download_collection, download_music, upload_collection, upload_music
 )
@@ -22,9 +20,6 @@ SYNC_OPERATIONS = {
 __all__ = (
     "download_collection",
     "download_music",
-    "SyncConfig",
-    "SYNC_OPERATIONS",
     "upload_collection",
-    "upload_log",
     "upload_music",
 )

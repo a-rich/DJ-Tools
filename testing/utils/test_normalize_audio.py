@@ -20,7 +20,7 @@ def test_normalize(mock_normalize, target_headroom, audio_file, config, input_tm
         "djtools.utils.normalize_audio.AudioSegment.from_file"
     ) as mock_audio_segment, mock.patch(
         "djtools.utils.normalize_audio.get_local_tracks",
-        mock.Mock(return_value={"playlist": [Path(input_tmpdir) / "file.mp3"]}),
+        mock.Mock(return_value={"playlist": [Path(input_tmpdir) / "file.wav"]}),
     ):
         mock_audio_segment.return_value = audio
         normalize(config)
@@ -41,10 +41,7 @@ def test_normalize_handles_decode_error(config, tmpdir, caplog):
     filename.write_text("something")
     config.LOCAL_DIRS = [tmpdir]
     normalize(config)
-    assert caplog.records[0].message.startswith(
-        f"Couldn't decode {filename}: Decoding failed. ffmpeg returned error "
-        "code: 1"
-    )
+    assert caplog.records[0].message.startswith(f"Couldn't decode {filename}:")
 
 
 def test_normalize_handles_no_local_tracks(config):

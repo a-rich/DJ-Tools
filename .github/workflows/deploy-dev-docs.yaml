@@ -6,7 +6,6 @@ on:
     paths:
       - 'djtools/**.py'
       - 'docs/**.md'
-      - 'development-requirements.txt'
       - 'mkdocs.yml'
 
 jobs:
@@ -32,12 +31,13 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}-${{ hashFiles('dev-requirements.txt') }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
 
       - name: Install dependencies
         run: |
+          cd main-repo
           python -m pip install --upgrade pip
-          pip install -r main-repo/development-requirements.txt
+          pip install --editable ".[dev]"
 
       - name: Checkout dev docs repo 
         uses: actions/checkout@main
@@ -52,7 +52,11 @@ jobs:
           rm -rf docs && rm -rf djtools
           cp -r ../main-repo/docs docs && cp -r ../main-repo/djtools djtools 
           cp ../main-repo/mkdocs.yml mkdocs.yml
+          mkdocs gh-deploy --force
+
+      - name: Commit changes
+        run: |
+          cd dev-docs-repo/
           git add .
           git commit -m "Deploy docs: $GITHUB_SHA"
           git push --force
-          mkdocs gh-deploy --force

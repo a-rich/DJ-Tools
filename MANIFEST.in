@@ -1,2 +1,0 @@
-include djtools/configs/*
-include djtools/logs/empty.txt

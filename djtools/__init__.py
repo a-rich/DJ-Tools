@@ -13,52 +13,52 @@ from .collection import (
     COLLECTION_OPERATIONS,
     collection_playlists,
     copy_playlists,
+    RekordboxCollection,
+    RekordboxPlaylist,
+    RekordboxTrack,
     shuffle_playlists,
 )
 from .spotify import (
-    spotify_playlist_from_upload,
     SPOTIFY_OPERATIONS,
+    spotify_playlist_from_upload,
     spotify_playlists,
 )
 from .sync import (
+    SYNC_OPERATIONS,
     download_collection,
     download_music,
-    SYNC_OPERATIONS,
     upload_collection,
-    upload_log,
     upload_music,
 )
+from .sync.helpers import upload_log
 from .utils import (
-    compare_tracks,
-    initialize_logger,
-    normalize,
-    process_recording,
     UTILS_OPERATIONS,
+    compare_tracks,
+    normalize,
+    process,
     url_download,
 )
+from .utils.helpers import initialize_logger
 from .version import __version__
 
 
 __all__ = (
     "build_config",
-    "COLLECTION_OPERATIONS",
     "collection_playlists",
     "compare_tracks",
     "copy_playlists",
     "download_collection",
     "download_music",
-    "initialize_logger",
     "normalize",
-    "process_recording",
+    "process",
+    "RekordboxCollection",
+    "RekordboxPlaylist",
+    "RekordboxTrack",
     "shuffle_playlists",
     "spotify_playlist_from_upload",
     "spotify_playlists",
-    "SPOTIFY_OPERATIONS",
-    "SYNC_OPERATIONS",
-    "upload_log",
     "upload_collection",
     "upload_music",
-    "UTILS_OPERATIONS",
     "url_download",
 )
 
