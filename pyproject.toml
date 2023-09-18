@@ -90,7 +90,10 @@ djtools = "djtools:main"
 
 [tool.coverage.run]
 source = ["djtools/"]
-omit = ["djtools/__main__.py"]
+omit = [
+    "djtools/__main__.py",
+    "djtools/version.py",
+]
 
 [tool.pylint.DESIGN]
 disable = [
