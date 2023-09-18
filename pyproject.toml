@@ -64,7 +64,7 @@ dependencies = [
 [project.urls]
 "Repository" = "https://github.com/a-rich/DJ-tools"
 "Documentation" = "https://a-rich.github.io/DJ-Tools"
-"Documentation (development environment)" = "https://a-rich.github.io/DJ-Tools-dev-docs"
+"Documentation (dev)" = "https://a-rich.github.io/DJ-Tools-dev-docs"
 
 
 [project.optional-dependencies]
