@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "djtools"
-version = "2.7.6"
+version = "2.7.7"
 authors = [
     {name = "Alex Richards", email = "alex.richards006@gmail.com"},
 ]
@@ -89,8 +89,8 @@ accelerated = [
 djtools = "djtools:main"
 
 [tool.coverage.run]
-source = ["djtools/"]
-omit = ["djtools/__main__.py"]
+source = ["src"]
+omit = ["src/djtools/__main__.py"]
 
 [tool.pylint.DESIGN]
 disable = [
@@ -154,6 +154,7 @@ filterwarnings = [
 ]
 
 [tool.setuptools]
+package-dir = {"" = "src"}
 packages = [
     "djtools",
     "djtools.configs",

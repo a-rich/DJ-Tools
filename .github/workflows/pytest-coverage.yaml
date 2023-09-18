@@ -2,8 +2,8 @@ name: Pytest Coverage
 on:
   pull_request:
     paths:
-      - 'djtools/**.py'
-      - 'testing/**.py'
+      - 'src/**.py'
+      - 'tests/**.py'
       - 'conftest.py'
       - 'pyproject.toml'
 
@@ -35,15 +35,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install --editable ".[dev]"
           pip freeze > requirements.txt
+          rm -rf src
 
       - name: pytester-cov
         id: pytester-cov
         uses: programmingwithalex/pytester-cov@main
         with:
-          pytest-root-dir: 'djtools/'
-          pytest-tests-dir: 'testing/'
+          pytest-root-dir: 'src'
+          pytest-tests-dir: 'tests'
           requirements-file: 'requirements.txt'
-          cov-omit-list: 'djtools/__main__.py'
+          cov-omit-list: 'src/djtools/__main__.py'
           cov-threshold-single: ${{ env.COVERAGE_SINGLE }}
           cov-threshold-total: ${{ env.COVERAGE_TOTAL }}
       
