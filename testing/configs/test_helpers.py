@@ -12,7 +12,7 @@ from djtools.configs.helpers import (
     filter_dict,
     PKG_CFG,
 )
-from djtools.version import __version__
+from djtools.version import get_version
 
 from ..test_utils import MockOpen
 
@@ -102,7 +102,7 @@ def test_build_config_version(mock_parse_args, namespace, capsys):
     mock_parse_args.return_value = namespace
     with pytest.raises(SystemExit):
         build_config()
-    assert capsys.readouterr().out == f"{__version__}\n"
+    assert capsys.readouterr().out == f"{get_version()}\n"
 
 
 @pytest.mark.parametrize("config", PKG_CFG.values())
