@@ -145,7 +145,7 @@ A class method called `new_playlist` which can create a `Playlist` object from e
 
 
 #### RekordboxCollection
-Rekordbox supports exporting a collection to an XML file which contains two primary sections: a COLLECTION tag with TRACK tags, and a PLAYLISTS tag with NODE tags with either more NODE tags or TRACK tags that have a key referencing the COLLECTION TRACKS. A [minimal example XML](https://github.com/a-rich/DJ-Tools/blob/main/testing/data/rekordbox.xml) can be seen in the test data.
+Rekordbox supports exporting a collection to an XML file which contains two primary sections: a COLLECTION tag with TRACK tags, and a PLAYLISTS tag with NODE tags with either more NODE tags or TRACK tags that have a key referencing the COLLECTION TRACKS. A [minimal example XML](https://github.com/a-rich/DJ-Tools/blob/main/tests/data/rekordbox.xml) can be seen in the test data.
 
 The `RekordboxCollection` implements `__init__` by parsing the XML with BeautifulSoup, deserializing the tracks as a dictionary of `RekordboxTrack` objects, and deserializing the playlists into the root node of a `RekordboxPlaylist` tree:
 

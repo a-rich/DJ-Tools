@@ -4,7 +4,7 @@ on:
     branches:
       - 'releases/**'
     paths:
-      - 'djtools/**.py'
+      - 'src/**.py'
       - 'docs/**.md'
       - 'mkdocs.yml'
 
@@ -49,8 +49,8 @@ jobs:
       - name: Update and deploy docs
         run: |
           cd dev-docs-repo/
-          rm -rf docs && rm -rf djtools
-          cp -r ../main-repo/docs docs && cp -r ../main-repo/djtools djtools 
+          rm -rf docs && rm -rf src
+          cp -r ../main-repo/docs docs && cp -r ../main-repo/src src
           cp ../main-repo/mkdocs.yml mkdocs.yml
           mkdocs gh-deploy --force
 

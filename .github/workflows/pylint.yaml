@@ -2,8 +2,8 @@ name: Pylint
 on:
   pull_request:
     paths:
-      - 'djtools/**.py'
-      - 'testing/**.py'
+      - 'src/**.py'
+      - 'tests/**.py'
       - 'pyproject.toml'
 
 jobs:
