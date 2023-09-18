@@ -5,6 +5,7 @@ import re
 
 __version__ = importlib.metadata.version(__package__)
 
+
 # For some reason, importlib doesn't include dashes which are necessary for
 # semver.Version.parse.
 major_minor_patch_regex = re.compile(r"([0-9]+)\.([0-9]+)\.([0-9]+)")
