@@ -26,6 +26,15 @@ def test_collectionconfig():
 
 
 @mock.patch(
+    "djtools.collection.config.Path.exists",
+    lambda path: mock_exists(
+        [
+            ("collection_playlists.yaml", True),
+        ],
+        path,
+    )
+)
+@mock.patch(
     "builtins.open",
     MockOpen(
         files=["collection_playlists.yaml"],
