@@ -4,7 +4,7 @@
 Please see the [docs](https://a-rich.github.io/DJ-Tools/) for tutorials, how-to guides, conceptual guides, and references!
 
 # Release Plan
-* 2.7.10
+* 2.7.11
     - [ ] [Stability issues with requests to the search endpoint of the Spotify API](https://github.com/a-rich/DJ-Tools/issues/58)
     - [ ] [Make Spotify API calls asynchronous](https://github.com/a-rich/DJ-Tools/issues/38)
 * 2.8.0
