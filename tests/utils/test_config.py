@@ -27,7 +27,8 @@ def test_utilsconfig_aws_profile_not_set():
     cfg = {"CHECK_TRACKS": True}
     os.environ["AWS_PROFILE"] = ""
     with pytest.raises(
-        RuntimeError, match=re.escape(
+        RuntimeError,
+        match=re.escape(
             "Without AWS_PROFILE set to a valid profile ('default' or otherwise) "
             "you cannot use the CHECK_TRACKS feature"
         ),
@@ -55,7 +56,8 @@ def test_utilsconfig_recording_playlist_not_set():
         "RECORDING_PLAYLIST": "",
     }
     with pytest.raises(
-        RuntimeError, match=(
+        RuntimeError,
+        match=(
             "You must provide a playlist name as RECORDING_PLAYLIST "
             "and this name must exists in spotify_playlists.yaml."
         ),

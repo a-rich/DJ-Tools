@@ -5,11 +5,9 @@ on:
       - 'src/**.py'
       - 'tests/**.py'
       - 'conftest.py'
-      - 'pyproject.toml'
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     env:
       COVERAGE_SINGLE: 0

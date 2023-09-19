@@ -18,13 +18,9 @@ class SubredditConfig(BaseModel):
     """Configuration object for SPOTIFY_PLAYLISTS."""
 
     name: str
-    limit: NonNegativeInt= 50
-    period: Literal[
-        "all", "day", "hour", "month", "week", "year"
-    ] = "week"
-    type: Literal [
-        "controversial", "hot", "new", "rising", "top"
-    ] = "hot"
+    limit: NonNegativeInt = 50
+    period: Literal["all", "day", "hour", "month", "week", "year"] = "week"
+    type: Literal["controversial", "hot", "new", "rising", "top"] = "hot"
 
 
 class SpotifyConfig(BaseConfig):
@@ -44,7 +40,7 @@ class SpotifyConfig(BaseConfig):
     SPOTIFY_CLIENT_ID: str = ""
     SPOTIFY_CLIENT_SECRET: str = ""
     SPOTIFY_REDIRECT_URI: str = ""
-    SPOTIFY_USERNAME: str  = ""
+    SPOTIFY_USERNAME: str = ""
 
     def __init__(self, *args, **kwargs):
         """Constructor.
@@ -57,15 +53,14 @@ class SpotifyConfig(BaseConfig):
         super().__init__(*args, **kwargs)
 
         if (
-            (self.SPOTIFY_PLAYLISTS or self.SPOTIFY_PLAYLIST_FROM_UPLOAD) and
-            not all(
-                [
-                    self.SPOTIFY_CLIENT_ID,
-                    self.SPOTIFY_CLIENT_SECRET,
-                    self.SPOTIFY_REDIRECT_URI,
-                    self.SPOTIFY_USERNAME
-                ]
-            )
+            self.SPOTIFY_PLAYLISTS or self.SPOTIFY_PLAYLIST_FROM_UPLOAD
+        ) and not all(
+            [
+                self.SPOTIFY_CLIENT_ID,
+                self.SPOTIFY_CLIENT_SECRET,
+                self.SPOTIFY_REDIRECT_URI,
+                self.SPOTIFY_USERNAME,
+            ]
         ):
             raise RuntimeError(
                 "Without all the configuration options SPOTIFY_CLIENT_ID, "
@@ -75,6 +70,7 @@ class SpotifyConfig(BaseConfig):
             )
         if self.SPOTIFY_PLAYLISTS or self.SPOTIFY_PLAYLIST_FROM_UPLOAD:
             from djtools.spotify.helpers import get_spotify_client
+
             spotify = get_spotify_client(self)
             try:
                 spotify.current_user()

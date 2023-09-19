@@ -129,7 +129,7 @@ def filter_tracks(
         )
         title_match = max(
             fuzz.ratio(track["name"].lower(), title.lower()),
-            fuzz.ratio(track["name"].lower(), artist.lower())
+            fuzz.ratio(track["name"].lower(), artist.lower()),
         )
         artist_match = max(
             fuzz.ratio(artists.lower(), title.lower()),
@@ -175,7 +175,9 @@ def fuzzy_match(
             continue
 
         artist = ", ".join(sorted([x.strip() for x in artist.split(",")]))
-        match, dist = filter_results(spotify, results, threshold, track, artist)
+        match, dist = filter_results(
+            spotify, results, threshold, track, artist
+        )
         if match:
             artists = ", ".join([y["name"] for y in match["artists"]])
             matches.append((dist, match["id"], f'{match["name"]} - {artists}'))
@@ -193,7 +195,9 @@ def get_playlist_ids() -> Dict[str, str]:
         Dictionary of Spotify playlist names mapped to playlist IDs.
     """
     playlist_ids = {}
-    ids_path = Path(__file__).parent.parent / "configs" / "spotify_playlists.yaml"
+    ids_path = (
+        Path(__file__).parent.parent / "configs" / "spotify_playlists.yaml"
+    )
     if ids_path.exists():
         with open(ids_path, mode="r", encoding="utf-8") as _file:
             playlist_ids = yaml.load(_file, Loader=yaml.FullLoader) or {}
@@ -270,10 +274,11 @@ async def get_subreddit_posts(
     sub = await reddit.subreddit(subreddit["name"])
     func = getattr(sub, subreddit["type"])
     kwargs = {"limit": config.SPOTIFY_PLAYLIST_POST_LIMIT}
-    if subreddit["type"]== "top":
+    if subreddit["type"] == "top":
         kwargs["time_filter"] = subreddit["period"]
     subs = [
-        x async for x in catch(
+        x
+        async for x in catch(
             func(**kwargs), message="Failed to retrieve Reddit submission"
         )
     ]
@@ -295,7 +300,7 @@ async def get_subreddit_posts(
         payload = [
             submissions,
             [spotify] * len(submissions),
-            [config.SPOTIFY_PLAYLIST_FUZZ_RATIO] * len(submissions)
+            [config.SPOTIFY_PLAYLIST_FUZZ_RATIO] * len(submissions),
         ]
         with ThreadPoolExecutor(max_workers=8) as executor:
             new_tracks = list(
@@ -376,7 +381,7 @@ def populate_playlist(
         )
     elif tracks:
         logger.warning(
-            f'Unable to get ID for {playlist_name}...creating a new '
+            f"Unable to get ID for {playlist_name}...creating a new "
             "playlist"
         )
         playlist = build_new_playlist(
@@ -518,8 +523,9 @@ def update_existing_playlist(
         logger.info("No tracks added or removed")
 
     if remove_payload:
-        spotify.playlist_remove_specific_occurrences_of_items(playlist,
-                                                              remove_payload)
+        spotify.playlist_remove_specific_occurrences_of_items(
+            playlist, remove_payload
+        )
     if add_payload:
         spotify.playlist_add_items(playlist, add_payload)
 

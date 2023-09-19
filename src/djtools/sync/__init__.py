@@ -5,7 +5,10 @@
         Beatcloud
 """
 from djtools.sync.sync_operations import (
-    download_collection, download_music, upload_collection, upload_music
+    download_collection,
+    download_music,
+    upload_collection,
+    upload_music,
 )
 
 

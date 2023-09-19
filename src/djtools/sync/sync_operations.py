@@ -12,7 +12,10 @@ from typing import List, Optional
 
 from djtools.configs.config import BaseConfig
 from djtools.sync.helpers import (
-    parse_sync_command, rewrite_track_paths, run_sync, webhook
+    parse_sync_command,
+    rewrite_track_paths,
+    run_sync,
+    webhook,
 )
 from djtools.utils.check_tracks import compare_tracks
 
@@ -20,7 +23,9 @@ from djtools.utils.check_tracks import compare_tracks
 logger = logging.getLogger(__name__)
 
 
-def download_music(config: BaseConfig, beatcloud_tracks: Optional[List[str]] = None):
+def download_music(
+    config: BaseConfig, beatcloud_tracks: Optional[List[str]] = None
+):
     """This function syncs tracks from the Beatcloud to "USB_PATH".
 
     If "DOWNLOAD_SPOTIFY_PLAYLIST" is set to a playlist name that exists in
@@ -57,7 +62,11 @@ def download_music(config: BaseConfig, beatcloud_tracks: Optional[List[str]] = N
 
     dest.mkdir(parents=True, exist_ok=True)
     cmd = [
-        "aws", "s3", "sync", "s3://dj.beatcloud.com/dj/music/", dest.as_posix()
+        "aws",
+        "s3",
+        "sync",
+        "s3://dj.beatcloud.com/dj/music/",
+        dest.as_posix(),
     ]
     run_sync(parse_sync_command(cmd, config))
 
@@ -89,8 +98,8 @@ def download_collection(config: BaseConfig):
         f"{config.PLATFORM}_collection"
     )
     dst = (
-        Path(collection_dir) /
-        f'{config.IMPORT_USER}_{config.COLLECTION_PATH.name}'
+        Path(collection_dir)
+        / f"{config.IMPORT_USER}_{config.COLLECTION_PATH.name}"
     )
     cmd = ["aws", "s3", "cp", src, dst.as_posix()]
     if config.COLLECTION_PATH.is_dir():
@@ -142,17 +151,14 @@ def upload_collection(config: BaseConfig):
     Args:
         config: Configuration object.
     """
-    logger.info(
-        f"Uploading {config.USER}'s {config.PLATFORM} collection..."
-    )
+    logger.info(f"Uploading {config.USER}'s {config.PLATFORM} collection...")
     dst = (
-      f"s3://dj.beatcloud.com/dj/collections/{config.USER}/"
-      f"{config.PLATFORM}_collection"
+        f"s3://dj.beatcloud.com/dj/collections/{config.USER}/"
+        f"{config.PLATFORM}_collection"
     )
     cmd = ["aws", "s3", "cp", config.COLLECTION_PATH.as_posix(), dst]
     if config.COLLECTION_PATH.is_dir():
         cmd.append("--recursive")
     logger.info(" ".join(cmd))
     with Popen(cmd) as proc:
-
         proc.wait()

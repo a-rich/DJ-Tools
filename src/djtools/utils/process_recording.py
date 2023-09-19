@@ -47,11 +47,17 @@ def process(config: BaseConfig):
     for track in tracks[config.RECORDING_PLAYLIST]:
         # Parse release date field based on the date precision
         if track["track"]["album"]["release_date_precision"] == "year":
-            date = datetime.strptime(track["track"]["album"]["release_date"], "%Y")
+            date = datetime.strptime(
+                track["track"]["album"]["release_date"], "%Y"
+            )
         elif track["track"]["album"]["release_date_precision"] == "month":
-            date = datetime.strptime(track["track"]["album"]["release_date"], "%Y-%m")
+            date = datetime.strptime(
+                track["track"]["album"]["release_date"], "%Y-%m"
+            )
         elif track["track"]["album"]["release_date_precision"] == "day":
-            date = datetime.strptime(track["track"]["album"]["release_date"], "%Y-%m-%d")
+            date = datetime.strptime(
+                track["track"]["album"]["release_date"], "%Y-%m-%d"
+            )
 
         # TODO(a-rich): why won't Rekordbox load "label" and "year" tags?!
         data = {
@@ -87,8 +93,8 @@ def process(config: BaseConfig):
     write_path.mkdir(parents=True, exist_ok=True)
     for track in track_data:
         # Slice the portion of the recording for the track.
-        track_audio = audio[:track["duration"]]
-        audio = audio[track["duration"]:]
+        track_audio = audio[: track["duration"]]
+        audio = audio[track["duration"] :]
 
         # Normalize the audio such that the headroom is
         # AUDIO_HEADROOM dB.
@@ -99,7 +105,8 @@ def process(config: BaseConfig):
 
         # Build the filename using the title, artist(s) and configured format.
         filename = (
-            f'{track["artist"]} - {track["title"]}' if config.ARTIST_FIRST
+            f'{track["artist"]} - {track["title"]}'
+            if config.ARTIST_FIRST
             else f'{track["title"]} - {track["artist"]}'
         )
         filename = write_path / f"{filename}.{config.AUDIO_FORMAT}"
@@ -121,7 +128,6 @@ def process(config: BaseConfig):
             format=config.AUDIO_FORMAT,
             bitrate=f"{config.AUDIO_BITRATE}k",
             tags={
-                key: value for key, value in track.items()
-                if key != "duration"
+                key: value for key, value in track.items() if key != "duration"
             },
         )

@@ -4,7 +4,8 @@ from unittest import mock
 import pytest
 
 from djtools.collection.playlist_filters import (
-    HipHopFilter, MinimalDeepTechFilter
+    HipHopFilter,
+    MinimalDeepTechFilter,
 )
 from djtools.collection.tracks import RekordboxTrack
 
@@ -22,7 +23,7 @@ def test_hiphopfilter(bass_hip_hop, genre_tags, expected, rekordbox_track):
     """Test for the HipHopFilter class."""
     track_filter = HipHopFilter()
     with mock.patch.object(
-        track_filter, '_bass_hip_hop', bass_hip_hop, create=True
+        track_filter, "_bass_hip_hop", bass_hip_hop, create=True
     ), mock.patch.object(
         RekordboxTrack, "get_genre_tags", lambda x: genre_tags
     ):
@@ -43,9 +44,9 @@ def test_minimaldeeptechfilter(techno, genre_tags, expected, rekordbox_track):
     """Test for the HipHopFilter class."""
     track_filter = MinimalDeepTechFilter()
     with mock.patch.object(
-        track_filter, '_techno', techno, create=True
+        track_filter, "_techno", techno, create=True
     ), mock.patch.object(
-        track_filter, '_house', not techno, create=True
+        track_filter, "_house", not techno, create=True
     ), mock.patch.object(
         RekordboxTrack, "get_genre_tags", lambda x: genre_tags
     ):

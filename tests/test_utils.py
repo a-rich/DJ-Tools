@@ -7,6 +7,7 @@ from unittest import mock
 
 class MockOpen:
     """Class for mocking the builtin open function."""
+
     builtin_open = open
 
     def __init__(

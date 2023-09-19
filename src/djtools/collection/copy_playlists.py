@@ -53,7 +53,8 @@ def copy_playlists(config: BaseConfig, output_path: Optional[Path] = None):
             raise LookupError(f"{playlist_name} not found")
         playlists.extend(
             [
-                playlist for playlist in found_playlists
+                playlist
+                for playlist in found_playlists
                 if not playlist.is_folder()
             ]
         )
@@ -96,8 +97,8 @@ def copy_playlists(config: BaseConfig, output_path: Optional[Path] = None):
     # the files are being copied to.
     if not output_path:
         output_path = (
-            config.COPY_PLAYLISTS_DESTINATION /
-            f"copied_playlists_collection{config.COLLECTION_PATH.suffix}"
+            config.COPY_PLAYLISTS_DESTINATION
+            / f"copied_playlists_collection{config.COLLECTION_PATH.suffix}"
         )
 
     # Serialize the new collection.

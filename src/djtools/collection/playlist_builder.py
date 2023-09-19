@@ -133,7 +133,7 @@ def collection_playlists(
             [
                 getattr(playlist_filters, playlist_filter)()
                 for playlist_filter in config.COLLECTION_PLAYLIST_FILTERS
-            ]
+            ],
         )
 
         # Recursively traverse the playlist tree and create "all" playlists

@@ -6,7 +6,9 @@ from unittest import mock
 import pytest
 
 from djtools.configs.cli_args import (
-    convert_to_paths, get_arg_parser, parse_json
+    convert_to_paths,
+    get_arg_parser,
+    parse_json,
 )
 from djtools.configs.helpers import build_config
 
@@ -48,15 +50,15 @@ def test_get_arg_parser_arg_for_every_field(namespace):
     # Test that the only CLI exclusive args are linking configs and displaying
     # the version.
     cli_only = args_set.difference(config_set)
-    expected_cli_only = {'link_configs', 'version'}
-    assert cli_only == expected_cli_only, (
-        f"Expected CLI args to be {expected_cli_only} but got {cli_only}"
-    )
+    expected_cli_only = {"link_configs", "version"}
+    assert (
+        cli_only == expected_cli_only
+    ), f"Expected CLI args to be {expected_cli_only} but got {cli_only}"
 
     # Test that every config option has a corresponding CLI arg.
     config_only = config_set.difference(args_set)
     assert config_only == set(), (
-        "Expected a CLI arg for every config option but these were missing:" \
+        "Expected a CLI arg for every config option but these were missing:"
         f"\n{config_only}"
     )
 

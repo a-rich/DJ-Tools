@@ -68,4 +68,3 @@ def test_spotifyconfig_no_reddit_credentials():
         ),
     ):
         SpotifyConfig(**cfg)
-        

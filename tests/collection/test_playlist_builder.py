@@ -11,10 +11,13 @@ from ..test_utils import MockOpen
 @pytest.mark.parametrize(
     "remainder_type", ["", "folder", "playlist", "invalid"]
 )
-def test_collection_playlists(remainder_type, config, rekordbox_xml, playlist_config):
+def test_collection_playlists(
+    remainder_type, config, rekordbox_xml, playlist_config
+):
     """Test for the collection_playlists function."""
     config.COLLECTION_PLAYLIST_FILTERS = [
-        "HipHopFilter", "MinimalDeepTechFilter"
+        "HipHopFilter",
+        "MinimalDeepTechFilter",
     ]
     config.COLLECTION_PLAYLISTS_REMAINDER = remainder_type
     config.COLLECTION_PATH = rekordbox_xml

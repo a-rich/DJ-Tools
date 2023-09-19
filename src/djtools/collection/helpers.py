@@ -152,7 +152,8 @@ def build_tag_playlists(
 
         # Filter out tracks that aren't pure.
         pure_tag_tracks = {
-            track_id: track for track_id, track in tracks_with_tag.items()
+            track_id: track
+            for track_id, track in tracks_with_tag.items()
             if all(tag.lower() in _.lower() for _ in track.get_genre_tags())
         }
         if not pure_tag_tracks:
@@ -162,7 +163,9 @@ def build_tag_playlists(
             )
             return None
 
-        return playlist_class.new_playlist(name=content, tracks=pure_tag_tracks)
+        return playlist_class.new_playlist(
+            name=content, tracks=pure_tag_tracks
+        )
 
     # Get tracks with this tag and index it so that it's not added to the
     # "Other" playlists.
@@ -201,7 +204,7 @@ def filter_tag_playlists(
         if not playlist_filter.is_filter_playlist(playlist):
             continue
         playlist.set_tracks(
-            tracks = {
+            tracks={
                 track_id: track
                 for track_id, track in playlist.get_tracks().items()
                 if playlist_filter.filter_track(track)
@@ -228,7 +231,8 @@ def aggregate_playlists(
 
     # Recursively get tracks from each playlist within this folder.
     aggregate_tracks = {
-        track_id: track for p in playlist
+        track_id: track
+        for p in playlist
         for track_id, track in aggregate_playlists(
             p, playlist_class, top_level=False
         ).items()
@@ -305,12 +309,12 @@ def add_selectors_to_tags(
 
         for track_id, track in collection.get_tracks().items():
             values = map(
-                str, [round(track.get_bpm()), track.get_rating(), track.get_year()]
+                str,
+                [round(track.get_bpm()), track.get_rating(), track.get_year()],
             )
             for val in values:
-                if (
-                    (isinstance(value, str) and value == val) or
-                    (isinstance(value, tuple) and val in value)
+                if (isinstance(value, str) and value == val) or (
+                    isinstance(value, tuple) and val in value
                 ):
                     tags_tracks[tag][track_id] = track
 
@@ -327,7 +331,9 @@ def add_selectors_to_tags(
             if selector_type == "date":
                 inequality, date, date_format = selector_value
                 if not inequality:
-                    if value.strftime(date_format) == date.strftime(date_format):
+                    if value.strftime(date_format) == date.strftime(
+                        date_format
+                    ):
                         tags_tracks[tag][track_id] = track
                     continue
                 if not inequality(value, date):
@@ -354,9 +360,7 @@ def add_selectors_to_tags(
 
         for playlist_object in [collection, *auto_playlists]:
             for playlist in playlist_object.get_playlists(playlist_name):
-                tags_tracks[playlist_key].update(
-                    playlist.get_tracks()
-                )
+                tags_tracks[playlist_key].update(playlist.get_tracks())
 
 
 def parse_numerical_selectors(
@@ -380,24 +384,23 @@ def parse_numerical_selectors(
         if match.isdigit():
             numerical_values.add(match)
         # If "match" is two digits separated by a "-", then it's a range.
-        elif (
-            len(match.split("-")) == 2 and
-            all(x.isdigit() for x in match.split("-"))
+        elif len(match.split("-")) == 2 and all(
+            x.isdigit() for x in match.split("-")
         ):
             _range = list(map(int, match.split("-")))
             _range = range(min(_range), max(_range) + 1)
             if not (
-                all(0 <= x <= 5 for x in _range) or    # range for ratings
-                all(6 <= x <= 999 for x in _range) or  # range for BPMs
-                all(x >= 1000 for x in _range)         # range for years
+                all(0 <= x <= 5 for x in _range)
+                or all(6 <= x <= 999 for x in _range)  # range for ratings
+                or all(  # range for BPMs
+                    x >= 1000 for x in _range
+                )  # range for years
             ):
                 logger.error(f"Bad numerical range selector: {match}")
                 continue
             numerical_values.update(map(str, _range))
         else:
-            logger.error(
-                f"Malformed numerical selector: {match}"
-            )
+            logger.error(f"Malformed numerical selector: {match}")
             continue
 
         numerical_value_lookup[
@@ -409,7 +412,7 @@ def parse_numerical_selectors(
 
 def parse_string_selectors(
     string_matches: List[str],
-    string_value_lookup:  Dict[Union[str, Tuple], str],
+    string_value_lookup: Dict[Union[str, Tuple], str],
     string_selector_type_map: Dict[str],
     playlists: Set(str),
 ):
@@ -440,9 +443,9 @@ def parse_string_selectors(
             logger.warning(f"{selector_type} is not a supported selector!")
             continue
         if selector_type != "date":
-            string_value_lookup[(selector_type, selector_value)] = (
-                f"{{{match}}}"
-            )
+            string_value_lookup[
+                (selector_type, selector_value)
+            ] = f"{{{match}}}"
             continue
 
         dates, formats, inequalities = [], [], []
@@ -468,13 +471,12 @@ def parse_string_selectors(
             formats.append(date_format)
 
         if (
-            skip_date_selector or
-            len(dates) != 1  or
-            (len(inequalities) not in [0, 1])
+            skip_date_selector
+            or len(dates) != 1
+            or (len(inequalities) not in [0, 1])
         ):
             logger.warning(f"Date selector {selector_value} is invalid!")
             continue
-
 
         string_value_lookup[
             (
@@ -482,8 +484,8 @@ def parse_string_selectors(
                 (
                     None if not inequalities else inequalities[0],
                     dates[0],
-                    formats[0]
-                )
+                    formats[0],
+                ),
             )
         ] = f"{{{match}}}"
 
@@ -603,8 +605,8 @@ class BooleanNode:
             Set of track IDs for the provided tag.
         """
         if "*" in tag and not (
-            re.search(self._numerical_selector_regex, tag) or
-            re.search(self._string_selector_regex, tag)
+            re.search(self._numerical_selector_regex, tag)
+            or re.search(self._string_selector_regex, tag)
         ):
             exp = re.compile(r".*".join(tag.split("*")))
             tracks = {}
@@ -667,11 +669,13 @@ class BooleanNode:
         while self._tags or self._operators:
             operator = self._operators.pop(0)
             tracks_a = (
-                self._tracks.pop(0) if self._tracks else
-                self._get_tracks(tag=self._tags.pop(0))
+                self._tracks.pop(0)
+                if self._tracks
+                else self._get_tracks(tag=self._tags.pop(0))
             )
             tracks_b = (
-                self._tracks.pop(0) if self._tracks
+                self._tracks.pop(0)
+                if self._tracks
                 else self._get_tracks(tag=self._tags.pop(0))
             )
             track_ids = operator(set(tracks_a), set(tracks_b))
@@ -736,7 +740,8 @@ def print_playlists_tag_statistics(combiner_playlists: Playlist) -> None:
             for tag in track_all_tags:
                 playlist_tags[tag] += 1
         for tag_subset, tags in [
-            ("Genre", sorted(genre_tags)), ("Other", sorted(other_tags))
+            ("Genre", sorted(genre_tags)),
+            ("Other", sorted(other_tags)),
         ]:
             data = {tag: playlist_tags[tag] for tag in tags}
             if data:

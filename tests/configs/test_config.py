@@ -13,9 +13,12 @@ def test_baseconfig_aws_profile():
     "inspect.stack",
     new=mock.Mock(
         return_value=[
-            "", "", ["", "", "", "build_config"], ["", "bin/djtools"]
+            "",
+            "",
+            ["", "", "", "build_config"],
+            ["", "bin/djtools"],
         ],
-    )
+    ),
 )
 def test_baseconfig_limits_repr_in_cli_execution():
     """Test for the BaseConfig class."""

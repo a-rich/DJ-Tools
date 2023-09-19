@@ -26,10 +26,10 @@ class CollectionConfig(BaseConfig):
     ] = []
     COLLECTION_PLAYLISTS: bool = False
     COLLECTION_PLAYLISTS_REMAINDER: Literal["folder", "playlist"] = "folder"
-    COPY_PLAYLISTS:  List[str] = []
+    COPY_PLAYLISTS: List[str] = []
     COPY_PLAYLISTS_DESTINATION: Path = None
     PLATFORM: Literal["rekordbox"] = "rekordbox"
-    SHUFFLE_PLAYLISTS:  List[str] = []
+    SHUFFLE_PLAYLISTS: List[str] = []
 
     def __init__(self, *args, **kwargs):
         """Constructor.
@@ -54,8 +54,9 @@ class CollectionConfig(BaseConfig):
 
         if self.COLLECTION_PLAYLISTS:
             playlist_config_path = (
-                Path(__file__).parent.parent / "configs" /
-                "collection_playlists.yaml"
+                Path(__file__).parent.parent
+                / "configs"
+                / "collection_playlists.yaml"
             )
             err = (
                 "collection_playlists.yaml must be a valid YAML to use the "
@@ -67,7 +68,9 @@ class CollectionConfig(BaseConfig):
                 with open(
                     playlist_config_path, mode="r", encoding="utf-8"
                 ) as _file:
-                    PlaylistConfig(**yaml.load(_file, Loader=yaml.FullLoader) or {})
+                    PlaylistConfig(
+                        **yaml.load(_file, Loader=yaml.FullLoader) or {}
+                    )
             except ValidationError as exc:
                 raise RuntimeError(err) from exc
 

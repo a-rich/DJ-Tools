@@ -53,17 +53,18 @@ def test_find_matches(config):
         spotify_tracks={
             "playlist_A": expected_matches,
             "playlist_b": [
-                "track 3 - special person", "track 4 - seen them before"
+                "track 3 - special person",
+                "track 4 - seen them before",
             ],
         },
         beatcloud_tracks=[
             "track 99 - who's that?",
-        ] + expected_matches,
+        ]
+        + expected_matches,
         config=config,
     )
     assert all(
-        match[-1] >= config.CHECK_TRACKS_FUZZ_RATIO
-        for match in matches
+        match[-1] >= config.CHECK_TRACKS_FUZZ_RATIO for match in matches
     )
     assert len(matches) == 2
     assert [x[1] for x in matches] == expected_matches
@@ -76,8 +77,8 @@ def test_find_matches(config):
         [
             "aweeeezy/Bass/2022-12-21/track - artist.mp3",
             "aweeeezy/Techno/2022-12-21/track - artist.mp3",
-        ]
-    ]
+        ],
+    ],
 )
 @mock.patch("djtools.utils.helpers.check_output")
 def test_get_beatcloud_tracks(mock_os_popen, proc_dump):
@@ -182,8 +183,7 @@ def test_get_playlist_tracks(
 
 @mock.patch("djtools.spotify.helpers.spotipy.Spotify")
 @mock.patch(
-    "djtools.spotify.helpers.spotipy.Spotify.playlist",
-    side_effect=Exception()
+    "djtools.spotify.helpers.spotipy.Spotify.playlist", side_effect=Exception()
 )
 def test_get_playlist_tracks_handles_spotipy_exception(
     mock_spotipy_playlist, mock_spotipy
@@ -205,12 +205,15 @@ def test_get_playlist_tracks_handles_spotipy_exception(
             ("spotify_playlists.yaml", True),
         ],
         path,
-    )
+    ),
 )
-@mock.patch("builtins.open", MockOpen(
-    files=["spotify_playlists.yaml"],
-    content='{"r/techno | Top weekly Posts": "5gex4eBgWH9nieoVuV8hDC"}',
-).open)
+@mock.patch(
+    "builtins.open",
+    MockOpen(
+        files=["spotify_playlists.yaml"],
+        content='{"r/techno | Top weekly Posts": "5gex4eBgWH9nieoVuV8hDC"}',
+    ).open,
+)
 @mock.patch(
     "djtools.utils.helpers.get_playlist_tracks",
     return_value={"some track - some artist"},
@@ -224,7 +227,8 @@ def test_get_spotify_tracks(
     config.SPOTIFY_CLIENT_SECRET = "spotify client secret"
     config.SPOTIFY_REDIRECT_URI = "spotify redirect uri"
     config.CHECK_TRACKS_SPOTIFY_PLAYLISTS = [
-        "playlist A", "r/techno | Top weekly Posts"
+        "playlist A",
+        "r/techno | Top weekly Posts",
     ]
     config.VERBOSITY = verbosity
     tracks = get_spotify_tracks(config, config.CHECK_TRACKS_SPOTIFY_PLAYLISTS)
@@ -252,19 +256,18 @@ def test_initialize_logger():
     "kwargs, expected_str_kwarg, expected_path_kwarg",
     [
         ({"str_kwarg": "string kwarg", "path_kwarg": "path kwarg"}, str, Path),
-        ({}, type(None), type(None))
-    ]
+        ({}, type(None), type(None)),
+    ],
 )
-def test_make_path_decorator(
-    kwargs, expected_str_kwarg, expected_path_kwarg
-):
+def test_make_path_decorator(kwargs, expected_str_kwarg, expected_path_kwarg):
     """Test for the make_path decorator function."""
+
     @make_path
     def foo(  # pylint: disable=disallowed-name
-            str_arg: str,
-            path_arg: Path,
-            str_kwarg: Optional[str] = None,
-            path_kwarg: Optional[Path] = None,
+        str_arg: str,
+        path_arg: Path,
+        str_kwarg: Optional[str] = None,
+        path_kwarg: Optional[Path] = None,
     ):
         assert isinstance(str_arg, str)
         assert isinstance(path_arg, Path)
@@ -283,8 +286,11 @@ def test_make_path_decorator(
 )
 def test_make_path_decorator_raises_error(arg, kwarg, expected):
     """Test for the make_path decorator function."""
+
     @make_path
-    def foo(path_arg: Path, path_kwarg: Path):  # pylint: disable=disallowed-name
+    def foo(
+        path_arg: Path, path_kwarg: Path
+    ):  # pylint: disable=disallowed-name
         assert isinstance(path_arg, Path)
         assert isinstance(path_kwarg, Path)
 

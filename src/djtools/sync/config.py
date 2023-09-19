@@ -49,9 +49,8 @@ class SyncConfig(BaseConfig):
         if not self.USER:
             self.USER = getpass.getuser()
 
-        if (
-            (self.UPLOAD_INCLUDE_DIRS and self.UPLOAD_EXCLUDE_DIRS)
-            or (self.DOWNLOAD_INCLUDE_DIRS and self.DOWNLOAD_EXCLUDE_DIRS)
+        if (self.UPLOAD_INCLUDE_DIRS and self.UPLOAD_EXCLUDE_DIRS) or (
+            self.DOWNLOAD_INCLUDE_DIRS and self.DOWNLOAD_EXCLUDE_DIRS
         ):
             msg = (
                 "Config must neither contain both UPLOAD_INCLUDE_DIRS and "
@@ -85,8 +84,8 @@ class SyncConfig(BaseConfig):
             raise RuntimeError(msg)
 
         if (
-            any([self.DOWNLOAD_MUSIC, self.UPLOAD_MUSIC]) and
-            not self.USB_PATH.exists()
+            any([self.DOWNLOAD_MUSIC, self.UPLOAD_MUSIC])
+            and not self.USB_PATH.exists()
         ):
             msg = f'Configured USB_PATH "{self.USB_PATH}" was not found!'
             logger.critical(msg)

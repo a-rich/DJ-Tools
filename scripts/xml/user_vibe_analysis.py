@@ -37,7 +37,7 @@ def analyze_user_vibes(
     user_tags = defaultdict(lambda: defaultdict(int))
     for user, tracks in groupby(
         sorted(tracks, key=lambda x: x["Location"]),
-        key=lambda x: x["Location"].split("/")[user_index]
+        key=lambda x: x["Location"].split("/")[user_index],
     ):
         tagged_tracks = 0
         tracks = list(tracks)
@@ -113,7 +113,13 @@ if __name__ == "__main__":
         "--excluded-tags",
         nargs="+",
         default=[
-            "Opener", "Build", "Peak Time", "Flute", "Guitar", "Piano", "Vocal"
+            "Opener",
+            "Build",
+            "Peak Time",
+            "Flute",
+            "Guitar",
+            "Piano",
+            "Vocal",
         ],
         help="Excluded tags",
     )

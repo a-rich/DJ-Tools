@@ -65,19 +65,21 @@ def test_process(mock_export, mock_get_spotify_tracks, config, tmpdir):
             },
         ],
     }
-    def mock_export_function(filename, **kwargs):  # pylint: disable=unused-argument
+
+    def mock_export_function(
+        filename, **kwargs
+    ):  # pylint: disable=unused-argument
         with open(filename, mode="wb") as _file:
             _file.write(b"")
+
     mock_export.side_effect = mock_export_function
     config.AUDIO_DESTINATION = Path(tmpdir)
-    config.RECORDING_FILE= "file.wav"
+    config.RECORDING_FILE = "file.wav"
     config.RECORDING_PLAYLIST = "playlist"
     process(config)
     output_files = list(config.AUDIO_DESTINATION.iterdir())
-    assert (
-        len(output_files) == len(
-            mock_get_spotify_tracks.return_value["playlist"]
-        )
+    assert len(output_files) == len(
+        mock_get_spotify_tracks.return_value["playlist"]
     )
 
 
@@ -85,9 +87,7 @@ def test_process(mock_export, mock_get_spotify_tracks, config, tmpdir):
     "djtools.utils.process_recording.get_spotify_tracks",
     mock.Mock(return_value={}),
 )
-@mock.patch(
-    "djtools.utils.process_recording.AudioSegment.export", mock.Mock()
-)
+@mock.patch("djtools.utils.process_recording.AudioSegment.export", mock.Mock())
 def test_process_handles_missing_or_empty_playlist(config):
     """Test for the process function."""
     config.RECORDING_PLAYLIST = "playlist"
@@ -104,14 +104,12 @@ def test_process_handles_missing_or_empty_playlist(config):
 
 @mock.patch("djtools.utils.process_recording.get_spotify_tracks")
 @mock.patch("djtools.utils.process_recording.AudioSegment.from_file")
-@mock.patch(
-    "djtools.utils.process_recording.AudioSegment.export", mock.Mock()
-)
+@mock.patch("djtools.utils.process_recording.AudioSegment.export", mock.Mock())
 def test_process_warns_when_recording_is_too_short(
     mock_audio_segment, mock_spotify_tracks, config, caplog, tmpdir
 ):
     """Test for the process function."""
-    config.RECORDING_FILE= "file.wav"
+    config.RECORDING_FILE = "file.wav"
     config.RECORDING_PLAYLIST = "playlist"
     config.AUDIO_DESTINATION = Path(tmpdir)
     caplog.set_level("WARNING")
@@ -150,7 +148,6 @@ def test_process_warns_when_recording_is_too_short(
     )
 
 
-
 @mock.patch(
     "djtools.utils.process_recording.get_spotify_tracks",
     mock.Mock(
@@ -177,12 +174,8 @@ def test_process_warns_when_recording_is_too_short(
     "djtools.utils.process_recording.AudioSegment.from_file",
     mock.Mock(return_value=AudioSegment.silent(duration=2000)),
 )
-@mock.patch(
-    "djtools.utils.process_recording.AudioSegment.export", mock.Mock()
-)
-def test_process_warns_when_filename_is_malformed(
-    config, caplog, tmpdir
-):
+@mock.patch("djtools.utils.process_recording.AudioSegment.export", mock.Mock())
+def test_process_warns_when_filename_is_malformed(config, caplog, tmpdir):
     """Test for the process function."""
     config.RECORDING_PLAYLIST = "playlist"
     config.AUDIO_DESTINATION = Path(tmpdir)

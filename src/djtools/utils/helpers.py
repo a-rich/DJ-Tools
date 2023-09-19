@@ -71,7 +71,8 @@ def find_matches(
             Levenshtein distance.
     """
     spotify_tracks = [
-        (playlist, track) for playlist, tracks in spotify_tracks.items()
+        (playlist, track)
+        for playlist, tracks in spotify_tracks.items()
         for track in tracks
     ]
     _product = list(product(spotify_tracks, beatcloud_tracks))
@@ -92,7 +93,7 @@ def find_matches(
                     executor.map(compute_distance, *payload),
                     total=len(_product),
                     desc="Matching new and Beatcloud tracks",
-                )
+                ),
             )
         )
 
@@ -142,7 +143,8 @@ def get_local_tracks(config: BaseConfig) -> Dict[str, List[str]]:
 
 
 def get_playlist_tracks(
-    spotify: spotipy.Spotify, playlist_id: str) -> List[Dict]:
+    spotify: spotipy.Spotify, playlist_id: str
+) -> List[Dict]:
     """Queries Spotify API for a playlist and pulls tracks from it.
 
     Args:
@@ -219,39 +221,40 @@ def initialize_logger() -> Tuple[logging.Logger, str]:
         Tuple containing Logger and associated log file.
     """
     log_file = (
-        Path(__file__).parent.parent / "logs" /
-        f'{datetime.now().strftime("%Y-%m-%d")}.log'
+        Path(__file__).parent.parent
+        / "logs"
+        / f'{datetime.now().strftime("%Y-%m-%d")}.log'
     )
     logging_config = {
-        'version': 1,
-        'disable_existing_loggers': False,
-        'formatters': {
-            'baseFormatter': {
-                'format': '%(asctime)s - %(name)s:%(lineno)s - %(levelname)s - %(message)s',
-                'datefmt': '%Y-%m-%d %H:%M:%S',
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "baseFormatter": {
+                "format": "%(asctime)s - %(name)s:%(lineno)s - %(levelname)s - %(message)s",
+                "datefmt": "%Y-%m-%d %H:%M:%S",
             },
         },
-        'handlers': {
-            'fileHandler': {
-                'class': 'logging.FileHandler',
-                'level': 'DEBUG',
-                'formatter': 'baseFormatter',
-                'filename': log_file.as_posix(),
+        "handlers": {
+            "fileHandler": {
+                "class": "logging.FileHandler",
+                "level": "DEBUG",
+                "formatter": "baseFormatter",
+                "filename": log_file.as_posix(),
             },
-            'streamHandler': {
-                'class': 'logging.StreamHandler',
-                'level': 'DEBUG',
-                'formatter': 'baseFormatter',
-                'stream': 'ext://sys.stdout',
+            "streamHandler": {
+                "class": "logging.StreamHandler",
+                "level": "DEBUG",
+                "formatter": "baseFormatter",
+                "stream": "ext://sys.stdout",
             },
         },
-        'loggers': {
-            '': {  # root logger
-                'handlers': ['fileHandler', 'streamHandler'],
-                'level': 'DEBUG',
-                'propagate': False
+        "loggers": {
+            "": {  # root logger
+                "handlers": ["fileHandler", "streamHandler"],
+                "level": "DEBUG",
+                "propagate": False,
             },
-        }
+        },
     }
     logging.config.dictConfig(logging_config)
 
@@ -273,6 +276,7 @@ def make_path(func: Callable) -> Callable:
     Returns:
         The Callable being wrapped by this decorator.
     """
+
     @wraps(make_path)
     def str_to_path(*args, **kwargs):
         """Converts non-Path type args into Paths if annotated as Paths.
@@ -286,7 +290,7 @@ def make_path(func: Callable) -> Callable:
         # Get the function's type annotations and partition them by args and
         # kwargs.
         path_types = (pathlib.Path, typing.Union[pathlib.Path, None])
-        num_args= 0
+        num_args = 0
         num_kwargs = 0
         type_hints = list(typing.get_type_hints(func).values())
         sig = inspect.signature(func)

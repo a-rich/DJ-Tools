@@ -8,13 +8,14 @@ from djtools.version import get_version
 
 
 @pytest.mark.parametrize(
-    "version, expected", [
+    "version, expected",
+    [
         ("3.0.0", "3.0.0"),
         ("3.0.0rc1", "3.0.0-rc1"),
         ("3.0.0-rc.1", "3.0.0-rc.1"),
         ("3.0.0b1", "3.0.0-b1"),
         ("3.0.0-b.1", "3.0.0-b.1"),
-    ]
+    ],
 )
 @mock.patch("djtools.version.importlib.metadata.version")
 def test_fix_version_string(mock_version, version, expected):

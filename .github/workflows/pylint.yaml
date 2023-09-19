@@ -4,11 +4,9 @@ on:
     paths:
       - 'src/**.py'
       - 'tests/**.py'
-      - 'pyproject.toml'
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     env:
       PYLINT_PASS_SCORE: "10.00"

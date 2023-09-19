@@ -5,7 +5,9 @@ import pytest
 from pydantic import ValidationError
 
 from djtools.collection.config import (
-    CollectionConfig, PlaylistConfig, PlaylistConfigContent
+    CollectionConfig,
+    PlaylistConfig,
+    PlaylistConfigContent,
 )
 
 from ..test_utils import mock_exists, MockOpen
@@ -32,7 +34,7 @@ def test_collectionconfig():
             ("collection_playlists.yaml", True),
         ],
         path,
-    )
+    ),
 )
 @mock.patch(
     "builtins.open",
@@ -47,7 +49,7 @@ def test_collectionconfig_invalid_collection_playlists_config(rekordbox_xml):
     with pytest.raises(
         RuntimeError,
         match="collection_playlists.yaml must be a valid YAML to use the "
-            "COLLECTION_PLAYLISTS feature"
+        "COLLECTION_PLAYLISTS feature",
     ):
         CollectionConfig(**cfg)
 
@@ -60,7 +62,7 @@ def test_collectionconfig_invalid_collection_playlists_config(rekordbox_xml):
             ("rekordbox.xml", True),
         ],
         path,
-    )
+    ),
 )
 def test_collectionconfig_no_collection_playlists_config(rekordbox_xml):
     """Test for the CollectionConfig class."""
@@ -68,10 +70,9 @@ def test_collectionconfig_no_collection_playlists_config(rekordbox_xml):
     with pytest.raises(
         RuntimeError,
         match="collection_playlists.yaml must be a valid YAML to use the "
-            "COLLECTION_PLAYLISTS feature"
+        "COLLECTION_PLAYLISTS feature",
     ):
         CollectionConfig(**cfg)
-
 
 
 def test_collectionconfig_xml_is_missing():
@@ -80,7 +81,7 @@ def test_collectionconfig_xml_is_missing():
     with pytest.raises(
         RuntimeError,
         match="Using the collection package requires the config option "
-            "COLLECTION_PATH to be a valid collection path",
+        "COLLECTION_PATH to be a valid collection path",
     ):
         CollectionConfig(**cfg)
 
@@ -91,7 +92,7 @@ def test_collectionconfig_xml_is_none():
     with pytest.raises(
         RuntimeError,
         match="Using the collection package requires the config option "
-            "COLLECTION_PATH to be a valid collection path",
+        "COLLECTION_PATH to be a valid collection path",
     ):
         CollectionConfig(**cfg)
 
