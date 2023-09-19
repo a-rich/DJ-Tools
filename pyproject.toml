@@ -69,6 +69,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    "black==23.9.1",
     "build==0.8.0",
     "mkdocs==1.4.2",
     "mkdocs-material==9.1.8",
@@ -87,6 +88,9 @@ accelerated = [
 
 [project.scripts]
 djtools = "djtools:main"
+
+[tool.black]
+line-length = 79
 
 [tool.coverage.run]
 source = ["src"]

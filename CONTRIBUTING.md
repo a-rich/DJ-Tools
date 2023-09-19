@@ -12,7 +12,7 @@ If you wish to contribute to DJ Tools, please follow these development rules:
 ## CI
 On `pull_request` events, [pytest-coverage](https://github.com/a-rich/DJ-Tools/actions/workflows/pytest-coverage.yaml) and [pylint](https://github.com/a-rich/DJ-Tools/actions/workflows/pylint.yaml) Actions are triggered. For build checks to pass on the PR, both of these Actions must pass with `100%` or `10.00/10` in the case of `pylint`. If you're unable to pass the `pytest-coverage` Action, please open an issue. If you're not able to pass `pylint`, first attempt to correct the errors before resorting to [messages control](https://pylint.readthedocs.io/en/latest/user_guide/messages/message_control.html).
 
-On `push` events to `releases/**`, changes to `**.md` files trigger the [deploy-dev-docs](https://github.com/a-rich/DJ-Tools/blob/pylint-check/.github/workflows/deploy-dev-docs.yaml) Action while changes to `**.py` files trigger the [release-dev](https://github.com/a-rich/DJ-Tools/blob/pylint-check/.github/workflows/release-dev.yaml) Action.
+On `push` events to `releases/**`, the [deploy-dev-docs](https://github.com/a-rich/DJ-Tools/blob/pylint-check/.github/workflows/deploy-dev-docs.yaml) and the [release-dev](https://github.com/a-rich/DJ-Tools/blob/pylint-check/.github/workflows/release-dev.yaml) Actions are triggered.
 
 `push` events to `main` trigger [deploy-prod-docs](https://github.com/a-rich/DJ-Tools/blob/pylint-check/.github/workflows/deploy-prod-docs.yaml) and [release-prod](https://github.com/a-rich/DJ-Tools/blob/pylint-check/.github/workflows/release-prod.yaml).
 
