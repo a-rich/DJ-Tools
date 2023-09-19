@@ -13,6 +13,7 @@
 # ignore directories
 **/__pycache__
 site/
+src/djtools.egg-info 
 
 # allow test data
 !tests/data/*
