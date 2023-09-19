@@ -66,9 +66,13 @@ def compare_tracks(
                 track_title_artists = []
                 for track in playlist_tracks:
                     title = track["track"]["name"]
-                    artists = ", ".join([y["name"] for y in track["track"]["artists"]])
+                    artists = ", ".join(
+                        [y["name"] for y in track["track"]["artists"]]
+                    )
                     track_title_artists.append(
-                        f"{artists} - {title}" if config.ARTIST_FIRST else f"{title} - {artists}"
+                        f"{artists} - {title}"
+                        if config.ARTIST_FIRST
+                        else f"{title} - {artists}"
                     )
                 tracks[playlist_name] = track_title_artists
             track_sets.append((tracks, "Spotify Playlist Tracks"))

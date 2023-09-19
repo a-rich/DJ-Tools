@@ -193,7 +193,12 @@ class RekordboxTrack(Track):
                 value = Path(unquote(value).split(self.__location_prefix)[-1])
             if key == "Rating":
                 value = {
-                    "0": 0, "51": 1, "102": 2, "153": 3, "204": 4, "255": 5
+                    "0": 0,
+                    "51": 1,
+                    "102": 2,
+                    "153": 3,
+                    "204": 4,
+                    "255": 5,
                 }.get(value)
             setattr(self, f"_{key}", value)
 
@@ -204,7 +209,9 @@ class RekordboxTrack(Track):
         )
 
         # Merge Genre and MyTag data into a new attribute.
-        self._Tags = set(self._Genre + self._MyTags)  # pylint: disable=invalid-name
+        self._Tags = set(
+            self._Genre + self._MyTags
+        )  # pylint: disable=invalid-name
 
         # Parse TEMPO Tags as the beat grid attribute.
         self._beat_grid = track.find_all("TEMPO")
@@ -227,12 +234,13 @@ class RekordboxTrack(Track):
         # Eventual repr string to return.
         string = "{}(\n{}\n)"
         # Body of the repr string to fill out with track contents.
-        body = ' ' * 4
+        body = " " * 4
 
         # Dunder members aren't represented. Public members (i.e. methods)
         # aren't represented either.  # pylint: disable=duplicate-code
         repr_attrs = {
-            key[1:]: value for key, value in self.__dict__.items()
+            key[1:]: value
+            for key, value in self.__dict__.items()
             if not (
                 key.startswith(f"_{type(self).__name__}")
                 or not key.startswith("_")
@@ -399,7 +407,8 @@ class RekordboxTrack(Track):
         # Dunder members aren't serialized. Public members (i.e. methods)
         # aren't serialized either.
         serialize_attrs = {
-            key[1:]: value for key, value in self.__dict__.items()
+            key[1:]: value
+            for key, value in self.__dict__.items()
             if not (
                 key.startswith(f"_{type(self).__name__}")
                 or not key.startswith("_")  # pylint: disable=duplicate-code
@@ -469,13 +478,18 @@ class RekordboxTrack(Track):
                 track_path = quote(value.as_posix(), safe="/,()!+=#;$:")
                 value = f"{self.__location_prefix}{track_path}"
                 value = re.sub(
-                    r'%[0-9A-Z]{2}', lambda x: x.group(0).lower(), value
+                    r"%[0-9A-Z]{2}", lambda x: x.group(0).lower(), value
                 )
 
             # Reverse the rating value to the range recognized by Rekordbox.
             if key == "Rating":
                 value = {
-                    0: "0", 1: "51", 2: "102", 3: "153", 4: "204", 5: "255"
+                    0: "0",
+                    1: "51",
+                    2: "102",
+                    3: "153",
+                    4: "204",
+                    5: "255",
                 }.get(value)
 
             # Otherwise the data is serialized as TRACK Tag attributes.
@@ -515,6 +529,6 @@ class RekordboxTrack(Track):
         Raises:
             AssertionError: Serialized Collection must match the original.
         """
-        assert original == serializable.serialize(), (
-            "Failed RekordboxTrack validation!"
-        )
+        assert (
+            original == serializable.serialize()
+        ), "Failed RekordboxTrack validation!"

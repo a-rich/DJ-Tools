@@ -84,9 +84,7 @@ def filter_dict(
         Dictionary containing just the keys unique to "sub_config".
     """
     super_keys = set(BaseConfig.__fields__)
-    return {
-        k: v for k, v in sub_config.dict().items() if k not in super_keys
-    }
+    return {k: v for k, v in sub_config.dict().items() if k not in super_keys}
 
 
 @make_path
@@ -121,7 +119,8 @@ def build_config(config_file: Optional[Path] = None) -> BaseConfig:
         base_config_fields = BaseConfig.__fields__
         initial_config = {
             pkg: {
-                k: v.default for k, v in cfg.__fields__.items()
+                k: v.default
+                for k, v in cfg.__fields__.items()
                 if pkg == "configs" or k not in base_config_fields
             }
             for pkg, cfg in PKG_CFG.items()
@@ -131,14 +130,17 @@ def build_config(config_file: Optional[Path] = None) -> BaseConfig:
 
     # Update config using command-line arguments.
     args = {
-        k.upper(): v for k, v in arg_parse().items()
+        k.upper(): v
+        for k, v in arg_parse().items()
         if v or isinstance(v, list)
     }
     if args:
         logger.info(f"Args: {args}")
         args_set = set(args)
         for pkg, cfg_class in PKG_CFG.items():
-            args_intersection = set(cfg_class.__fields__).intersection(args_set)
+            args_intersection = set(cfg_class.__fields__).intersection(
+                args_set
+            )
             if args_intersection:
                 args_subset = {
                     k: v for k, v in args.items() if k in args_intersection
@@ -152,14 +154,16 @@ def build_config(config_file: Optional[Path] = None) -> BaseConfig:
     base_cfg_options = config["configs"] if config else {}
     configs = {
         pkg: cfg(**{**base_cfg_options, **config.get(pkg, {})})
-        for pkg, cfg in PKG_CFG.items() if pkg != "configs"
+        for pkg, cfg in PKG_CFG.items()
+        if pkg != "configs"
     }
     joined_config = BaseConfig(
         **base_cfg_options,
         **{
-            k: v for cfg in configs.values()
+            k: v
+            for cfg in configs.values()
             for k, v in filter_dict(cfg).items()
-        }
+        },
     )
 
     return joined_config

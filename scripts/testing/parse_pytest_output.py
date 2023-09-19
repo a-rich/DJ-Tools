@@ -22,9 +22,11 @@ for line in data.split("\n"):
 
 test_lookup = {}
 
+
 def func(string):
     """Helper function for sorting and grouping test results."""
     return string.split("[DEBUG] ")[-1].split(" [")[0].split("[")[0].strip()
+
 
 for _id, group in groupby(sorted(test_case_lines, key=func), key=func):
     phase_times = defaultdict(list)
@@ -39,8 +41,11 @@ for _id, group in groupby(sorted(test_case_lines, key=func), key=func):
 
 sorted_test_lookup = {
     phase: {
-        key: value[phase] for key, value in sorted(
-            test_lookup.items(), key=lambda x: x[1][phase], reverse=True  # pylint: disable=cell-var-from-loop
+        key: value[phase]
+        for key, value in sorted(
+            test_lookup.items(),
+            key=lambda x: x[1][phase],
+            reverse=True,  # pylint: disable=cell-var-from-loop
         )
     }
     for phase in ["call", "setup", "teardown"]
@@ -57,18 +62,19 @@ for phase, times in sorted_test_lookup.items():
 
 fixture_times = {}
 
+
 def func(string):  # pylint: disable=function-redefined
     """Helper function for sorting and grouping test results."""
     return string.split("[DEBUG] ")[-1].split(" [fixture]=")[0]
+
 
 for _id, group in groupby(sorted(fixture_lines, key=func), key=func):
     group = [float(x.strip().split("[fixture]=")[-1]) for x in group]
     fixture_times[_id] = np.mean(group)
 
 
-for fixture, time in dict(sorted(
-        fixture_times.items(), key=lambda x: x[1], reverse=True
-    )
+for fixture, time in dict(
+    sorted(fixture_times.items(), key=lambda x: x[1], reverse=True)
 ).items():
     print(f"{fixture}: {time}")
 print()

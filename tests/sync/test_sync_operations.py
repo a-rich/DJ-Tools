@@ -5,7 +5,10 @@ from unittest import mock
 import pytest
 
 from djtools.sync.sync_operations import (
-    download_collection, download_music, upload_collection, upload_music
+    download_collection,
+    download_music,
+    upload_collection,
+    upload_music,
 )
 
 
@@ -42,7 +45,7 @@ def test_download_music(playlist_name, config, tmpdir, caplog):
 
     with mock.patch(
         "djtools.sync.sync_operations.run_sync",
-        side_effect=lambda *args, **kwargs: dummy_func()
+        side_effect=lambda *args, **kwargs: dummy_func(),
     ) as mock_run_sync:
         download_music(config)
         mock_run_sync.assert_called_with(cmd)
@@ -89,7 +92,9 @@ def test_download_collection(
     test_user = "test_user"
     other_user = "aweeeezy"
     new_xml = rekordbox_xml.parent / f"{other_user}_rekordbox.xml"
-    new_xml.write_text(rekordbox_xml.read_text(encoding="utf-8"), encoding="utf-8")
+    new_xml.write_text(
+        rekordbox_xml.read_text(encoding="utf-8"), encoding="utf-8"
+    )
     config.USER = test_user
     config.IMPORT_USER = other_user
     config.COLLECTION_PATH = rekordbox_xml

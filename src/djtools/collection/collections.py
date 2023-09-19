@@ -52,11 +52,13 @@ class Collection(ABC):
             Dict containing all track tags keyed by "genres" and "other".
         """
         all_tags = {
-            tag for track in self.get_tracks().values()
+            tag
+            for track in self.get_tracks().values()
             for tag in track.get_tags()
         }
         genre_tags = {
-            tag for track in self.get_tracks().values()
+            tag
+            for track in self.get_tracks().values()
             for tag in track.get_genre_tags()
         }
         other_tags = all_tags.difference(genre_tags)
@@ -83,9 +85,8 @@ class Collection(ABC):
         exp = re.compile(r".*".join(name.split("*")))
         playlists = []
         for playlist in self._playlists:  # pylint:disable=no-member
-            if (
-                (glob and re.search(exp, playlist.get_name())) or
-                (not glob and playlist.get_name() == name)
+            if (glob and re.search(exp, playlist.get_name())) or (
+                not glob and playlist.get_name() == name
             ):
                 playlists.append(playlist)
             if playlist.is_folder():
@@ -157,13 +158,14 @@ class RekordboxCollection(Collection):
         # Eventual repr string to return.
         string = "{}({}\n)"
         # Body to the repr string to fill out with Collection content.
-        body =  ""
+        body = ""
 
         # Dunder methods aren't represented. Public members (i.e methods)
         # aren't represented either.
         repr_attrs = {
-            key[1:]: value for key, value in self.__dict__.items()
-            if not(
+            key[1:]: value
+            for key, value in self.__dict__.items()
+            if not (
                 key.startswith(f"_{type(self).__name__}")
                 or not key.startswith("_")
                 or key == "_collection"
@@ -179,7 +181,7 @@ class RekordboxCollection(Collection):
 
             # Represent string values with surrounding double quotes.
             if isinstance(value, (Path, str)):
-                value=  f'"{value}"'
+                value = f'"{value}"'
 
             # Append the attribute's name and value to the representation.
             body += f"\n{' ' * 4}{key}={value},"
@@ -329,9 +331,9 @@ class RekordboxCollection(Collection):
         input_xml_string = re.sub(whitespace, input_xml_string, " ")
         output_xml_string = re.sub(whitespace, output_xml_string, " ")
 
-        assert input_xml_string == output_xml_string, (
-            "Failed RekordboxCollection validation!"
-        )
+        assert (
+            input_xml_string == output_xml_string
+        ), "Failed RekordboxCollection validation!"
 
 
 class CustomSubstitution(EntitySubstitution):
@@ -355,7 +357,8 @@ class CustomSubstitution(EntitySubstitution):
         """
         # Escape angle brackets, ampersands, single quotes, and double quotes.
         value = cls.AMPERSAND_OR_BRACKET_OR_QUOTES.sub(
-            cls._substitute_xml_entity, value)
+            cls._substitute_xml_entity, value
+        )
 
         if make_quoted_attribute:
             value = cls.quoted_attribute_value(value)  # pragma: no cover

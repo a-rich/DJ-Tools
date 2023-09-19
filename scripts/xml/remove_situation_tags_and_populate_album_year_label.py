@@ -45,7 +45,9 @@ def thread(track):
                 continue
         year = str(date.year)
         for attribute_name, attribute in [
-            ("album", album), ("label", label), ("year", year)
+            ("album", album),
+            ("label", label),
+            ("year", year),
         ]:
             setattr(track, f"_{attribute_name.title()}", attribute)
 
@@ -57,14 +59,19 @@ def thread(track):
     comment_prefix = comments.split("/* ")[0].strip()
     comment_suffix = comments.split(" */")[-1].strip()
     new_tags = [
-        tag.strip() for tag in tags.group().split("/")
+        tag.strip()
+        for tag in tags.group().split("/")
         if tag.strip() not in remove_tags
     ]
     new_tags = " / ".join(new_tags)
     if new_tags:
-        setattr(track, "_Comments", f'{comment_prefix} /* {new_tags} */ {comment_suffix}')
+        setattr(
+            track,
+            "_Comments",
+            f"{comment_prefix} /* {new_tags} */ {comment_suffix}",
+        )
     else:
-        setattr(track, "_Comments", f'{comment_prefix} {comment_suffix}')
+        setattr(track, "_Comments", f"{comment_prefix} {comment_suffix}")
 
 
 if __name__ == "__main__":

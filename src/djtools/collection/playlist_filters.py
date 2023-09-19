@@ -74,7 +74,6 @@ class HipHopFilter(PlaylistFilter):
 
         return True
 
-
     def is_filter_playlist(self, playlist: Playlist) -> bool:
         """Returns True if this playlist's name is "Hip Hop".
 
@@ -87,11 +86,15 @@ class HipHopFilter(PlaylistFilter):
         if not playlist.get_name() == "Hip Hop":
             return False
 
-        self._bass_hip_hop = False  #pylint: disable=attribute-defined-outside-init
+        self._bass_hip_hop = (
+            False  # pylint: disable=attribute-defined-outside-init
+        )
         parent = playlist.get_parent()
         while parent:
             if parent.get_name() == "Bass":
-                self._bass_hip_hop = True  #pylint: disable=attribute-defined-outside-init
+                self._bass_hip_hop = (
+                    True  # pylint: disable=attribute-defined-outside-init
+                )
             parent = parent.get_parent()
 
         return True
@@ -123,9 +126,8 @@ class MinimalDeepTechFilter(PlaylistFilter):
                 house_tag = True
             if re.search(techno_exp, tag.lower()):
                 techno_tag = True
-        if (
-            (self._techno and not techno_tag) or
-            (self._house and not house_tag)
+        if (self._techno and not techno_tag) or (
+            self._house and not house_tag
         ):
             return False
 
@@ -143,14 +145,18 @@ class MinimalDeepTechFilter(PlaylistFilter):
         if not playlist.get_name() == "Minimal Deep Tech":
             return False
 
-        self._techno = False  #pylint: disable=attribute-defined-outside-init
-        self._house = False  #pylint: disable=attribute-defined-outside-init
+        self._techno = False  # pylint: disable=attribute-defined-outside-init
+        self._house = False  # pylint: disable=attribute-defined-outside-init
         parent = playlist.get_parent()
         while parent:
             if parent.get_name() == "Techno":
-                self._techno = True  #pylint: disable=attribute-defined-outside-init
+                self._techno = (
+                    True  # pylint: disable=attribute-defined-outside-init
+                )
             if parent.get_name() == "House":
-                self._house = True  #pylint: disable=attribute-defined-outside-init
+                self._house = (
+                    True  # pylint: disable=attribute-defined-outside-init
+                )
             parent = parent.get_parent()
 
         return True

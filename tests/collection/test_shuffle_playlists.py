@@ -14,7 +14,8 @@ def test_shuffle_playlists(config, rekordbox_xml, caplog):
     with open(rekordbox_xml, mode="r", encoding="utf-8") as _file:
         database = BeautifulSoup(_file.read(), "xml")
     track_lookup = {
-        track["TrackID"]: track for track in database.find_all("TRACK")
+        track["TrackID"]: track
+        for track in database.find_all("TRACK")
         if track.get("Location")
     }
     original_playlists = [
@@ -22,7 +23,8 @@ def test_shuffle_playlists(config, rekordbox_xml, caplog):
         for playlist in playlists
     ]
     original_tracks = set(
-        track["Key"] for playlist in original_playlists
+        track["Key"]
+        for playlist in original_playlists
         for track in playlist.find_all("TRACK")
     )
     original_track_numbers = [
@@ -33,7 +35,8 @@ def test_shuffle_playlists(config, rekordbox_xml, caplog):
     with open(new_xml, mode="r", encoding="utf-8") as _file:
         database = BeautifulSoup(_file.read(), "xml")
     track_lookup = {
-        track["TrackID"]: track for track in database.find_all("TRACK")
+        track["TrackID"]: track
+        for track in database.find_all("TRACK")
         if track.get("Location")
     }
     shuffled_playlist = database.find_all(

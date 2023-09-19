@@ -27,7 +27,7 @@ def fix_up(_file: Path) -> Path:
         Cleaned up music file name.
     """
     ext = _file.suffix
-    exp = fr"(\-\d{{1,}}(?={ext}))"
+    exp = rf"(\-\d{{1,}}(?={ext}))"
     stripped = Path(re.split(exp, _file.as_posix())[0]).stem
     name = Path(" - ".join(stripped.split(" - ")[-1::-1]))
 
@@ -44,12 +44,14 @@ def url_download(config: BaseConfig):
     dl_loc.mkdir(parents=True, exist_ok=True)
 
     ydl_opts = {
-        "postprocessors": [{
-            "key": "FFmpegExtractAudio",
-            "preferredcodec": config.AUDIO_FORMAT,
-            "preferredquality": config.AUDIO_BITRATE,
-        }],
-        "outtmpl": (dl_loc / "%(title)s.tmp").as_posix()
+        "postprocessors": [
+            {
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": config.AUDIO_FORMAT,
+                "preferredquality": config.AUDIO_BITRATE,
+            }
+        ],
+        "outtmpl": (dl_loc / "%(title)s.tmp").as_posix(),
     }
 
     with ytdl.YoutubeDL(ydl_opts) as ydl:

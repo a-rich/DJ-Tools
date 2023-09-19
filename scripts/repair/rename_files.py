@@ -95,9 +95,7 @@ from djtools.configs.cli_args import convert_to_paths
 eyed3.log.setLevel("ERROR")
 
 
-def analyze_tracks(
-    collection: RekordboxCollection, usb: Path
-) -> str:
+def analyze_tracks(collection: RekordboxCollection, usb: Path) -> str:
     """Determines statistics of a collection.
 
     Tracks are noted if:
@@ -113,7 +111,7 @@ def analyze_tracks(
         Common path across tracks in the collection.
     """
 
-    def thread(track: RekordboxTrack, data: Dict, usb: Path) -> Path: 
+    def thread(track: RekordboxTrack, data: Dict, usb: Path) -> Path:
         """Threaded process for processing tracks.
 
         Args:
@@ -154,7 +152,7 @@ def analyze_tracks(
                 locations.append(future.result())
                 pbar.update()
             locations = list(filter(None, locations))
-    
+
     if not locations:
         print(
             "WARNING: none of your tracks were able to be opened...make sure "
@@ -193,7 +191,7 @@ def move_files(
     Given a Collection object, this function will move all the tracks to a path
     following the convention:
         '<usb>/DJ Music/<user>/<path_insert>/<filename>'
-    
+
     Users provide <usb> and <user> via the CLI. <path_insert> may also be
     provided (if you want all your tracks to be in the same directory),
     otherwise it is inferred from the common path between tracks of the
@@ -258,7 +256,7 @@ def move_files(
         if path_insert is not None:
             path_suffix = path_insert
         else:
-            path_suffix = str(loc.parent).split(common_path)[-1] 
+            path_suffix = str(loc.parent).split(common_path)[-1]
 
         # Either use the existing filename or infer a new one using the ID3
         # tags for 'title' and 'artist'.
@@ -307,7 +305,7 @@ def move_files(
             for future in as_completed(futures):
                 future.result()
                 pbar.update()
-    
+
     # Serialize the updated collection to a new XML file.
     collection.serialize(output_path="output_rekordbox.xml")
 
@@ -322,7 +320,7 @@ def move_files(
         encoding="utf-8",
     ) as _file:
         json.dump(data, _file)
-    
+
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -381,7 +379,7 @@ if __name__ == "__main__":
     # This just extracts location info to see (a) what the common path is for
     # tracks in your collection and (b) what the list of tracks not located
     # under 'args.usb' is.
-    # 
+    #
     # Nothing destructive occurs.
     common_path = analyze_tracks(collection, args.usb)
 

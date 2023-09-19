@@ -16,8 +16,8 @@ def test_copy_playlists(tmpdir, config, rekordbox_xml):
     config.COPY_PLAYLISTS = target_playlists
     config.COPY_PLAYLISTS_DESTINATION = Path(test_output_dir)
     new_collection = (
-        config.COPY_PLAYLISTS_DESTINATION /
-        f"copied_playlists_collection{config.COLLECTION_PATH.suffix}"
+        config.COPY_PLAYLISTS_DESTINATION
+        / f"copied_playlists_collection{config.COLLECTION_PATH.suffix}"
     )
     copy_playlists(config)
     assert list(test_output_dir.iterdir())

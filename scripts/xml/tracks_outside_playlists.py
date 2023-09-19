@@ -22,12 +22,17 @@ def create_playlist(_soup, tracks, new_playlist_name):
         tracks (dict): map of TrackIDs to XML tags for dangling tracks
         new_playlist (str): new playlist name
     """
-    playlists_root = _soup.find_all('NODE', {'Name': 'ROOT', 'Type': '0'})[0]
-    new_playlist = _soup.new_tag('NODE', Name=new_playlist_name, Type="1",
-                                 KeyType="0", Entries=str(len(tracks)))
+    playlists_root = _soup.find_all("NODE", {"Name": "ROOT", "Type": "0"})[0]
+    new_playlist = _soup.new_tag(
+        "NODE",
+        Name=new_playlist_name,
+        Type="1",
+        KeyType="0",
+        Entries=str(len(tracks)),
+    )
     playlists_root.insert(0, new_playlist)
     for track_id, _ in tracks.items():
-        new_playlist.append(_soup.new_tag('TRACK', Key=track_id))
+        new_playlist.append(_soup.new_tag("TRACK", Key=track_id))
 
 
 def get_tracks(_soup, name, folder):
@@ -46,57 +51,71 @@ def get_tracks(_soup, name, folder):
     Returns:
         dict: map of TrackIDs to XML tags for dangling tracks
     """
-    tracks = {x['TrackID']: x
-              for x in _soup.find_all('TRACK') if x.get('Location')}
+    tracks = {
+        x["TrackID"]: x for x in _soup.find_all("TRACK") if x.get("Location")
+    }
     try:
-        node = _soup.find_all('NODE', {'Name': name, 'Type': '0'
-                            if folder else '1'})[0]
+        node = _soup.find_all(
+            "NODE", {"Name": name, "Type": "0" if folder else "1"}
+        )[0]
     except IndexError:
         msg = f'Failed to find {"folder" if folder else "playlist"} {name}'
         logger.critical(msg)
         raise ValueError(msg) from IndexError
 
     if folder:
-        playlists = node.find_all('NODE', {'Type': '1'})
+        playlists = node.find_all("NODE", {"Type": "1"})
     else:
         playlists = [node]
 
-    logger.info(f'Tracks: {len(tracks)}')
-    logger.info(f'Playlists: {len(playlists)}')
+    logger.info(f"Tracks: {len(tracks)}")
+    logger.info(f"Playlists: {len(playlists)}")
 
     for playlist in playlists:
         for track in playlist.children:
-            if not (isinstance(track, Tag) and tracks.get(track['Key'])):
+            if not (isinstance(track, Tag) and tracks.get(track["Key"])):
                 continue
-            del tracks[track['Key']]
+            del tracks[track["Key"]]
 
-    logger.info(f'Dangling tracks: {len(tracks)}')
+    logger.info(f"Dangling tracks: {len(tracks)}")
 
     return tracks
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument('--xml_path', required=True, type=str,
-            help='path to Rekordbox XML')
-    parser.add_argument('--name', type=str, required=True,
-            help='playlist / folder name used to find missing tracks')
-    parser.add_argument('--folder', action='store_true',
-            help='set if "--name" is folder instead of playlist')
-    parser.add_argument('--new_playlist', type=str, default='Dangling Tracks',
-            help='name of playlist to create with dangling tracks')
+    parser.add_argument(
+        "--xml_path", required=True, type=str, help="path to Rekordbox XML"
+    )
+    parser.add_argument(
+        "--name",
+        type=str,
+        required=True,
+        help="playlist / folder name used to find missing tracks",
+    )
+    parser.add_argument(
+        "--folder",
+        action="store_true",
+        help='set if "--name" is folder instead of playlist',
+    )
+    parser.add_argument(
+        "--new_playlist",
+        type=str,
+        default="Dangling Tracks",
+        help="name of playlist to create with dangling tracks",
+    )
     args = parser.parse_args()
 
-    with open(args.xml_path, encoding='utf-8') as _file:
-        soup = BeautifulSoup(_file.read(), 'xml')
+    with open(args.xml_path, encoding="utf-8") as _file:
+        soup = BeautifulSoup(_file.read(), "xml")
     try:
-        create_playlist(soup, get_tracks(soup, args.name, args.folder),
-                        args.new_playlist)
+        create_playlist(
+            soup, get_tracks(soup, args.name, args.folder), args.new_playlist
+        )
     except ValueError as exc:
         logger.critical(exc)
     except Exception:
-        logger.critical(f'Some error occured: {format_exc()}')
+        logger.critical(f"Some error occured: {format_exc()}")
 
-    with open(args.xml_path, mode='wb',
-              encoding=soup.orignal_encoding) as f:
-        f.write(soup.prettify('utf-8'))
+    with open(args.xml_path, mode="wb", encoding=soup.orignal_encoding) as f:
+        f.write(soup.prettify("utf-8"))

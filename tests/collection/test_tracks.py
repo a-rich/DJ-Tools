@@ -13,9 +13,7 @@ def test_track_raises_type_error():
     """Test Track class."""
     with pytest.raises(
         TypeError,
-        match=(
-            "Can't instantiate abstract class Track with abstract method"
-        ),
+        match=("Can't instantiate abstract class Track with abstract method"),
     ):
         Track()
 
@@ -29,16 +27,19 @@ def test_rekordboxtrack(rekordbox_track, rekordbox_track_tag):
     assert repr(track) == repr(rekordbox_track)
     assert str(track) == str(rekordbox_track)
     assert track.get_bpm() == float(rekordbox_track_tag["AverageBpm"])
-    genre_tags = list(
-        map(str.strip, rekordbox_track_tag["Genre"].split("/"))
-    )
+    genre_tags = list(map(str.strip, rekordbox_track_tag["Genre"].split("/")))
     assert track.get_genre_tags() == genre_tags
     assert track.get_id() == rekordbox_track_tag["TrackID"]
     assert track.get_location() == Path(
         unquote(rekordbox_track_tag["Location"]).split(prefix)[-1]
     )
     assert track.get_rating() == {
-        "0": 0, "51": 1, "102": 2, "153": 3, "204": 4, "255": 5
+        "0": 0,
+        "51": 1,
+        "102": 2,
+        "153": 3,
+        "204": 4,
+        "255": 5,
     }.get(rekordbox_track_tag["Rating"])
     tags = re.search(r"(?<=\/\*).*(?=\*\/)", rekordbox_track_tag["Comments"])
     tags = [x.strip() for x in tags.group().split("/")] if tags else []

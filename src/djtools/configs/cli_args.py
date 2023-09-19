@@ -51,6 +51,7 @@ class NonEmptyListElementAction(Action):
     having to first make an edit to their config.yaml (because the
     include/exclude options are mutually exclusive).
     """
+
     def __call__(
         self,
         parser: ArgumentParser,

@@ -9,7 +9,10 @@ from typing import Dict, List
 from typing_extensions import Literal
 
 from pydantic import (
-    NonNegativeFloat, NonNegativeInt, root_validator, validator
+    NonNegativeFloat,
+    NonNegativeInt,
+    root_validator,
+    validator,
 )
 
 from djtools.configs.config import BaseConfig
@@ -29,7 +32,7 @@ class UtilsConfig(BaseConfig):
     AUDIO_HEADROOM: NonNegativeFloat = 0.0
     CHECK_TRACKS: bool = False
     CHECK_TRACKS_FUZZ_RATIO: NonNegativeInt = 80
-    CHECK_TRACKS_SPOTIFY_PLAYLISTS:  List[str] = []
+    CHECK_TRACKS_SPOTIFY_PLAYLISTS: List[str] = []
     LOCAL_DIRS: List[Path] = []
     NORMALIZE_AUDIO: bool = False
     PROCESS_RECORDING: bool = False

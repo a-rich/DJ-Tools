@@ -8,9 +8,13 @@ from djtools.collection.playlists import Playlist, RekordboxPlaylist
     "playlist_name,expected_length,is_folder",
     [("My Tags", 1, True), ("Dark", 0, False)],
 )
-def test_rekordboxplaylist(rekordbox_collection_tag, playlist_name, expected_length, is_folder):
+def test_rekordboxplaylist(
+    rekordbox_collection_tag, playlist_name, expected_length, is_folder
+):
     """Test RekordboxPlaylist class."""
-    test_playlist = rekordbox_collection_tag.find("NODE", {"Name": playlist_name})
+    test_playlist = rekordbox_collection_tag.find(
+        "NODE", {"Name": playlist_name}
+    )
     playlist = RekordboxPlaylist(test_playlist, {})
     _ = repr(playlist)
     assert len(playlist) == expected_length
@@ -73,7 +77,7 @@ def test_rekordboxplaylist_get_tracks(rekordbox_track, rekordbox_playlist_tag):
 
 
 def test_rekordboxplaylist_raises_runtimeerror_when_appending_to_non_folder(
-    rekordbox_collection_tag
+    rekordbox_collection_tag,
 ):
     """Test RekordboxPlaylist class."""
     test_playlist = rekordbox_collection_tag.find("NODE", {"Name": "Dark"})
@@ -85,9 +89,13 @@ def test_rekordboxplaylist_raises_runtimeerror_when_appending_to_non_folder(
         playlist.add_playlist("")
 
 
-def test_rekordboxplaylist_raises_runtimeerror_when_removing_folder(rekordbox_collection_tag):
+def test_rekordboxplaylist_raises_runtimeerror_when_removing_folder(
+    rekordbox_collection_tag,
+):
     """Test RekordboxPlaylist class."""
-    playlist = RekordboxPlaylist(rekordbox_collection_tag.find("NODE", {"Name": "Dark"}))
+    playlist = RekordboxPlaylist(
+        rekordbox_collection_tag.find("NODE", {"Name": "Dark"})
+    )
     with pytest.raises(
         RuntimeError,
         match="Can't remove playlist from a non-folder playlist.",

@@ -53,7 +53,7 @@ def test_arg_parse_links_configs_dir_does_not_exist(
         # NOTE(a-rich): WindowsPath needs to be escaped for `\` characters to
         # appear in the `match` argument.
         match=re.escape(
-            f'{config_path} must be a directory that does not already exist'
+            f"{config_path} must be a directory that does not already exist"
         ),
     ):
         arg_parse()
@@ -70,10 +70,13 @@ def test_build_config(namespace):
     assert isinstance(config, BaseConfig)
 
 
-@mock.patch("builtins.open", MockOpen(
-    files=["config.yaml"],
-    content="yaml_valid: {false",
-).open)
+@mock.patch(
+    "builtins.open",
+    MockOpen(
+        files=["config.yaml"],
+        content="yaml_valid: {false",
+    ).open,
+)
 def test_build_config_invalid_config_yaml(caplog):
     """Test for the build_config function."""
     caplog.set_level("CRITICAL")
@@ -123,10 +126,13 @@ def test_filter_dict(config):
     assert sub_keys.difference(super_keys) == result_keys
 
 
-@mock.patch("builtins.open", MockOpen(
-    files=["config.yaml"],
-    content="sync:\n  UPLOAD_EXCLUDE_DIRS:\n    - some/path",
-).open)
+@mock.patch(
+    "builtins.open",
+    MockOpen(
+        files=["config.yaml"],
+        content="sync:\n  UPLOAD_EXCLUDE_DIRS:\n    - some/path",
+    ).open,
+)
 def test_overridding_list():
     """Test for the arg_parse function."""
     with mock.patch(

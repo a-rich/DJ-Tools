@@ -21,7 +21,9 @@ logger = logging.getLogger(__name__)
 
 
 def parse_sync_command(
-    _cmd: str, config: BaseConfig, upload: Optional[bool] = False,
+    _cmd: str,
+    config: BaseConfig,
+    upload: Optional[bool] = False,
 ) -> str:
     """Appends flags to "aws s3 sync" command. If "*_INCLUDE_DIRS" is
         specified, all directories are ignored except those specified. If
@@ -39,9 +41,8 @@ def parse_sync_command(
     Returns:
         Fully constructed "aws s3 sync" command.
     """
-    if (
-        (upload and config.UPLOAD_INCLUDE_DIRS)
-        or (not upload and config.DOWNLOAD_INCLUDE_DIRS)
+    if (upload and config.UPLOAD_INCLUDE_DIRS) or (
+        not upload and config.DOWNLOAD_INCLUDE_DIRS
     ):
         _cmd.extend(["--exclude", "*"])
         directories = map(
@@ -56,9 +57,8 @@ def parse_sync_command(
             else:
                 path = _dir.parent / path.with_suffix(ext)
             _cmd.extend(["--include", path.as_posix()])
-    if (
-        (upload and config.UPLOAD_EXCLUDE_DIRS)
-        or (not upload and config.DOWNLOAD_EXCLUDE_DIRS)
+    if (upload and config.UPLOAD_EXCLUDE_DIRS) or (
+        not upload and config.DOWNLOAD_EXCLUDE_DIRS
     ):
         _cmd.extend(["--include", "*"])
         directories = map(
@@ -100,7 +100,7 @@ def rewrite_track_paths(config: BaseConfig, other_user_collection: Path):
     for track in collection.get_tracks().values():
         loc = track.get_location().as_posix()
         common_path = (
-            music_path / loc.split(str(music_path) + '/', maxsplit=-1)[-1]
+            music_path / loc.split(str(music_path) + "/", maxsplit=-1)[-1]
         )
         track.set_location(config.USB_PATH / common_path)
     collection.serialize(output_path=other_user_collection)
@@ -148,7 +148,7 @@ def run_sync(_cmd: str) -> str:
     new_music = ""
     for group_id, group in groupby(
         sorted(tracks, key=lambda x: x.parent.as_posix()),
-        key=lambda x: x.parent.as_posix()
+        key=lambda x: x.parent.as_posix(),
     ):
         group = sorted(group)
         new_music += f"{group_id}: {len(group)}\n"
@@ -224,8 +224,8 @@ def webhook(
             except IndexError:
                 break
             index -= 1
-        remainder = batch[index+1:] + remainder
-        batch = batch[:index+1]
+        remainder = batch[index + 1 :] + remainder
+        batch = batch[: index + 1]
 
         if batch:
             requests.post(url, json={"content": batch}, timeout=10)

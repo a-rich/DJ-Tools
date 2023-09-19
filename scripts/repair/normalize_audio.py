@@ -56,9 +56,7 @@ if __name__ == "__main__":
     data = defaultdict(lambda: {"count": 0, "tracks": []})
     with tqdm(total=len(tracks)) as pbar:
         with ThreadPoolExecutor(max_workers=32) as pool:
-            futures = [
-                pool.submit(thread, track, data) for track in tracks
-            ]
+            futures = [pool.submit(thread, track, data) for track in tracks]
             for future in as_completed(futures):
                 future.result()
                 pbar.update()
@@ -71,9 +69,9 @@ if __name__ == "__main__":
     data = {k: data[k] for k in sorted(data)}
     plt.figure(figsize=(10, 6))
     plt.bar(list(data.keys()), [v["count"] for v in data.values()])
-    plt.title("Collection Peak Amplitudes (log scale)", fontweight='bold')
-    plt.xlabel("Amplitude", fontweight='bold')
-    plt.ylabel("Frequency", fontweight='bold')
+    plt.title("Collection Peak Amplitudes (log scale)", fontweight="bold")
+    plt.xlabel("Amplitude", fontweight="bold")
+    plt.ylabel("Frequency", fontweight="bold")
     plt.yscale("log")
     plt.tick_params(left=False, bottom=False)
     plt.tight_layout()

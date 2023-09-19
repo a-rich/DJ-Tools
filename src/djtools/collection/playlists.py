@@ -56,9 +56,7 @@ class Playlist(ABC):
             return len(self._playlists)
         return len(self._tracks)
 
-    def add_playlist(
-        self, playlist: Playlist, index: Optional[int] = None
-    ):
+    def add_playlist(self, playlist: Playlist, index: Optional[int] = None):
         """Adds a playlist to this folder-type playlist.
 
         Args:
@@ -69,9 +67,7 @@ class Playlist(ABC):
             RuntimeError: Only folder Playlists can be added to.
         """
         if not self.is_folder():
-            raise RuntimeError(
-                "You can't append to a non-folder Playlist"
-            )
+            raise RuntimeError("You can't append to a non-folder Playlist")
         if index is not None:
             self._playlists.insert(index, playlist)
         else:
@@ -115,9 +111,8 @@ class Playlist(ABC):
 
         exp = re.compile(r".*".join(name.split("*")))
         playlists = []
-        if (
-            (glob and re.search(exp, self.get_name())) or
-            (not glob and self.get_name() == name)
+        if (glob and re.search(exp, self.get_name())) or (
+            not glob and self.get_name() == name
         ):
             playlists.append(self)
         if self.is_folder():
@@ -181,7 +176,8 @@ class Playlist(ABC):
                 "Can't remove playlist from a non-folder playlist."
             )
         self._playlists = [  # pylint: disable=attribute-defined-outside-init
-            _playlist for _playlist in self._playlists
+            _playlist
+            for _playlist in self._playlists
             if _playlist is not playlist
         ]
 
@@ -223,7 +219,7 @@ class RekordboxPlaylist(Playlist):
         playlist: bs4.element.Tag,
         tracks: Dict[str, RekordboxTrack] = None,
         playlist_tracks: Optional[Dict[str, RekordboxTrack]] = None,
-        parent: Optional[RekordboxPlaylist] = None
+        parent: Optional[RekordboxPlaylist] = None,
     ):
         """Deserialize a Playlist from a BeautifulSoup NODE Tag.
 
@@ -255,9 +251,10 @@ class RekordboxPlaylist(Playlist):
             # Filter the children elements for Tags and get the key attribute.
             if not playlist_tracks:
                 playlist_tracks = [
-                    track.get("Key") for track in filter(
+                    track.get("Key")
+                    for track in filter(
                         lambda x: isinstance(x, bs4.element.Tag),
-                        playlist.children
+                        playlist.children,
                     )
                 ]
             # Create a dict of tracks.
@@ -276,13 +273,17 @@ class RekordboxPlaylist(Playlist):
         # Body of the repr string to fill out with playlist contents.
         body = ""
         # Get the repr recursion depth to determine the degree of indentation.
-        depth = len(
-            [
-                frame for frame in inspect.stack()
-                if frame[3] == "__repr__"
-                and Path(frame[1]).name == "playlists.py"
-            ]
-        ) - 1
+        depth = (
+            len(
+                [
+                    frame
+                    for frame in inspect.stack()
+                    if frame[3] == "__repr__"
+                    and Path(frame[1]).name == "playlists.py"
+                ]
+            )
+            - 1
+        )
         # These variables are used to control indentation level.
         extra = 1 if depth else 0
         padding = f"{' ' * 4 * (depth + extra)}"
@@ -290,7 +291,8 @@ class RekordboxPlaylist(Playlist):
         # Dunder members aren't represented. Public members (i.e. methods)
         # aren't represented either.
         repr_attrs = {
-            key[1:]: value for key, value in self.__dict__.items()
+            key[1:]: value
+            for key, value in self.__dict__.items()
             if not (
                 key.startswith(f"_{type(self).__name__}")
                 or not key.startswith("_")
@@ -399,13 +401,14 @@ class RekordboxPlaylist(Playlist):
         playlist_tag = bs4.Tag(
             name="NODE",
             attrs=(
-            {"Name": name, "Type": "0", "Count": len(playlists)}
-            if playlists is not None else {
-                "Name": name,
-                "Type": "1",
-                "KeyType": "0",
-                "Entries": len(tracks),
-            }
+                {"Name": name, "Type": "0", "Count": len(playlists)}
+                if playlists is not None
+                else {
+                    "Name": name,
+                    "Type": "1",
+                    "KeyType": "0",
+                    "Entries": len(tracks),
+                }
             ),
         )
         playlist = RekordboxPlaylist(
@@ -427,7 +430,8 @@ class RekordboxPlaylist(Playlist):
         # Dunder members aren't serialized. Public members (i.e. methods)
         # aren't serialized either.
         serialize_attrs = {
-            key[1:]: value for key, value in self.__dict__.items()
+            key[1:]: value
+            for key, value in self.__dict__.items()
             if not (
                 key.startswith(f"_{type(self).__name__}")
                 or not key.startswith("_")
@@ -466,7 +470,9 @@ class RekordboxPlaylist(Playlist):
             playlist_tag[key] = value
 
         # Update the Count or Entries attribute.
-        playlist_tag["Count" if self.is_folder() else "Entries"] = str(len(self))
+        playlist_tag["Count" if self.is_folder() else "Entries"] = str(
+            len(self)
+        )
 
         return playlist_tag
 
@@ -480,6 +486,6 @@ class RekordboxPlaylist(Playlist):
             original: BeautifulSoup Tag representing a playlist.
             serializable: Playlist object.
         """
-        assert original == serializable.serialize(), (
-            "Failed RekordboxPlaylist validation!"
-        )
+        assert (
+            original == serializable.serialize()
+        ), "Failed RekordboxPlaylist validation!"

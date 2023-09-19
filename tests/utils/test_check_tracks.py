@@ -7,7 +7,6 @@ import pytest
 from djtools.utils.check_tracks import compare_tracks
 
 
-
 @pytest.mark.parametrize("get_spotify_tracks_flag", [True, False])
 @pytest.mark.parametrize("get_local_tracks_flag", [True, False])
 @pytest.mark.parametrize("beatcloud_tracks", [[], [Path("track - artist")]])
@@ -64,7 +63,7 @@ def test_compare_tracks(
     if not get_local_tracks_flag and not download_spotify_playlist:
         assert caplog.records.pop(0).message == (
             "There are no local tracks; make sure LOCAL_DIRS has "
-            'one or more directories containing one or more tracks'
+            "one or more directories containing one or more tracks"
         )
     if not beatcloud_tracks and (
         get_spotify_tracks_flag or get_local_tracks_flag
@@ -92,7 +91,7 @@ def test_compare_tracks(
 
 @mock.patch(
     "djtools.spotify.helpers.spotipy.Spotify.playlist",
-    return_value = {
+    return_value={
         "tracks": {
             "items": [
                 {
@@ -132,7 +131,7 @@ def test_compare_tracks_spotify_with_artist_first(
     assert caplog.records[0].message == (
         'Got 1 track from Spotify playlist "playlist"'
     )
-    assert caplog.records[1].message == 'Got 1 track from Spotify in total'
+    assert caplog.records[1].message == "Got 1 track from Spotify in total"
     assert caplog.records[2].message == (
         "\nSpotify Playlist Tracks / Beatcloud Matches: 1"
     )

@@ -1,0 +1,74 @@
+Metadata-Version: 2.1
+Name: djtools
+Version: 2.7.8rc1
+Summary: DJ Tools is a library for managing a collection of music.
+Author-email: Alex Richards <alex.richards006@gmail.com>
+Project-URL: Repository, https://github.com/a-rich/DJ-tools
+Project-URL: Documentation, https://a-rich.github.io/DJ-Tools
+Project-URL: Documentation (dev), https://a-rich.github.io/DJ-Tools-dev-docs
+Keywords: DJ,Collections,Rekordbox,Playlists,Spotify,Reddit,Audio
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: End Users/Desktop
+Classifier: Intended Audience :: Other Audience
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Natural Language :: English
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Topic :: Multimedia :: Sound/Audio
+Classifier: Topic :: Other/Nonlisted Topic
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: asyncpraw==7.6.0
+Requires-Dist: awscli==1.27.45
+Requires-Dist: beautifulsoup4==4.11.1
+Requires-Dist: fuzzywuzzy==0.18.0
+Requires-Dist: lxml==4.9.2
+Requires-Dist: pydantic==1.9.1
+Requires-Dist: pydub==0.25.1
+Requires-Dist: pyperclip==1.8.2
+Requires-Dist: PyYAML==5.3.1
+Requires-Dist: requests==2.28.0
+Requires-Dist: spotipy==2.21.0
+Requires-Dist: tqdm==4.64.0
+Requires-Dist: youtube-dl==2021.12.17
+Provides-Extra: dev
+Requires-Dist: black==23.9.1; extra == "dev"
+Requires-Dist: build==0.8.0; extra == "dev"
+Requires-Dist: mkdocs==1.4.2; extra == "dev"
+Requires-Dist: mkdocs-material==9.1.8; extra == "dev"
+Requires-Dist: mkdocstrings-python==1.6.0; extra == "dev"
+Requires-Dist: pylint<=2.15.0; extra == "dev"
+Requires-Dist: pytest==7.2.0; extra == "dev"
+Requires-Dist: pytest-asyncio==0.20.3; extra == "dev"
+Requires-Dist: pytest-cov==4.0.0; extra == "dev"
+Requires-Dist: semver==3.0.1; extra == "dev"
+Requires-Dist: setuptools==58.1.0; extra == "dev"
+Requires-Dist: twine==4.0.1; extra == "dev"
+Provides-Extra: accelerated
+Requires-Dist: python-Levenshtein==0.12.2; extra == "accelerated"
+
+# DJ Tools
+[![image](https://img.shields.io/pypi/v/djtools.svg)](https://pypi.org/project/djtools/)
+
+Please see the [docs](https://a-rich.github.io/DJ-Tools/) for tutorials, how-to guides, conceptual guides, and references!
+
+# Release Plan
+* 2.7.9
+    - [ ] [Stability issues with requests to the search endpoint of the Spotify API](https://github.com/a-rich/DJ-Tools/issues/58)
+    - [ ] [Make Spotify API calls asynchronous](https://github.com/a-rich/DJ-Tools/issues/38)
+* 2.8.0
+    - [ ] [Create graphic user interface for djtools](https://github.com/a-rich/DJ-Tools/issues/118)
+    - [ ] [Derive boolean algebra expressions that generate a given playlist](https://github.com/a-rich/DJ-Tools/issues/106)
+    - [ ] [Improve Reddit submission title parsing in order to improve precision and recall of Spotify API search results](https://github.com/a-rich/DJ-Tools/issues/59)
+
+# Contribution
+Please see the [CONTRIBUTING](CONTRIBUTING.md)

@@ -2,6 +2,7 @@
 from argparse import Namespace
 import os
 from pathlib import Path
+
 # import time
 from unittest import mock
 
@@ -30,7 +31,8 @@ def config():
     configs = {pkg: cfg() for pkg, cfg in PKG_CFG.items() if pkg != "configs"}
     joined_config = BaseConfig(
         **{
-            k: v for cfg in configs.values()
+            k: v
+            for cfg in configs.values()
             for k, v in filter_dict(cfg).items()
         }
     )
@@ -49,9 +51,9 @@ def audio_file(input_tmpdir):  # pylint: disable=redefined-outer-name
     """Test audio file fixture."""
     headroom = -2
     audio = AudioSegment.silent(duration=1000).overlay(
-        generators.WhiteNoise().to_audio_segment(duration=1000).apply_gain(
-            headroom
-        )
+        generators.WhiteNoise()
+        .to_audio_segment(duration=1000)
+        .apply_gain(headroom)
     )
     _file = Path(input_tmpdir) / "file.wav"
     audio.export(_file, format="wav")
@@ -87,7 +89,9 @@ def rekordbox_playlist_tag():  # pylint: disable=redefined-outer-name
 
 
 @pytest.fixture(scope="session")
-def rekordbox_playlist(rekordbox_playlist_tag):  # pylint: disable=redefined-outer-name
+def rekordbox_playlist(
+    rekordbox_playlist_tag,
+):  # pylint: disable=redefined-outer-name
     """Fixture for Rekordbox playlist object."""
     return RekordboxPlaylist(rekordbox_playlist_tag)
 
@@ -114,7 +118,9 @@ def rekordbox_track_tag(input_tmpdir):  # pylint: disable=redefined-outer-name
 
 
 @pytest.fixture()
-def rekordbox_track(rekordbox_track_tag):  # pylint: disable=redefined-outer-name
+def rekordbox_track(
+    rekordbox_track_tag,
+):  # pylint: disable=redefined-outer-name
     """Fixture for Rekordbox track object."""
     return RekordboxTrack(rekordbox_track_tag)
 
@@ -133,16 +139,22 @@ def rekordbox_xml(input_tmpdir):  # pylint: disable=redefined-outer-name
 
 
 @pytest.fixture(scope="session")
-def rekordbox_collection_tag(rekordbox_xml):  # pylint: disable=redefined-outer-name
+def rekordbox_collection_tag(
+    rekordbox_xml,
+):  # pylint: disable=redefined-outer-name
     """Fixture for Rekordbox collection tag."""
     with open(rekordbox_xml, mode="r", encoding="utf-8") as _file:
-        xml = BeautifulSoup(_file.read(), "xml")  # pylint: disable=redefined-outer-name
+        xml = BeautifulSoup(
+            _file.read(), "xml"
+        )  # pylint: disable=redefined-outer-name
 
     return xml
 
 
 @pytest.fixture(scope="session")
-def rekordbox_collection(rekordbox_xml):  # pylint: disable=redefined-outer-name
+def rekordbox_collection(
+    rekordbox_xml,
+):  # pylint: disable=redefined-outer-name
     """Fixture for Rekordbox collection object."""
     return RekordboxCollection(rekordbox_xml)
 

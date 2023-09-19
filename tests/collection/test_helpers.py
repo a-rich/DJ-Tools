@@ -36,9 +36,9 @@ def test_aggregate_playlists():
         (
             ["&", "|", "~"],
             ["Jungle", "Breaks", "Techno", "Tech House"],
-            {11,12},
+            {11, 12},
         ),
-        (["~"], ["*House", "Bass House"], {3,5,6,7,8}),
+        (["~"], ["*House", "Bass House"], {3, 5, 6, 7, 8}),
         (["&"], ["{All DnB}", "Dark"], {2}),
     ],
 )
@@ -46,14 +46,14 @@ def test_booleannode(node_attributes):
     """Test for the BooleanNode class."""
     operators, tags, expected = node_attributes
     tracks = {
-        "{All DnB}": [1,2,3],
-        "Acid House": [7,8],
-        "Bass House": [9,10],
-        "Breaks": [3,4],
-        "Dark": [2,11],
-        "Jungle": [1,3],
-        "Tech House": [3,5,6],
-        "Techno": [11,12],
+        "{All DnB}": [1, 2, 3],
+        "Acid House": [7, 8],
+        "Bass House": [9, 10],
+        "Breaks": [3, 4],
+        "Dark": [2, 11],
+        "Jungle": [1, 3],
+        "Tech House": [3, 5, 6],
+        "Techno": [11, 12],
     }
     tracks = {k: {x: None for x in v} for k, v in tracks.items()}
     node = BooleanNode(tracks)
@@ -83,8 +83,8 @@ def test_booleannode_raises_runtime_eror():
     with pytest.raises(
         RuntimeError,
         match=(
-            re.escape("Invalid boolean expression: track sets: 0, ") +
-            re.escape("tags: ['tag'], operators: ['union']")
+            re.escape("Invalid boolean expression: track sets: 0, ")
+            + re.escape("tags: ['tag'], operators: ['union']")
         ),
     ):
         node.evaluate()
@@ -134,7 +134,17 @@ def test_parse_numerical_selectors():
     numerical_lookup = {}
     values = parse_numerical_selectors(matches, numerical_lookup)
     assert values == {
-        "1", "2", "3", "4", "140", "141", "142", "143", "2021", "2022", "2023"
+        "1",
+        "2",
+        "3",
+        "4",
+        "140",
+        "141",
+        "142",
+        "143",
+        "2021",
+        "2022",
+        "2023",
     }
     for match in matches:
         key = match
@@ -180,9 +190,7 @@ def test_parse_string_selectors():
         "label": "get_label",
     }
     playlists = set()
-    parse_string_selectors(
-        matches, string_lookup, type_map, playlists
-    )
+    parse_string_selectors(matches, string_lookup, type_map, playlists)
     for match in matches:
         key = tuple(map(str.strip, match.split(":")))
         if key[0] == "date":
@@ -216,7 +224,9 @@ def test_platform_registry():
         assert isinstance(impls, dict)
         for impl_type, impl_class in impls.items():
             assert impl_type in ["collection", "playlist"]
-            assert set(impl_class.__bases__).intersection(set((Collection, Playlist)))
+            assert set(impl_class.__bases__).intersection(
+                set((Collection, Playlist))
+            )
 
 
 def test_print_data(capsys):
@@ -230,33 +240,33 @@ def test_print_data(capsys):
         "Rave": 13,
     }
     expected = (
-        "|   *                                     \n" +
-        "|   *                                     \n" +
-        "|   *                                     \n" +
-        "|   *                                     \n" +
-        "|   *                                     \n" +
-        "|   *                                     \n" +
-        "|   *                                     \n" +
-        "|   *                                     \n" +
-        "|   *                                     \n" +
-        "|   *               *                     \n" +
-        "|   *               *                     \n" +
-        "|   *               *                     \n" +
-        "|   *               *                     \n" +
-        "|   *               *                     \n" +
-        "|   *               *                 *   \n" +
-        "|   *               *                 *   \n" +
-        "|   *               *                 *   \n" +
-        "|   *               *        *        *   \n" +
-        "|   *               *        *        *   \n" +
-        "|   *               *        *        *   \n" +
-        "|   *               *        *        *   \n" +
-        "|   *               *        *        *   \n" +
-        "|   *               *        *        *   \n" +
-        "|   *       *       *        *        *   \n" +
-        "|   *       *       *        *        *   \n" +
-        "------------------------------------------\n" +
-        "  Aggro   Bounce   Dark   Melodic   Rave  \n"
+        "|   *                                     \n"
+        + "|   *                                     \n"
+        + "|   *                                     \n"
+        + "|   *                                     \n"
+        + "|   *                                     \n"
+        + "|   *                                     \n"
+        + "|   *                                     \n"
+        + "|   *                                     \n"
+        + "|   *                                     \n"
+        + "|   *               *                     \n"
+        + "|   *               *                     \n"
+        + "|   *               *                     \n"
+        + "|   *               *                     \n"
+        + "|   *               *                     \n"
+        + "|   *               *                 *   \n"
+        + "|   *               *                 *   \n"
+        + "|   *               *                 *   \n"
+        + "|   *               *        *        *   \n"
+        + "|   *               *        *        *   \n"
+        + "|   *               *        *        *   \n"
+        + "|   *               *        *        *   \n"
+        + "|   *               *        *        *   \n"
+        + "|   *               *        *        *   \n"
+        + "|   *       *       *        *        *   \n"
+        + "|   *       *       *        *        *   \n"
+        + "------------------------------------------\n"
+        + "  Aggro   Bounce   Dark   Melodic   Rave  \n"
     )
     print_data(data)
     cap = capsys.readouterr()

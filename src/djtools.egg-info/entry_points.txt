@@ -1,0 +1,2 @@
+[console_scripts]
+djtools = djtools:main

@@ -24,7 +24,9 @@ class BaseConfig(BaseModel, extra=Extra.allow):
         """Constructor."""
         super().__init__(*args, **kwargs)
         logger.info(repr(self))
-        if type(self) is not BaseConfig:  # pylint: disable=unidiomatic-typecheck
+        if (
+            type(self) is not BaseConfig
+        ):  # pylint: disable=unidiomatic-typecheck
             return
 
     def __repr__(self):
@@ -38,19 +40,24 @@ class BaseConfig(BaseModel, extra=Extra.allow):
         calling_frame = stack[2]
         show_full_config = True
         if (
-            entry_frame[1].endswith("bin/djtools") and
-            calling_frame[3] == "build_config"
+            entry_frame[1].endswith("bin/djtools")
+            and calling_frame[3] == "build_config"
         ):
             show_full_config = False
 
         for name, value in self.dict().items():
             if (
-                (name in super_keys and type(self) is not BaseConfig)  # pylint: disable=unidiomatic-typecheck
-                or (name not in super_keys and type(self) is BaseConfig)  # pylint: disable=unidiomatic-typecheck
+                (
+                    name in super_keys and type(self) is not BaseConfig
+                )  # pylint: disable=unidiomatic-typecheck
+                or (
+                    name not in super_keys and type(self) is BaseConfig
+                )  # pylint: disable=unidiomatic-typecheck
             ) and not show_full_config:
                 continue
             if (
-                isinstance(value, list) and len(value) > 1
+                isinstance(value, list)
+                and len(value) > 1
                 and isinstance(value[0], (dict, list, set))
             ):
                 ret += f"\n\t{name}=[\n\t\t"

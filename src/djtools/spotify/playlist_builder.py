@@ -132,7 +132,7 @@ def spotify_playlist_from_upload(config: BaseConfig):
         try:
             track, artist = file_.strip().split(" - ")
         except ValueError:
-            logger.warning(f'{line} is not a valid file')
+            logger.warning(f"{line} is not a valid file")
             continue
         if config.ARTIST_FIRST:
             track, artist = artist, track
@@ -153,7 +153,9 @@ def spotify_playlist_from_upload(config: BaseConfig):
         match, _ = filter_results(spotify, results, threshold, title, artist)
         if match:
             artists = ", ".join([y["name"] for y in match["artists"]])
-            logger.info(f"Matched {match['name']} - {artists} to {title} - {artist}")
+            logger.info(
+                f"Matched {match['name']} - {artists} to {title} - {artist}"
+            )
         else:
             logger.warning(f"Could not find a match for {title} - {artist}")
             continue

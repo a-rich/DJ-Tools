@@ -20,7 +20,9 @@ def test_normalize(
         "djtools.utils.normalize_audio.AudioSegment.from_file"
     ) as mock_audio_segment, mock.patch(
         "djtools.utils.normalize_audio.get_local_tracks",
-        mock.Mock(return_value={"playlist": [Path(input_tmpdir) / "file.wav"]}),
+        mock.Mock(
+            return_value={"playlist": [Path(input_tmpdir) / "file.wav"]}
+        ),
     ):
         mock_audio_segment.return_value = audio
         normalize(config)
@@ -50,7 +52,9 @@ def test_normalize_handles_decode_error(config, tmpdir, caplog):
 )
 @mock.patch("djtools.utils.normalize_audio.effects.normalize", mock.Mock())
 @mock.patch("djtools.utils.process_recording.AudioSegment.export", mock.Mock())
-def test_normalize_handles_missing_ffmpeg(config, audio_file, input_tmpdir, caplog):
+def test_normalize_handles_missing_ffmpeg(
+    config, audio_file, input_tmpdir, caplog
+):
     """Test for the normalize function."""
     caplog.set_level("WARNING")
     config.AUDIO_HEADROOM = 0.0
@@ -59,7 +63,9 @@ def test_normalize_handles_missing_ffmpeg(config, audio_file, input_tmpdir, capl
         "djtools.utils.normalize_audio.AudioSegment.from_file"
     ) as mock_audio_segment, mock.patch(
         "djtools.utils.normalize_audio.get_local_tracks",
-        mock.Mock(return_value={"playlist": [Path(input_tmpdir) / "file.wav"]}),
+        mock.Mock(
+            return_value={"playlist": [Path(input_tmpdir) / "file.wav"]}
+        ),
     ):
         mock_audio_segment.return_value = audio
         normalize(config)

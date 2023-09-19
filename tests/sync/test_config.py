@@ -81,7 +81,7 @@ def test_syncconfig_no_aws_profile():
     cfg = {"AWS_PROFILE": "", "UPLOAD_COLLECTION": True}
     with pytest.raises(
         RuntimeError,
-        match="Config must include AWS_PROFILE for sync operations"
+        match="Config must include AWS_PROFILE for sync operations",
     ):
         SyncConfig(**cfg)
 

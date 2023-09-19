@@ -9,7 +9,11 @@ import pytest
 
 from djtools.collection.collections import RekordboxCollection
 from djtools.sync.helpers import (
-    parse_sync_command, rewrite_track_paths, run_sync, upload_log, webhook
+    parse_sync_command,
+    rewrite_track_paths,
+    run_sync,
+    upload_log,
+    webhook,
 )
 
 
@@ -66,8 +70,8 @@ def test_rewrite_track_paths(config, rekordbox_xml):
     """Test for the rewrite_track_paths function."""
     user_a = "first_user"
     user_b = "other_user"
-    user_a_path= Path("/Volumes/first_user_usb/")
-    user_b_path= Path("/Volumes/other_user_usb/")
+    user_a_path = Path("/Volumes/first_user_usb/")
+    user_b_path = Path("/Volumes/other_user_usb/")
     user_a_xml = rekordbox_xml.parent / "rekordbox.xml"
     user_b_xml = rekordbox_xml.parent / f"{user_b}_rekordbox.xml"
     user_a_xml.write_text(
@@ -116,14 +120,14 @@ def test_run_sync(mock_popen, tmpdir):
     cmd = ["aws", "s3", "sync", str(tmpdir), "s3://dj.beatcloud.com/dj/music/"]
     sync_output = (
         "upload: ../../Volumes/AWEEEEZY/DJ Music/Bass/2022-12-21/track - "
-            "artist.mp3 to s3://dj.beatcloud.com/dj/music/Bass/2022-12-21/"
-            "track - artist.mp3\n"
+        "artist.mp3 to s3://dj.beatcloud.com/dj/music/Bass/2022-12-21/"
+        "track - artist.mp3\n"
         "upload: ../../Volumes/AWEEEEZY/DJ Music/Bass/2O22-12-21/other track "
-            "- other artist.mp3 to s3://dj.beatcloud.com/dj/music/Bass/"
-            "2O22-12-21/other track - other artist.mp3\n"
+        "- other artist.mp3 to s3://dj.beatcloud.com/dj/music/Bass/"
+        "2O22-12-21/other track - other artist.mp3\n"
         "upload: ../../Volumes/AWEEEEZY/DJ Music/Techno/2022-12-22/last track "
-            "- last artist.mp3 to s3://dj.beatcloud.com/dj/music/Techno/"
-            "2022-12-22/last track - last artist.mp3"
+        "- last artist.mp3 to s3://dj.beatcloud.com/dj/music/Techno/"
+        "2022-12-22/last track - last artist.mp3"
         "\nirrelevant line"
     )
     # NOTE(a-rich): Windows does not allow opening a temporary file after it's
@@ -217,9 +221,9 @@ def test_upload_log_no_aws_profile(config, caplog):
     "content",
     [
         "*",
-        "*"*2001,
-        "*"*1900 + "\n" + "*"*99,
-        "*"*1900 + "\n" + "*"*100,
+        "*" * 2001,
+        "*" * 1900 + "\n" + "*" * 99,
+        "*" * 1900 + "\n" + "*" * 100,
     ],
 )
 @mock.patch("requests.post", side_effect=lambda *args, **kwargs: None)

@@ -32,7 +32,9 @@ def normalize(config: BaseConfig):
         )
 
     for track in [
-        track for tracks in folder_tracks.values() for track in tracks
+        track
+        for tracks in folder_tracks.values()
+        for track in tracks
         if track.is_file() and not track.name.startswith(".")
     ]:
         try:

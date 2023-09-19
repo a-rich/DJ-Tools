@@ -5,7 +5,10 @@ import bs4
 import pytest
 
 from djtools.collection.collections import (
-    Collection, CustomSubstitution, RekordboxCollection, UnsortedAttributes
+    Collection,
+    CustomSubstitution,
+    RekordboxCollection,
+    UnsortedAttributes,
 )
 from djtools.collection.tracks import RekordboxTrack
 
@@ -23,7 +26,7 @@ def test_collection_raises_type_error():
 
 def test_customsubstitution():
     """Test CustomSubstitution class."""
-    test_string = '''Bob's cat is "cute" & <furry>'''
+    test_string = """Bob's cat is "cute" & <furry>"""
     expected = "Bob&apos;s cat is &quot;cute&quot; &amp; &lt;furry&gt;"
     result = CustomSubstitution.substitute_xml(test_string)
     assert result == expected
@@ -42,9 +45,7 @@ def test_rekordboxcollection(
     }
     assert (
         a[0] == b[0] and str(a[1]) == str(b[1])
-        for a, b in zip(
-            tracks.items(), collection.get_tracks().items()
-        )
+        for a, b in zip(tracks.items(), collection.get_tracks().items())
     )
     repr(collection)
     str(collection)

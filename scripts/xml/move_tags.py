@@ -36,7 +36,8 @@ def parse_args() -> Dict[str, Any]:
         "-m",
         type=str,
         choices=[
-            "move-genres-from-comments", "move-tags-to-front-of-comments"
+            "move-genres-from-comments",
+            "move-tags-to-front-of-comments",
         ],
         required=True,
         help="Path to Rekordbox XML file.",
@@ -104,9 +105,7 @@ def move_genres_from_comments(
     if not new_genre_tags:
         return track
     # Get pre-existing tags and split them on the chosen delimiter.
-    current_tags = [
-        x.strip() for x in track["Genre"].split(tag_delimiter)
-    ]
+    current_tags = [x.strip() for x in track["Genre"].split(tag_delimiter)]
     # Deduplicate tags across pre-existing tags and "My Tags".
     if current_tags:
         new_genre_tags = set(current_tags).union(set(new_genre_tags))
@@ -149,9 +148,7 @@ def move_tags_to_front_of_comments(
     comment_suffix = track["Comments"].split(" */")[-1]
     new_my_tags = " / ".join(tags_to_move + remainder_tags)
     # Write new tags to Comments field.
-    track["Comments"] = (
-        f"{comment_prefix} /* {new_my_tags} */{comment_suffix}"
-    )
+    track["Comments"] = f"{comment_prefix} /* {new_my_tags} */{comment_suffix}"
 
     return track
 
@@ -175,9 +172,9 @@ def move_tags(
 
     The provided XML must be an valid XML export:
         `File > Export Collection in xml format`
-    
+
     The provided tags must match exactly the data written to the Comments field
-    (case-sensitive). 
+    (case-sensitive).
 
     The provided output must be the path to a XML file from which you'll import
     the adjusted data.
@@ -185,7 +182,7 @@ def move_tags(
     Comments field tags are expected to have the format `/* tag1 / tag2 */`
     which is the way Rekordbox's "My Tag" system writes the data to the
     Comments field.
-    
+
     Rekordbox's "My Tag" system will write data to the Comments field only if
     the following setting is enabled:
         `Preferences > Advanced > Browse > Add "My Tag" to the "Comments"`
