@@ -53,6 +53,6 @@ jobs:
 
       - name: Commit changes
         run: |
-          git add
+          git add .
           git commit -m "Release: $GITHUB_SHA"
           git push --force
