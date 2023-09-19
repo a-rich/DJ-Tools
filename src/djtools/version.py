@@ -4,7 +4,7 @@ import re
 
 
 def get_version() -> str:
-    """Get the package version.
+    """Get package version.
 
     If this is a pre-release, reformat to be compatible with semver.
 
