@@ -12,6 +12,9 @@ from djtools.sync.sync_operations import (
 )
 
 
+# pylint: disable=duplicate-code
+
+
 @pytest.mark.parametrize("playlist_name", ["", "playlist Uploads"])
 @mock.patch(
     "djtools.sync.sync_operations.compare_tracks",

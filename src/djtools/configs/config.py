@@ -25,8 +25,9 @@ class BaseConfig(BaseModel, extra=Extra.allow):
         super().__init__(*args, **kwargs)
         logger.info(repr(self))
         if (
-            type(self) is not BaseConfig
-        ):  # pylint: disable=unidiomatic-typecheck
+            type(self)  # pylint: disable=unidiomatic-typecheck
+            is not BaseConfig
+        ):
             return
 
     def __repr__(self):
@@ -48,11 +49,15 @@ class BaseConfig(BaseModel, extra=Extra.allow):
         for name, value in self.dict().items():
             if (
                 (
-                    name in super_keys and type(self) is not BaseConfig
-                )  # pylint: disable=unidiomatic-typecheck
+                    name in super_keys
+                    and type(self)  # pylint: disable=unidiomatic-typecheck
+                    is not BaseConfig
+                )
                 or (
-                    name not in super_keys and type(self) is BaseConfig
-                )  # pylint: disable=unidiomatic-typecheck
+                    name not in super_keys
+                    and type(self)  # pylint: disable=unidiomatic-typecheck
+                    is BaseConfig
+                )
             ) and not show_full_config:
                 continue
             if (

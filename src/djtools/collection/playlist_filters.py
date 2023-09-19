@@ -86,14 +86,14 @@ class HipHopFilter(PlaylistFilter):
         if not playlist.get_name() == "Hip Hop":
             return False
 
-        self._bass_hip_hop = (
-            False  # pylint: disable=attribute-defined-outside-init
+        self._bass_hip_hop = (  # pylint: disable=attribute-defined-outside-init
+            False
         )
         parent = playlist.get_parent()
         while parent:
             if parent.get_name() == "Bass":
-                self._bass_hip_hop = (
-                    True  # pylint: disable=attribute-defined-outside-init
+                self._bass_hip_hop = (  # pylint: disable=attribute-defined-outside-init
+                    True
                 )
             parent = parent.get_parent()
 
@@ -150,12 +150,12 @@ class MinimalDeepTechFilter(PlaylistFilter):
         parent = playlist.get_parent()
         while parent:
             if parent.get_name() == "Techno":
-                self._techno = (
-                    True  # pylint: disable=attribute-defined-outside-init
+                self._techno = (  # pylint: disable=attribute-defined-outside-init
+                    True
                 )
             if parent.get_name() == "House":
-                self._house = (
-                    True  # pylint: disable=attribute-defined-outside-init
+                self._house = (  # pylint: disable=attribute-defined-outside-init
+                    True
                 )
             parent = parent.get_parent()
 

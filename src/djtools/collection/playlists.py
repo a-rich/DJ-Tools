@@ -20,6 +20,9 @@ import bs4
 from djtools.collection.tracks import RekordboxTrack, Track
 
 
+# pylint: disable=duplicate-code
+
+
 class Playlist(ABC):
     "Abstract base class for a playlist."
 
