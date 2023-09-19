@@ -6,6 +6,8 @@ import re
 def get_version() -> str:
     """Get the package version.
 
+    If this is a pre-release, reformat to be compatible with semver.
+
     Returns:
         Version string.
     """

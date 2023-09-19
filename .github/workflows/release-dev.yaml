@@ -5,7 +5,6 @@ on:
       - 'releases/*'
     paths:
       - 'src/**.py'
-      - '!pyproject.toml'
 
 jobs:
   build:
@@ -48,8 +47,12 @@ jobs:
           python -m build
           twine upload dist/* -u 'aweeeezy' -p '${{ secrets.PYPI_PASSWORD }}'
 
+      - name: Run black
+        run: |
+          black .
+
       - name: Commit changes
         run: |
-          git add pyproject.toml
+          git add .
           git commit -m "Release: $GITHUB_SHA"
           git push --force
