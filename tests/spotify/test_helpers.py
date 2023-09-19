@@ -34,11 +34,11 @@ async def aiter(obj, num_subs):
 
 
 @mock.patch(
-    "djtools.spotify.helpers.spotipy.Spotify." "playlist_add_items",
+    "djtools.spotify.helpers.spotipy.Spotify.playlist_add_items",
     return_value=(),
 )
 @mock.patch(
-    "djtools.spotify.helpers.spotipy.Spotify." "user_playlist_create",
+    "djtools.spotify.helpers.spotipy.Spotify.user_playlist_create",
     return_value={"id": "test_id"},
 )
 @mock.patch(
@@ -528,7 +528,7 @@ def test_track_name_too_similar(playlist_track_names, caplog):
     return_value=None,
 )
 @mock.patch(
-    "djtools.spotify.helpers.spotipy.Spotify." "playlist_add_items",
+    "djtools.spotify.helpers.spotipy.Spotify.playlist_add_items",
     return_value=(),
 )
 @mock.patch(

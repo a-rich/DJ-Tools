@@ -21,7 +21,7 @@ import bs4
 from djtools.utils.helpers import make_path
 
 
-# pylint: disable=no-member
+# pylint: disable=no-member,duplicate-code
 
 
 class Track(ABC):
@@ -209,9 +209,9 @@ class RekordboxTrack(Track):
         )
 
         # Merge Genre and MyTag data into a new attribute.
-        self._Tags = set(
+        self._Tags = set(  # pylint: disable=invalid-name
             self._Genre + self._MyTags
-        )  # pylint: disable=invalid-name
+        )
 
         # Parse TEMPO Tags as the beat grid attribute.
         self._beat_grid = track.find_all("TEMPO")
@@ -237,7 +237,7 @@ class RekordboxTrack(Track):
         body = " " * 4
 
         # Dunder members aren't represented. Public members (i.e. methods)
-        # aren't represented either.  # pylint: disable=duplicate-code
+        # aren't represented either.
         repr_attrs = {
             key[1:]: value
             for key, value in self.__dict__.items()
@@ -411,7 +411,7 @@ class RekordboxTrack(Track):
             for key, value in self.__dict__.items()
             if not (
                 key.startswith(f"_{type(self).__name__}")
-                or not key.startswith("_")  # pylint: disable=duplicate-code
+                or not key.startswith("_")
                 or key in ["_MyTags", "_Tags"]
             )
         }
