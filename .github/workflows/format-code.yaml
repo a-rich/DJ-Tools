@@ -1,19 +1,25 @@
-name: Pylint
+name: Format Code
 on:
-  pull_request:
+  push:
+    branches:
+      - '!main'
+      - '!releases/*'
     paths:
       - 'src/**.py'
-      - 'tests/**.py'
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      PYLINT_PASS_SCORE: "10.00"
-
     steps:
-      - name: Checkout repo
+      - name: Set GitHub Actions as Commit Author
+        run: |
+          git config --global user.name github-actions
+          git config --global user.email github-actions@github.com
+
+      - name: Checkout repo 
         uses: actions/checkout@main
+        with:
+          token: ${{ secrets.DJTOOLS_WORKFLOWS }}
 
       - name: Set up Python 3.9
         uses: actions/setup-python@main
@@ -31,11 +37,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install --editable ".[dev]"
 
-      - name: Run pylint
+      - name: Black Format
         run: |
-          PYLINT=`pylint $(git ls-files '*.py')`
-          PASS=`echo $PYLINT | grep "Your code has been rated at ${{ env.PYLINT_PASS_SCORE}}/10"`
-          if [ -z $PASS ]; then
-            echo $PYLINT
-            exit 1;
-          fi
+          black .
+
+      - name: Commit changes
+        run: |
+          git add .
+          git commit -m "Format: $GITHUB_SHA"
+          git push --force
