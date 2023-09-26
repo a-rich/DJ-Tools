@@ -1,9 +1,9 @@
 name: Format Code
 on:
   push:
-    branches:
-      - '!main'
-      - '!releases/*'
+    branches-ignore:
+      - main
+      - 'releases/*'
     paths:
       - 'src/**.py'
 
