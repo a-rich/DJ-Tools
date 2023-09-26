@@ -20,7 +20,6 @@ from djtools.utils.helpers import make_path
 logger = logging.getLogger(__name__)
 
 
-
 def parse_sync_command(
     _cmd: str,
     config: BaseConfig,
