@@ -187,7 +187,7 @@ def upload_log(config: BaseConfig, log_file: Path):
     now = datetime.now()
     one_day = timedelta(days=1)
     for _file in log_file.parent.rglob("*"):
-        if _file.name == "empty.txt":
+        if _file.name == "__init__.py" or not _file.is_file():
             continue
         if _file.lstat().st_mtime < (now - one_day).timestamp():
             _file.unlink()

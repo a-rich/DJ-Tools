@@ -1,7 +1,8 @@
-name: Development Release
+name: Format Code
 on:
   push:
-    branches:
+    branches-ignore:
+      - main
       - 'releases/*'
     paths:
       - 'src/**.py'
@@ -36,19 +37,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install --editable ".[dev]"
 
-      - name: Bump version
+      - name: Format code
+        id: format_code
         run: |
-          NEXT_VERSION=`python -c "import semver; from djtools.version import get_version; ver = semver.Version.parse(get_version()).bump_prerelease(); print(ver)"`
-          SEMVER_REGEX="version = \"([0-9]+)\.([0-9]+)\.([0-9]+)([-]{0,1})(((b{0,1})|(rc{0,1}))[\.]{0,1}[0-9]+){0,1}\""
-          sed -i -E "s/$SEMVER_REGEX/version = \"$NEXT_VERSION\"/g" pyproject.toml
-
-      - name: Build and publish wheel
-        run: |
-          python -m build
-          twine upload dist/* -u 'aweeeezy' -p '${{ secrets.PYPI_PASSWORD }}'
+          black .
+          echo "DIFF=$(git diff --name-only)" >> $GITHUB_OUTPUT
 
       - name: Commit changes
+        if: steps.format_code.outputs.DIFF
         run: |
-          git add pyproject.toml
-          git commit -m "Release: $GITHUB_SHA"
+          git add .
+          git commit -m "Format: $GITHUB_SHA"
           git push --force
