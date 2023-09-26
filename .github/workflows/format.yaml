@@ -38,10 +38,13 @@ jobs:
           pip install --editable ".[dev]"
 
       - name: Format code
+        id: format_code
         run: |
           black .
+          echo "DIFF=$(git diff --name-only HEAD^ HEAD)" >> $GITHUB_OUTPUT
 
       - name: Commit changes
+        if: steps.format_code.outputs.DIFF
         run: |
           git add .
           git commit -m "Format: $GITHUB_SHA"
