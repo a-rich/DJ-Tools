@@ -41,7 +41,7 @@ jobs:
         id: format_code
         run: |
           black .
-          echo "DIFF=$(git diff --name-only HEAD^ HEAD)" >> $GITHUB_OUTPUT
+          echo "DIFF=$(git diff --name-only)" >> $GITHUB_OUTPUT
 
       - name: Commit changes
         if: steps.format_code.outputs.DIFF
