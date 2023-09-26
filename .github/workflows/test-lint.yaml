@@ -1,4 +1,4 @@
-name: Pytest Coverage
+name: Test and Lint
 on:
   pull_request:
     paths:
@@ -12,6 +12,7 @@ jobs:
     env:
       COVERAGE_SINGLE: 0
       COVERAGE_TOTAL: 100
+      PYLINT_PASS_SCORE: "10.00"
 
     steps:
       - name: Checkout repo
@@ -33,6 +34,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install --editable ".[dev]"
           pip freeze > requirements.txt
+
+      - name: Run pylint
+        run: |
+          PYLINT=`pylint $(git ls-files '*.py')`
+          PASS=`echo $PYLINT | grep "Your code has been rated at ${{ env.PYLINT_PASS_SCORE}}/10"`
+          if [ -z $PASS ]; then
+            echo $PYLINT
+            exit 1;
+          fi
           rm -rf src
 
       - name: pytester-cov

@@ -1,4 +1,4 @@
-name: Release prod version 
+name: Production Release
 on:
   push:
     branches:
@@ -47,12 +47,8 @@ jobs:
           python -m build
           twine upload dist/* -u 'aweeeezy' -p '${{ secrets.PYPI_PASSWORD }}'
 
-      - name: Run black
-        run: |
-          black .
-
       - name: Commit changes
         run: |
-          git add .
+          git add pyproject.toml
           git commit -m "Release: $GITHUB_SHA"
           git push --force
