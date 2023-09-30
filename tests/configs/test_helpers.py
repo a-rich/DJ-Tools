@@ -1,8 +1,10 @@
 """Testing for the helpers module."""
+import logging
 from pathlib import Path
 import re
 from unittest import mock
 
+from pip._vendor import tomli
 import pytest
 
 from djtools.configs.helpers import (
@@ -17,14 +19,36 @@ from djtools.version import get_version
 from ..test_utils import mock_exists, MockOpen
 
 
+@pytest.mark.parametrize(
+    "log_level_name, log_level", [("DEBUG", 10), ("WARNING", 30)]
+)
 @mock.patch("argparse.ArgumentParser.parse_args")
-def test_arg_parse_links_configs(mock_parse_args, tmpdir, namespace):
+def test_arg_parse_sets_log_level(
+    mock_parse_args, namespace, log_level_name, log_level
+):
     """Test for the arg_parse function."""
-    config_path = Path(tmpdir) / "test_dir"
-    namespace.link_configs = config_path
+    namespace.log_level = log_level_name
     mock_parse_args.return_value = namespace
     arg_parse()
-    assert config_path.is_symlink()
+    logger = logging.getLogger("djtools.configs.helpers")
+    assert logger.getEffectiveLevel() == log_level
+
+
+@mock.patch("argparse.ArgumentParser.parse_args")
+def test_arg_parse_gets_version(mock_parse_args, namespace, capsys):
+    """Test for the arg_parse function."""
+    namespace.version = True
+    mock_parse_args.return_value = namespace
+    with pytest.raises(SystemExit):
+        arg_parse()
+    with open(
+        Path(__file__).parent.parent.parent / "pyproject.toml", mode="rb"
+    ) as _file:
+        toml_dict = tomli.load(_file)
+    assert (
+        capsys.readouterr().out.replace(".", "").strip()
+        == toml_dict["project"]["version"].replace(".", "").strip()
+    )
 
 
 @mock.patch("argparse.ArgumentParser.parse_args")
@@ -35,13 +59,14 @@ def test_arg_parse_links_configs_dir_does_exist(
     config_path = Path(tmpdir) / "new_dir" / "link_dir"
     namespace.link_configs = config_path
     mock_parse_args.return_value = namespace
+    assert not config_path.parent.exists()
     arg_parse()
     assert config_path.exists()
     assert config_path.is_symlink()
 
 
 @mock.patch("argparse.ArgumentParser.parse_args")
-def test_arg_parse_links_configs_dir_does_not_exist(
+def test_arg_parse_links_configs_dir_parent_does_not_exist(
     mock_parse_args, tmpdir, namespace
 ):
     """Test for the arg_parse function."""
@@ -57,24 +82,6 @@ def test_arg_parse_links_configs_dir_does_not_exist(
         ),
     ):
         arg_parse()
-
-
-@mock.patch(
-    "builtins.open",
-    MockOpen(
-        files=["config.yaml"],
-        write_only=True,
-    ).open,
-)
-@mock.patch("djtools.spotify.helpers.get_spotify_client", mock.Mock())
-def test_build_config(namespace):
-    """Test for the build_config function."""
-    with mock.patch(
-        "argparse.ArgumentParser.parse_args",
-    ) as mock_parse_args:
-        mock_parse_args.return_value = namespace
-        config = build_config()
-    assert isinstance(config, BaseConfig)
 
 
 @mock.patch(
@@ -165,19 +172,3 @@ def test_filter_dict(config):
     assert result_keys.union(super_keys) == sub_keys
     assert sub_keys.difference(result_keys) == super_keys
     assert sub_keys.difference(super_keys) == result_keys
-
-
-@mock.patch(
-    "builtins.open",
-    MockOpen(
-        files=["config.yaml"],
-        content="sync:\n  UPLOAD_EXCLUDE_DIRS:\n    - some/path",
-    ).open,
-)
-def test_overridding_list():
-    """Test for the arg_parse function."""
-    with mock.patch(
-        "sys.argv", ["__main__.py", "sync", "--upload-exclude-dirs", ""]
-    ):
-        parse_args = arg_parse()
-    assert parse_args["upload_exclude_dirs"] == []

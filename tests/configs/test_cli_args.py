@@ -55,7 +55,7 @@ def test_get_arg_parser_arg_for_every_field(config):
     )
 
 
-def test_NonEmptyListElementAction(namespace):
+def test_non_empty_list_element_action(namespace):
     """Test for the NonEmptyListElementAction class."""
     namespace.local_dirs = ["first"]
     parser = get_arg_parser()
