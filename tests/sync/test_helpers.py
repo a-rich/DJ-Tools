@@ -189,7 +189,7 @@ def test_upload_log(mock_popen, tmpdir, config):
     one_day_ago = now - timedelta(days=1)
     test_log = f'{now.strftime("%Y-%m-%d")}.log'
     filenames = [
-        "empty.txt",
+        "__init__.py",
         test_log,
         f'{one_day_ago.strftime("%Y-%m-%d")}.log',
     ]
@@ -197,7 +197,7 @@ def test_upload_log(mock_popen, tmpdir, config):
     for filename in filenames:
         file_path = Path(tmpdir) / filename
         with open(file_path, mode="w", encoding="utf-8") as _file:
-            _file.write("stuff")
+            _file.write("")
         if filename != test_log:
             os.utime(file_path, (ctime, ctime))
     process = mock_popen.return_value.__enter__.return_value
