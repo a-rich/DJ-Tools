@@ -56,9 +56,9 @@ class BaseConfig(BaseModel, extra=Extra.allow):
                 or (
                     name not in super_keys
                     and type(self)  # pylint: disable=unidiomatic-typecheck
-                    is BaseConfig
+                    is BaseConfig and not show_full_config
                 )
-            ) and not show_full_config:
+            ):
                 continue
             if (
                 isinstance(value, list)
