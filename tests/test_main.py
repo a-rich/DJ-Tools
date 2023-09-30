@@ -2,8 +2,16 @@
 from unittest import mock
 
 from djtools import main
+from .test_utils import MockOpen
 
 
+@mock.patch(
+    "builtins.open",
+    MockOpen(
+        files=["config.yaml"],
+        write_only=True,
+    ).open,
+)
 @mock.patch("djtools.upload_log", mock.Mock())
 @mock.patch("djtools.UTILS_OPERATIONS")
 @mock.patch("argparse.ArgumentParser.parse_args")

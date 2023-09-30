@@ -14,7 +14,7 @@ from djtools.configs.helpers import (
 )
 from djtools.version import get_version
 
-from ..test_utils import MockOpen
+from ..test_utils import mock_exists, MockOpen
 
 
 @mock.patch("argparse.ArgumentParser.parse_args")
@@ -59,6 +59,13 @@ def test_arg_parse_links_configs_dir_does_not_exist(
         arg_parse()
 
 
+@mock.patch(
+    "builtins.open",
+    MockOpen(
+        files=["config.yaml"],
+        write_only=True,
+    ).open,
+)
 @mock.patch("djtools.spotify.helpers.get_spotify_client", mock.Mock())
 def test_build_config(namespace):
     """Test for the build_config function."""
@@ -80,7 +87,9 @@ def test_build_config(namespace):
 def test_build_config_invalid_config_yaml(caplog):
     """Test for the build_config function."""
     caplog.set_level("CRITICAL")
-    with pytest.raises(RuntimeError):
+    with mock.patch.object(Path, "exists", return_value=True), pytest.raises(
+        RuntimeError
+    ):
         build_config()
     assert 'Error reading "config.yaml"' in caplog.records[0].message
 
@@ -94,12 +103,44 @@ def test_build_config_no_config_yaml(mock_parse_args, namespace):
         Path(__file__).parent.parent.parent / "src" / "djtools" / "configs"
     )
     config_file = config_dir / "config.yaml"
-    with mock.patch.object(Path, "exists", return_value=False):
-        assert not config_file.exists()
-        build_config()
+    assert not config_file.exists()
+    build_config()
     assert config_file.exists()
+    config_file.unlink()
 
 
+@mock.patch(
+    "builtins.open",
+    MockOpen(
+        files=["config.yaml"],
+        content="sync:\n  ARTIST_FIRST: false",
+    ).open,
+)
+@mock.patch(
+    "djtools.configs.helpers.Path.exists",
+    lambda path: mock_exists(
+        [
+            ("config.yaml", True),
+        ],
+        path,
+    ),
+)
+@mock.patch("argparse.ArgumentParser.parse_args")
+def test_build_config_overrides_using_args(mock_parse_args, namespace):
+    """Test for the build_config function."""
+    namespace.artist_first = True
+    mock_parse_args.return_value = namespace
+    config = build_config()
+    assert config.ARTIST_FIRST is True
+
+
+@mock.patch(
+    "builtins.open",
+    MockOpen(
+        files=["config.yaml"],
+        write_only=True,
+    ).open,
+)
 @mock.patch("argparse.ArgumentParser.parse_args")
 def test_build_config_version(mock_parse_args, namespace, capsys):
     """Test for the build_config function."""
