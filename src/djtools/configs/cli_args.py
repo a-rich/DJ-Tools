@@ -7,14 +7,14 @@ from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 
-def convert_to_paths(paths: Union[str, List[str]]) -> Path:
+def convert_to_paths(paths: Union[str, List[str]]) -> Union[Path, List[Path]]:
     """Convert CLI argument from string to pathlib.Path.
 
     Args:
         paths: String(s) representing path(s).
 
     Returns:
-        Path
+        Path or List of Paths.
     """
     if isinstance(paths, List):
         return list(map(Path, filter(None, paths)))

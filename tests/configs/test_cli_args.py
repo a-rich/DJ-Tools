@@ -7,6 +7,7 @@ import pytest
 from djtools.configs.cli_args import (
     convert_to_paths,
     get_arg_parser,
+    NonEmptyListElementAction,
     parse_json,
 )
 
@@ -52,6 +53,15 @@ def test_get_arg_parser_arg_for_every_field(config):
         "Expected a CLI arg for every config option but these were missing:"
         f"\n{config_only}"
     )
+
+
+def test_NonEmptyListElementAction(namespace):
+    """Test for the NonEmptyListElementAction class."""
+    namespace.local_dirs = ["first"]
+    parser = get_arg_parser()
+    action = NonEmptyListElementAction(option_strings=None, dest="local_dirs")
+    action(parser, namespace, values=[None, "second"])
+    assert namespace.local_dirs == ["first", "second"]
 
 
 def test_parse_json():
