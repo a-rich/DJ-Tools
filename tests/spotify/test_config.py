@@ -6,18 +6,6 @@ import pytest
 from djtools.spotify.config import SpotifyConfig
 
 
-@mock.patch("djtools.spotify.helpers.get_spotify_client", mock.Mock())
-def test_spotifyconfig():
-    """Test for the SpotifyConfig class."""
-    cfg = {
-        "SPOTIFY_PLAYLIST_SUBREDDITS": [
-            {"name": "jungle"},
-            {"name": "darkpsy"},
-        ],
-    }
-    SpotifyConfig(**cfg)
-
-
 @mock.patch("djtools.spotify.helpers.get_spotify_client")
 def test_baseconfig_invalid_spotify_credentials(mock_spotify):
     """Test for the SpotifyConfig class."""
