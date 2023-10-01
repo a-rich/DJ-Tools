@@ -12,7 +12,7 @@ import pytest
 import yaml
 
 from djtools.configs.config import BaseConfig
-from djtools.configs.helpers import filter_dict, PKG_CFG
+from djtools.configs.helpers import _filter_dict, PKG_CFG
 from djtools.collection.collections import RekordboxCollection
 from djtools.collection.playlists import RekordboxPlaylist
 from djtools.collection.tracks import RekordboxTrack
@@ -33,7 +33,7 @@ def config():
         **{
             k: v
             for cfg in configs.values()
-            for k, v in filter_dict(cfg).items()
+            for k, v in _filter_dict(cfg).items()
         }
     )
 

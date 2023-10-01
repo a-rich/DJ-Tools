@@ -8,10 +8,10 @@ from pip._vendor import tomli
 import pytest
 
 from djtools.configs.helpers import (
-    arg_parse,
+    _arg_parse,
     BaseConfig,
     build_config,
-    filter_dict,
+    _filter_dict,
     PKG_CFG,
 )
 from djtools.version import get_version
@@ -29,7 +29,7 @@ def test_arg_parse_sets_log_level(
     """Test for the arg_parse function."""
     namespace.log_level = log_level_name
     mock_parse_args.return_value = namespace
-    arg_parse()
+    _arg_parse()
     logger = logging.getLogger("djtools.configs.helpers")
     assert logger.getEffectiveLevel() == log_level
 
@@ -40,7 +40,7 @@ def test_arg_parse_gets_version(mock_parse_args, namespace, capsys):
     namespace.version = True
     mock_parse_args.return_value = namespace
     with pytest.raises(SystemExit):
-        arg_parse()
+        _arg_parse()
     with open(
         Path(__file__).parent.parent.parent / "pyproject.toml", mode="rb"
     ) as _file:
@@ -60,7 +60,7 @@ def test_arg_parse_links_configs_dir_does_exist(
     namespace.link_configs = config_path
     mock_parse_args.return_value = namespace
     assert not config_path.parent.exists()
-    arg_parse()
+    _arg_parse()
     assert config_path.exists()
     assert config_path.is_symlink()
 
@@ -81,7 +81,7 @@ def test_arg_parse_links_configs_dir_parent_does_not_exist(
             f"{config_path} must be a directory that does not already exist"
         ),
     ):
-        arg_parse()
+        _arg_parse()
 
 
 @mock.patch(
@@ -164,7 +164,7 @@ def test_filter_dict(config):
     """Test for the filter_dict function."""
     super_config = BaseConfig()
     sub_config = config(**dict(super_config))
-    result = filter_dict(sub_config)
+    result = _filter_dict(sub_config)
     super_keys = set(super_config.dict())
     sub_keys = set(sub_config.dict())
     result_keys = set(result)

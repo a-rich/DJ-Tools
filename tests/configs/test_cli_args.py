@@ -5,17 +5,17 @@ from typing import List
 import pytest
 
 from djtools.configs.cli_args import (
-    convert_to_paths,
+    _convert_to_paths,
     get_arg_parser,
     NonEmptyListElementAction,
-    parse_json,
+    _parse_json,
 )
 
 
 @pytest.mark.parametrize("paths", ["path", ["path1", "path2"]])
 def test_convert_to_paths(paths):
     """Test for the convert_to_paths function."""
-    paths = convert_to_paths(paths)
+    paths = _convert_to_paths(paths)
     if isinstance(paths, List):
         for path in paths:
             assert isinstance(path, Path)
@@ -67,7 +67,7 @@ def test_non_empty_list_element_action(namespace):
 def test_parse_json():
     """Test for the parse_json function."""
     json_string = '{"name": ["stuff"]}'
-    json_obj = parse_json(json_string)
+    json_obj = _parse_json(json_string)
     assert isinstance(json_obj, dict)
     assert isinstance(json_obj["name"], list)
 
@@ -76,4 +76,4 @@ def test_parse_json_invalid():
     """Test for the parse_json function."""
     json_string = '{"name": {"stuff"}}'
     with pytest.raises(ValueError):
-        parse_json(json_string)
+        _parse_json(json_string)

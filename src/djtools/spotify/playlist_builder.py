@@ -132,7 +132,7 @@ def spotify_playlist_from_upload(config: BaseConfig):
         try:
             track, artist = file_.strip().split(" - ")
         except ValueError:
-            logger.warning(f"{line} is not a valid file")
+            logger.warning(f"{line.strip()} is not a valid file")
             continue
         if config.ARTIST_FIRST:
             track, artist = artist, track
