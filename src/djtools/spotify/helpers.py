@@ -50,7 +50,9 @@ def filter_results(
             logger.warning(f"Failed to get next tracks for {title, artist}")
             break
         tracks.extend(
-            _filter_tracks(results["tracks"]["items"], threshold, title, artist)
+            _filter_tracks(
+                results["tracks"]["items"], threshold, title, artist
+            )
         )
 
     if tracks:
@@ -287,7 +289,9 @@ def _build_new_playlist(
     return playlist
 
 
-async def _catch(generator: AsyncGenerator, message: Optional[str] = "") -> Any:
+async def _catch(
+    generator: AsyncGenerator, message: Optional[str] = ""
+) -> Any:
     """This function permits one-line try/except logic for comprehensions.
 
     Args:
@@ -436,7 +440,9 @@ def _process(
     return _fuzzy_match(spotify, submission.title, threshold)
 
 
-def _track_name_too_similar(track: str, playlist_track_names: Set[str]) -> bool:
+def _track_name_too_similar(
+    track: str, playlist_track_names: Set[str]
+) -> bool:
     """Fuzzy matches candidate new track with tracks already in playlist to see
         if it's a duplicate.
 

@@ -59,7 +59,9 @@ def test_build_new_playlist(
         mock_spotify_playlist_add_items.return_value
     )
     new_tracks = [("test_id", "track title - artist name")]
-    ret = _build_new_playlist(mock_spotify, "test_user", "r/techno", new_tracks)
+    ret = _build_new_playlist(
+        mock_spotify, "test_user", "r/techno", new_tracks
+    )
     assert isinstance(ret, dict)
     assert ret == {"id": "test_id"}
 

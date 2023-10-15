@@ -194,7 +194,6 @@ class RekordboxCollection(Collection):
             if isinstance(value, dict):
                 body += f"\n{' ' * 4}{key}={len(value)},"
             else:
-                # TODO(a-rich): split and join with extra indents.
                 body += f"\n{' ' * 4}{key}=["
                 playlists = f"\n{' ' * 8}".join(repr(value).split("\n"))
                 body += f"\n{' ' * 8}{playlists}"
