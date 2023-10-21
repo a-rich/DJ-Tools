@@ -7,21 +7,6 @@ import pytest
 from djtools.utils.config import UtilsConfig
 
 
-def test_utilsconfig(caplog):
-    """Test the UtilsConfig class."""
-    caplog.set_level("WARNING")
-    cfg = {
-        "CHECK_TRACKS": True,
-        "CHECK_TRACKS_SPOTIFY_PLAYLISTS": ["playlist"],
-        "AWS_PROFILE": "default",
-    }
-    UtilsConfig(**cfg)
-    assert caplog.records[0].message == (
-        "CHECK_TRACKS depends on valid Spotify API credentials in "
-        "SpotifyConfig."
-    )
-
-
 def test_utilsconfig_aws_profile_not_set():
     """Test for the UtilsConfig class."""
     cfg = {"CHECK_TRACKS": True}
@@ -34,6 +19,22 @@ def test_utilsconfig_aws_profile_not_set():
         ),
     ):
         UtilsConfig(**cfg)
+
+
+def test_utilsconfig_spotify_creds_warning(caplog):
+    """Test the UtilsConfig class."""
+    caplog.set_level("WARNING")
+    cfg = {
+        "CHECK_TRACKS": True,
+        "CHECK_TRACKS_SPOTIFY_PLAYLISTS": ["playlist"],
+        "AWS_PROFILE": "default",
+    }
+    os.environ["AWS_PROFILE"] = "default"
+    UtilsConfig(**cfg)
+    assert caplog.records[0].message == (
+        "CHECK_TRACKS depends on valid Spotify API credentials in "
+        "SpotifyConfig."
+    )
 
 
 def test_utilsconfig_recording_file_not_set():
@@ -82,3 +83,13 @@ def test_utilsconfig_validates_bitrate_success(bit_rate):
     cfg = {"AUDIO_BITRATE": bit_rate}
     config = UtilsConfig(**cfg)
     assert config.AUDIO_BITRATE == str(bit_rate)
+
+
+def test_utilsconfig_validate_format_warning(caplog):
+    """Test for the UtilsConfig class."""
+    caplog.set_level("WARNING")
+    cfg = {"AUDIO_FORMAT": "mp3", "NORMALIZE_AUDIO": True}
+    _ = UtilsConfig(**cfg)
+    assert caplog.records[0].message == (
+        "You must install FFmpeg in order to use non-wav file formats."
+    )

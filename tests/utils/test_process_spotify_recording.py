@@ -9,81 +9,6 @@ from djtools.utils.process_recording import process
 
 
 @mock.patch(
-    "djtools.utils.process_recording.AudioSegment.from_file",
-    mock.Mock(return_value=AudioSegment.silent(duration=30000)),
-)
-@mock.patch("djtools.utils.process_recording.get_spotify_tracks")
-@mock.patch("djtools.utils.process_recording.AudioSegment.export")
-def test_process(mock_export, mock_get_spotify_tracks, config, tmpdir):
-    """Test for the process function."""
-    mock_get_spotify_tracks.return_value = {
-        "playlist": [
-            {
-                "track": {
-                    "album": {
-                        "name": "",
-                        "release_date_precision": "year",
-                        "release_date": "2023",
-                        "label": "",
-                    },
-                    "artists": [{"name": "some artist"}],
-                    "duration_ms": 10000,
-                    "name": "some name",
-                },
-            },
-            {
-                "track": {
-                    "album": {
-                        "name": "",
-                        "release_date_precision": "month",
-                        "release_date": "2023-07",
-                        "label": "",
-                    },
-                    "artists": [
-                        {"name": "another artist"},
-                        {"name": "a final artist"},
-                    ],
-                    "duration_ms": 10000,
-                    "name": "another name",
-                },
-            },
-            {
-                "track": {
-                    "album": {
-                        "name": "",
-                        "release_date_precision": "day",
-                        "release_date": "2023-07-28",
-                        "label": "",
-                    },
-                    "artists": [
-                        {"name": "another artist"},
-                        {"name": "a final artist"},
-                    ],
-                    "duration_ms": 10000,
-                    "name": "a final name",
-                },
-            },
-        ],
-    }
-
-    def mock_export_function(
-        filename, **kwargs
-    ):  # pylint: disable=unused-argument
-        with open(filename, mode="wb") as _file:
-            _file.write(b"")
-
-    mock_export.side_effect = mock_export_function
-    config.AUDIO_DESTINATION = Path(tmpdir)
-    config.RECORDING_FILE = "file.wav"
-    config.RECORDING_PLAYLIST = "playlist"
-    process(config)
-    output_files = list(config.AUDIO_DESTINATION.iterdir())
-    assert len(output_files) == len(
-        mock_get_spotify_tracks.return_value["playlist"]
-    )
-
-
-@mock.patch(
     "djtools.utils.process_recording.get_spotify_tracks",
     mock.Mock(return_value={}),
 )
@@ -170,16 +95,17 @@ def test_process_warns_when_recording_is_too_short(
         },
     ),
 )
+@mock.patch("djtools.utils.process_recording.AudioSegment.export", mock.Mock())
+@mock.patch("djtools.utils.process_recording.effects.normalize", mock.Mock())
 @mock.patch(
     "djtools.utils.process_recording.AudioSegment.from_file",
     mock.Mock(return_value=AudioSegment.silent(duration=2000)),
 )
-@mock.patch("djtools.utils.process_recording.AudioSegment.export", mock.Mock())
-def test_process_warns_when_filename_is_malformed(config, caplog, tmpdir):
+def test_process_warns_when_filename_is_malformed(config, tmpdir, caplog):
     """Test for the process function."""
+    caplog.set_level("WARNING")
     config.RECORDING_PLAYLIST = "playlist"
     config.AUDIO_DESTINATION = Path(tmpdir)
-    caplog.set_level("WARNING")
     process(config)
     filename = tmpdir / "some - bad name - artist.mp3"
     assert caplog.records[0].message == (
@@ -188,3 +114,85 @@ def test_process_warns_when_filename_is_malformed(config, caplog, tmpdir):
         "separate track title and artist(s), you might get unexpected "
         'behavior while using features like "--check-tracks".'
     )
+
+
+@mock.patch("djtools.utils.process_recording.AudioSegment.from_file")
+@mock.patch("djtools.utils.process_recording.effects.normalize")
+@mock.patch("djtools.utils.process_recording.get_spotify_tracks")
+@mock.patch("djtools.utils.process_recording.AudioSegment.export")
+def test_process(
+    mock_export,
+    mock_get_spotify_tracks,
+    mock_normalize,
+    mock_audio,
+    config,
+    tmpdir,
+):
+    """Test for the process function."""
+    mock_get_spotify_tracks.return_value = {
+        "playlist": [
+            {
+                "track": {
+                    "album": {
+                        "name": "",
+                        "release_date_precision": "year",
+                        "release_date": "2023",
+                        "label": "",
+                    },
+                    "artists": [{"name": "some artist"}],
+                    "duration_ms": 10000,
+                    "name": "some name",
+                },
+            },
+            {
+                "track": {
+                    "album": {
+                        "name": "",
+                        "release_date_precision": "month",
+                        "release_date": "2023-07",
+                        "label": "",
+                    },
+                    "artists": [
+                        {"name": "another artist"},
+                        {"name": "a final artist"},
+                    ],
+                    "duration_ms": 10000,
+                    "name": "another name",
+                },
+            },
+            {
+                "track": {
+                    "album": {
+                        "name": "",
+                        "release_date_precision": "day",
+                        "release_date": "2023-07-28",
+                        "label": "",
+                    },
+                    "artists": [
+                        {"name": "another artist"},
+                        {"name": "a final artist"},
+                    ],
+                    "duration_ms": 10000,
+                    "name": "a final name",
+                },
+            },
+        ],
+    }
+    mock_audio.return_value = AudioSegment.silent(duration=30000)
+    mock_normalize.return_value = mock_audio.return_value
+
+    def mock_export_function(
+        filename, **kwargs
+    ):  # pylint: disable=unused-argument
+        with open(filename, mode="wb") as _file:
+            _file.write(b"")
+
+    mock_export.side_effect = mock_export_function
+    config.AUDIO_DESTINATION = Path(tmpdir)
+    config.RECORDING_FILE = "file.wav"
+    config.RECORDING_PLAYLIST = "playlist"
+    process(config)
+    track_count = len(mock_get_spotify_tracks.return_value["playlist"])
+    assert mock_export.call_count == track_count
+    assert mock_normalize.call_count == track_count
+    assert len(list(config.AUDIO_DESTINATION.iterdir())) == track_count

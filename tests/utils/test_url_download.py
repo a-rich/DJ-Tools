@@ -37,10 +37,13 @@ def test_url_download(tmpdir, config):
     config.URL_DOWNLOAD = (
         "https://soundcloud.com/aweeeezy_music/sets/test-download"
     )
-    config.AUDIO_DESTINATION = tmpdir
+    config.AUDIO_DESTINATION = tmpdir / "new_dir"
+    assert not config.AUDIO_DESTINATION.exists()
 
     def dummy_func():
-        with open(tmpdir / "file.mp3", mode="w", encoding="utf-8") as _file:
+        with open(
+            config.AUDIO_DESTINATION / "file.mp3", mode="w", encoding="utf-8"
+        ) as _file:
             _file.write("")
 
     with mock.patch(
@@ -49,4 +52,6 @@ def test_url_download(tmpdir, config):
         context = mock_ytdl.return_value.__enter__.return_value
         context.download.side_effect = lambda *args, **kwargs: dummy_func()
         url_download(config)
-    assert len(list(tmpdir.iterdir())) == 1
+
+    assert config.AUDIO_DESTINATION.exists()
+    assert len(list(config.AUDIO_DESTINATION.iterdir())) == 1

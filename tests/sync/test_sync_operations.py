@@ -71,7 +71,7 @@ def test_download_spotify_playlist_handles_no_matches(config, caplog):
     )
     assert caplog.records[1].message == (
         "There are no Spotify tracks; make sure DOWNLOAD_SPOTIFY_PLAYLIST is "
-        "a key from spotify_playlists.yaml"
+        "a key in spotify_playlists.yaml"
     )
     assert caplog.records[2].message == (
         "No Beatcloud matches were found! Make sure you've supplied the "
