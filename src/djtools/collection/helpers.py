@@ -17,7 +17,7 @@ from djtools.collection.config import (
 )
 from djtools.collection.playlist_filters import PlaylistFilter
 from djtools.collection.playlists import Playlist, RekordboxPlaylist
-from djtools.collection.tracks import Track
+from djtools.collection.tracks import Track, RekordboxTrack
 from djtools.utils.helpers import make_path
 
 
@@ -72,13 +72,14 @@ def copy_file(track: Track, destination: Path):
 
 
 # As support for various platforms (Serato, Denon, Traktor, etc.) is added, the
-# platform name must be registered with references to their Collection and
-# Playlist implementations.
+# platform name must be registered with references to their Collection,
+# Playlist, and Track implementations.
 PLATFORM_REGISTRY = {
     "rekordbox": {
         "collection": RekordboxCollection,
         "playlist": RekordboxPlaylist,
-    }
+        "track": RekordboxTrack,
+    },
 }
 
 
@@ -553,11 +554,23 @@ def build_combiner_playlists(
         return playlist_class.new_playlist(name=content, tracks=tracks)
 
     # This is a folder so create playlists for those playlists within it.
-    playlists = [
-        build_combiner_playlists(item, tags_tracks, playlist_class)
-        for item in content.playlists
-    ]
-    playlists = [playlist for playlist in playlists if playlist]
+    playlists = []
+    for item in content.playlists:
+        try:
+            playlist = build_combiner_playlists(
+                item, tags_tracks, playlist_class
+            )
+        except Exception as exc:
+            logger.warning(
+                f"Failed to build the Combiner playlist: {item}\n{exc}"
+            )
+            continue
+        if playlist:
+            playlists.append(playlist)
+        else:
+            logger.warning(
+                f"There are no tracks for the Combiner playlist: {item}"
+            )
     if not playlists:
         logger.warning(
             f'There were no playlists created from "{content.playlists}"'

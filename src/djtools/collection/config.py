@@ -63,12 +63,11 @@ class CollectionConfig(BaseConfig):
                 / "configs"
                 / "collection_playlists.yaml"
             )
-            err = (
-                "collection_playlists.yaml must be a valid YAML to use the "
-                "COLLECTION_PLAYLISTS feature"
-            )
             if not playlist_config_path.exists():
-                raise RuntimeError(err)
+                raise RuntimeError(
+                    "collection_playlists.yaml must exist to use the "
+                    "COLLECTION_PLAYLISTS feature"
+                )
             try:
                 with open(
                     playlist_config_path, mode="r", encoding="utf-8"
@@ -77,7 +76,10 @@ class CollectionConfig(BaseConfig):
                         **yaml.load(_file, Loader=yaml.FullLoader) or {}
                     )
             except ValidationError as exc:
-                raise RuntimeError(err) from exc
+                raise RuntimeError(
+                    "collection_playlists.yaml must be a valid YAML to use "
+                    "the COLLECTION_PLAYLISTS feature"
+                ) from exc
 
 
 class PlaylistName(BaseModel, extra=Extra.forbid):

@@ -7,6 +7,7 @@ from unittest import mock
 import pytest
 
 from djtools.collection.collections import Collection, RekordboxCollection
+from djtools.collection.config import PlaylistConfigContent
 from djtools.collection.helpers import (
     BooleanNode,
     copy_file,
@@ -21,13 +22,30 @@ from djtools.collection.helpers import (
     scale_data,
 )
 from djtools.collection.playlists import Playlist
+from djtools.collection.tracks import Track
 
 
 # pylint: disable=duplicate-code
 
 
-def test_aggregate_playlists():
-    """Test the create_aggregate_playlists function."""
+def test_platform_registry_structure():
+    """Test for the PLATFORM_REGISTRY object."""
+    assert isinstance(PLATFORM_REGISTRY, dict)
+    assert len(PLATFORM_REGISTRY)
+    required_class_impl_keys = {"collection", "playlist", "track"}
+    required_base_class_impls = {Collection, Playlist, Track}
+    for registered_software, impls in PLATFORM_REGISTRY.items():
+        assert isinstance(registered_software, str)
+        assert isinstance(impls, dict)
+        assert set(impls.keys()) == required_class_impl_keys
+        assert (
+            set(
+                base
+                for class_impl in impls.values()
+                for base in class_impl.__bases__
+            )
+            == required_base_class_impls
+        )
 
 
 @pytest.mark.parametrize(
@@ -91,7 +109,7 @@ def test_booleannode_raises_runtime_eror():
         node.evaluate()
 
 
-def test_build_combiner_playlists_raises_exception_():
+def test_build_combiner_playlists_raises_exception_for_malformed_content():
     """Test the build_combiner_playlists function."""
     with pytest.raises(
         ValueError,
@@ -99,6 +117,22 @@ def test_build_combiner_playlists_raises_exception_():
     ):
         software_config = PLATFORM_REGISTRY[next(iter(PLATFORM_REGISTRY))]
         build_combiner_playlists([], {}, software_config["playlist"])
+
+
+def test_build_combiner_playlists_handles_malformed_playlist_content(caplog):
+    """Test the build_combiner_playlists function."""
+    caplog.set_level("WARNING")
+    software_config = PLATFORM_REGISTRY[next(iter(PLATFORM_REGISTRY))]
+    invalid_playlist = "Invalid ~"
+    content = PlaylistConfigContent(name="test", playlists=[invalid_playlist])
+    build_combiner_playlists(content, {}, software_config["playlist"])
+    expected_error = (
+        "Invalid boolean expression: track sets: 0, tags: ['Invalid'], "
+        "operators: ['difference']"
+    )
+    assert caplog.records[0].message == (
+        f"Failed to build the Combiner playlist: {invalid_playlist}\n{expected_error}"
+    )
 
 
 def test_build_tag_playlists_raises_exception_():
@@ -214,20 +248,6 @@ def test_parse_string_selectors_warns_bad(matches, expected, caplog):
     caplog.set_level("WARNING")
     parse_string_selectors(matches, {}, {"date": "get_date_added"}, set())
     assert caplog.records[0].message == expected
-
-
-def test_platform_registry():
-    """Test for the PLATFORM_REGISTRY object."""
-    assert isinstance(PLATFORM_REGISTRY, dict)
-    assert len(PLATFORM_REGISTRY)
-    for registered_software, impls in PLATFORM_REGISTRY.items():
-        assert isinstance(registered_software, str)
-        assert isinstance(impls, dict)
-        for impl_type, impl_class in impls.items():
-            assert impl_type in ["collection", "playlist"]
-            assert set(impl_class.__bases__).intersection(
-                set((Collection, Playlist))
-            )
 
 
 def test_print_data(capsys):

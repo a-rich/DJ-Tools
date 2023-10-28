@@ -1,4 +1,4 @@
-"""This module contains the PlaylistFilter abstract base class and its\
+"""This module contains the PlaylistFilter abstract base class and its
 implementations.
 
 PlaylistFilter subclasses implement an 'is_filter_playlist' method and a
@@ -109,10 +109,10 @@ class MinimalDeepTechFilter(PlaylistFilter):
         """Returns True if this track should remain in the playlist.
 
         If the playlist is not underneath a folder called "Techno", then this
-        track is filtered out if the genre tag preceding "Minimal Deep Tech" is
-        "Techno". If the playlist is underneath a folder called "Techno", then
-        this track is filtered out if the genre tag preceding
-        "Minimal Deep Tech" is not "Techno".
+        track is filtered out if there's another genre tag containing "Techno".
+        If the playlist is underneath a folder called "Techno", then
+        this track is filtered out if there's no other genre tag containing
+        "Techno".
 
         Args:
             track: Track object to apply filter to.

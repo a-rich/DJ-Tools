@@ -8,9 +8,22 @@ from djtools.collection.playlist_filters import (
     ComplexTrackFilter,
     HipHopFilter,
     MinimalDeepTechFilter,
+    PlaylistFilter,
     TransitionTrackFilter,
 )
 from djtools.collection.tracks import RekordboxTrack
+
+
+def test_playlistfilter_cannot_be_instantiated():
+    """Test for the PlaylistFilter class."""
+    with pytest.raises(
+        TypeError,
+        match=(
+            "Can't instantiate abstract class PlaylistFilter with abstract "
+            "methods filter_track, is_filter_playlist"
+        ),
+    ):
+        PlaylistFilter()
 
 
 @pytest.mark.parametrize(

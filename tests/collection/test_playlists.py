@@ -22,7 +22,7 @@ def test_rekordboxplaylist(
     assert str(test_playlist) == str(playlist)
     assert test_playlist == playlist.serialize()
     try:
-        RekordboxPlaylist.validate(test_playlist, playlist)
+        playlist.validate(test_playlist)
     except AssertionError:
         assert False, "RekordboxPlaylist validation failed!"
 

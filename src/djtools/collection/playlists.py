@@ -479,16 +479,12 @@ class RekordboxPlaylist(Playlist):
 
         return playlist_tag
 
-    @classmethod
-    def validate(
-        cls, original: bs4.element.Tag, serializable: RekordboxPlaylist
-    ):
+    def validate(self, original: bs4.element.Tag):
         """Validate the serialized playlist matches the original.
 
         Args:
             original: BeautifulSoup Tag representing a playlist.
-            serializable: Playlist object.
         """
         assert (
-            original == serializable.serialize()
+            original == self.serialize()
         ), "Failed RekordboxPlaylist validation!"

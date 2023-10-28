@@ -57,8 +57,8 @@ def collection_playlists(
     In addition to creating playlists from tags, this function also supports
     creating "combiner" playlists by evaluating boolean algebra expressions.
     This is an incredibly powerful feature which allows users to apply set
-    operations {union, intersection, difference, negation} to a diverse range
-    of operands {tag, playlists, BPM ranges, rating ranges}.
+    operations {union, intersection, and difference} to a diverse range of
+    operands {tag, playlists, BPMs, ratings, etc.}.
 
     Combiner playlists are declared in the "combiner" specification of the
     playlist config with playlists whose names are the boolean algebra
@@ -66,7 +66,7 @@ def collection_playlists(
 
     Here's an example combiner playlist to illustrate this:
 
-        ((Dubstep ~ [1-3]) | {My Favorites} | (*Techno & [135-145])) & Dark
+        ((Dubstep ~ [1-3]) | {playlist: My Favorites} | (*Techno & [135-145])) & Dark
 
     The resulting combiner playlist will be comprised of tracks that are:
 
