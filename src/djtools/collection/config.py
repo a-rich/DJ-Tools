@@ -75,10 +75,16 @@ class CollectionConfig(BaseConfig):
                 raise RuntimeError(err) from exc
 
 
+class PlaylistName(BaseModel, extra=Extra.forbid):
+    "A class for configuring the names of playlists."
+    tag_content: str
+    name: Optional[str] = None
+
+
 class PlaylistConfigContent(BaseModel, extra=Extra.forbid):
     "A class for type checking the content of the playlist config YAML."
     name: str
-    playlists: List[Union[PlaylistConfigContent, str]]
+    playlists: List[Union[PlaylistConfigContent, PlaylistName, str]]
 
 
 class PlaylistConfig(BaseModel, extra=Extra.forbid):
