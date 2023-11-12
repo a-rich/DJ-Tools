@@ -113,6 +113,12 @@ def collection_playlists(
     # This will hold the playlists being built.
     auto_playlists = []
 
+    # List of PlaylistFilter implementations to run against built playlists.
+    filters = [
+        getattr(playlist_filters, playlist_filter)()
+        for playlist_filter in config.COLLECTION_PLAYLIST_FILTERS
+    ]
+
     # Create playlists for the "tags" portion of the playlist config.
     if playlist_config.tags:
         # A set of tags seen is maintained while creating the tags playlists so
@@ -128,13 +134,7 @@ def collection_playlists(
         tag_playlists.set_parent()
 
         # Apply the filtering logic of the configured PlaylistFilter implementations.
-        filter_tag_playlists(
-            tag_playlists,
-            [
-                getattr(playlist_filters, playlist_filter)()
-                for playlist_filter in config.COLLECTION_PLAYLIST_FILTERS
-            ],
-        )
+        filter_tag_playlists(tag_playlists, filters)
 
         # Recursively traverse the playlist tree and create "all" playlists
         # within each folder containing more than one playlist. These "all"
@@ -184,6 +184,20 @@ def collection_playlists(
         combiner_playlists = build_combiner_playlists(
             playlist_config.combiner, tags_tracks, playlist_class
         )
+
+        # The tag playlists must have their "parent" attribute set so that
+        # PlaylistFilter implementations may apply logic that depends on the
+        # relative position of the playlist with the playlist tree.
+        combiner_playlists.set_parent()
+
+        # Apply the filtering logic of the configured PlaylistFilter implementations.
+        filter_tag_playlists(combiner_playlists, filters)
+
+        # Recursively traverse the playlist tree and create "all" playlists
+        # within each folder containing more than one playlist. These "all"
+        # playlists aggregate the set of tracks contained within all the other
+        # playlists within the same folder.
+        _ = aggregate_playlists(combiner_playlists, playlist_class)
 
         auto_playlists.append(combiner_playlists)
 
