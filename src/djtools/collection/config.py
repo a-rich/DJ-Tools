@@ -22,7 +22,12 @@ class CollectionConfig(BaseConfig):
 
     COLLECTION_PATH: Path = None
     COLLECTION_PLAYLIST_FILTERS: List[
-        Literal["HipHopFilter", "MinimalDeepTechFilter"]
+        Literal[
+            "HipHopFilter",
+            "MinimalDeepTechFilter",
+            "SimpleTrackFilter",
+            "TransitionTrackFilter",
+        ]
     ] = []
     COLLECTION_PLAYLISTS: bool = False
     COLLECTION_PLAYLISTS_REMAINDER: Literal["folder", "playlist"] = "folder"

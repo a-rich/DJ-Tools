@@ -12,6 +12,7 @@ should remain in the playlist.
 """
 from abc import ABC, abstractmethod
 import re
+from typing import Optional
 
 from djtools.collection.playlists import Playlist
 from djtools.collection.tracks import Track
@@ -95,6 +96,7 @@ class HipHopFilter(PlaylistFilter):
                 self._bass_hip_hop = (  # pylint: disable=attribute-defined-outside-init
                     True
                 )
+                break
             parent = parent.get_parent()
 
         return True
@@ -160,3 +162,153 @@ class MinimalDeepTechFilter(PlaylistFilter):
             parent = parent.get_parent()
 
         return True
+
+
+class SimpleTrackFilter(ABC):
+    """This class filters "simple" playlists.
+
+    This PlaylistFilter looks for playlists with "simple" in their name or in
+    the name of a parent playlist. When found, tracks contained in the playlist
+    must have no more than 'max_tags_for_simple_track' in order to remain in
+    the playlist.
+    """
+
+    def __init__(self, max_tags_for_simple_track: Optional[int] = 2):
+        """Constructor.
+
+        Args:
+            max_tags_for_simple_track: Maximum number of non-genre tags before
+            a track is no longer considered "simple".
+        """
+        self._max_tags_for_simple_track = max_tags_for_simple_track
+
+    def filter_track(self, track: Track) -> bool:
+        """Returns True if this track should remain in the playlist.
+
+        Args:
+            track: Track object to apply filter to.
+
+        Returns:
+            Whether or not this track should be included in the playlist.
+        """
+        other_tags = track.get_tags().difference(set(track.get_genre_tags()))
+
+        return (
+            other_tags and len(other_tags) <= self._max_tags_for_simple_track
+        )
+
+    def is_filter_playlist(self, playlist: Playlist) -> bool:
+        """Returns True if this playlist should be filtered.
+
+        Args:
+            playlist: Playlist object to potentially filter.
+
+        Returns:
+            Whether or not to filter this playlist.
+        """
+        playlist_exp = re.compile(r".*simple.*")
+        if re.search(playlist_exp, playlist.get_name().lower()):
+            return True
+
+        parent = playlist.get_parent()
+        while parent:
+            if re.search(playlist_exp, parent.get_name().lower()):
+                return True
+            parent = parent.get_parent()
+
+        return False
+
+
+class TransitionTrackFilter(ABC):
+    """This class filters "transition" playlists.
+
+    This PlaylistFilter looks for playlists with "transition" in their name or in
+    the name of a parent playlist. When found, tracks contained in the playlist
+    must have a square bracket enclosed set of transition tokens (forward-slash
+    delimited list of floats, for BPMs, or otherwise, for genres).
+    """
+
+    def __init__(self, separator: Optional[str] = "/"):
+        """Constructor.
+
+        Args:
+            separator: Character used to separate transition tokens.
+        """
+        self._separator = separator
+        self._playlist_type = None
+
+    def filter_track(self, track: Track) -> bool:
+        """Returns True if this track should remain in the playlist.
+
+        Matches square bracket enclosed tokens representing transitions for
+        supported playlist types.
+
+        Args:
+            track: Track object to apply filter to.
+
+        Returns:
+            Whether or not this track should be included in the playlist.
+        """
+        comments = track.get_comments()
+        transition_exp = re.compile(r"\[([^]]+)\]")
+        transition_tokens_match_playlist_type = False
+        for match in re.findall(transition_exp, comments):
+            for token in match.split(self._separator):
+                token = token.strip()
+                try:
+                    float(token)
+                    if self._playlist_type == "tempo":
+                        transition_tokens_match_playlist_type = True
+                except ValueError:
+                    if self._playlist_type == "genre":
+                        transition_tokens_match_playlist_type = True
+
+        return transition_tokens_match_playlist_type
+
+    def is_filter_playlist(self, playlist: Playlist) -> bool:
+        """Returns True if this playlist should be filtered.
+
+        Identifies playlists with a supported transition playlist type in its
+        name while also having a parent playlist with "transition" in its name.
+
+        Args:
+            playlist: Playlist object to potentially filter.
+
+        Returns:
+            Whether or not to filter this playlist.
+        """
+        is_transition_playlist = False
+
+        # Check if the given playlist has a substring of "transition".
+        playlist_exp = re.compile(r".*transition.*")
+        if re.search(playlist_exp, playlist.get_name().lower()):
+            is_transition_playlist = True
+
+        # Search parents' names for "transition" substring.
+        parent = playlist.get_parent()
+        while not is_transition_playlist and parent:
+            if re.search(playlist_exp, parent.get_name().lower()):
+                is_transition_playlist = True
+            parent = parent.get_parent()
+
+        if not is_transition_playlist:
+            return False
+
+        # Check if the given playlist contains one, and only one, of the
+        # supported transition playlist types.
+        self._playlist_type = None
+        playlist_type_exprs = {
+            "genre": re.compile(r".*genre.*"),
+            "tempo": re.compile(r".*tempo.*"),
+        }
+        for playlist_type, exp in playlist_type_exprs.items():
+            if not re.search(exp, playlist.get_name().lower()):
+                continue
+            if self._playlist_type:
+                raise ValueError(
+                    f'"{playlist.get_name()}" matches multiple playlist types:'
+                    f" {self._playlist_type}, {playlist_type}"
+                )
+            self._playlist_type = playlist_type
+
+        return bool(self._playlist_type)
