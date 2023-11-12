@@ -121,6 +121,14 @@ Note that the examples below are trivial ones designed to get 100% code coverage
 
 The `combiner` configuration specifies a set of `name` folders with lists of playlists and / or folders inside of them. The leaves of this playlist tree are the actual playlists themselves whose names are boolean algebra expressions that use the syntax noted above to describe how different tags and selectors are to be combined to produce the final playlist of tracks. Valid expressions must contain at least two operands and must have one less operator than there are operands. 
 
+Note that, as with the tag playlists, you may provide an override for these playlist names.
+This can be really helpful since combiner playlists can otherwise have very long names.
+Here's an example of configuring a playlist name override:
+```
+    - tag_content: "Dubstep & {date:<2022} & [5]"
+      name: Pre 2022 High Energy Dubstep
+```
+
 Once you've finalized your playlist configuration, run the following command to build the playlists:
 
 `djtools --collection-playlists`

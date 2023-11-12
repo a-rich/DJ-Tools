@@ -32,6 +32,15 @@ You can ignore the `combiner` part of the YAML for now. Although it's similar to
 
 The configuration above specifies a set of `name` folders with lists of playlists and / or folders inside of them. The leaves of this playlist tree are the actual playlists themselves named after the tag that the playlist will contain tracks for. Note that you can reference the same tag multiple times.
 
+While not pictured above, the `playlist_builder` supports configuring the names of playlists if you'd like them to be something other than the tag used to create them.
+For example, users may provide a map containing the `tag_content` field, which specifies the tag to use, and an optional `name` field to override the actual name of the playlist.
+Note that if `name` is not provided, `tag_content` will be used as the playlist name.
+Here's an example of overriding the name of a Hard Techno playlist to be "Techno that is hard":
+```
+    - tag_content: Hard Techno
+      name: Techno that is hard
+```
+
 Every folder will create an implicit playlist called `All <folder name>` which recursively aggregates the tracks from all the playlists within that folder. For example, my `Techno` folder will have a playlist called `All Techno` which contains the union of tracks between `Hard Techno` and `Minimal Deep Tech`.
 
 You may only have one tag for each playlist. If you're interested in creating playlists that combine multiple tags, check out the [Combiner](combiner_playlists.md) how-to guide.

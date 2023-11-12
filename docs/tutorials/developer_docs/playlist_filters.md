@@ -37,7 +37,7 @@ The `playlist_filters` module contains a set of `PlaylistFilter` implementations
 ### HipHopFilter
 - Checks to see if a playlist named 'Hip Hop' is a child of a playlist named 'Bass'
 - If it is, then tracks in that playlist must have a genre tag besides 'Hip Hop' and 'R&B'
-- If it is not, then tracks in that playlist must have only genre tags 'Hip Hop' and 'R&G'
+- If it is not, then tracks in that playlist must have only genre tags 'Hip Hop' and 'R&B'
 
 ::: djtools.collection.playlist_filters.HipHopFilter
     options:
