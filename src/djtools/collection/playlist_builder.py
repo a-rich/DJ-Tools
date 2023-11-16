@@ -22,6 +22,7 @@ from djtools.utils.helpers import make_path
 
 
 logger = logging.getLogger(__name__)
+PLAYLIST_NAME = "PLAYLIST_BUILDER"
 
 
 @make_path
@@ -151,7 +152,9 @@ def collection_playlists(
         if config.COLLECTION_PLAYLISTS_REMAINDER == "folder":
             auto_playlists.append(
                 build_tag_playlists(
-                    PlaylistConfigContent(name="Other", playlists=other_tags),
+                    PlaylistConfigContent(
+                        name="Unused Tags", playlists=other_tags
+                    ),
                     tags_tracks,
                     playlist_class,
                 )
@@ -159,9 +162,9 @@ def collection_playlists(
         else:
             auto_playlists.append(
                 build_tag_playlists(
-                    "Other",
+                    "Unused Tags",
                     {
-                        "Other": {
+                        "Unused Tags": {
                             track_id: track
                             for tag, track_dict in tags_tracks.items()
                             for track_id, track in track_dict.items()
@@ -199,15 +202,21 @@ def collection_playlists(
         # playlists within the same folder.
         _ = aggregate_playlists(combiner_playlists, playlist_class)
 
-        auto_playlists.append(combiner_playlists)
+        auto_playlists.extend(combiner_playlists)
 
         # Print tag statistics for each combiner playlist.
         if config.VERBOSITY and combiner_playlists:
             print_playlists_tag_statistics(combiner_playlists)
 
+    # Remove any previous playlist builder playlists.
+    previous_playlists = collection.get_playlists(name=PLAYLIST_NAME)
+    root = collection.get_playlists()
+    for playlist in previous_playlists:
+        root.remove_playlist(playlist)
+
     # Insert a new playlist containing the built playlists.
     auto_playlist = playlist_class.new_playlist(
-        name="PLAYLIST_BUILDER", playlists=auto_playlists
+        name=PLAYLIST_NAME, playlists=auto_playlists
     )
     auto_playlist.set_parent(collection.get_playlists())
     collection.add_playlist(auto_playlist)

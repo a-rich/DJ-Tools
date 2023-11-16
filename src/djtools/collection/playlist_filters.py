@@ -164,23 +164,23 @@ class MinimalDeepTechFilter(PlaylistFilter):
         return True
 
 
-class SimpleTrackFilter(ABC):
-    """This class filters "simple" playlists.
+class ComplexTrackFilter(ABC):
+    """This class filters "complex" playlists.
 
-    This PlaylistFilter looks for playlists with "simple" in their name or in
+    This PlaylistFilter looks for playlists with "complex" in their name or in
     the name of a parent playlist. When found, tracks contained in the playlist
-    must have no more than 'max_tags_for_simple_track' in order to remain in
+    must have no less than 'min_tags_for_complex_track' in order to remain in
     the playlist.
     """
 
-    def __init__(self, max_tags_for_simple_track: Optional[int] = 2):
+    def __init__(self, min_tags_for_complex_track: Optional[int] = 3):
         """Constructor.
 
         Args:
-            max_tags_for_simple_track: Maximum number of non-genre tags before
-            a track is no longer considered "simple".
+            min_tags_for_complex_track: Maximum number of non-genre tags before
+            a track is no longer considered "complex".
         """
-        self._max_tags_for_simple_track = max_tags_for_simple_track
+        self._min_tags_for_complex_track = min_tags_for_complex_track
 
     def filter_track(self, track: Track) -> bool:
         """Returns True if this track should remain in the playlist.
@@ -194,7 +194,7 @@ class SimpleTrackFilter(ABC):
         other_tags = track.get_tags().difference(set(track.get_genre_tags()))
 
         return (
-            other_tags and len(other_tags) <= self._max_tags_for_simple_track
+            other_tags and len(other_tags) >= self._min_tags_for_complex_track
         )
 
     def is_filter_playlist(self, playlist: Playlist) -> bool:
@@ -206,7 +206,7 @@ class SimpleTrackFilter(ABC):
         Returns:
             Whether or not to filter this playlist.
         """
-        playlist_exp = re.compile(r".*simple.*")
+        playlist_exp = re.compile(r".*complex.*")
         if re.search(playlist_exp, playlist.get_name().lower()):
             return True
 
@@ -253,15 +253,16 @@ class TransitionTrackFilter(ABC):
         transition_exp = re.compile(r"\[([^]]+)\]")
         transition_tokens_match_playlist_type = False
         for match in re.findall(transition_exp, comments):
-            for token in match.split(self._separator):
-                token = token.strip()
-                try:
-                    float(token)
-                    if self._playlist_type == "tempo":
-                        transition_tokens_match_playlist_type = True
-                except ValueError:
-                    if self._playlist_type == "genre":
-                        transition_tokens_match_playlist_type = True
+            try:
+                _ = [
+                    float(token.strip())
+                    for token in match.split(self._separator)
+                ]
+                if self._playlist_type == "tempo":
+                    transition_tokens_match_playlist_type = True
+            except ValueError:
+                if self._playlist_type == "genre":
+                    transition_tokens_match_playlist_type = True
 
         return transition_tokens_match_playlist_type
 

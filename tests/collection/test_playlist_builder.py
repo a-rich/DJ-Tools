@@ -3,7 +3,11 @@ from unittest import mock
 
 import pytest
 
-from djtools.collection.playlist_builder import collection_playlists
+from djtools.collection.helpers import PLATFORM_REGISTRY
+from djtools.collection.playlist_builder import (
+    collection_playlists,
+    PLAYLIST_NAME,
+)
 
 from ..test_utils import MockOpen
 
@@ -31,6 +35,45 @@ def test_collection_playlists(
         collection_playlists(
             config, output_path=rekordbox_xml.parent / "test_collection"
         )
+
+
+def test_collection_playlists_removes_existing_playlist(
+    config, playlist_config, rekordbox_xml
+):
+    """Test for the collection_playlists function."""
+    software_config = PLATFORM_REGISTRY[next(iter(PLATFORM_REGISTRY))]
+    playlist_class = software_config["playlist"]
+    collection_class = software_config["collection"]
+    collection = collection_class(rekordbox_xml)
+
+    # A playlist_builder playlist should not already exist.
+    assert not collection.get_playlists(PLAYLIST_NAME)
+
+    # Insert a playlist_builder playlist into the collection.
+    new_playlists = playlist_class.new_playlist(PLAYLIST_NAME, playlists=[])
+    root = collection.get_playlists()
+    root.add_playlist(new_playlists)
+
+    # A playlist_builder playlist should now exist.
+    assert collection.get_playlists(PLAYLIST_NAME)
+
+    # Serialize the collection containing a playlist_builder playlist.
+    new_path = rekordbox_xml.parent / "test_collection_blah"
+    collection.serialize(output_path=new_path)
+    config.COLLECTION_PATH = new_path
+
+    # Run the playlist_builder on this collection to test removing the existing
+    # playlist_builder playlist.
+    with mock.patch(
+        "builtins.open",
+        MockOpen(
+            files=["collection_playlists.yaml"], content=f"{playlist_config}"
+        ).open,
+    ):
+        collection_playlists(config, output_path=new_path)
+
+    # TODO(a-rich): Mock either RekordboxPlaylist.new_playlist or RekordboxCollection.add_playlist
+    # assert not collection.get_playlists(PLAYLIST_NAME)
 
 
 @mock.patch(

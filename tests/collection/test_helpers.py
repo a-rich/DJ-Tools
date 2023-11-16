@@ -60,7 +60,7 @@ def test_booleannode(node_attributes):
     for operator in operators:
         node.add_operator(operator)
     for tag in tags:
-        node.add_tag(tag)
+        node.add_operand(tag)
     result = node.evaluate().keys()
     assert result == expected
 
@@ -70,7 +70,7 @@ def test_booleannode_with_multiple_expressions():
     node = BooleanNode({})
     node.add_operator("|")
     for tracks in [{2: None}, {2: None}]:
-        node.add_tracks(tracks)
+        node.add_operand(tracks)
     result = node.evaluate().keys()
     assert result == {2}
 
@@ -79,12 +79,13 @@ def test_booleannode_raises_runtime_eror():
     """Test for the BooleanNode class."""
     node = BooleanNode({})
     node.add_operator("|")
-    node.add_tag("tag")
+    node.add_operand("tag")
     with pytest.raises(
         RuntimeError,
         match=(
-            re.escape("Invalid boolean expression: track sets: 0, ")
-            + re.escape("tags: ['tag'], operators: ['union']")
+            "Invalid boolean expression:\n"
+            + re.escape("\toperands: ['tag']\n")
+            + re.escape("\toperators: ['union']")
         ),
     ):
         node.evaluate()

@@ -25,7 +25,7 @@ class CollectionConfig(BaseConfig):
         Literal[
             "HipHopFilter",
             "MinimalDeepTechFilter",
-            "SimpleTrackFilter",
+            "ComplexTrackFilter",
             "TransitionTrackFilter",
         ]
     ] = []
