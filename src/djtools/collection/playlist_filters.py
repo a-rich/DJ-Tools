@@ -12,7 +12,7 @@ should remain in the playlist.
 """
 from abc import ABC, abstractmethod
 import re
-from typing import Optional
+from typing import List, Optional
 
 from djtools.collection.playlists import Playlist
 from djtools.collection.tracks import Track
@@ -173,14 +173,23 @@ class ComplexTrackFilter(ABC):
     the playlist.
     """
 
-    def __init__(self, min_tags_for_complex_track: Optional[int] = 3):
+    def __init__(
+        self,
+        min_tags_for_complex_track: Optional[int] = 3,
+        exclude_tags: Optional[List[str]] = None,
+    ):
         """Constructor.
 
         Args:
             min_tags_for_complex_track: Maximum number of non-genre tags before
-            a track is no longer considered "complex".
+                a track is no longer considered "complex".
+            exclude_tags: Tags to ignore when determining the number of
+                non-genre tags.
         """
         self._min_tags_for_complex_track = min_tags_for_complex_track
+        if exclude_tags is None:
+            exclude_tags = ["Vocal"]
+        self._exclude_tags = set(exclude_tags)
 
     def filter_track(self, track: Track) -> bool:
         """Returns True if this track should remain in the playlist.
@@ -191,7 +200,11 @@ class ComplexTrackFilter(ABC):
         Returns:
             Whether or not this track should be included in the playlist.
         """
-        other_tags = track.get_tags().difference(set(track.get_genre_tags()))
+        other_tags = (
+            track.get_tags()
+            .difference(set(track.get_genre_tags()))
+            .difference(self._exclude_tags)
+        )
 
         return (
             other_tags and len(other_tags) >= self._min_tags_for_complex_track
