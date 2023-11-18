@@ -377,7 +377,13 @@ def add_selectors_to_tags(
 
         for playlist_object in [collection, *auto_playlists]:
             for playlist in playlist_object.get_playlists(playlist_name):
-                tags_tracks[playlist_key].update(playlist.get_tracks())
+                tracks = playlist.get_tracks()
+                if not tracks:
+                    logger.warning(
+                        f"No playlists were found for {playlist.get_name()}"
+                    )
+                    continue
+                tags_tracks[playlist_key].update(tracks)
 
 
 def parse_numerical_selectors(
@@ -572,17 +578,17 @@ def parse_expression(
         if char == "(":
             node = BooleanNode(tags_tracks, parent=node)
         elif node.is_operator(char):
-            tag = node.add_tag(tag)
+            tag = node.add_operand(tag)
             node.add_operator(char)
         elif char == ")":
-            tag = node.add_tag(tag)
+            tag = node.add_operand(tag)
             tracks = node.evaluate()
             node = node.get_parent()
             if tracks:
-                node.add_tracks(tracks)
+                node.add_operand(tracks)
         else:
             tag += char
-    tag = node.add_tag(tag)
+    tag = node.add_operand(tag)
 
     return node.evaluate()
 
@@ -608,8 +614,7 @@ class BooleanNode:
         }
         self._parent = parent
         self._operators = []
-        self._tags = []
-        self._tracks = []
+        self._operands = []
         self._tags_tracks = tags_tracks
         self._numerical_selector_regex = re.compile(r"(?<=\[)[^\[\]]*(?=\])")
         self._string_selector_regex = re.compile(r"(?<={)[^{}]+:[^{}]+(?=})")
@@ -640,18 +645,20 @@ class BooleanNode:
 
         return self._tags_tracks.get(tag, {})
 
-    def add_tag(self, tag: str) -> str:
-        """Add tag to BooleanNode.
+    def add_operand(self, operand: str) -> str:
+        """Add operand to BooleanNode.
 
         Args:
-            tag: Tag to be evaluated.
+            operand: Tag or track set to be evaluated.
 
         Returns:
             Empty string to reset tag in the parse_expression function.
         """
-        tag = tag.strip()
-        if tag:
-            self._tags.append(tag)
+        if isinstance(operand, str):
+            operand = operand.strip()
+            if not operand:
+                return ""
+        self._operands.append(operand)
 
         return ""
 
@@ -663,14 +670,6 @@ class BooleanNode:
         """
         self._operators.append(self._ops[operator])
 
-    def add_tracks(self, tracks: Dict[str, Track]):
-        """Adds a dict of tracks to the BooleanNode.
-
-        Args:
-            tracks: Dict of tracks.
-        """
-        self._tracks.append(tracks)
-
     def evaluate(self) -> Dict[str, Track]:
         """Applies operators to the operands to produce a dict of tracks.
 
@@ -681,35 +680,37 @@ class BooleanNode:
         Returns:
             A dict of tracks reduced from the boolean expression.
         """
-        operators = len(self._operators)
-        operands = len(self._tags) + len(self._tracks)
-        if operators + 1 != operands:
+        if len(self._operators) + 1 != len(self._operands):
+            operands = [
+                x if isinstance(x, str) else str(len(x)) + " tracks"
+                for x in self._operands
+            ]
             raise RuntimeError(
-                "Invalid boolean expression: track sets: "
-                f"{len(self._tracks)}, tags: {self._tags}, operators: "
-                f"{[x.__name__ for x in self._operators]}"
+                "Invalid boolean expression:\n"
+                f"\toperands: {operands}\n"
+                f"\toperators: {[x.__name__ for x in self._operators]}"
             )
-        while self._tags or self._operators:
-            operator = self._operators.pop(0)
+        while self._operators:
             tracks_a = (
-                self._tracks.pop(0)
-                if self._tracks
-                else self._get_tracks(tag=self._tags.pop(0))
+                self._operands.pop(0)
+                if not isinstance(self._operands[0], str)
+                else self._get_tracks(tag=self._operands.pop(0))
             )
             tracks_b = (
-                self._tracks.pop(0)
-                if self._tracks
-                else self._get_tracks(tag=self._tags.pop(0))
+                self._operands.pop(0)
+                if not isinstance(self._operands[0], str)
+                else self._get_tracks(tag=self._operands.pop(0))
             )
+            operator = self._operators.pop(0)
             track_ids = operator(set(tracks_a), set(tracks_b))
             tracks = {
                 track_id: track
                 for track_id, track in {**tracks_a, **tracks_b}.items()
                 if track_id in track_ids
             }
-            self._tracks.insert(0, tracks)
+            self._operands.insert(0, tracks)
 
-        return next(iter(self._tracks), set())
+        return next(iter(self._operands), set())
 
     def get_parent(self) -> BooleanNode:
         """Gets the parent of the BooleanNode.

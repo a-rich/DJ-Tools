@@ -5,9 +5,9 @@ import pytest
 
 from djtools.collection.helpers import PLATFORM_REGISTRY
 from djtools.collection.playlist_filters import (
+    ComplexTrackFilter,
     HipHopFilter,
     MinimalDeepTechFilter,
-    SimpleTrackFilter,
     TransitionTrackFilter,
 )
 from djtools.collection.tracks import RekordboxTrack
@@ -60,18 +60,18 @@ def test_minimaldeeptechfilter(techno, genre_tags, expected, rekordbox_track):
 @pytest.mark.parametrize(
     "parent_playlist_name,playlist_name,expected",
     [
-        ("something", "simple", True),
-        ("simple", "irrelevant", True),
+        ("something", "complex", True),
+        ("complex", "irrelevant", True),
         ("irrelevant", "something", False),
     ],
 )
-def test_simpletrackfilter_skips_irrelevant_playlists(
+def test_complextrackfilter_skips_irrelevant_playlists(
     parent_playlist_name,
     playlist_name,
     expected,
 ):
-    """Test for the SimpleTrackFilter class."""
-    track_filter = SimpleTrackFilter()
+    """Test for the ComplexTrackFilter class."""
+    track_filter = ComplexTrackFilter()
     playlist_class = next(iter(PLATFORM_REGISTRY.values()))["playlist"]
     playlist = playlist_class.new_playlist(playlist_name, tracks={})
     parent_playlist = playlist_class.new_playlist(
@@ -86,23 +86,25 @@ def test_simpletrackfilter_skips_irrelevant_playlists(
     "max_tags,tags,expected",
     [
         (1, set(["Tag"]), True),
-        (1, set(["Tag", "Another Tag"]), False),
-        (2, set(["Tag"]), True),
+        (2, set(["Tag"]), False),
         (2, set(["Tag", "Another Tag"]), True),
-        (2, set(["Tag", "Another Tag", "Last Tag"]), False),
+        (3, set(["Tag", "Another Tag"]), False),
+        (3, set(["Tag", "Another Tag", "Last Tag"]), True),
     ],
 )
-def test_simpletrackfilter_filters_tracks(
+def test_complextrackfilter_filters_tracks(
     max_tags, tags, expected, rekordbox_track
 ):
-    """Test for the SimpleTrackFilter class."""
-    track_filter = SimpleTrackFilter(max_tags)
+    """Test for the ComplexTrackFilter class."""
+    track_filter = ComplexTrackFilter(max_tags)
     playlist_class = next(iter(PLATFORM_REGISTRY.values()))["playlist"]
     rekordbox_track._Tags = tags  # pylint: disable=protected-access
     playlist = playlist_class.new_playlist(
         "genres", tracks={rekordbox_track.get_id(): rekordbox_track}
     )
-    root_playlist = playlist_class.new_playlist("simple", playlists=[playlist])
+    root_playlist = playlist_class.new_playlist(
+        "complex", playlists=[playlist]
+    )
     playlist.set_parent(root_playlist)
     result = track_filter.filter_track(rekordbox_track)
     assert result == expected
