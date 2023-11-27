@@ -54,8 +54,12 @@ def remove_tags_thread(track, tag_regex, remove_tags):
 if __name__ == "__main__":
     arg_parser = ArgumentParser()
     arg_parser.add_argument("--config", help="Path to a config.yaml")
-    arg_parser.add_argument("--output_collection", help="Path to output collection")
-    arg_parser.add_argument("--remove-tags", nargs="+", help="List of tags to remove")
+    arg_parser.add_argument(
+        "--output_collection", help="Path to output collection"
+    )
+    arg_parser.add_argument(
+        "--remove-tags", nargs="+", help="List of tags to remove"
+    )
     args = arg_parser.parse_args()
 
     # Build config, instantiate collection, and get tracks.
@@ -85,7 +89,9 @@ if __name__ == "__main__":
             pbar.update(1)
 
     playlist_class = PLATFORM_REGISTRY[config.PLATFORM]["playlist"]
-    playlist = playlist_class.new_playlist(name=args.playlist_name, tracks=tracks)
+    playlist = playlist_class.new_playlist(
+        name=args.playlist_name, tracks=tracks
+    )
     collection.add_playlist(playlist)
     output = args.output_collection if args.output_collection else config_path
     collection.serialize(output)

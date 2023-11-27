@@ -11,10 +11,7 @@ from djtools.collection.collections import RekordboxCollection
 
 
 def analyze_collection_vibes(
-    xml: str,
-    included_tags: Optional[Set] = None,
-    verbosity: int = 0,
-    **kwargs
+    xml: str, included_tags: Optional[Set] = None, verbosity: int = 0, **kwargs
 ):
     """Create histograms that show a collection's distribution of My Tags.
 
@@ -58,7 +55,7 @@ def analyze_user_vibes(
     user_index: int,
     included_tags: Optional[Set] = None,
     verbosity: int = 0,
-    **kwargs
+    **kwargs,
 ):
     """Create histograms that show each user's distribution of My Tags.
 
@@ -76,12 +73,18 @@ def analyze_user_vibes(
     user_tags = defaultdict(lambda: defaultdict(int))
     for user, tracks in groupby(
         sorted(tracks, key=lambda x: x.get_location()),
-        key=lambda x: list(filter(None, str(x.get_location()).split("/")))[user_index],
+        key=lambda x: list(filter(None, str(x.get_location()).split("/")))[
+            user_index
+        ],
     ):
         tagged_tracks = 0
         tracks = list(tracks)
         for track in tracks:
-            tags = track.get_tags().difference(track.get_genre_tags()).intersection(included_tags)
+            tags = (
+                track.get_tags()
+                .difference(track.get_genre_tags())
+                .intersection(included_tags)
+            )
             if not tags:
                 continue
             tagged_tracks += 1
@@ -158,7 +161,7 @@ if __name__ == "__main__":
         "--mode",
         choices=["collection", "user"],
         default="collection",
-        help="Whether to analyze vibes across the whole collection or on a per-user level."
+        help="Whether to analyze vibes across the whole collection or on a per-user level.",
     )
     parser.add_argument(
         "--user-index",

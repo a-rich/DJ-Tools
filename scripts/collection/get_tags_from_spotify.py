@@ -51,7 +51,9 @@ def get_spotify_tags_thread(track, spotify, threshold):
 if __name__ == "__main__":
     arg_parser = ArgumentParser()
     arg_parser.add_argument("--config", help="Path to a config.yaml")
-    arg_parser.add_argument("--output_collection", help="Path to output collection")
+    arg_parser.add_argument(
+        "--output_collection", help="Path to output collection"
+    )
     args = arg_parser.parse_args()
 
     # Build config, instantiate collection, and get tracks.
@@ -75,9 +77,11 @@ if __name__ == "__main__":
         for future in as_completed(futures):
             future.result()
             pbar.update(1)
-    
+
     playlist_class = PLATFORM_REGISTRY[config.PLATFORM]["playlist"]
-    playlist = playlist_class.new_playlist(name=args.playlist_name, tracks=tracks)
+    playlist = playlist_class.new_playlist(
+        name=args.playlist_name, tracks=tracks
+    )
     collection.add_playlist(playlist)
     output = args.output_collection if args.output_collection else config_path
     collection.serialize(output)
