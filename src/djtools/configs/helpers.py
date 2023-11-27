@@ -133,11 +133,7 @@ def build_config(config_file: Optional[Path] = None) -> BaseConfig:
     args = {}
     stack = inspect.stack()
     entry_frame = stack[-1]
-    calling_frame = stack[2]
-    if (
-        entry_frame[1].endswith("bin/djtools")
-        and calling_frame[3] == "build_config"
-    ):
+    if entry_frame[1].endswith(("bin/djtools", "bin/pytest")):
         args = {
             k.upper(): v
             for k, v in arg_parse().items()
