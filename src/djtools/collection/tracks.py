@@ -13,7 +13,7 @@ from datetime import datetime
 import os
 from pathlib import Path
 import re
-from typing import Any, List, Set
+from typing import Any, List
 from urllib.parse import quote, unquote
 
 import bs4
@@ -112,7 +112,7 @@ class Track(ABC):
         """
 
     @abstractmethod
-    def get_tags(self) -> Set[str]:
+    def get_tags(self) -> List[str]:
         """Gets the tags of the track.
 
         Returns:
@@ -209,9 +209,7 @@ class RekordboxTrack(Track):
         )
 
         # Merge Genre and MyTag data into a new attribute.
-        self._Tags = set(  # pylint: disable=invalid-name
-            self._Genre + self._MyTags
-        )
+        self._Tags = self._Genre + self._MyTags  # pylint: disable=invalid-name
 
         # Parse TEMPO Tags as the beat grid attribute.
         self._beat_grid = track.find_all("TEMPO")
@@ -362,7 +360,7 @@ class RekordboxTrack(Track):
         """
         return self._Rating
 
-    def get_tags(self) -> Set[str]:
+    def get_tags(self) -> List[str]:
         """Gets the tags of the track.
 
         Returns:

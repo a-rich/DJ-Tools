@@ -2,29 +2,34 @@
 from argparse import ArgumentParser
 from collections import defaultdict
 from itertools import groupby
+from pathlib import Path
 from typing import Optional, Set
 
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
-from djtools.collection.collections import RekordboxCollection
+from djtools.configs import build_config
+from djtools.collection.collections import Collection
+from djtools.collection.helpers import PLATFORM_REGISTRY
 
 
 def analyze_collection_vibes(
-    xml: str, included_tags: Optional[Set] = None, verbosity: int = 0, **kwargs
+    collection: Collection,
+    included_tags: Optional[Set] = None,
+    verbosity: int = 0,
+    **kwargs,
 ):
     """Create histograms that show a collection's distribution of My Tags.
 
     Args:
-        xml: Path to a Rekordbox XML file.
+        collection: Collection object.
         included_tags: My Tags to include in the histograms.
         verbosity: Verbosity level.
     """
-    collection = RekordboxCollection(xml)
     tracks = collection.get_tracks().values()
     tag_counts = {tag: 0 for tag in included_tags}
     for track in tracks:
-        tags = track.get_tags().difference(track.get_genre_tags())
+        tags = set(track.get_tags()).difference(track.get_genre_tags())
         for tag in tags:
             if tag not in tag_counts:
                 continue
@@ -51,7 +56,7 @@ def analyze_collection_vibes(
 
 
 def analyze_user_vibes(
-    xml: str,
+    collection: Collection,
     user_index: int,
     included_tags: Optional[Set] = None,
     verbosity: int = 0,
@@ -60,12 +65,11 @@ def analyze_user_vibes(
     """Create histograms that show each user's distribution of My Tags.
 
     Args:
-        xml: Path to a Rekordbox XML file.
+        collection: Collection object.
         user_index: Part of the `Location` path the corresponds to a username.
         included_tags: My Tags to include in the histograms.
         verbosity: Verbosity level.
     """
-    collection = RekordboxCollection(xml)
     tracks = collection.get_tracks().values()
 
     # Collect user-tag data.
@@ -81,7 +85,7 @@ def analyze_user_vibes(
         tracks = list(tracks)
         for track in tracks:
             tags = (
-                track.get_tags()
+                set(track.get_tags())
                 .difference(track.get_genre_tags())
                 .intersection(included_tags)
             )
@@ -137,6 +141,18 @@ def analyze_user_vibes(
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument(
+        "--collection",
+        type=str,
+        required=True,
+        help="Path to collection.",
+    )
+    parser.add_argument(
+        "--config",
+        type=str,
+        required=True,
+        help="Path to config.yaml.",
+    )
+    parser.add_argument(
         "--included-tags",
         nargs="+",
         default=[
@@ -176,13 +192,19 @@ if __name__ == "__main__":
         default=0,
         help="verbosity",
     )
-    parser.add_argument(
-        "--xml",
-        type=str,
-        required=True,
-        help="Path to rekordbox.xml",
-    )
     args = parser.parse_args()
+
+    # Load config and, if provided, override path to collection.
+    config_path = Path(args.config)
+    config = build_config(config_path)
+    if args.collection:
+        config.COLLECTION_PATH = Path(args.collection)
+
+    # Load collection and get a dict of tracks keyed by location.
+    collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
+        path=config.COLLECTION_PATH
+    )
+    args.collection = collection
 
     if args.mode == "collection":
         analyze_collection_vibes(**vars(args))

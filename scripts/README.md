@@ -7,6 +7,8 @@
         * moves data around from different fields in a collection; e.g. moving certain tags from `Comments` to `Genre` or moving a particular tag in `Comments` to the front of that field
     - `remove_tags_from_comments`
         * filters out undesirable tags from the `Comments` field
+    - `sort_tags`
+        * sort non-genre tags to be in alphabetical order
     - `tracks_outside_playlists`
         * identifies all tracks that do not appear in a given playlist or folder of playlists -- "dangling" tracks will be aggregated into a new playlist
     - `update_collection`

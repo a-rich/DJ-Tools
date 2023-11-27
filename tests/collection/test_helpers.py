@@ -287,9 +287,8 @@ def test_print_playlists_tag_statistics(
     for playlist in playlists:
         assert f"\n{playlist.get_name()} tag statistics:" in cap.out
         for track in playlist.get_tracks().values():
-            all_tags = track.get_tags()
             genre_tags = track.get_genre_tags()
-            other_tags = all_tags.difference(set(genre_tags))
+            other_tags = set(track.get_tags()).difference(set(genre_tags))
             if other_tags:
                 assert "\nOther:\n" in cap.out
             if genre_tags:
