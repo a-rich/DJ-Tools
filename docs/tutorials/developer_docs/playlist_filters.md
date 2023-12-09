@@ -43,42 +43,18 @@ The `playlist_filters` module contains the following set of `PlaylistFilter` imp
 - If it is, then tracks in that playlist must have a genre tag besides 'Hip Hop' and 'R&B'
 - If it is not, then tracks in that playlist must have only genre tags 'Hip Hop' and 'R&B'
 
-::: djtools.collection.playlist_filters.HipHopFilter
-    options:
-        show_bases: false
-        members: false
-        show_docstring_description: false
-
 ### MinimalDeepTechFilter
 - Checks to see if a playlist named 'Minimal Deep Tech' is a child of a playlist named 'Techno' or 'House'
 - If it's a child of a 'Techno' playlist, then at least one other genre tag must contain the substring 'techno' (case insensitive)
 - If it's a child of a 'House' playlist, then at least one other genre tag must contain the substring 'house'
-
-::: djtools.collection.playlist_filters.MinimalDeepTechFilter
-    options:
-        show_bases: false
-        members: false
-        show_docstring_description: false
-
-### TransitionTrackFilter
-- Checks to see if the playlist, or a parent playlist, contains the substring 'transition' 
-- Checks to see if the playlist contains one, and only one, of the substrings 'genre' or 'tempo'
-- Filters tracks that contain a special annotation in their comments field
-- The expected annotation must match the following syntax `[ token1 / token2]` where a `token` must be strings if it's a 'genre' transition playlist or numbers if it's a 'tempo' transition playlist
-
-::: djtools.collection.playlist_filters.TransitionTrackFilter
-    options:
-        show_bases: false
-        members: false
-        show_docstring_description: false
 
 ### ComplexTrackFilter
 - Checks to see if the playlist, or a parent playlist, contains the substring 'complex' 
 - Filters tracks that contain fewer than a set number of tags (only includes "other" tags, does not include genre tags)
 - When instantiated, `ComplexTrackFilter` takes optional arguments for the `minimum_tags_for_complex_track` as well as the list of `exclude_tags` which may not count towards the total number of tags
 
-::: djtools.collection.playlist_filters.ComplexTrackFilter
-    options:
-        show_bases: false
-        members: false
-        show_docstring_description: false
+### TransitionTrackFilter
+- Checks to see if the playlist, or a parent playlist, contains the substring 'transition' 
+- Checks to see if the playlist contains one, and only one, of the substrings 'genre' or 'tempo'
+- Filters tracks that contain a special annotation in their comments field
+- The expected annotation must match the following syntax `[ token1 / token2]` where a `token` must be strings if it's a 'genre' transition playlist or numbers if it's a 'tempo' transition playlist
