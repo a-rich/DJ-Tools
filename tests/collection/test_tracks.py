@@ -43,7 +43,7 @@ def test_rekordboxtrack(rekordbox_track, rekordbox_track_tag):
     }.get(rekordbox_track_tag["Rating"])
     tags = re.search(r"(?<=\/\*).*(?=\*\/)", rekordbox_track_tag["Comments"])
     tags = [x.strip() for x in tags.group().split("/")] if tags else []
-    assert track.get_tags() == set(genre_tags + tags)
+    assert track.get_tags() == genre_tags + tags
     track.set_location("path/to.mp3")
     assert track.get_location() == Path("path/to.mp3")
     track_number = 42

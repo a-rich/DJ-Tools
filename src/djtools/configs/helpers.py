@@ -2,6 +2,7 @@
 using config.yaml. If command-line arguments are provided, this module
 overrides the corresponding configuration options with these arguments.
 """
+import inspect
 import logging
 from pathlib import Path
 import sys
@@ -128,12 +129,18 @@ def build_config(config_file: Optional[Path] = None) -> BaseConfig:
         with open(config_file, mode="w", encoding="utf-8") as _file:
             yaml.dump(initial_config, _file)
 
+    # Only get CLI arguments if calling djtools as a CLI.
+    args = {}
+    stack = inspect.stack()
+    entry_frame = stack[-1]
+    if entry_frame[1].endswith(("bin/djtools", "bin/pytest")):
+        args = {
+            k.upper(): v
+            for k, v in arg_parse().items()
+            if v or isinstance(v, list)
+        }
+
     # Update config using command-line arguments.
-    args = {
-        k.upper(): v
-        for k, v in arg_parse().items()
-        if v or isinstance(v, list)
-    }
     if args:
         logger.info(f"Args: {args}")
         args_set = set(args)

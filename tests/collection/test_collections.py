@@ -70,7 +70,7 @@ def test_rekordboxcollection_get_all_tags(rekordbox_collection):
     genre_tags, all_tags = set(), set()
     for track in tracks:
         genre_tags.update(track.get_genre_tags())
-        all_tags.update(track.get_tags())
+        all_tags.update(set(track.get_tags()))
     other_tags = all_tags.difference(genre_tags)
     expected = {
         "genres": sorted(genre_tags),

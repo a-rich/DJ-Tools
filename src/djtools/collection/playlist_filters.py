@@ -210,7 +210,7 @@ class ComplexTrackFilter(PlaylistFilter):
             Whether or not this track should be included in the playlist.
         """
         other_tags = (
-            track.get_tags()
+            set(track.get_tags())
             .difference(set(track.get_genre_tags()))
             .difference(self._exclude_tags)
         )

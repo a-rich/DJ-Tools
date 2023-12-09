@@ -765,7 +765,7 @@ def print_playlists_tag_statistics(combiner_playlists: Playlist) -> None:
         for track in tracks.values():
             track_all_tags = track.get_tags()
             track_genre_tags = set(track.get_genre_tags())
-            other_tags.update(track_all_tags.difference(track_genre_tags))
+            other_tags.update(set(track_all_tags).difference(track_genre_tags))
             genre_tags.update(track_genre_tags)
             for tag in track_all_tags:
                 playlist_tags[tag] += 1
