@@ -37,6 +37,40 @@ def test_collection_playlists(
         )
 
 
+@pytest.mark.parametrize(
+    "invalid_expression",
+    [
+        "this & & will be invalid",
+        {
+            "name": "invalid expression",
+            "tag_content": "this & & will be invalid",
+        },
+    ],
+)
+def test_collection_playlists_handles_error_parsing_expression(
+    invalid_expression, config, rekordbox_xml, playlist_config, caplog
+):
+    """Test for the collection_playlists function."""
+    caplog.set_level("WARNING")
+    config.COLLECTION_PATH = rekordbox_xml
+    del playlist_config["tags"]
+    playlist_config["combiner"]["playlists"] = [
+        {"name": "test", "playlists": [invalid_expression]}
+    ]
+    with mock.patch(
+        "builtins.open",
+        MockOpen(
+            files=["collection_playlists.yaml"], content=f"{playlist_config}"
+        ).open,
+    ):
+        collection_playlists(
+            config, output_path=rekordbox_xml.parent / "test_collection"
+        )
+    assert caplog.records[0].message.startswith(
+        "Error parsing expression: this & & will be invalid"
+    )
+
+
 def test_collection_playlists_removes_existing_playlist(
     config, playlist_config, rekordbox_xml
 ):

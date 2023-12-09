@@ -45,11 +45,13 @@ Every folder will create an implicit playlist called `All <folder name>` which r
 
 You may only have one tag for each playlist. If you're interested in creating playlists that combine multiple tags, check out the [Combiner](combiner_playlists.md) how-to guide.
 
-Any tags in your Collection that are not included in the `collection_playlists.yaml` configuration file will automatically be added to either a `Other` playlist or an `Other` folder with a playlist for each tag (you can [configure this behavior](../tutorials/getting_started/configuration.md#collection-config) using `COLLECTION_PLAYLISTS_REMAINDER`).
+Any tags in your Collection that are not included in the `collection_playlists.yaml` configuration file will automatically be added to either a `Unused Tags` playlist or an `Unused Tags` folder with a playlist for each tag (you can [configure this behavior](../tutorials/getting_started/configuration.md#collection-config) using `COLLECTION_PLAYLISTS_REMAINDER`).
 
-If there are tags for which you're not interested in creating an `Other` playlist(s) for, simply add a new folder to the tree call `_ignore` and list the tags underneath of it.
+If there are tags for which you're not interested in creating an `Unused Tags` playlist(s) for, simply add a new folder to the tree call `_ignore` and list the tags underneath of it.
 
-During operation of the `playlist_builder`, after the `tag` playlists are constructed, optional `PlaylistFilters` are applied to enable special filtering. For example, the `HipHopFilter` looks for playlists matching the name `Hip Hop` and checks if there's a playlist called `Bass` somewhere above it. If so, then the only tracks allowed in that playlist are ones that have at least one genre tag besides `Hip Hop` and `R&B`. Conversely, if there is _not_ a parent playlist called `Bass`, then the only tracks allowed in that playlist must have exclusively `Hip Hop` (and `R&B`) genre tags. A second `PlaylistFilter` is the `MinimalDeepTechFilter` which looks for playlists matching the name `Minimal Deep Tech` and checks if there's a playlist called `House` or `Techno` somewhere above it. If so, then only tracks also containing a genre tag with the substring `House` or `Techno` is allowed in the respective playlists.
+During operation of the `playlist_builder`, after the `tag` playlists are constructed, optional `PlaylistFilters` are applied to enable special filtering.
+In general, each `PlaylistFilter` calls a `is_filter_playlist` method which returns `True` if the playlist should have filtering logic applied to it.
+For each track in the playlist, the `PlaylistFilter` method `filter_track` is called with the track and returns `True` if the track should remain in the playlist.
 
 You may configure which, if any, `PlaylistFilters` you want applied using the `COLLECTION_PLAYLIST_FILTERS` option. Check the [references](../reference/collection/index.md) for the current set of implemented `PlaylistFilters`.
 
