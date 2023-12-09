@@ -77,7 +77,7 @@ The `playlist_filters` module contains the following set of `PlaylistFilter` imp
 - Filters tracks that contain fewer than a set number of tags (only includes "other" tags, does not include genre tags)
 - When instantiated, `ComplexTrackFilter` takes optional arguments for the `minimum_tags_for_complex_track` as well as the list of `exclude_tags` which may not count towards the total number of tags
 
-::: djtools.collection.playlist_filters.TransitionTrackFilter
+::: djtools.collection.playlist_filters.ComplexTrackFilter
     options:
         show_bases: false
         members: false
