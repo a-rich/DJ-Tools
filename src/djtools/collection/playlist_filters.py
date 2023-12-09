@@ -164,7 +164,7 @@ class MinimalDeepTechFilter(PlaylistFilter):
         return True
 
 
-class ComplexTrackFilter(ABC):
+class ComplexTrackFilter(PlaylistFilter):
     """This class filters "complex" playlists.
 
     This PlaylistFilter looks for playlists with "complex" in their name or in
@@ -241,7 +241,7 @@ class ComplexTrackFilter(ABC):
         return False
 
 
-class TransitionTrackFilter(ABC):
+class TransitionTrackFilter(PlaylistFilter):
     """This class filters "transition" playlists.
 
     This PlaylistFilter looks for playlists with "transition" in their name or in
