@@ -538,13 +538,19 @@ def build_combiner_playlists(
     if isinstance(content, PlaylistName):
         tag_content = content.tag_content
         name = content.name or tag_content
-        return playlist_class.new_playlist(
-            name=name, tracks=parse_expression(tag_content, tags_tracks)
-        )
+        try:
+            tracks = parse_expression(tag_content, tags_tracks)
+        except Exception as exc:
+            logger.warning(f"Error parsing expression: {tag_content}\n{exc}")
+            return None
+        return playlist_class.new_playlist(name=name, tracks=tracks)
     if isinstance(content, str):
-        return playlist_class.new_playlist(
-            name=content, tracks=parse_expression(content, tags_tracks)
-        )
+        try:
+            tracks = parse_expression(content, tags_tracks)
+        except Exception as exc:
+            logger.warning(f"Error parsing expression: {content}\n{exc}")
+            return None
+        return playlist_class.new_playlist(name=content, tracks=tracks)
 
     # This is a folder so create playlists for those playlists within it.
     playlists = [

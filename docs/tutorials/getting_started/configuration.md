@@ -12,7 +12,7 @@ In fact, removing the template `config.yaml` and building a config from scratch 
 ## [Collection config][djtools.collection.config.CollectionConfig]
 * `COLLECTION_PATH`: the full path to your collection...the parent directory where this points to is also where all other collections generated or utilized by this library will exist
 * `COLLECTION_PLAYLISTS`: boolean flag to trigger the generation of a playlist structure (as informed by `collection_playlists.yaml`) using the tags in `COLLECTION_PATH`...the resulting collection is the file at `COLLECTION_PATH`
-* `COLLECTION_PLAYLISTS_REMAINDER`: whether tracks of remainder tags (those not specified in `collection_playlists.yaml`) will be placed in a `folder` called "Other" with individual tag playlists or a `playlist` called "Other"
+* `COLLECTION_PLAYLISTS_REMAINDER`: whether tracks of remainder tags (those not specified in `collection_playlists.yaml`) will be placed in a `folder` called "Unused Tags" with individual tag playlists or a `playlist` called "Unused Tags"
 * `COLLECTION_PLAYLIST_FILTERS`: list of `PlaylistFilter` classes used to apply special filtering logic to tag playlists
 * `COPY_PLAYLISTS`: list of playlists in `COLLECTION_PATH` to (a) have audio files copied and (b) have track data written to a new collection with updated locations
 * `COPY_PLAYLISTS_DESTINATION`: path to copy audio files to

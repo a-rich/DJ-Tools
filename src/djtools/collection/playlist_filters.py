@@ -188,7 +188,16 @@ class ComplexTrackFilter(ABC):
         """
         self._min_tags_for_complex_track = min_tags_for_complex_track
         if exclude_tags is None:
-            exclude_tags = ["Vocal"]
+            exclude_tags = [
+                "DELETE",
+                "Flute",
+                "Guitar",
+                "Horn",
+                "Piano",
+                "Scratch",
+                "Strings",
+                "Vocal",
+            ]
         self._exclude_tags = set(exclude_tags)
 
     def filter_track(self, track: Track) -> bool:
