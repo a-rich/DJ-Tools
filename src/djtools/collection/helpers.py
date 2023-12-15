@@ -556,15 +556,7 @@ def build_combiner_playlists(
     # This is a folder so create playlists for those playlists within it.
     playlists = []
     for item in content.playlists:
-        try:
-            playlist = build_combiner_playlists(
-                item, tags_tracks, playlist_class
-            )
-        except Exception as exc:
-            logger.warning(
-                f"Failed to build the Combiner playlist: {item}\n{exc}"
-            )
-            continue
+        playlist = build_combiner_playlists(item, tags_tracks, playlist_class)
         if playlist:
             playlists.append(playlist)
         else:
