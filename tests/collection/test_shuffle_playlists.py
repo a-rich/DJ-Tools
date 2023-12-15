@@ -31,7 +31,7 @@ def test_shuffle_playlists_shuffles_track_numbers(
         for track_id, track in hip_hop_playlist.get_tracks().items()
     }
     new_collection = tmpdir / "test_shuffle_collection"
-    shuffle_playlists(config, output_path=new_collection)
+    shuffle_playlists(config, path=new_collection)
     collection = RekordboxCollection(new_collection)
     hip_hop_playlist = collection.get_playlists(playlist)[0]
     new_track_id_number_map = {
@@ -53,7 +53,7 @@ def test_shuffle_playlists_creates_new_playlist(
     shuffle_playlist = rekordbox_collection.get_playlists(output_playlist)
     assert not shuffle_playlist
     new_collection = tmpdir / "test_collection"
-    shuffle_playlists(config, output_path=new_collection)
+    shuffle_playlists(config, path=new_collection)
     collection = RekordboxCollection(new_collection)
     shuffle_playlist = collection.get_playlists(output_playlist)[0]
     assert isinstance(shuffle_playlist, Playlist)
@@ -68,5 +68,5 @@ def test_shuffle_playlists_creates_new_collection(
     config.SHUFFLE_PLAYLISTS = [playlist]
     new_collection = tmpdir / "test_collection"
     assert not new_collection.exists()
-    shuffle_playlists(config, output_path=new_collection)
+    shuffle_playlists(config, path=new_collection)
     assert new_collection.exists()

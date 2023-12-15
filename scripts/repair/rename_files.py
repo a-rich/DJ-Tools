@@ -307,7 +307,7 @@ def move_files(
                 pbar.update()
 
     # Serialize the updated collection to a new XML file.
-    collection.serialize(output_path="output_rekordbox.xml")
+    collection.serialize(path="output_rekordbox.xml")
 
     # Print statistics about tracks.
     for key, value in data.items():

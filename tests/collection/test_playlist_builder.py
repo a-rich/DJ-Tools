@@ -33,7 +33,7 @@ def test_collection_playlists(
         ).open,
     ):
         collection_playlists(
-            config, output_path=rekordbox_xml.parent / "test_collection"
+            config, path=rekordbox_xml.parent / "test_collection"
         )
 
 
@@ -64,7 +64,7 @@ def test_collection_playlists_handles_error_parsing_expression(
         ).open,
     ):
         collection_playlists(
-            config, output_path=rekordbox_xml.parent / "test_collection"
+            config, path=rekordbox_xml.parent / "test_collection"
         )
     assert caplog.records[0].message.startswith(
         "Error parsing expression: this & & will be invalid"
@@ -93,7 +93,7 @@ def test_collection_playlists_removes_existing_playlist(
 
     # Serialize the collection containing a playlist_builder playlist.
     new_path = rekordbox_xml.parent / "test_collection_blah"
-    collection.serialize(output_path=new_path)
+    collection.serialize(path=new_path)
     config.COLLECTION_PATH = new_path
 
     # Run the playlist_builder on this collection to test removing the existing
@@ -104,7 +104,7 @@ def test_collection_playlists_removes_existing_playlist(
             files=["collection_playlists.yaml"], content=f"{playlist_config}"
         ).open,
     ):
-        collection_playlists(config, output_path=new_path)
+        collection_playlists(config, path=new_path)
 
     # TODO(a-rich): Mock either RekordboxPlaylist.new_playlist or RekordboxCollection.add_playlist
     # assert not collection.get_playlists(PLAYLIST_NAME)
@@ -120,9 +120,7 @@ def test_collection_playlists_with_empty_playlistconfig_returns_early(
     """Test for the collection_playlists function."""
     caplog.set_level("WARNING")
     config.COLLECTION_PATH = rekordbox_xml
-    collection_playlists(
-        config, output_path=rekordbox_xml.parent / "test_collection"
-    )
+    collection_playlists(config, path=rekordbox_xml.parent / "test_collection")
     assert caplog.records[0].message == (
         "Not building playlists because the playlist config is empty."
     )

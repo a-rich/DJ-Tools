@@ -18,7 +18,7 @@ def test_copy_playlists_makes_destination_folder(
     config.COPY_PLAYLISTS_DESTINATION = Path(test_output_dir)
     new_collection = tmpdir / "test_collection"
     assert not config.COPY_PLAYLISTS_DESTINATION.exists()
-    copy_playlists(config, output_path=new_collection)
+    copy_playlists(config, path=new_collection)
     assert config.COPY_PLAYLISTS_DESTINATION.exists()
 
 
@@ -38,7 +38,6 @@ def test_copy_playlists_find_multiple_playlists_with_the_same_name(
     tmpdir, config, rekordbox_collection, rekordbox_xml
 ):
     """Test for the copy_playlists function."""
-    # TODO(a-rich): Figure out why getting playlists from the test data isn't working as expected.
     target_playlist = "Dark"
     config.COLLECTION_PATH = rekordbox_xml
     config.COPY_PLAYLISTS = [target_playlist]
@@ -47,19 +46,16 @@ def test_copy_playlists_find_multiple_playlists_with_the_same_name(
     old_playlist_count = len(
         rekordbox_collection.get_playlists(target_playlist)
     )
-    copy_playlists(config, output_path=new_collection)
+    copy_playlists(config, path=new_collection)
     collection = RekordboxCollection(new_collection)
     new_playlist_count = len(collection.get_playlists(target_playlist))
-    print(f"old_playlist_count: {old_playlist_count}")
-    print(f"new_playlist_count: {new_playlist_count}")
-    # assert old_playlist_count == new_playlist_count
+    assert old_playlist_count == new_playlist_count
 
 
 def test_copy_playlists_copies_files(
     tmpdir, config, rekordbox_collection, rekordbox_xml
 ):
     """Test for the copy_playlists function."""
-    # TODO(a-rich): Figure out why getting playlists from the test data isn't working as expected.
     target_playlists = ["Hip Hop", "Dark"]
     test_output_dir = Path(tmpdir) / "output"
     config.COLLECTION_PATH = rekordbox_xml
@@ -72,7 +68,7 @@ def test_copy_playlists_copies_files(
         for playlist in rekordbox_collection.get_playlists(target_playlist)
         for track_id, track in playlist.get_tracks().items()
     }
-    copy_playlists(config, output_path=new_collection)
+    copy_playlists(config, path=new_collection)
     num_copied_tracks = len(list(test_output_dir.iterdir()))
     assert num_copied_tracks == len(old_tracks)
     collection = RekordboxCollection(new_collection)
@@ -82,13 +78,12 @@ def test_copy_playlists_copies_files(
         for playlist in collection.get_playlists(target_playlist)
         for track_id, track in playlist.get_tracks().items()
     }
-    print(f"new_tracks: {new_tracks}")
-    # for track_id, track in old_tracks.items():
-    #     old_loc = track.get_location()
-    #     new_loc = new_tracks[track_id].get_location()
-    #     assert old_loc != new_loc
-    #     assert old_loc.name == new_loc.name
-    #     assert new_loc.parent == test_output_dir
+    for track_id, track in old_tracks.items():
+        old_loc = track.get_location()
+        new_loc = new_tracks[track_id].get_location()
+        assert old_loc != new_loc
+        assert old_loc.name == new_loc.name
+        assert new_loc.parent == test_output_dir
 
 
 def test_copy_playlists_creates_new_collection(config, rekordbox_xml, tmpdir):
@@ -99,7 +94,7 @@ def test_copy_playlists_creates_new_collection(config, rekordbox_xml, tmpdir):
     config.COPY_PLAYLISTS_DESTINATION = Path(tmpdir)
     new_collection = tmpdir / "test_collection"
     assert not new_collection.exists()
-    copy_playlists(config, output_path=new_collection)
+    copy_playlists(config, path=new_collection)
     assert new_collection.exists()
 
 

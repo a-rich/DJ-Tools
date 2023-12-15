@@ -26,9 +26,7 @@ PLAYLIST_NAME = "PLAYLIST_BUILDER"
 
 
 @make_path
-def collection_playlists(
-    config: BaseConfig, output_path: Optional[Path] = None
-):
+def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
     """Builds playlists automatically.
 
     By maintaining a collection with tracks having tag data (e.g. genre tags,
@@ -78,7 +76,7 @@ def collection_playlists(
 
     Args:
         config: Configuration object.
-        output_path: Path to write the new collection to.
+        path: Path to write the new collection to.
     """
     # Load the playlist config.
     with open(
@@ -220,4 +218,4 @@ def collection_playlists(
     )
     auto_playlist.set_parent(collection.get_playlists())
     collection.add_playlist(auto_playlist)
-    collection.serialize(output_path=output_path)
+    collection.serialize(path=path)

@@ -103,7 +103,7 @@ def rewrite_track_paths(config: BaseConfig, other_user_collection: Path):
             music_path / loc.split(str(music_path) + "/", maxsplit=-1)[-1]
         )
         track.set_location(config.USB_PATH / common_path)
-    collection.serialize(output_path=other_user_collection)
+    collection.serialize(path=other_user_collection)
 
 
 def run_sync(_cmd: str) -> str:

@@ -84,7 +84,7 @@ def test_rewrite_track_paths(config, rekordbox_xml):
         track.set_location(
             loc.parent / str(user_b_path).strip("/") / "DJ Music" / loc.name
         )
-    collection.serialize(output_path=user_b_xml)
+    collection.serialize(path=user_b_xml)
 
     # Replaces all instances of user_b_path in user_b_xml with user_a_path.
     rewrite_track_paths(config, user_b_xml)
