@@ -79,7 +79,7 @@ def build_config(config_file: Optional[Path] = None) -> BaseConfig:
     if entry_frame[1].endswith(("bin/djtools", "bin/pytest")):
         args = {
             k.upper(): v
-            for k, v in arg_parse().items()
+            for k, v in _arg_parse().items()
             if v or isinstance(v, list)
         }
 
