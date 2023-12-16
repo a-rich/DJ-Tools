@@ -320,6 +320,8 @@ class RekordboxPlaylist(Playlist):
         # Truncate the final attributes trailing ", ".
         if not repr_attrs["playlists"]:
             body = body[:-2]
+        else:
+            body = body[:-1]
 
         # Now represent the playlist attribute as an indented list of
         # sub-playlists.
@@ -478,13 +480,3 @@ class RekordboxPlaylist(Playlist):
         )
 
         return playlist_tag
-
-    def validate(self, original: bs4.element.Tag):
-        """Validate the serialized playlist matches the original.
-
-        Args:
-            original: BeautifulSoup Tag representing a playlist.
-        """
-        assert (
-            original == self.serialize()
-        ), "Failed RekordboxPlaylist validation!"

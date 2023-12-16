@@ -125,7 +125,10 @@ def test_rekordboxcollection_serialization(rekordbox_xml):
     assert rekordbox_xml != serialized_collection
 
     # Serialization / deserialization is a symmetrical operation.
-    RekordboxCollection.validate(rekordbox_xml, serialized_collection)
+    try:
+        RekordboxCollection.validate(rekordbox_xml, serialized_collection)
+    except AssertionError:
+        assert False, "RekordboxCollection validation failed!"
 
 
 def test_rekordboxcollection_set_tracks(rekordbox_xml):
