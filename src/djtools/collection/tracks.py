@@ -515,18 +515,3 @@ class RekordboxTrack(Track):
             number: Number to set for TrackNumber.
         """
         self._TrackNumber = number  # pylint: disable=attribute-defined-outside-init,invalid-name
-
-    @classmethod
-    def validate(cls, original: bs4.element.Tag, serializable: RekordboxTrack):
-        """Validate the serialized track matches the original.
-
-        Args:
-            original: BeautifulSoup Tag representing a track.
-            serializable: Track object.
-
-        Raises:
-            AssertionError: Serialized Collection must match the original.
-        """
-        assert (
-            original == serializable.serialize()
-        ), "Failed RekordboxTrack validation!"

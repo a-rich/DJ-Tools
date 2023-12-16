@@ -92,7 +92,7 @@ def rekordbox_track_tag(input_tmpdir):  # pylint: disable=redefined-outer-name
     """Fixture for Rekordbox track tag."""
     track_string = (
         """<TRACK Artist="A Tribe Called Quest" AverageBpm="86.00" """
-        """Comments="" DateAdded="2022-06-24" Genre="Hip Hop / R&amp;B" """
+        """Comments=" /* Gangsta */ " DateAdded="2022-06-24" Genre="Hip Hop / R&amp;B" """
         """Label="Label" Location="file://localhost/track2.mp3" """
         """Tonality="7B" Rating="0" TrackID="2" """
         """TrackNumber="2" Year="2022"/>"""

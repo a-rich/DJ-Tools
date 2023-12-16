@@ -1,8 +1,6 @@
 """Testing for the tracks module."""
-import re
-import os
+from datetime import datetime
 from pathlib import Path
-from urllib.parse import unquote
 
 import pytest
 
@@ -18,34 +16,70 @@ def test_track_raises_type_error():
         Track()
 
 
-def test_rekordboxtrack(rekordbox_track, rekordbox_track_tag):
+@pytest.mark.parametrize(
+    "method,expected",
+    [
+        ("get_artists", "A Tribe Called Quest"),
+        ("get_bpm", 86),
+        ("get_comments", " /* Gangsta */ "),
+        ("get_date_added", datetime(2022, 6, 24)),
+        ("get_genre_tags", ["Hip Hop", "R&B"]),
+        ("get_id", "2"),
+        ("get_key", "7B"),
+        ("get_label", "Label"),
+        ("get_location", "track2.mp3"),
+        ("get_rating", 0),
+        ("get_tags", ["Hip Hop", "R&B", "Gangsta"]),
+        ("get_year", "2022"),
+    ],
+)
+def test_rekordboxtrack_get_methods(method, expected, rekordbox_track):
     """Test RekordboxTrack class."""
-    prefix = "file://localhost" if os.name == "posix" else "file://localhost/"
+    try:
+        _method = getattr(rekordbox_track, method)
+    except AttributeError:
+        assert False, f"RekordboxTrack is missing required method '{method}'"
+
+    if method == "get_location":
+        assert _method().name == expected
+    else:
+        assert _method() == expected
+
+
+def test_rekordboxtrack_serialization(rekordbox_track_tag):
+    """Test RekordboxTrack class."""
     track = RekordboxTrack(rekordbox_track_tag)
-    RekordboxTrack.validate(rekordbox_track_tag, track)
-    RekordboxTrack.validate(track.serialize(), rekordbox_track)
-    assert repr(track) == repr(rekordbox_track)
-    assert str(track) == str(rekordbox_track)
-    assert track.get_bpm() == float(rekordbox_track_tag["AverageBpm"])
-    genre_tags = list(map(str.strip, rekordbox_track_tag["Genre"].split("/")))
-    assert track.get_genre_tags() == genre_tags
-    assert track.get_id() == rekordbox_track_tag["TrackID"]
-    assert track.get_location() == Path(
-        unquote(rekordbox_track_tag["Location"]).split(prefix)[-1]
+    loc = str(track.get_location())
+    assert (
+        repr(track)
+        == f"""RekordboxTrack(
+    Artist="A Tribe Called Quest", AverageBpm=86.0, Comments=" /* Gangsta */ ", 
+    DateAdded="2022-06-24", Genre=['Hip Hop', 'R&B'], Label="Label", Location={loc}, 
+    Tonality="7B", Rating=0, TrackID="2", TrackNumber=2, Year="2022", MyTags=['Gangsta'], 
+    Tags=['Hip Hop', 'R&B', 'Gangsta'], beat_grid=0, hot_cues=0
+)"""
     )
-    assert track.get_rating() == {
-        "0": 0,
-        "51": 1,
-        "102": 2,
-        "153": 3,
-        "204": 4,
-        "255": 5,
-    }.get(rekordbox_track_tag["Rating"])
-    tags = re.search(r"(?<=\/\*).*(?=\*\/)", rekordbox_track_tag["Comments"])
-    tags = [x.strip() for x in tags.group().split("/")] if tags else []
-    assert track.get_tags() == genre_tags + tags
+    assert (
+        str(track)
+        == """<TRACK Artist="A Tribe Called Quest" AverageBpm="86.00" """
+        """Comments=" /* Gangsta */ " DateAdded="2022-06-24" """
+        """Genre="Hip Hop / R&amp;B" Label="Label" """
+        f"""Location="file://localhost{loc}" Rating="0" Tonality="7B" """
+        """TrackID="2" TrackNumber="2" Year="2022"/>"""
+    )
+    assert track.serialize() == rekordbox_track_tag
+
+
+def test_rekordboxtrack_set_location(rekordbox_track_tag):
+    """Test RekordboxTrack class."""
+    track = RekordboxTrack(rekordbox_track_tag)
     track.set_location("path/to.mp3")
     assert track.get_location() == Path("path/to.mp3")
+
+
+def test_rekordboxtrack_set_track_number(rekordbox_track_tag):
+    """Test RekordboxTrack class."""
+    track = RekordboxTrack(rekordbox_track_tag)
     track_number = 42
     track.set_track_number(track_number)
     assert f'TrackNumber="{track_number}"' in str(track)
