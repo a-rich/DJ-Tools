@@ -108,7 +108,7 @@ def test_rekordboxcollection_serialization(rekordbox_xml):
         repr(collection)
         == f"""RekordboxCollection(
     path="{rekordbox_xml}",
-    tracks=3,
+    tracks=4,
     playlists=3,
 )"""
     )

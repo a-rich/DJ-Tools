@@ -14,6 +14,7 @@ import yaml
 from djtools.configs.config import BaseConfig
 from djtools.configs.helpers import _filter_dict, PKG_CFG
 from djtools.collection.collections import RekordboxCollection
+from djtools.collection.config import PlaylistConfig
 from djtools.collection.tracks import RekordboxTrack
 
 
@@ -67,6 +68,14 @@ def playlist_config():
         "tests/data/collection_playlists.yaml", mode="r", encoding="utf-8"
     ) as _file:
         return yaml.load(_file.read(), Loader=yaml.FullLoader)
+
+
+@pytest.fixture
+def playlist_config_obj(
+    playlist_config,
+):  # pylint: disable=redefined-outer-name
+    """Test playlist config object fixture."""
+    return PlaylistConfig(**playlist_config)
 
 
 @pytest.fixture(scope="session")
