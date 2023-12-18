@@ -35,6 +35,7 @@ class RekordboxPlaylist(Playlist):
             playlist_tracks: Tracks to set when initializing with new_playlist.
             parent: The folder this playlist is in.
         """
+        super().__init__()
         self._tracks = None
         self._playlists = None
         self._parent = parent

@@ -10,7 +10,7 @@ from djtools.utils.config import UtilsConfig
 def test_utilsconfig_aws_profile_not_set():
     """Test for the UtilsConfig class."""
     cfg = {"CHECK_TRACKS": True}
-    os.environ["AWS_PROFILE"] = ""
+    os.environ["AWS_PROFILE"] = ""  # pylint: disable=no-member
     with pytest.raises(
         RuntimeError,
         match=re.escape(
@@ -29,7 +29,7 @@ def test_utilsconfig_spotify_creds_warning(caplog):
         "CHECK_TRACKS_SPOTIFY_PLAYLISTS": ["playlist"],
         "AWS_PROFILE": "default",
     }
-    os.environ["AWS_PROFILE"] = "default"
+    os.environ["AWS_PROFILE"] = "default"  # pylint: disable=no-member
     UtilsConfig(**cfg)
     assert caplog.records[0].message == (
         "CHECK_TRACKS depends on valid Spotify API credentials in "
@@ -66,7 +66,7 @@ def test_utilsconfig_recording_playlist_not_set():
         UtilsConfig(**cfg)
 
 
-@pytest.mark.parametrize("bit_rate", [35, 321])
+@pytest.mark.parametrize("bit_rate", ["35", "321"])
 def test_utilsconfig_validates_bitrate_error(bit_rate):
     """Test for the UtilsConfig class."""
     cfg = {"AUDIO_BITRATE": bit_rate}
@@ -77,7 +77,7 @@ def test_utilsconfig_validates_bitrate_error(bit_rate):
         UtilsConfig(**cfg)
 
 
-@pytest.mark.parametrize("bit_rate", [36, 178, 320])
+@pytest.mark.parametrize("bit_rate", ["36", "178", "320"])
 def test_utilsconfig_validates_bitrate_success(bit_rate):
     """Test for the UtilsConfig class."""
     cfg = {"AUDIO_BITRATE": bit_rate}

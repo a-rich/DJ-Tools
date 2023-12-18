@@ -194,14 +194,13 @@ def move_tags(
         tag_delimiter: Character used to delimit field tags.
 
     Raises:
-        FileNotFoundError: `xml` must be a file that exists.
-        Exception: `xml` must be a valid XML file.
+        RuntimeError: `xml` must be a valid XML file.
     """
     try:
         with open(xml, mode="r", encoding="utf-8") as _file:
             database = BeautifulSoup(_file.read(), "xml")
     except Exception as exc:
-        raise Exception(
+        raise RuntimeError(
             "Are you sure the provided XML is valid? Parsing it failed with "
             f"the following exception:\n{exc}"
         ) from exc

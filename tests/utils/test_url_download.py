@@ -1,4 +1,5 @@
 """Testing for the url_download module."""
+# pylint: disable=duplicate-code
 from pathlib import Path
 from unittest import mock
 

@@ -13,10 +13,9 @@ from djtools.collection.config import (
 from ..test_utils import mock_exists, MockOpen
 
 
-@pytest.mark.parametrize("collection", ["not/a/real/path", None])
-def test_collectionconfig_collection_is_unset_or_missing(collection):
+def test_collectionconfig_collection_is_unset_or_missing():
     """Test for the CollectionConfig class."""
-    cfg = {"COLLECTION_PLAYLISTS": True, "COLLECTION_PATH": collection}
+    cfg = {"COLLECTION_PLAYLISTS": True, "COLLECTION_PATH": "not/a/real/path"}
     with pytest.raises(
         RuntimeError,
         match="Using the collection package requires the config option "

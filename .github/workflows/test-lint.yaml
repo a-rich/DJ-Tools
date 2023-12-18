@@ -8,20 +8,24 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+
     env:
-      COVERAGE_SINGLE: 0
       COVERAGE_TOTAL: 100
       PYLINT_PASS_SCORE: "10.00"
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@main
+        uses: actions/checkout@v2
 
-      - name: Set up Python 3.9
+      - name: Set up Python
         uses: actions/setup-python@main
         with:
-          python-version: 3.9
+          python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
       - uses: actions/cache@v2
@@ -33,37 +37,46 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install --editable ".[dev]"
-          pip freeze > requirements.txt
 
-      - name: Run pylint
+      - name: Run pylint on Ubuntu
+        if: matrix.os == 'ubuntu-latest'
         run: |
-          PYLINT=`pylint $(git ls-files '*.py')`
+          PYLINT=`pylint --verbose $(git ls-files '*.py')`
           PASS=`echo $PYLINT | grep "Your code has been rated at ${{ env.PYLINT_PASS_SCORE}}/10"`
+
           if [ -z $PASS ]; then
             echo $PYLINT
             exit 1;
           fi
-          rm -rf src
 
-      - name: pytester-cov
-        id: pytester-cov
-        uses: programmingwithalex/pytester-cov@main
-        with:
-          pytest-root-dir: 'src'
-          pytest-tests-dir: 'tests'
-          requirements-file: 'requirements.txt'
-          cov-omit-list: 'src/djtools/__main__.py'
-          cov-threshold-single: ${{ env.COVERAGE_SINGLE }}
-          cov-threshold-total: ${{ env.COVERAGE_TOTAL }}
-      
-      - name: Coverage total fail - exit
-        if: ${{ steps.pytester-cov.outputs.cov-threshold-total-fail == 'true' }}
+      - name: Run pylint on Windows
+        # TODO(a-rich): Pylint on Windows with Python 3.12 raises "'zipimporter' object has no attribute 'find_module'"
+        #   AttributeError: 'zipimporter' object has no attribute 'find_module'. Did you mean: 'load_module'?
+        #   File "C:\hostedtoolcache\windows\Python\3.12.1\x64\Lib\site-packages\pylint\lint\pylinter.py", line 888, in get_ast
+        if: matrix.os == 'windows-latest' && matrix.python-version != '3.12'
         run: |
-          echo "cov total fail ${{ steps.pytester-cov.outputs.cov-threshold-total-fail }}"
-          echo -e "report:\n${{ steps.pytester-cov.outputs.output-table }}"
-          exit 1
+          $PYLINT=pylint --verbose (Get-ChildItem -Recurse -Filter *.py | ForEach-Object { $_.FullName })
+          $PASS=$PYLINT -match "Your code has been rated at $env:PYLINT_PASS_SCORE/10"
+          Write-Output $PYLINT
 
-      - name: Commit pytest coverage table
-        uses: peter-evans/commit-comment@main
-        with:
-          body: ${{ steps.pytester-cov.outputs.output-table }}
+      - name: Run pytest with coverage on Ubuntu
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          PYTEST=`pytest --cov --cov-report term-missing --show-capture=no`
+          PASS=`echo $PYTEST | grep -E "TOTAL\s+[0-9]+\s+0+\s+${{ env.COVERAGE_TOTAL }}%"`
+
+          if [ -z $PASS ]; then
+            echo $PYTEST
+            exit 1
+          fi
+
+      - name: Run pytest with coverage on Windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          $PYTEST=pytest --cov --cov-report term-missing --show-capture=no
+          $PASS=$PYTEST -match "TOTAL\s+\d+\s+0+\s+$env:COVERAGE_TOTAL%"
+
+          if (-not $PASS) {
+              Write-Output $PYTEST
+              exit 1
+          }

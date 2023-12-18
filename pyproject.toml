@@ -24,7 +24,7 @@ keywords = [
     "Reddit",
     "Audio", 
 ]
-requires-python=">=3.6"
+requires-python=">=3.8"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -35,29 +35,28 @@ classifiers = [
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Multimedia :: Sound/Audio",
     "Topic :: Other/Nonlisted Topic"
 ]
 dependencies = [
-    "asyncpraw==7.6.0",
-    "awscli==1.27.45",
-    "beautifulsoup4==4.11.1",
-    "fuzzywuzzy==0.18.0",
-    "lxml==4.9.3",
-    "pydantic==1.9.1",
-    "pydub==0.25.1",
-    "pyperclip==1.8.2",
-    "PyYAML==5.3.1",
-    "requests==2.28.0",
-    "spotipy==2.21.0",
-    "tqdm==4.64.0",
-    "youtube-dl==2021.12.17"
+    "asyncpraw",
+    "awscli",
+    "beautifulsoup4",
+    "fuzzywuzzy",
+    "lxml",
+    "pydantic",
+    "pydub",
+    "pyperclip",
+    "PyYAML",
+    "requests",
+    "spotipy",
+    "tqdm",
+    "youtube-dl"
 ]
 
 
@@ -69,22 +68,22 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "aiohttp==3.9.0b1",
-    "black==23.9.1",
-    "build==0.8.0",
-    "mkdocs==1.4.2",
-    "mkdocs-material==9.1.8",
-    "mkdocstrings-python==1.6.0",
-    "pylint<=2.15.0",
-    "pytest==7.2.0",
-    "pytest-asyncio==0.20.3",
-    "pytest-cov==4.0.0",
-    "semver==3.0.1",
-    "setuptools==58.1.0",
-    "twine==4.0.1",
+    "aiohttp",
+    "black",
+    "build",
+    "mkdocs",
+    "mkdocs-material",
+    "mkdocstrings-python",
+    "pylint",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "semver",
+    "setuptools",
+    "twine",
 ]
 accelerated = [
-    "python-Levenshtein==0.12.2" 
+    "python-Levenshtein" 
 ]
 
 [project.scripts]
@@ -120,11 +119,6 @@ disable = [
     "logging-fstring-interpolation"
 ]
 
-[tool.pylint.MASTER]
-ignore-paths = [
-    "^scripts/.*$"
-]
-
 [tool.pylint.SPELLING]
 spelling-ignore-words = [
     "/dj/", "dj/",
@@ -150,12 +144,6 @@ spelling-ignore-words = [
     "wav", "wb", "webhook", "whitespace",
     "xml", "xml's",
     "yaml", "youtube",
-]
-
-[tool.pytest.ini_options]
-filterwarnings = [
-    "ignore::pytest.PytestAssertRewriteWarning",
-    "ignore::RuntimeWarning"
 ]
 
 [tool.setuptools]

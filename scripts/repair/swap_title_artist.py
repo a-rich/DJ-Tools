@@ -46,6 +46,7 @@ correct Location field, you can set your import XML to be this one and import
 the tracks in this missing files playlist into your collection to relocate them
 while retaining the original beatgrid, hot cues, etc.
 """
+# pylint: disable=import-error,no-member
 from argparse import ArgumentParser
 from datetime import datetime
 from glob import glob
@@ -62,6 +63,8 @@ eyed3.log.setLevel("ERROR")
 
 
 logger = logging.getLogger(__name__)
+IGNORE_TRACKS = set(["Scratch Sentence 5.mp3", "Scratch Sentence 1.mp3"])
+
 
 try:
     import Levenshtein  # pylint: disable=unused-import
@@ -236,8 +239,6 @@ if __name__ == "__main__":
         "title/artist swap performed on their location",
     )
     args = parser.parse_args()
-
-    IGNORE_TRACKS = set(["Scratch Sentence 5.mp3", "Scratch Sentence 1.mp3"])
 
     if args.fuzz_ratio:
         bad_tracks = get_bad_tracks(args)

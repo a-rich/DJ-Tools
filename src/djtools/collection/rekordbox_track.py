@@ -30,6 +30,7 @@ class RekordboxTrack(Track):
             track: BeautifulSoup Tag representing a track.
         """
         # Prefix of the path to the audio file corresponding to this track.
+        super().__init__()
         self.__location_prefix = (
             "file://localhost" if os.name == "posix" else "file://localhost/"
         )

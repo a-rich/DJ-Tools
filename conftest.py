@@ -110,7 +110,11 @@ def rekordbox_track_tag(input_tmpdir):  # pylint: disable=redefined-outer-name
     test_dir = Path(input_tmpdir) / "input"
     test_dir.mkdir(exist_ok=True)
     track_name = Path(track_tag["Location"]).name
-    prefix = "file://localhost" if os.name == "posix" else "file://localhost/"
+    prefix = (
+        "file://localhost"
+        if os.name == "posix"  # pylint: disable=no-member
+        else "file://localhost/"
+    )
     track_tag["Location"] = f"{prefix}{(test_dir / track_name).as_posix()}"
     with open(test_dir / track_name, mode="w", encoding="utf-8") as _file:
         _file.write("")

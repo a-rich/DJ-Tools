@@ -87,7 +87,9 @@ def find_matches(
         beatcloud_tracks,
         [fuzz_ratio] * len(_product),
     ]
-    with ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as executor:
+    with ThreadPoolExecutor(
+        max_workers=os.cpu_count() * 4  # pylint: disable=no-member
+    ) as executor:
         matches = list(
             filter(
                 None,

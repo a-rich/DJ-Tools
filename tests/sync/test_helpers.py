@@ -54,9 +54,15 @@ def test_parse_sync_command(
     ]
     cmd = " ".join(parse_sync_command(partial_cmd, config, upload))
     for dir_ in include_dirs:
-        assert f"--include {(dir_ / '*' if not dir_.suffix else dir_)}" in cmd
+        assert (
+            f"--include {((dir_ / '*').as_posix() if not dir_.suffix else dir_.as_posix())}"
+            in cmd
+        )
     for dir_ in exclude_dirs:
-        assert f"--exclude {(dir_ / '*' if not dir_.suffix else dir_)}" in cmd
+        assert (
+            f"--exclude {((dir_ / '*').as_posix() if not dir_.suffix else dir_.as_posix())}"
+            in cmd
+        )
     if include_dirs:
         assert "--exclude *" in cmd
     elif exclude_dirs:
@@ -201,7 +207,9 @@ def test_upload_log(mock_popen, tmpdir, config):
     """Test for the upload_log function."""
     config.AWS_PROFILE = "DJ"
     now = datetime.now()
-    one_day_ago = now - timedelta(days=1)
+    # Windows st_mtime includes fractional seconds which can cause a test
+    # failure due to a rounding error.
+    one_day_ago = now - timedelta(days=1) - timedelta(seconds=1)
     test_log = f'{now.strftime("%Y-%m-%d")}.log'
     filenames = [
         "__init__.py",
@@ -214,7 +222,7 @@ def test_upload_log(mock_popen, tmpdir, config):
         with open(file_path, mode="w", encoding="utf-8") as _file:
             _file.write("")
         if filename != test_log:
-            os.utime(file_path, (ctime, ctime))
+            os.utime(file_path, (ctime, ctime))  # pylint: disable=no-member
     process = mock_popen.return_value.__enter__.return_value
     process.wait.return_value = 0
     upload_log(config, Path(tmpdir) / test_log)

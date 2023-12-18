@@ -6,13 +6,13 @@ import inspect
 import logging
 from typing_extensions import Literal
 
-from pydantic import BaseModel, Extra, NonNegativeInt
+from pydantic import BaseModel, NonNegativeInt
 
 
 logger = logging.getLogger(__name__)
 
 
-class BaseConfig(BaseModel, extra=Extra.allow):
+class BaseConfig(BaseModel, extra="allow"):
     """Base configuration object used across the whole library."""
 
     ARTIST_FIRST: bool = False
@@ -27,7 +27,6 @@ class BaseConfig(BaseModel, extra=Extra.allow):
         logger.info(repr(self))
 
     def __repr__(self):
-        super_keys = set(BaseConfig.__fields__)
         ret = f"{self.__class__.__name__}("
 
         # Inspect the stack to determine if the BaseConfig is being displayed
@@ -42,13 +41,13 @@ class BaseConfig(BaseModel, extra=Extra.allow):
         ):
             show_full_config = False
 
-        for name, value in self.dict().items():
+        for name, value in self.model_dump().items():
             if (
-                name in super_keys
+                name in BaseConfig.model_fields
                 and type(self)  # pylint: disable=unidiomatic-typecheck
                 is not BaseConfig
             ) or (
-                name not in super_keys
+                name not in BaseConfig.model_fields
                 and type(self)  # pylint: disable=unidiomatic-typecheck
                 is BaseConfig
                 and not show_full_config

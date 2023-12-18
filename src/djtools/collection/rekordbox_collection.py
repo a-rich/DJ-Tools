@@ -31,6 +31,7 @@ class RekordboxCollection(Collection):
         Args:
             path: Path to a serialized collection.
         """
+        super().__init__(path=path)
         self._path = path
 
         # Parse the XML as a BeautifulSoup document.

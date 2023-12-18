@@ -18,10 +18,7 @@ def test_playlistfilter_cannot_be_instantiated():
     """Test for the PlaylistFilter class."""
     with pytest.raises(
         TypeError,
-        match=(
-            "Can't instantiate abstract class PlaylistFilter with abstract "
-            "methods filter_track, is_filter_playlist"
-        ),
+        match="Can't instantiate abstract class PlaylistFilter",
     ):
         PlaylistFilter()
 

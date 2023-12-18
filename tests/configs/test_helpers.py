@@ -1,4 +1,5 @@
 """Testing for the helpers module."""
+import inspect
 import logging
 from pathlib import Path
 import re
@@ -17,6 +18,16 @@ from djtools.configs.helpers import (
 from djtools.version import get_version
 
 from ..test_utils import mock_exists, MockOpen
+
+
+def test_stack_inspection_for_cli_arg_parsing():
+    """Test stack inspection for cli arg parsing."""
+    stack = inspect.stack()
+    entry_frame = stack[-1]
+    test_loc = str(Path("bin") / "pytest")
+    windows_loc = str(Path("lib") / "runpy.py")
+    windows_frozen = "<frozen runpy>"
+    assert entry_frame[1].endswith((test_loc, windows_loc, windows_frozen))
 
 
 @pytest.mark.parametrize(
@@ -165,8 +176,8 @@ def test_filter_dict(config):
     super_config = BaseConfig()
     sub_config = config(**dict(super_config))
     result = _filter_dict(sub_config)
-    super_keys = set(super_config.dict())
-    sub_keys = set(sub_config.dict())
+    super_keys = set(super_config.model_dump())
+    sub_keys = set(sub_config.model_dump())
     result_keys = set(result)
     assert len(result_keys) + len(super_keys) == len(sub_keys)
     assert result_keys.union(super_keys) == sub_keys

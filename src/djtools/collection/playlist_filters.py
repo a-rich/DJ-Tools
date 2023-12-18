@@ -188,6 +188,7 @@ class ComplexTrackFilter(PlaylistFilter):
             exclude_tags: Tags to ignore when determining the number of
                 non-genre tags.
         """
+        super().__init__()
         self._min_tags_for_complex_track = min_tags_for_complex_track
         if exclude_tags is None:
             exclude_tags = [
@@ -258,6 +259,7 @@ class TransitionTrackFilter(PlaylistFilter):
         Args:
             separator: Character used to separate transition tokens.
         """
+        super().__init__()
         self._separator = separator
         self._playlist_type = None
 

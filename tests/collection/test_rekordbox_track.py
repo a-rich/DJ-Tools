@@ -1,5 +1,6 @@
 """Testing for the tracks module."""
 from datetime import datetime
+import os
 from pathlib import Path
 
 import pytest
@@ -43,19 +44,21 @@ def test_rekordboxtrack_serialization(rekordbox_track_tag):
     loc = str(track.get_location())
     assert (
         repr(track)
-        == f"""RekordboxTrack(
-    Artist="A Tribe Called Quest", AverageBpm=86.0, Comments=" /* Gangsta */ ", 
-    DateAdded="2022-06-24", Genre=['Hip Hop', 'R&B'], Label="Label", Location={loc}, 
-    Tonality="7B", Rating=0, TrackID="2", TrackNumber=2, Year="2022", MyTags=['Gangsta'], 
-    Tags=['Hip Hop', 'R&B', 'Gangsta'], beat_grid=0, hot_cues=0
-)"""
+        == """RekordboxTrack(\n    Artist="A Tribe Called Quest", """
+        """AverageBpm=86.0, Comments=" /* Gangsta */ ", """
+        """\n    DateAdded="2022-06-24", Genre=['Hip Hop', 'R&B'], """
+        f"""Label="Label", Location={loc}, \n    Tonality="7B", Rating=0, """
+        """TrackID="2", TrackNumber=2, Year="2022", MyTags=['Gangsta'], """
+        """\n    Tags=['Hip Hop', 'R&B', 'Gangsta'], beat_grid=0, hot_cues=0\n)"""
     )
+    sep = "" if os.name == "posix" else "/"  # pylint: disable=no-member
+    loc = track.get_location().as_posix()
     assert (
         str(track)
         == """<TRACK Artist="A Tribe Called Quest" AverageBpm="86.00" """
         """Comments=" /* Gangsta */ " DateAdded="2022-06-24" """
         """Genre="Hip Hop / R&amp;B" Label="Label" """
-        f"""Location="file://localhost{loc}" Rating="0" Tonality="7B" """
+        f"""Location="file://localhost{sep}{loc}" Rating="0" Tonality="7B" """
         """TrackID="2" TrackNumber="2" Year="2022"/>"""
     )
     assert track.serialize() == rekordbox_track_tag

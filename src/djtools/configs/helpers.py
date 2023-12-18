@@ -60,12 +60,11 @@ def build_config(config_file: Optional[Path] = None) -> BaseConfig:
             raise RuntimeError(msg) from Exception
     else:
         config = {}
-        base_config_fields = BaseConfig.__fields__
         initial_config = {
             pkg: {
                 k: v.default
-                for k, v in cfg.__fields__.items()
-                if pkg == "configs" or k not in base_config_fields
+                for k, v in cfg.model_fields.items()
+                if pkg == "configs" or k not in BaseConfig.model_fields
             }
             for pkg, cfg in PKG_CFG.items()
         }
@@ -76,7 +75,13 @@ def build_config(config_file: Optional[Path] = None) -> BaseConfig:
     args = {}
     stack = inspect.stack()
     entry_frame = stack[-1]
-    if entry_frame[1].endswith(("bin/djtools", "bin/pytest")):
+    cli_loc = str(Path("bin") / "djtools")  # Unix djtools.
+    test_loc = str(Path("bin") / "pytest")  # Unix pytest.
+    windows_loc = str(Path("lib") / "runpy.py")  # Windows Python<=3.10.
+    windows_frozen = "<frozen runpy>"  # Windows Python>=3.11.
+    if entry_frame[1].endswith(
+        (cli_loc, test_loc, windows_loc, windows_frozen)
+    ):
         args = {
             k.upper(): v
             for k, v in _arg_parse().items()
@@ -88,7 +93,7 @@ def build_config(config_file: Optional[Path] = None) -> BaseConfig:
         logger.info(f"Args: {args}")
         args_set = set(args)
         for pkg, cfg_class in PKG_CFG.items():
-            args_intersection = set(cfg_class.__fields__).intersection(
+            args_intersection = set(cfg_class.model_fields).intersection(
                 args_set
             )
             if args_intersection:
@@ -172,5 +177,8 @@ def _filter_dict(
     Returns:
         Dictionary containing just the keys unique to "sub_config".
     """
-    super_keys = set(BaseConfig.__fields__)
-    return {k: v for k, v in sub_config.dict().items() if k not in super_keys}
+    return {
+        k: v
+        for k, v in sub_config.model_dump().items()
+        if k not in BaseConfig.model_fields
+    }

@@ -119,7 +119,9 @@ def process(config: BaseConfig):
         track_data,
         [write_path] * len(audio_chunks),
     ]
-    with ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as executor:
+    with ThreadPoolExecutor(
+        max_workers=os.cpu_count() * 4  # pylint: disable=no-member
+    ) as executor:
         _ = list(
             tqdm(
                 executor.map(process_parallel, *payload),

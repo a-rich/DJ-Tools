@@ -7,6 +7,7 @@ The purpose of this utility is to:
 * backup subsets of your library
 * ensure you have easy access to a preparation independent of the setup
 """
+# pylint: disable=duplicate-code
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 import os
@@ -83,7 +84,9 @@ def copy_playlists(config: BaseConfig, path: Optional[Path] = None):
         playlist_tracks.values(),
         [config.COPY_PLAYLISTS_DESTINATION] * len(playlist_tracks),
     ]
-    with ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as executor:
+    with ThreadPoolExecutor(
+        max_workers=os.cpu_count() * 4  # pylint: disable=no-member
+    ) as executor:
         _ = list(
             tqdm(
                 executor.map(copy_file, *payload),
