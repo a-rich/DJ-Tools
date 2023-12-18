@@ -3,7 +3,6 @@ from unittest import mock
 
 import pytest
 
-from djtools.collection.helpers import PLATFORM_REGISTRY
 from djtools.collection.playlist_filters import (
     ComplexTrackFilter,
     HipHopFilter,
@@ -11,6 +10,7 @@ from djtools.collection.playlist_filters import (
     PlaylistFilter,
     TransitionTrackFilter,
 )
+from djtools.collection.playlists import RekordboxPlaylist
 from djtools.collection.tracks import RekordboxTrack
 
 
@@ -42,9 +42,8 @@ def test_hiphopfilter_detects_playlists(
 ):
     """Test for the HipHopFilter class."""
     track_filter = HipHopFilter()
-    playlist_class = next(iter(PLATFORM_REGISTRY.values()))["playlist"]
-    playlist = playlist_class.new_playlist(playlist, tracks={})
-    parent_playlist = playlist_class.new_playlist(
+    playlist = RekordboxPlaylist.new_playlist(playlist, tracks={})
+    parent_playlist = RekordboxPlaylist.new_playlist(
         parent_playlist, playlists=[playlist]
     )
     playlist.set_parent(parent_playlist)
@@ -94,9 +93,8 @@ def test_minimaldeeptechfilter_detects_playlists(
 ):
     """Test for the MinimalDeepTechFilter class."""
     track_filter = MinimalDeepTechFilter()
-    playlist_class = next(iter(PLATFORM_REGISTRY.values()))["playlist"]
-    playlist = playlist_class.new_playlist(playlist, tracks={})
-    parent_playlist = playlist_class.new_playlist(
+    playlist = RekordboxPlaylist.new_playlist(playlist, tracks={})
+    parent_playlist = RekordboxPlaylist.new_playlist(
         parent_playlist, playlists=[playlist]
     )
     playlist.set_parent(parent_playlist)
@@ -158,9 +156,8 @@ def test_complextrackfilter_detects_playlists(
 ):
     """Test for the ComplexTrackFilter class."""
     track_filter = ComplexTrackFilter()
-    playlist_class = next(iter(PLATFORM_REGISTRY.values()))["playlist"]
-    playlist = playlist_class.new_playlist(playlist, tracks={})
-    parent_playlist = playlist_class.new_playlist(
+    playlist = RekordboxPlaylist.new_playlist(playlist, tracks={})
+    parent_playlist = RekordboxPlaylist.new_playlist(
         parent_playlist, playlists=[playlist]
     )
     playlist.set_parent(parent_playlist)
@@ -183,12 +180,11 @@ def test_complextrackfilter_filters_tracks(
 ):
     """Test for the ComplexTrackFilter class."""
     track_filter = ComplexTrackFilter(max_tags)
-    playlist_class = next(iter(PLATFORM_REGISTRY.values()))["playlist"]
     rekordbox_track._Tags = tags  # pylint: disable=protected-access
-    playlist = playlist_class.new_playlist(
+    playlist = RekordboxPlaylist.new_playlist(
         "genres", tracks={rekordbox_track.get_id(): rekordbox_track}
     )
-    root_playlist = playlist_class.new_playlist(
+    root_playlist = RekordboxPlaylist.new_playlist(
         "complex", playlists=[playlist]
     )
     playlist.set_parent(root_playlist)
@@ -213,9 +209,8 @@ def test_transitiontrackfilter_detects_playlists(
 ):
     """Test for the TransitionTrackFilter class."""
     track_filter = TransitionTrackFilter()
-    playlist_class = next(iter(PLATFORM_REGISTRY.values()))["playlist"]
-    playlist = playlist_class.new_playlist(playlist, tracks={})
-    parent_playlist = playlist_class.new_playlist(
+    playlist = RekordboxPlaylist.new_playlist(playlist, tracks={})
+    parent_playlist = RekordboxPlaylist.new_playlist(
         parent_playlist, playlists=[playlist]
     )
     playlist.set_parent(parent_playlist)
@@ -226,10 +221,9 @@ def test_transitiontrackfilter_detects_playlists(
 def test_transitiontrackfilter_handles_playlist_with_multiple_supported_types():
     """Test for the TransitionTrackFilter class."""
     track_filter = TransitionTrackFilter()
-    playlist_class = next(iter(PLATFORM_REGISTRY.values()))["playlist"]
     bad_playlist = "genres & tempos"
-    playlist = playlist_class.new_playlist(bad_playlist, tracks={})
-    parent_playlist = playlist_class.new_playlist(
+    playlist = RekordboxPlaylist.new_playlist(bad_playlist, tracks={})
+    parent_playlist = RekordboxPlaylist.new_playlist(
         "transitions", playlists=[playlist]
     )
     playlist.set_parent(parent_playlist)
@@ -257,12 +251,11 @@ def test_transitiontrackfilter_filters_tracks(
 ):
     """Test for the TransitionTrackFilter class."""
     track_filter = TransitionTrackFilter(separator)
-    playlist_class = next(iter(PLATFORM_REGISTRY.values()))["playlist"]
     rekordbox_track._Comments = comments  # pylint: disable=protected-access
-    playlist = playlist_class.new_playlist(
+    playlist = RekordboxPlaylist.new_playlist(
         "genres", tracks={rekordbox_track.get_id(): rekordbox_track}
     )
-    root_playlist = playlist_class.new_playlist(
+    root_playlist = RekordboxPlaylist.new_playlist(
         "transitions", playlists=[playlist]
     )
     playlist.set_parent(root_playlist)

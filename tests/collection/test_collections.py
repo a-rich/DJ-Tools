@@ -8,7 +8,7 @@ from djtools.collection.collections import (
     RekordboxCollection,
     UnsortedAttributes,
 )
-from djtools.collection.helpers import PLATFORM_REGISTRY
+from djtools.collection.playlists import RekordboxPlaylist
 from djtools.collection.tracks import RekordboxTrack
 
 
@@ -33,8 +33,9 @@ def test_rekordboxcollection_add_playlist(rekordbox_xml):
     assert collection.get_playlists(test_playlist_name) == []
 
     # The test playlist does exist after inserting it.
-    playlist_class = next(iter(PLATFORM_REGISTRY.values()))["playlist"]
-    test_playlist = playlist_class.new_playlist(test_playlist_name, tracks={})
+    test_playlist = RekordboxPlaylist.new_playlist(
+        test_playlist_name, tracks={}
+    )
     collection.add_playlist(test_playlist)
     assert collection.get_playlists(test_playlist_name) == [test_playlist]
 

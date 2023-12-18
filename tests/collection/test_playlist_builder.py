@@ -3,29 +3,110 @@ from unittest import mock
 
 import pytest
 
-from djtools.collection.helpers import PLATFORM_REGISTRY
+from djtools.collection.collections import RekordboxCollection
 from djtools.collection.playlist_builder import (
     collection_playlists,
     PLAYLIST_NAME,
 )
+from djtools.collection.playlists import RekordboxPlaylist
 
 from ..test_utils import MockOpen
 
 
-@pytest.mark.parametrize(
-    "remainder_type", ["", "folder", "playlist", "invalid"]
-)
-def test_collection_playlists(
-    remainder_type, config, rekordbox_xml, playlist_config
+@pytest.mark.parametrize("remainder_type", ["folder", "playlist"])
+def test_collection_playlists_makes_unused_tags_playlists(
+    remainder_type,
+    config,
+    rekordbox_collection,
+    rekordbox_xml,
+    playlist_config,
 ):
     """Test for the collection_playlists function."""
-    config.COLLECTION_PLAYLIST_FILTERS = [
-        "HipHopFilter",
-        "MinimalDeepTechFilter",
-    ]
+    config.COLLECTION_PATH = rekordbox_xml
     config.COLLECTION_PLAYLISTS_REMAINDER = remainder_type
+    new_path = rekordbox_xml.parent / "test_collection"
+
+    tags = {
+        tag
+        for value in rekordbox_collection.get_all_tags().values()
+        for tag in value
+    }
+    some_tag = next(iter(tags))
+    tags.remove(some_tag)
+
+    del playlist_config["combiner"]
+    playlist_config["tags"]["playlists"] = [some_tag]
+
+    with mock.patch(
+        "builtins.open",
+        MockOpen(
+            files=["collection_playlists.yaml"], content=f"{playlist_config}"
+        ).open,
+    ):
+        collection_playlists(config, path=new_path)
+
+    # Since our "tags" config only specifies one tag, and there is more than
+    # one tag in the collection, there must be a playlist called "Unused Tags".
+    collection = RekordboxCollection(new_path)
+    assert collection.get_playlists("Unused Tags")
+    unused_tags_playlists = collection.get_playlists("Unused Tags")[0]
+
+    if remainder_type == "folder":
+        # If COLLECTION_PLAYLISTS_REMAINDER is set to "folder", then
+        # "Unused Tags" will be a folder containing one playlist for each
+        # unused tag.
+        assert unused_tags_playlists.is_folder()
+
+        for playlist in unused_tags_playlists:
+            tag_playlist = playlist.get_name()
+
+            # The name of the playlist will be one of the tags in the
+            # collection.
+            assert tag_playlist in tags
+
+            # The name of the playlist will be a tag that's not specified in
+            # the "tags" section of the playlist config.
+            assert tag_playlist != some_tag
+
+            # Every track in that playlist will have the tag that is the name
+            # of that playlist.
+            assert all(
+                tag_playlist in track.get_tags()
+                for track in playlist.get_tracks().values()
+            )
+    else:
+        # If COLLECTION_PLAYLISTS_REMAINDER is set to "playlist", then
+        # "Unused Tags" will be a playlist containing all the tracks having at
+        # least one of the unused tags.
+        assert not unused_tags_playlists.is_folder()
+
+        for track in unused_tags_playlists.get_tracks().values():
+            track_tags = track.get_tags()
+            for tag in track_tags:
+                if tag == some_tag:
+                    # If the tag that was specified in the "tags" section of
+                    # the playlist config appears in this track, then it must
+                    # be the case that it also has other tags which are unused.
+                    assert len(track_tags) > 1
+                    continue
+
+                # Otherwise, the tag must be one of the unused tags.
+                assert tag in tags
+
+
+@mock.patch(
+    "djtools.collection.playlist_builder.print_playlists_tag_statistics"
+)
+def test_collection_playlists_prints_playlist_tag_statistics(
+    mock_print_playlists_tag_statistics,
+    config,
+    rekordbox_xml,
+    playlist_config,
+):
+    """Test for the collection_playlists function."""
     config.COLLECTION_PATH = rekordbox_xml
     config.VERBOSITY = 1
+
     with mock.patch(
         "builtins.open",
         MockOpen(
@@ -35,6 +116,7 @@ def test_collection_playlists(
         collection_playlists(
             config, path=rekordbox_xml.parent / "test_collection"
         )
+    assert mock_print_playlists_tag_statistics.call_count == 1
 
 
 @pytest.mark.parametrize(
@@ -75,16 +157,13 @@ def test_collection_playlists_removes_existing_playlist(
     config, playlist_config, rekordbox_xml
 ):
     """Test for the collection_playlists function."""
-    software_config = PLATFORM_REGISTRY[next(iter(PLATFORM_REGISTRY))]
-    playlist_class = software_config["playlist"]
-    collection_class = software_config["collection"]
-    collection = collection_class(rekordbox_xml)
+    collection = RekordboxCollection(rekordbox_xml)
 
     # A playlist_builder playlist should not already exist.
     assert not collection.get_playlists(PLAYLIST_NAME)
 
     # Insert a playlist_builder playlist into the collection.
-    new_playlists = playlist_class.new_playlist(PLAYLIST_NAME, playlists=[])
+    new_playlists = RekordboxPlaylist.new_playlist(PLAYLIST_NAME, playlists=[])
     root = collection.get_playlists()
     root.add_playlist(new_playlists)
 
@@ -92,7 +171,7 @@ def test_collection_playlists_removes_existing_playlist(
     assert collection.get_playlists(PLAYLIST_NAME)
 
     # Serialize the collection containing a playlist_builder playlist.
-    new_path = rekordbox_xml.parent / "test_collection_blah"
+    new_path = rekordbox_xml.parent / "test_collection"
     collection.serialize(path=new_path)
     config.COLLECTION_PATH = new_path
 
@@ -103,11 +182,13 @@ def test_collection_playlists_removes_existing_playlist(
         MockOpen(
             files=["collection_playlists.yaml"], content=f"{playlist_config}"
         ).open,
+    ), mock.patch(
+        "djtools.collection.collections.RekordboxCollection.add_playlist"
     ):
         collection_playlists(config, path=new_path)
 
-    # TODO(a-rich): Mock either RekordboxPlaylist.new_playlist or RekordboxCollection.add_playlist
-    # assert not collection.get_playlists(PLAYLIST_NAME)
+    collection = RekordboxCollection(new_path)
+    assert not collection.get_playlists(PLAYLIST_NAME)
 
 
 @mock.patch(
@@ -124,117 +205,3 @@ def test_collection_playlists_with_empty_playlistconfig_returns_early(
     assert caplog.records[0].message == (
         "Not building playlists because the playlist config is empty."
     )
-
-
-# def test_playlistbuilder_combiner_playlist_contains_new_playlist_selector_tracks(
-#     test_playlist_config, rekordbox_xml, xml
-# ):
-#     """Test for the playlist_builder module."""
-#     # Insert test track and Combiner playlist to target it.
-#     with open(test_playlist_config, mode="r", encoding="utf-8",) as _file:
-#         playlist_config = yaml.load(_file, Loader=yaml.FullLoader) or {}
-#     new_track = xml.new_tag("TRACK")
-#     new_track_id = "-1"
-#     new_track.attrs = {
-#         "TrackID": new_track_id,
-#         "AverageBpm": "140.00",
-#         "Genre": "Dubstep",
-#         "Rating": "255",
-#         "Location": "file://localhost/test-track.mp3",
-#         "Comments": "",
-#     }
-#     collection = xml.find_all("COLLECTION")[0]
-#     collection.insert(0, new_track)
-#     selector_playlist = "{Dubstep} & [140]"
-#     playlist_config["Combiner"]["playlists"] = [selector_playlist]
-#     playlist_config = {
-#         k: v for k, v in playlist_config.items()
-#         if k in ["GenreTagParser", "Combiner"]
-#     }
-#     with open(test_playlist_config, mode="w", encoding="utf-8",) as _file:
-#         playlist_config = yaml.dump(playlist_config, _file)
-#     with open(rekordbox_xml, mode="wb", encoding=xml.orignal_encoding) as _file:
-#         _file.write(xml.prettify("utf-8"))
-
-#     # Test pre-conditions.
-#     playlist = xml.find_all("NODE", {"Name": "Hip Hop", "Type": "1"})[0]
-#     for track_key in playlist.find_all("TRACK"):
-#         assert track_key["Key"] != new_track_id, (
-#             "Test track should not exist in Hip Hop!"
-#         )
-#     test_track = None
-#     for track in xml.find_all("TRACK"):
-#         if not track.get("Location"):
-#             continue
-#         if track.get("TrackID") == new_track_id:
-#             test_track = track
-#     assert test_track, "Test track should exist in XML!"
-
-#     # Run the PlaylistBuilder (GenreTagParser and Combiner).
-#     PlaylistBuilder(
-#         rekordbox_database=rekordbox_xml,
-#         playlist_config=Path(test_playlist_config),
-#     )()
-
-#     # Load XML generated by the PlaylistBuilder.
-#     path = rekordbox_xml.parent
-#     file_name = rekordbox_xml.name
-#     with open(path / f"auto_{file_name}", mode="r", encoding="utf-8") as _file:
-#         database = BeautifulSoup(_file.read(), "xml")
-
-#     # Test that the test track was inserted into the "Dubstep" playlist.
-#     test_track = None
-#     playlist = database.find_all("NODE", {"Name": "Dubstep", "Type": "1"})[0]
-#     for track_key in playlist.find_all("TRACK"):
-#         if track_key["Key"] == new_track_id:
-#             test_track = track_key
-#     assert test_track, "New track was not found in the genre playlist!"
-
-#     # Test that the test track was inserted into the Combiner playlist.
-#     test_track = None
-#     test_track = None
-#     playlist = database.find_all(
-#         "NODE", {"Name": selector_playlist, "Type": "1"}
-#     )[0]
-#     for track_key in playlist.find_all("TRACK"):
-#         if track_key["Key"] == new_track_id:
-#             test_track = track_key
-#     assert test_track, "New track was not found in the Combiner playlist!"
-
-
-# def test_playlistbuilder_invalid_parser(rekordbox_xml, test_playlist_config):
-#     """Test for the playlist_builder module."""
-#     with open(test_playlist_config, mode="r", encoding="utf-8",) as _file:
-#         playlist_config = yaml.load(_file, Loader=yaml.FullLoader) or {}
-#     parser_type = "nonexistent_parser"
-#     playlist_config[parser_type] = {}
-#     with open(test_playlist_config, mode="w", encoding="utf-8",) as _file:
-#         playlist_config = yaml.dump(playlist_config, _file)
-#     with pytest.raises(
-#         AttributeError,
-#         match=f"{parser_type} is not a valid TagParser!"
-#     ):
-#         PlaylistBuilder(
-#             rekordbox_database=rekordbox_xml,
-#             playlist_config=test_playlist_config,
-#         )()
-
-
-# def test_playlistbuilder_invalid_playlist(rekordbox_xml, test_playlist_config):
-#     """Test for the playlist_builder module."""
-#     with open(test_playlist_config, mode="r", encoding="utf-8",) as _file:
-#         playlist_config = yaml.load(_file, Loader=yaml.FullLoader) or {}
-#     content = [0]
-#     playlist_config = {
-#         "GenreTagParser": {"name": "invalid", "playlists": content}
-#     }
-#     with open(test_playlist_config, mode="w", encoding="utf-8",) as _file:
-#         playlist_config = yaml.dump(playlist_config, _file)
-#     with pytest.raises(
-#         ValueError,
-#         match=f"Encountered invalid input type {type(content[0])}: {content[0]}"
-#     ):
-#         PlaylistBuilder(
-#             rekordbox_database=rekordbox_xml,
-#             playlist_config=test_playlist_config,
-#         )()
