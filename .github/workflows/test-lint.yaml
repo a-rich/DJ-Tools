@@ -9,6 +9,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+
     env:
       COVERAGE_SINGLE: 0
       COVERAGE_TOTAL: 100
@@ -21,8 +25,7 @@ jobs:
       - name: Set up Python 3.9
         uses: actions/setup-python@main
         with:
-          python-version: 3.9
-          cache: 'pip'
+          python-version: ${{ matrix.python-version }}
 
       - uses: actions/cache@v2
         with:
