@@ -19,10 +19,10 @@ from djtools.sync.helpers import (
 
 @pytest.mark.parametrize("upload", [True, False])
 @pytest.mark.parametrize(
-    "include_dirs", [[], ["path/to/stuff", "path/to/things.mp3"]]
+    "include_dirs", [[], [Path("path/to/stuff"), Path("path/to/things.mp3")]]
 )
 @pytest.mark.parametrize(
-    "exclude_dirs", [[], ["path/to/stuff", "path/to/things.mp3"]]
+    "exclude_dirs", [[], [Path("path/to/stuff"), Path("path/to/things.mp3")]]
 )
 @pytest.mark.parametrize("use_date_modified", [True, False])
 @pytest.mark.parametrize("dryrun", [True, False])
@@ -37,12 +37,12 @@ def test_parse_sync_command(
 ):
     """Test for the parse_sync_command function."""
     tmpdir = str(tmpdir)
-    if upload:
-        config.UPLOAD_INCLUDE_DIRS = include_dirs
-        config.UPLOAD_EXCLUDE_DIRS = exclude_dirs
-    else:
-        config.DOWNLOAD_INCLUDE_DIRS = include_dirs
-        config.DOWNLOAD_EXCLUDE_DIRS = exclude_dirs
+    setattr(
+        config, f"{'UP' if upload else 'DOWN'}LOAD_INCLUDE_DIRS", include_dirs
+    )
+    setattr(
+        config, f"{'UP' if upload else 'DOWN'}LOAD_EXCLUDE_DIRS", exclude_dirs
+    )
     config.AWS_USE_DATE_MODIFIED = not use_date_modified
     config.DRYRUN = dryrun
     partial_cmd = [
@@ -52,13 +52,14 @@ def test_parse_sync_command(
         tmpdir if upload else "s3://dj.beatcloud.com/dj/music/",
         "s3://dj.beatcloud.com/dj/music/" if upload else tmpdir,
     ]
-    cmd = parse_sync_command(partial_cmd, config, upload)
-    cmd = " ".join(cmd)
+    cmd = " ".join(parse_sync_command(partial_cmd, config, upload))
+    for dir_ in include_dirs:
+        assert f"--include {(dir_ / '*' if not dir_.suffix else dir_)}" in cmd
+    for dir_ in exclude_dirs:
+        assert f"--exclude {(dir_ / '*' if not dir_.suffix else dir_)}" in cmd
     if include_dirs:
-        assert all(f"--include {x}" in cmd for x in include_dirs)
         assert "--exclude *" in cmd
     elif exclude_dirs:
-        assert all(f"--exclude {x}" in cmd for x in exclude_dirs)
         assert "--include *" in cmd
     if use_date_modified:
         assert "--size-only" in cmd
@@ -68,31 +69,13 @@ def test_parse_sync_command(
 
 def test_rewrite_track_paths(config, rekordbox_xml):
     """Test for the rewrite_track_paths function."""
-    user_a = "first_user"
-    user_b = "other_user"
     user_a_path = Path("/Volumes/first_user_usb/")
     user_b_path = Path("/Volumes/other_user_usb/")
-    user_a_xml = rekordbox_xml.parent / "rekordbox.xml"
-    user_b_xml = rekordbox_xml.parent / f"{user_b}_rekordbox.xml"
-    user_a_xml.write_text(
-        Path(rekordbox_xml).read_text(encoding="utf-8"), encoding="utf-8"
-    )
+    user_b_xml = rekordbox_xml.parent / "other_user_rekordbox.xml"
     user_b_xml.write_text(
         Path(rekordbox_xml).read_text(encoding="utf-8"), encoding="utf-8"
     )
-    config.USER = user_a
-    config.COLLECTION_PATH = user_a_xml
     config.USB_PATH = user_a_path
-    config.IMPORT_USER = user_b
-
-    # Write the first user's USB_PATH into each track.
-    collection = RekordboxCollection(user_a_xml)
-    for track in collection.get_tracks().values():
-        loc = track.get_location()
-        track.set_location(
-            loc.parent / str(user_a_path).strip("/") / "DJ Music" / loc.name
-        )
-    collection.serialize(output_path=user_a_xml)
 
     # Write the second user's USB_PATH into each track.
     collection = RekordboxCollection(user_b_xml)
@@ -101,10 +84,12 @@ def test_rewrite_track_paths(config, rekordbox_xml):
         track.set_location(
             loc.parent / str(user_b_path).strip("/") / "DJ Music" / loc.name
         )
-    collection.serialize(output_path=user_b_xml)
+    collection.serialize(path=user_b_xml)
 
+    # Replaces all instances of user_b_path in user_b_xml with user_a_path.
     rewrite_track_paths(config, user_b_xml)
 
+    # Assert user_a_path no longer appears and user_b_path is in every track.
     collection = RekordboxCollection(user_b_xml)
     for track in collection.get_tracks().values():
         loc = track.get_location().as_posix()

@@ -186,38 +186,28 @@ class RekordboxCollection(Collection):
             # Append the attribute's name and value to the representation.
             body += f"\n{' ' * 4}{key}={value},"
 
-        # Now represent the playlists and tracks attributes as an indented list
-        # of playlists and number of tracks, respectively.
-        for key, value in repr_attrs.items():
-            if key not in ["playlists", "tracks"]:
-                continue
-            if isinstance(value, dict):
-                body += f"\n{' ' * 4}{key}={len(value)},"
-            else:
-                # TODO(a-rich): split and join with extra indents.
-                body += f"\n{' ' * 4}{key}=["
-                playlists = f"\n{' ' * 8}".join(repr(value).split("\n"))
-                body += f"\n{' ' * 8}{playlists}"
-                body += f"\n{' ' * 4}]"
+        # Represent the tracks attribute as the number of tracks.
+        body += f"\n{' ' * 4}tracks={len(repr_attrs['tracks'])},"
+
+        # Represent the playlists attribute as the total number of playlists.
+        stack = list(repr_attrs["playlists"])
+        playlist_count = 0
+        while stack:
+            playlist = stack.pop()
+            try:
+                stack.extend(playlist.get_playlists())
+            except RuntimeError:
+                playlist_count += 1
+        body += f"\n{' ' * 4}playlists={playlist_count},"
 
         return string.format(type(self).__name__, body)
 
-    def __str__(self) -> str:
-        """Produces a string representation of this Collection.
-
-        Returns:
-            Collection represented as a string.
-        """
-        return str(self.serialize())
-
     @make_path
-    def serialize(
-        self, *args, output_path: Optional[Path] = None, **kwargs
-    ) -> Path:
+    def serialize(self, *args, path: Optional[Path] = None, **kwargs) -> Path:
         """Serializes this Collection as an XML file.
 
         Args:
-            output_path: Path to output serialized collection to.
+            path: Path to output serialized collection to.
 
         Returns:
             Path to the serialized collection XML file.
@@ -282,11 +272,11 @@ class RekordboxCollection(Collection):
         doc.append(root_tag)
 
         # If no new path is provided, use the original.
-        if not output_path:
-            output_path = self._path
+        if not path:
+            path = self._path
 
         # Write the serialized Collection to a new file.
-        with open(output_path, mode="w", encoding="utf-8") as _file:
+        with open(path, mode="w", encoding="utf-8") as _file:
             _file.write(
                 doc.prettify(
                     # UnsortedAttributes formatter ensures attributes are
@@ -300,7 +290,7 @@ class RekordboxCollection(Collection):
                 )
             )
 
-        return output_path
+        return path
 
     @classmethod
     def validate(cls, input_xml: Path, output_xml: Path):

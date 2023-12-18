@@ -17,11 +17,20 @@ from djtools.collection.config import (
 )
 from djtools.collection.playlist_filters import PlaylistFilter
 from djtools.collection.playlists import Playlist, RekordboxPlaylist
-from djtools.collection.tracks import Track
+from djtools.collection.tracks import Track, RekordboxTrack
 from djtools.utils.helpers import make_path
 
 
 logger = logging.getLogger(__name__)
+NUMERICAL_SELECTOR_REGEX = re.compile(r"(?<=\[)[^\[\]]*(?=\])")
+STRING_SELECTOR_REGEX = re.compile(r"(?<={)[^{}]+:[^{}]+(?=})")
+DATE_SELECTOR_REGEX = re.compile(r"(>=|>|<=|<)")
+INEQUALITY_MAP = {
+    ">": lambda x, y: x > y,
+    "<": lambda x, y: x < y,
+    ">=": lambda x, y: x >= y,
+    "<=": lambda x, y: x <= y,
+}
 
 
 # #############################################################################
@@ -72,13 +81,14 @@ def copy_file(track: Track, destination: Path):
 
 
 # As support for various platforms (Serato, Denon, Traktor, etc.) is added, the
-# platform name must be registered with references to their Collection and
-# Playlist implementations.
+# platform name must be registered with references to their Collection,
+# Playlist, and Track implementations.
 PLATFORM_REGISTRY = {
     "rekordbox": {
         "collection": RekordboxCollection,
         "playlist": RekordboxPlaylist,
-    }
+        "track": RekordboxTrack,
+    },
 }
 
 
@@ -95,8 +105,8 @@ def build_tag_playlists(
         tags_tracks: Dict of tags to tracks.
         playlist_class: Playlist implementation class.
         tag_set: A set of tags seen while creating playlists. This is used to
-            indicate which tags should be ignored when creating the "Other"
-            playlists.
+            indicate which tags should be ignored when creating the
+            "Unused Tags" playlists.
 
     Raises:
         ValueError: The user's playlist config must not be malformed.
@@ -113,7 +123,7 @@ def build_tag_playlists(
     # This is a folder so create playlists for those playlists within it.
     if isinstance(content, PlaylistConfigContent):
         # Update the set of tags seen so these are ignored in when creating the
-        # "Other" playlists.
+        # "Unused Tags" playlists.
         if content.name == "_ignore":
             tag_set.update(content.playlists)
             return None
@@ -180,7 +190,7 @@ def build_tag_playlists(
         return playlist_class.new_playlist(name=name, tracks=pure_tag_tracks)
 
     # Get tracks with this tag and index it so that it's not added to the
-    # "Other" playlists.
+    # "Unused Tags" playlists.
     tracks_with_tag = tags_tracks.get(tag_content)
     tag_set.add(tag_content)
     if not tracks_with_tag:
@@ -188,6 +198,60 @@ def build_tag_playlists(
         return None
 
     return playlist_class.new_playlist(name=name, tracks=tracks_with_tag)
+
+
+def build_combiner_playlists(
+    content: Union[PlaylistConfig, PlaylistName, str],
+    tags_tracks: Dict[str, Dict[str, Track]],
+    playlist_class: Playlist,
+) -> Optional[Playlist]:
+    """Recursively traverses a playlist config to generate playlists from tags.
+
+    Args:
+        content: A component of a playlist config to create a playlist for.
+        tags_tracks: Dict of tags to tracks.
+        playlist_class: Playlist implementation class.
+
+    Raises:
+        ValueError: The user's playlist config must not be malformed.
+
+    Returns:
+        A Playlist or None.
+    """
+    if not isinstance(content, (PlaylistConfigContent, PlaylistName, str)):
+        raise ValueError(f"Invalid input type {type(content)}: {content}")
+
+    if isinstance(content, PlaylistName):
+        tag_content = content.tag_content
+        name = content.name or tag_content
+    elif isinstance(content, str):
+        tag_content = name = content
+
+    # This is not a folder so a playlist with tracks must be created.
+    if isinstance(content, (PlaylistName, str)):
+        try:
+            tracks = parse_expression(tag_content, tags_tracks)
+        except Exception as exc:
+            logger.warning(f"Error parsing expression: {tag_content}\n{exc}")
+            return None
+        return playlist_class.new_playlist(name=name, tracks=tracks)
+
+    # This is a folder so create playlists for those playlists within it.
+    playlists = []
+    for item in content.playlists:
+        playlist = build_combiner_playlists(item, tags_tracks, playlist_class)
+        if playlist:
+            playlists.append(playlist)
+        else:
+            logger.warning(
+                f"There are no tracks for the Combiner playlist: {item}"
+            )
+    if not playlists:
+        logger.warning(
+            f'There were no playlists created from "{content.playlists}"'
+        )
+
+    return playlist_class.new_playlist(name=content.name, playlists=playlists)
 
 
 def filter_tag_playlists(
@@ -291,10 +355,7 @@ def add_selectors_to_tags(
     else:
         tag_content = content
 
-    numerical_selector_regex = re.compile(r"(?<=\[)[^\[\]]*(?=\])")
     numerical_value_lookup = {}
-    numerical_value_set = set()
-    string_selector_regex = re.compile(r"(?<={)[^{}]+:[^{}]+(?=})")
     string_selector_type_map = {
         "artist": "get_artists",
         "comment": "get_comments",
@@ -306,14 +367,12 @@ def add_selectors_to_tags(
     playlists = set()
 
     # Grab selectors from Combiner playlist name.
-    numerical_value_set.update(
-        parse_numerical_selectors(
-            re.findall(numerical_selector_regex, tag_content),
-            numerical_value_lookup,
-        )
+    parse_numerical_selectors(
+        re.findall(NUMERICAL_SELECTOR_REGEX, tag_content),
+        numerical_value_lookup,
     )
     parse_string_selectors(
-        re.findall(string_selector_regex, tag_content),
+        re.findall(STRING_SELECTOR_REGEX, tag_content),
         string_value_lookup,
         string_selector_type_map,
         playlists,
@@ -353,6 +412,13 @@ def add_selectors_to_tags(
                     ):
                         tags_tracks[tag][track_id] = track
                     continue
+                # In order for inequalities with lower precision levels than
+                # YYYY-MM-DD to work properly, the date added value for the
+                # track must be converted to the lower precision string and
+                # back into a datetime object.
+                value = datetime.strptime(
+                    value.strftime(date_format), date_format
+                )
                 if not inequality(value, date):
                     continue
                 tags_tracks[tag][track_id] = track
@@ -377,13 +443,7 @@ def add_selectors_to_tags(
 
         for playlist_object in [collection, *auto_playlists]:
             for playlist in playlist_object.get_playlists(playlist_name):
-                tracks = playlist.get_tracks()
-                if not tracks:
-                    logger.warning(
-                        f"No playlists were found for {playlist.get_name()}"
-                    )
-                    continue
-                tags_tracks[playlist_key].update(tracks)
+                tags_tracks[playlist_key].update(playlist.get_tracks())
 
 
 def parse_numerical_selectors(
@@ -448,14 +508,7 @@ def parse_string_selectors(
         string_selector_type_map: Maps a selector type to a Track method name.
         playlists: Set for storing playlist names.
     """
-    date_selector_regex = re.compile(r"(>=|>|<=|<)")
     date_formats = ["%Y-%m-%d", "%Y-%m", "%Y"]
-    inequality_map = {
-        ">": lambda x, y: x > y,
-        "<": lambda x, y: x < y,
-        ">=": lambda x, y: x >= y,
-        "<=": lambda x, y: x <= y,
-    }
 
     for match in string_matches:
         selector_type, selector_value = map(str.strip, match.split(":"))
@@ -474,10 +527,10 @@ def parse_string_selectors(
         dates, formats, inequalities = [], [], []
         skip_date_selector = False
         for part in filter(
-            None, re.split(date_selector_regex, selector_value)
+            None, re.split(DATE_SELECTOR_REGEX, selector_value)
         ):
-            if re.search(date_selector_regex, part):
-                inequalities.append(inequality_map[part])
+            if re.search(DATE_SELECTOR_REGEX, part):
+                inequalities.append(INEQUALITY_MAP[part])
                 continue
 
             date = None
@@ -513,62 +566,9 @@ def parse_string_selectors(
         ] = f"{{{match}}}"
 
 
-def build_combiner_playlists(
-    content: Union[PlaylistConfig, PlaylistName, str],
-    tags_tracks: Dict[str, Dict[str, Track]],
-    playlist_class: Playlist,
-) -> Optional[Playlist]:
-    """Recursively traverses a playlist config to generate playlists from tags.
-
-    Args:
-        content: A component of a playlist config to create a playlist for.
-        tags_tracks: Dict of tags to tracks.
-        playlist_class: Playlist implementation class.
-
-    Raises:
-        ValueError: The user's playlist config must not be malformed.
-
-    Returns:
-        A Playlist or None.
-    """
-    if not isinstance(content, (PlaylistConfigContent, PlaylistName, str)):
-        raise ValueError(f"Invalid input type {type(content)}: {content}")
-
-    # This is not a folder so a playlist with tracks must be created.
-    if isinstance(content, PlaylistName):
-        tag_content = content.tag_content
-        name = content.name or tag_content
-        try:
-            tracks = parse_expression(tag_content, tags_tracks)
-        except Exception as exc:
-            logger.warning(f"Error parsing expression: {tag_content}\n{exc}")
-            return None
-        return playlist_class.new_playlist(name=name, tracks=tracks)
-    if isinstance(content, str):
-        try:
-            tracks = parse_expression(content, tags_tracks)
-        except Exception as exc:
-            logger.warning(f"Error parsing expression: {content}\n{exc}")
-            return None
-        return playlist_class.new_playlist(name=content, tracks=tracks)
-
-    # This is a folder so create playlists for those playlists within it.
-    playlists = [
-        build_combiner_playlists(item, tags_tracks, playlist_class)
-        for item in content.playlists
-    ]
-    playlists = [playlist for playlist in playlists if playlist]
-    if not playlists:
-        logger.warning(
-            f'There were no playlists created from "{content.playlists}"'
-        )
-
-    return playlist_class.new_playlist(name=content.name, playlists=playlists)
-
-
 def parse_expression(
     expression: str, tags_tracks: Dict[str, Dict[str, Track]]
-) -> Playlist:
+) -> Dict[str, Track]:
     """Parses a boolean algebra expression by constructing a tree.
 
     Args:
@@ -622,8 +622,6 @@ class BooleanNode:
         self._operators = []
         self._operands = []
         self._tags_tracks = tags_tracks
-        self._numerical_selector_regex = re.compile(r"(?<=\[)[^\[\]]*(?=\])")
-        self._string_selector_regex = re.compile(r"(?<={)[^{}]+:[^{}]+(?=})")
 
     def _get_tracks(self, tag: str) -> Set[str]:
         """Gets set of track IDs for the provided tag.
@@ -639,13 +637,13 @@ class BooleanNode:
             Set of track IDs for the provided tag.
         """
         if "*" in tag and not (
-            re.search(self._numerical_selector_regex, tag)
-            or re.search(self._string_selector_regex, tag)
+            re.search(NUMERICAL_SELECTOR_REGEX, tag)
+            or re.search(STRING_SELECTOR_REGEX, tag)
         ):
-            exp = re.compile(r".*".join(tag.split("*")))
+            exp = re.compile(r".*".join(tag.split("*")) + "$")
             tracks = {}
             for key in self._tags_tracks:
-                if re.search(exp, key):
+                if re.match(exp, key):
                     tracks.update(self._tags_tracks[key])
             return tracks
 
@@ -793,7 +791,9 @@ def scale_data(
     """
     data_max = max(data.items(), key=itemgetter(1))[1]
 
-    return {k: round((v / data_max) * maximum) for k, v in data.items()}
+    return {
+        k: max(round((v / data_max) * maximum), 1) for k, v in data.items()
+    }
 
 
 def print_data(data: Dict[str, int]):

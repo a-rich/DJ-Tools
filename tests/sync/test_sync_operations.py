@@ -71,21 +71,23 @@ def test_download_spotify_playlist_handles_no_matches(config, caplog):
     )
     assert caplog.records[1].message == (
         "There are no Spotify tracks; make sure DOWNLOAD_SPOTIFY_PLAYLIST is "
-        "a key from spotify_playlists.yaml"
+        "a key in spotify_playlists.yaml"
     )
     assert caplog.records[2].message == (
-        "No Beatcloud matches were found! Make sure you've supplied to correct"
-        " playlist name."
+        "No Beatcloud matches were found! Make sure you've supplied the "
+        "correct playlist name."
     )
 
 
 @pytest.mark.parametrize("collection_is_dir", [True, False])
+@pytest.mark.parametrize("user_is_import_user", [True, False])
 @mock.patch("djtools.sync.sync_operations.rewrite_track_paths")
 @mock.patch("djtools.sync.sync_operations.Popen")
 def test_download_collection(
     mock_popen,
     mock_rewrite_track_paths,
     collection_is_dir,
+    user_is_import_user,
     config,
     rekordbox_xml,
     caplog,
@@ -93,27 +95,23 @@ def test_download_collection(
     """Test for the download_collection function."""
     caplog.set_level("INFO")
     test_user = "test_user"
-    other_user = "aweeeezy"
-    new_xml = rekordbox_xml.parent / f"{other_user}_rekordbox.xml"
+    other_user = "other_user"
+    import_user = test_user if user_is_import_user else other_user
+    config.USER = test_user
+    config.IMPORT_USER = import_user
+    config.COLLECTION_PATH = rekordbox_xml
+    config.PLATFORM = "rekordbox"
+    new_xml = rekordbox_xml.parent / f"{import_user}_rekordbox.xml"
     new_xml.write_text(
         rekordbox_xml.read_text(encoding="utf-8"), encoding="utf-8"
     )
-    config.USER = test_user
-    config.IMPORT_USER = other_user
-    config.COLLECTION_PATH = rekordbox_xml
-    config.PLATFORM = "rekordbox"
     process = mock_popen.return_value.__enter__.return_value
     process.wait.return_value = 0
-    with mock.patch(
-        "djtools.sync.sync_operations.Path.is_dir",
-        lambda path: collection_is_dir,
-    ):
-        download_collection(config)
     cmd = [
         "aws",
         "s3",
         "cp",
-        f"s3://dj.beatcloud.com/dj/collections/{other_user}/"
+        f"s3://dj.beatcloud.com/dj/collections/{import_user}/"
         f"{config.PLATFORM}_collection",
         # NOTE(a-rich): since we could be passing a `rekordbox_xml` formatted
         # as a WindowsPath, the comparison needs to be made with `str(new_xml)`
@@ -122,11 +120,18 @@ def test_download_collection(
     ]
     if collection_is_dir:
         cmd.append("--recursive")
+    with mock.patch(
+        "djtools.sync.sync_operations.Path.is_dir",
+        lambda path: collection_is_dir,
+    ):
+        download_collection(config)
+    mock_popen.assert_called_with(cmd)
     assert caplog.records[0].message == (
         f"Downloading {config.IMPORT_USER}'s {config.PLATFORM} collection..."
     )
     assert caplog.records[1].message == " ".join(cmd)
-    mock_rewrite_track_paths.assert_called_once()
+    if not user_is_import_user:
+        mock_rewrite_track_paths.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -178,13 +183,15 @@ def test_upload_collection(
     config.USER = user
     config.COLLECTION_PATH = rekordbox_xml
     config.PLATFORM = "rekordbox"
-    cmd = (
-        f"aws s3 cp {config.COLLECTION_PATH.as_posix()} "
-        f"s3://dj.beatcloud.com/dj/collections/{user}/"
-        f"{config.PLATFORM}_collection"
-    )
+    cmd = [
+        "aws",
+        "s3",
+        "cp",
+        config.COLLECTION_PATH.as_posix(),
+        f"s3://dj.beatcloud.com/dj/collections/{user}/{config.PLATFORM}_collection",
+    ]
     if collection_is_dir:
-        cmd += " --recursive"
+        cmd.append("--recursive")
     process = mock_popen.return_value.__enter__.return_value
     process.wait.return_value = 0
     with mock.patch(
@@ -195,4 +202,5 @@ def test_upload_collection(
     assert caplog.records[0].message == (
         f"Uploading {user}'s {config.PLATFORM} collection..."
     )
-    assert caplog.records[1].message == cmd
+    assert caplog.records[1].message == " ".join(cmd)
+    mock_popen.assert_called_with(cmd)

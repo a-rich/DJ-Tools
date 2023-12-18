@@ -26,9 +26,7 @@ PLAYLIST_NAME = "PLAYLIST_BUILDER"
 
 
 @make_path
-def collection_playlists(
-    config: BaseConfig, output_path: Optional[Path] = None
-):
+def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
     """Builds playlists automatically.
 
     By maintaining a collection with tracks having tag data (e.g. genre tags,
@@ -57,8 +55,8 @@ def collection_playlists(
     In addition to creating playlists from tags, this function also supports
     creating "combiner" playlists by evaluating boolean algebra expressions.
     This is an incredibly powerful feature which allows users to apply set
-    operations {union, intersection, difference, negation} to a diverse range
-    of operands {tag, playlists, BPM ranges, rating ranges}.
+    operations {union, intersection, and difference} to a diverse range of
+    operands {tag, playlists, BPMs, ratings, etc.}.
 
     Combiner playlists are declared in the "combiner" specification of the
     playlist config with playlists whose names are the boolean algebra
@@ -66,7 +64,7 @@ def collection_playlists(
 
     Here's an example combiner playlist to illustrate this:
 
-        ((Dubstep ~ [1-3]) | {My Favorites} | (*Techno & [135-145])) & Dark
+        ((Dubstep ~ [1-3]) | {playlist: My Favorites} | (*Techno & [135-145])) & Dark
 
     The resulting combiner playlist will be comprised of tracks that are:
 
@@ -78,7 +76,7 @@ def collection_playlists(
 
     Args:
         config: Configuration object.
-        output_path: Path to write the new collection to.
+        path: Path to write the new collection to.
     """
     # Load the playlist config.
     with open(
@@ -220,4 +218,4 @@ def collection_playlists(
     )
     auto_playlist.set_parent(collection.get_playlists())
     collection.add_playlist(auto_playlist)
-    collection.serialize(output_path=output_path)
+    collection.serialize(path=path)

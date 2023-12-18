@@ -7,159 +7,201 @@ import pytest
 from djtools.utils.check_tracks import compare_tracks
 
 
-@pytest.mark.parametrize("get_spotify_tracks_flag", [True, False])
-@pytest.mark.parametrize("get_local_tracks_flag", [True, False])
-@pytest.mark.parametrize("beatcloud_tracks", [[], [Path("track - artist")]])
-@pytest.mark.parametrize("download_spotify_playlist", ["", "playlist Uploads"])
-@mock.patch("djtools.utils.check_tracks.get_local_tracks", return_value={})
+@pytest.mark.parametrize("download_from_spotify", [False, True])
 @mock.patch(
     "djtools.utils.check_tracks.get_beatcloud_tracks",
-    return_value=[Path("aweeeezy/Bass/2022-12-21/track - artist.mp3")],
+    new=mock.Mock(return_value=[]),
 )
-@mock.patch("djtools.utils.check_tracks.get_spotify_tracks", return_value={})
-def test_compare_tracks(
+@mock.patch(
+    "djtools.utils.check_tracks.get_spotify_tracks",
+    new=mock.Mock(return_value=[]),
+)
+@mock.patch("djtools.utils.check_tracks.get_local_tracks")
+@mock.patch("djtools.utils.helpers.get_spotify_client", new=mock.Mock())
+def test_compare_tracks_ignores_local_dirs_with_download_spotify_playlist(
+    mock_get_local_tracks, download_from_spotify, config
+):
+    """Test the compare_tracks function."""
+    if download_from_spotify:
+        config.DOWNLOAD_SPOTIFY_PLAYLIST = "test-playlist"
+    else:
+        config.DOWNLOAD_SPOTIFY_PLAYLIST = ""
+    local_dirs = [Path("some/dir")]
+    config.LOCAL_DIRS = local_dirs
+    mock_get_local_tracks.return_value = []
+    compare_tracks(config)
+    if download_from_spotify:
+        mock_get_local_tracks.assert_not_called()
+    else:
+        mock_get_local_tracks.assert_called_once()
+    assert config.LOCAL_DIRS == local_dirs
+
+
+@mock.patch(
+    "djtools.utils.check_tracks.find_matches",
+    new=mock.Mock(return_value=[]),
+)
+@mock.patch(
+    "djtools.utils.check_tracks.get_beatcloud_tracks",
+    new=mock.Mock(return_value=[]),
+)
+@mock.patch(
+    "djtools.utils.check_tracks.get_spotify_tracks",
+    new=mock.Mock(return_value={}),
+)
+@pytest.mark.parametrize("downloading_instead_of_checking", [True, False])
+def test_compare_tracks_get_spotify_tracks_no_tracks(
+    downloading_instead_of_checking, config, caplog
+):
+    """Test the compare_tracks function."""
+    caplog.set_level("WARNING")
+    if downloading_instead_of_checking:
+        config.DOWNLOAD_SPOTIFY_PLAYLIST = "test-playlist"
+    else:
+        config.CHECK_TRACKS_SPOTIFY_PLAYLISTS = ["test-playlist"]
+    beatcloud_tracks, beatcloud_matches = compare_tracks(config)
+    if downloading_instead_of_checking:
+        assert (
+            "DOWNLOAD_SPOTIFY_PLAYLIST is a key" in caplog.records[0].message
+        )
+    else:
+        assert (
+            "CHECK_TRACKS_SPOTIFY_PLAYLISTS has one or more keys"
+            in caplog.records[0].message
+        )
+    assert not beatcloud_tracks
+    assert not beatcloud_matches
+
+
+@pytest.mark.parametrize("artist_first", [False, True])
+@mock.patch("djtools.utils.check_tracks.find_matches")
+@mock.patch("djtools.utils.check_tracks.get_beatcloud_tracks")
+@mock.patch("djtools.utils.check_tracks.get_spotify_tracks")
+def test_compare_tracks_get_spotify_tracks_yields_tracks(
     mock_get_spotify_tracks,
     mock_get_beatcloud_tracks,
-    mock_get_local_tracks,
-    get_spotify_tracks_flag,
-    get_local_tracks_flag,
-    beatcloud_tracks,
-    download_spotify_playlist,
+    mock_find_matches,
+    artist_first,
     config,
-    tmpdir,
     caplog,
 ):
     """Test the compare_tracks function."""
     caplog.set_level("INFO")
-    spotify_playlist = "playlist"
-    tmpdir = Path(tmpdir)
-    config.CHECK_TRACKS = True
-    config.CHECK_TRACKS_SPOTIFY_PLAYLISTS = [spotify_playlist]
-    config.LOCAL_DIRS = [tmpdir]
-    config.DOWNLOAD_SPOTIFY_PLAYLIST = download_spotify_playlist
-    if get_spotify_tracks_flag or download_spotify_playlist:
-        mock_get_spotify_tracks.return_value = {
-            "playlist": [
-                {"track": {"name": "track", "artists": [{"name": "artist"}]}},
-            ]
-        }
-    if get_local_tracks_flag:
-        mock_get_local_tracks.return_value = {
-            tmpdir: [Path("track - artist.mp3")]
-        }
-    compare_tracks(
-        config,
-        beatcloud_tracks,
+    config.CHECK_TRACKS_SPOTIFY_PLAYLISTS = ["test-playlist"]
+    config.ARTIST_FIRST = artist_first
+    title = "title"
+    artist = "artist"
+    get_spotify_tracks_result = {
+        "test-playlist": [
+            {"track": {"name": title, "artists": [{"name": artist}]}}
+        ]
+    }
+    expected_match = (
+        f"{artist} - {title}" if artist_first else f"{title} - {artist}"
     )
-    if not get_spotify_tracks_flag and not download_spotify_playlist:
-        if download_spotify_playlist:
-            substring = "DOWNLOAD_SPOTIFY_PLAYLIST is a key"
-        else:
-            substring = "CHECK_TRACKS_SPOTIFY_PLAYLISTS has one or more keys"
-        assert caplog.records.pop(0).message == (
-            f"There are no Spotify tracks; make sure {substring} from "
-            "spotify_playlists.yaml"
-        )
-    if not get_local_tracks_flag and not download_spotify_playlist:
-        assert caplog.records.pop(0).message == (
-            "There are no local tracks; make sure LOCAL_DIRS has "
-            "one or more directories containing one or more tracks"
-        )
-    if not beatcloud_tracks and (
-        get_spotify_tracks_flag or get_local_tracks_flag
-    ):
-        mock_get_beatcloud_tracks.assert_called_once()
-    if get_spotify_tracks_flag and not download_spotify_playlist:
-        assert caplog.records.pop(0).message == (
-            "\nSpotify Playlist Tracks / Beatcloud Matches: "
-            f"{len(mock_get_spotify_tracks.return_value)}"
-        )
-        assert caplog.records.pop(0).message == f"{spotify_playlist}:"
-        assert caplog.records.pop(0).message == (
-            "\t100: track - artist | track - artist"
-        )
-    if get_local_tracks_flag and not download_spotify_playlist:
-        assert caplog.records.pop(0).message == (
-            "\nLocal Directory Tracks / Beatcloud Matches: "
-            f"{len(mock_get_local_tracks.return_value)}"
-        )
-        assert caplog.records.pop(0).message == f"{tmpdir}:"
-        assert caplog.records.pop(0).message == (
-            "\t100: track - artist | track - artist"
-        )
+    find_matches_result = [
+        ("test-playlist", expected_match, expected_match, 100)
+    ]
+    expected_matches = [Path(f"{expected_match}.mp3")]
+    mock_get_spotify_tracks.return_value = get_spotify_tracks_result
+    mock_find_matches.return_value = find_matches_result
+    mock_get_beatcloud_tracks.return_value = expected_matches
+    beatcloud_tracks, beatcloud_matches = compare_tracks(config)
+    assert (
+        caplog.records[0].message
+        == "\nSpotify Playlist Tracks / Beatcloud Matches: 1"
+    )
+    assert caplog.records[1].message == "test-playlist:"
+    assert (
+        caplog.records[2].message
+        == f"\t100: {expected_match} | {expected_match}"
+    )
+    assert beatcloud_tracks == mock_get_beatcloud_tracks.return_value
+    assert beatcloud_matches == expected_matches
 
 
 @mock.patch(
-    "djtools.spotify.helpers.spotipy.Spotify.playlist",
-    return_value={
-        "tracks": {
-            "items": [
-                {
-                    "track": {
-                        "name": "title",
-                        "artists": [
-                            {"name": "artist"},
-                        ],
-                    },
-                },
-            ],
-            "next": False,
-        },
-    },
-)
-@mock.patch("djtools.utils.helpers.get_spotify_client")
-@mock.patch(
-    "djtools.utils.helpers.get_playlist_ids",
-    mock.Mock(return_value={"playlist": "playlist_id"}),
+    "djtools.utils.check_tracks.find_matches",
+    new=mock.Mock(return_value=[]),
 )
 @mock.patch(
     "djtools.utils.check_tracks.get_beatcloud_tracks",
-    mock.Mock(return_value=[Path("artist - title")]),
+    new=mock.Mock(return_value=[]),
 )
-def test_compare_tracks_spotify_with_artist_first(
-    mock_spotify, mock_spotify_playlist, config, caplog
-):
-    """Test the compare_tracks function."""
-    caplog.set_level("INFO")
-    mock_spotify.return_value.playlist.return_value = (
-        mock_spotify_playlist.return_value
-    )
-    config.ARTIST_FIRST = True
-    config.CHECK_TRACKS = True
-    config.CHECK_TRACKS_SPOTIFY_PLAYLISTS = ["playlist"]
-    compare_tracks(config)
-    assert caplog.records[0].message == (
-        'Got 1 track from Spotify playlist "playlist"'
-    )
-    assert caplog.records[1].message == "Got 1 track from Spotify in total"
-    assert caplog.records[2].message == (
-        "\nSpotify Playlist Tracks / Beatcloud Matches: 1"
-    )
-    assert caplog.records[3].message == "playlist:"
-    assert caplog.records[4].message == (
-        "\t100: artist - title | artist - title"
-    )
-
-
 @mock.patch(
     "djtools.utils.check_tracks.get_local_tracks",
-    mock.Mock(return_value={"dir": [Path("title - artist.mp3")]}),
+    new=mock.Mock(return_value={}),
+)
+def test_compare_tracks_get_local_tracks_no_tracks(config, caplog):
+    """Test the compare_tracks function."""
+    caplog.set_level("WARNING")
+    config.LOCAL_DIRS = [Path("some/dir")]
+    beatcloud_tracks, beatcloud_matches = compare_tracks(config)
+    assert caplog.records[0].message == (
+        "There are no local tracks; make sure LOCAL_DIRS has one or "
+        "more directories containing one or more tracks"
+    )
+    assert not beatcloud_tracks
+    assert not beatcloud_matches
+
+
+@pytest.mark.parametrize("artist_first", [False, True])
+@mock.patch("djtools.utils.check_tracks.find_matches")
+@mock.patch("djtools.utils.check_tracks.get_beatcloud_tracks")
+@mock.patch("djtools.utils.check_tracks.get_local_tracks")
+@mock.patch("djtools.utils.check_tracks.reverse_title_and_artist")
+def test_compare_tracks_get_local_tracks_yields_tracks(
+    mock_reverse_title_and_artist,
+    mock_get_local_tracks,
+    mock_get_beatcloud_tracks,
+    mock_find_matches,
+    artist_first,
+    config,
+):
+    """Test the compare_tracks function."""
+    local_dir = Path("some/dir")
+    config.LOCAL_DIRS = [local_dir]
+    config.ARTIST_FIRST = artist_first
+    file_stem = "artist - title" if artist_first else "title - artist"
+    mock_get_local_tracks.return_value = {
+        local_dir: [Path(f"{file_stem}.mp3")]
+    }
+    mock_get_beatcloud_tracks.return_value = [Path(f"{file_stem}.mp3")]
+    find_matches_result = [(local_dir, file_stem, file_stem, 100)]
+    mock_find_matches.return_value = find_matches_result
+    compare_tracks(config)
+    if artist_first:
+        mock_reverse_title_and_artist.assert_called_once()
+    else:
+        mock_reverse_title_and_artist.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "beatcloud_tracks", [[Path("title - artist.mp3")], []]
+)
+@mock.patch("djtools.utils.check_tracks.get_beatcloud_tracks")
+@mock.patch(
+    "djtools.utils.check_tracks.get_spotify_tracks",
+    new=mock.Mock(
+        return_value={
+            "test-playlist": [
+                {"track": {"name": "title", "artists": [{"name": "artist"}]}}
+            ]
+        }
+    ),
 )
 @mock.patch(
-    "djtools.utils.check_tracks.get_beatcloud_tracks",
-    mock.Mock(return_value=[Path("artist - title")]),
+    "djtools.utils.check_tracks.find_matches",
+    new=mock.Mock(return_value=[]),
 )
-def test_compare_tracks_local_dirs_with_artist_first(config, caplog):
+def test_compare_tracks_cached_get_beatcloud_tracks(
+    mock_get_beatcloud_tracks, beatcloud_tracks, config
+):
     """Test the compare_tracks function."""
-    caplog.set_level("INFO")
-    config.ARTIST_FIRST = True
-    config.CHECK_TRACKS = True
-    config.LOCAL_DIRS = ["dir"]
-    compare_tracks(config)
-    assert caplog.records[0].message == (
-        "\nLocal Directory Tracks / Beatcloud Matches: 1"
-    )
-    assert caplog.records[1].message == "dir:"
-    assert caplog.records[2].message == (
-        "\t100: title - artist | title - artist"
-    )
+    config.CHECK_TRACKS_SPOTIFY_PLAYLISTS = ["test-playlist"]
+    compare_tracks(config, beatcloud_tracks)
+    if beatcloud_tracks:
+        mock_get_beatcloud_tracks.assert_not_called()
+    else:
+        mock_get_beatcloud_tracks.return_value = beatcloud_tracks
+        mock_get_beatcloud_tracks.assert_called_once()

@@ -1,58 +1,12 @@
 """Testing for the shuffle_playlists module."""
-from bs4 import BeautifulSoup
 import pytest
 
+from djtools.collection.collections import RekordboxCollection
 from djtools.collection.shuffle_playlists import shuffle_playlists
+from djtools.collection.playlists import Playlist
 
 
-def test_shuffle_playlists(config, rekordbox_xml, caplog):
-    """Test shuffle_playlists function."""
-    caplog.set_level("INFO")
-    playlists = ["Hip Hop"]
-    config.COLLECTION_PATH = rekordbox_xml
-    config.SHUFFLE_PLAYLISTS = playlists
-    with open(rekordbox_xml, mode="r", encoding="utf-8") as _file:
-        database = BeautifulSoup(_file.read(), "xml")
-    track_lookup = {
-        track["TrackID"]: track
-        for track in database.find_all("TRACK")
-        if track.get("Location")
-    }
-    original_playlists = [
-        database.find_all("NODE", {"Name": playlist, "Type": "1"})[0]
-        for playlist in playlists
-    ]
-    original_tracks = set(
-        track["Key"]
-        for playlist in original_playlists
-        for track in playlist.find_all("TRACK")
-    )
-    original_track_numbers = [
-        track_lookup[key]["TrackNumber"] for key in original_tracks
-    ]
-    new_xml = rekordbox_xml.parent / "test_collection"
-    shuffle_playlists(config, output_path=new_xml)
-    with open(new_xml, mode="r", encoding="utf-8") as _file:
-        database = BeautifulSoup(_file.read(), "xml")
-    track_lookup = {
-        track["TrackID"]: track
-        for track in database.find_all("TRACK")
-        if track.get("Location")
-    }
-    shuffled_playlist = database.find_all(
-        "NODE", {"Name": "SHUFFLE", "Type": "1"}
-    )[0]
-    shuffled_tracks = set(
-        track["Key"] for track in shuffled_playlist.find_all("TRACK")
-    )
-    shuffled_track_numbers = [
-        track_lookup[key]["TrackNumber"] for key in shuffled_tracks
-    ]
-    assert shuffled_tracks == original_tracks
-    assert shuffled_track_numbers != original_track_numbers
-
-
-def test_shuffle_playlists_missing_playlist(config, rekordbox_xml):
+def test_shuffle_playlists_handles_missing_playlist(config, rekordbox_xml):
     """Test shuffle_playlists function."""
     playlist = "nonexistent playlist"
     config.COLLECTION_PATH = rekordbox_xml
@@ -62,3 +16,57 @@ def test_shuffle_playlists_missing_playlist(config, rekordbox_xml):
         match=f"{playlist} not found",
     ):
         shuffle_playlists(config)
+
+
+def test_shuffle_playlists_shuffles_track_numbers(
+    config, rekordbox_collection, rekordbox_xml, tmpdir
+):
+    """Test shuffle_playlists function."""
+    playlist = "Hip Hop"
+    config.COLLECTION_PATH = rekordbox_xml
+    config.SHUFFLE_PLAYLISTS = [playlist]
+    hip_hop_playlist = rekordbox_collection.get_playlists(playlist)[0]
+    old_track_id_number_map = {
+        track_id: track._TrackNumber  # pylint: disable=protected-access
+        for track_id, track in hip_hop_playlist.get_tracks().items()
+    }
+    new_collection = tmpdir / "test_shuffle_collection"
+    shuffle_playlists(config, path=new_collection)
+    collection = RekordboxCollection(new_collection)
+    hip_hop_playlist = collection.get_playlists(playlist)[0]
+    new_track_id_number_map = {
+        track_id: track._TrackNumber  # pylint: disable=protected-access
+        for track_id, track in hip_hop_playlist.get_tracks().items()
+    }
+    assert old_track_id_number_map.keys() == new_track_id_number_map.keys()
+    assert old_track_id_number_map.values() != new_track_id_number_map.values()
+
+
+def test_shuffle_playlists_creates_new_playlist(
+    config, rekordbox_collection, rekordbox_xml, tmpdir
+):
+    """Test shuffle_playlists function."""
+    target_playlist = "Hip Hop"
+    output_playlist = "SHUFFLE"
+    config.COLLECTION_PATH = rekordbox_xml
+    config.SHUFFLE_PLAYLISTS = [target_playlist]
+    shuffle_playlist = rekordbox_collection.get_playlists(output_playlist)
+    assert not shuffle_playlist
+    new_collection = tmpdir / "test_collection"
+    shuffle_playlists(config, path=new_collection)
+    collection = RekordboxCollection(new_collection)
+    shuffle_playlist = collection.get_playlists(output_playlist)[0]
+    assert isinstance(shuffle_playlist, Playlist)
+
+
+def test_shuffle_playlists_creates_new_collection(
+    config, rekordbox_xml, tmpdir
+):
+    """Test shuffle_playlists function."""
+    playlist = "Hip Hop"
+    config.COLLECTION_PATH = rekordbox_xml
+    config.SHUFFLE_PLAYLISTS = [playlist]
+    new_collection = tmpdir / "test_collection"
+    assert not new_collection.exists()
+    shuffle_playlists(config, path=new_collection)
+    assert new_collection.exists()

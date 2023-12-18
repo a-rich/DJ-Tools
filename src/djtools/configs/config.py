@@ -24,11 +24,6 @@ class BaseConfig(BaseModel, extra=Extra.allow):
         """Constructor."""
         super().__init__(*args, **kwargs)
         logger.info(repr(self))
-        if (
-            type(self)  # pylint: disable=unidiomatic-typecheck
-            is not BaseConfig
-        ):
-            return
 
     def __repr__(self):
         super_keys = set(BaseConfig.__fields__)
@@ -48,17 +43,15 @@ class BaseConfig(BaseModel, extra=Extra.allow):
 
         for name, value in self.dict().items():
             if (
-                (
-                    name in super_keys
-                    and type(self)  # pylint: disable=unidiomatic-typecheck
-                    is not BaseConfig
-                )
-                or (
-                    name not in super_keys
-                    and type(self)  # pylint: disable=unidiomatic-typecheck
-                    is BaseConfig
-                )
-            ) and not show_full_config:
+                name in super_keys
+                and type(self)  # pylint: disable=unidiomatic-typecheck
+                is not BaseConfig
+            ) or (
+                name not in super_keys
+                and type(self)  # pylint: disable=unidiomatic-typecheck
+                is BaseConfig
+                and not show_full_config
+            ):
                 continue
             if (
                 isinstance(value, list)

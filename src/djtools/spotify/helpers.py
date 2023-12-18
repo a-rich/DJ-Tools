@@ -19,52 +19,6 @@ from djtools.configs.config import BaseConfig
 logger = logging.getLogger(__name__)
 
 
-def build_new_playlist(
-    spotify: spotipy.Spotify,
-    username: str,
-    subreddit: str,
-    new_tracks: List[Tuple[str]],
-) -> Dict[str, Any]:
-    """Creates a new playlist from a list of track IDs / URLs.
-
-    Args:
-        spotify: Spotify client.
-        username: Spotify username.
-        subreddit: Subreddit name to filter.
-        new_tracks: List of Spotify track ("id", "name") tuples.
-
-    Returns:
-        Playlist object for the newly constructed playlist.
-    """
-    ids = list(zip(*new_tracks))[0]
-    playlist = spotify.user_playlist_create(
-        username, name=f"{subreddit.title()}"
-    )
-    spotify.playlist_add_items(playlist["id"], ids, position=None)
-
-    return playlist
-
-
-async def catch(generator: AsyncGenerator, message: Optional[str] = "") -> Any:
-    """This function permits one-line try/except logic for comprehensions.
-
-    Args:
-        generator: Async generator.
-        message: Prefix message for logger warning.
-
-    Returns:
-        Return of the AsyncGenerator.
-    """
-    while True:
-        try:
-            yield await generator.__anext__()  # pylint: disable=stop-iteration-return,unnecessary-dunder-call
-        except StopAsyncIteration:
-            return
-        except Exception as exc:
-            logger.warning(f"{message}: {exc}" if message else exc)
-            continue
-
-
 def filter_results(
     spotify: spotipy.Spotify,
     results: List[Dict],
@@ -86,7 +40,7 @@ def filter_results(
         Tuple of track object and Levenshtein distance.
     """
     track, dist = {}, 0.0
-    tracks = filter_tracks(
+    tracks = _filter_tracks(
         results["tracks"]["items"], threshold, title, artist
     )
     while results["tracks"]["next"]:
@@ -96,96 +50,15 @@ def filter_results(
             logger.warning(f"Failed to get next tracks for {title, artist}")
             break
         tracks.extend(
-            filter_tracks(results["tracks"]["items"], threshold, title, artist)
+            _filter_tracks(
+                results["tracks"]["items"], threshold, title, artist
+            )
         )
 
     if tracks:
         track, dist = max(tracks, key=itemgetter(1))
 
     return track, dist
-
-
-def filter_tracks(
-    tracks: Dict, threshold: float, title: str, artist: str
-) -> List[Tuple[Dict[str, Any], float]]:
-    """Applies Levenshtein distance filtering on both the resulting
-        tracks' "artist" and "name" fields to qualify a match for the
-        submission title.
-
-    Args:
-        tracks: Spotify search results.
-        threshold: Minimum Levenshtein distance.
-        title: Potential title of a track.
-        artist: Potential artist of a track.
-
-    Returns:
-        List of tuple of track object and Levenshtein distance.
-    """
-    results = []
-    artist = ", ".join(sorted([x.strip() for x in artist.split(",")]))
-    for track in tracks:
-        artists = ", ".join(
-            sorted({x["name"].lower() for x in track["artists"]})
-        )
-        title_match = max(
-            fuzz.ratio(track["name"].lower(), title.lower()),
-            fuzz.ratio(track["name"].lower(), artist.lower()),
-        )
-        artist_match = max(
-            fuzz.ratio(artists.lower(), title.lower()),
-            fuzz.ratio(artists.lower(), artist.lower()),
-        )
-        if title_match >= threshold and artist_match >= threshold:
-            results.append((track, title_match + artist_match))
-
-    return results
-
-
-def fuzzy_match(
-    spotify: spotipy.Spotify, title: str, threshold: float
-) -> Optional[Tuple[str]]:
-    """Attempts to split submission title into two parts
-        (track name, artist(s)), search Spotify for tracks that have an
-        "artist" field that matches one of these parts and a "name" field that
-        matches the remaining part with a threshold Levenshtein similarity.
-
-    Args:
-        spotify: Spotify client.
-        title: Submission title.
-        threshold: Minimum Levenshtein distance.
-
-    Returns:
-        Tuple of matching track's ID and artist - title or None if no match.
-    """
-    ret = None
-    parts = parse_title(title)
-    if not all(parts):
-        return ret
-
-    matches = []
-    for track, artist in [parts, parts[::-1]]:
-        try:
-            results = spotify.search(
-                q=f"track:{track} artist:{artist}",
-                type="track",
-                limit=50,
-            )
-        except Exception as exc:
-            logger.error(f'Error searching for "{track} - {artist}": {exc}')
-            continue
-
-        artist = ", ".join(sorted([x.strip() for x in artist.split(",")]))
-        match, dist = filter_results(
-            spotify, results, threshold, track, artist
-        )
-        if match:
-            artists = ", ".join([y["name"] for y in match["artists"]])
-            matches.append((dist, match["id"], f'{match["name"]} - {artists}'))
-
-    if matches:
-        ret = tuple(max(matches, key=itemgetter(0))[1:])
-
-    return ret
 
 
 def get_playlist_ids() -> Dict[str, str]:
@@ -200,7 +73,9 @@ def get_playlist_ids() -> Dict[str, str]:
     )
     if ids_path.exists():
         with open(ids_path, mode="r", encoding="utf-8") as _file:
-            playlist_ids = yaml.load(_file, Loader=yaml.FullLoader) or {}
+            playlist_ids = (
+                yaml.load(_file, Loader=yaml.FullLoader) or playlist_ids
+            )
 
     return playlist_ids
 
@@ -278,7 +153,7 @@ async def get_subreddit_posts(
         kwargs["time_filter"] = subreddit["period"]
     subs = [
         x
-        async for x in catch(
+        async for x in _catch(
             func(**kwargs), message="Failed to retrieve Reddit submission"
         )
     ]
@@ -305,7 +180,7 @@ async def get_subreddit_posts(
         with ThreadPoolExecutor(max_workers=8) as executor:
             new_tracks = list(
                 tqdm(
-                    executor.map(process, *payload),
+                    executor.map(_process, *payload),
                     total=len(submissions),
                     desc=msg,
                 )
@@ -319,31 +194,6 @@ async def get_subreddit_posts(
         logger.info(f'No new submissions from "r/{subreddit["name"]}"')
 
     return new_tracks, subreddit
-
-
-def parse_title(title: str) -> List[str]:
-    """Attempts to split submission title into two parts
-        (track name, artist(s)).
-
-    Args:
-        title: Submission title.
-
-    Returns:
-        Pair of strings that represent (in no particular order) the artist(s)
-            and track name(s).
-    """
-    try:
-        title, artist = map(str.strip, title.split(" - "))
-    except ValueError:
-        try:
-            title, artist = map(str.strip, title.lower().split(" by "))
-        except ValueError:
-            return [None, None]
-
-    title, artist = map(str.strip, [title.split("(")[0], artist.split("(")[0]])
-    title, artist = map(str.strip, [title.split("[")[0], artist.split("[")[0]])
-
-    return [title, artist]
 
 
 def populate_playlist(
@@ -372,7 +222,7 @@ def populate_playlist(
     playlist_id = playlist_ids.get(playlist_name)
     playlist = None
     if playlist_id and tracks:
-        playlist = update_existing_playlist(
+        playlist = _update_existing_playlist(
             spotify,
             playlist_id,
             tracks,
@@ -384,7 +234,7 @@ def populate_playlist(
             f"Unable to get ID for {playlist_name}...creating a new "
             "playlist"
         )
-        playlist = build_new_playlist(
+        playlist = _build_new_playlist(
             spotify, spotify_username, playlist_name, tracks
         )
         playlist_ids[playlist_name] = playlist["id"]
@@ -399,7 +249,177 @@ def populate_playlist(
     return playlist_ids
 
 
-def process(
+def write_playlist_ids(playlist_ids: Dict[str, str]):
+    """Write playlist IDs to file.
+
+    Args:
+        playlist_ids: Dictionary of Spotify playlist names mapped to playlist
+            IDs.
+    """
+    ids_path = (
+        Path(__file__).parent.parent / "configs" / "spotify_playlists.yaml"
+    )
+    with open(ids_path, mode="w", encoding="utf-8") as _file:
+        yaml.dump(playlist_ids, _file)
+
+
+def _build_new_playlist(
+    spotify: spotipy.Spotify,
+    username: str,
+    subreddit: str,
+    new_tracks: List[Tuple[str]],
+) -> Dict[str, Any]:
+    """Creates a new playlist from a list of track IDs / URLs.
+
+    Args:
+        spotify: Spotify client.
+        username: Spotify username.
+        subreddit: Subreddit name to filter.
+        new_tracks: List of Spotify track ("id", "name") tuples.
+
+    Returns:
+        Playlist object for the newly constructed playlist.
+    """
+    ids = list(zip(*new_tracks))[0]
+    playlist = spotify.user_playlist_create(
+        username, name=f"{subreddit.title()}"
+    )
+    spotify.playlist_add_items(playlist["id"], ids, position=None)
+
+    return playlist
+
+
+async def _catch(
+    generator: AsyncGenerator, message: Optional[str] = ""
+) -> Any:
+    """This function permits one-line try/except logic for comprehensions.
+
+    Args:
+        generator: Async generator.
+        message: Prefix message for logger warning.
+
+    Returns:
+        Return of the AsyncGenerator.
+    """
+    while True:
+        try:
+            yield await generator.__anext__()  # pylint: disable=stop-iteration-return,unnecessary-dunder-call
+        except StopAsyncIteration:
+            return
+        except Exception as exc:
+            logger.warning(f"{message}: {exc}" if message else exc)
+            continue
+
+
+def _filter_tracks(
+    tracks: Dict, threshold: float, title: str, artist: str
+) -> List[Tuple[Dict[str, Any], float]]:
+    """Applies Levenshtein distance filtering on both the resulting
+        tracks' "artist" and "name" fields to qualify a match for the
+        submission title.
+
+    Args:
+        tracks: Spotify search results.
+        threshold: Minimum Levenshtein distance.
+        title: Potential title of a track.
+        artist: Potential artist of a track.
+
+    Returns:
+        List of tuple of track object and Levenshtein distance.
+    """
+    results = []
+    artist = ", ".join(sorted([x.strip() for x in artist.split(",")]))
+    for track in tracks:
+        artists = ", ".join(
+            sorted({x["name"].lower() for x in track["artists"]})
+        )
+        title_match = max(
+            fuzz.ratio(track["name"].lower(), title.lower()),
+            fuzz.ratio(track["name"].lower(), artist.lower()),
+        )
+        artist_match = max(
+            fuzz.ratio(artists.lower(), title.lower()),
+            fuzz.ratio(artists.lower(), artist.lower()),
+        )
+        if title_match >= threshold and artist_match >= threshold:
+            results.append((track, title_match + artist_match))
+
+    return results
+
+
+def _fuzzy_match(
+    spotify: spotipy.Spotify, title: str, threshold: float
+) -> Optional[Tuple[str]]:
+    """Attempts to split submission title into two parts
+        (track name, artist(s)), search Spotify for tracks that have an
+        "artist" field that matches one of these parts and a "name" field that
+        matches the remaining part with a threshold Levenshtein similarity.
+
+    Args:
+        spotify: Spotify client.
+        title: Submission title.
+        threshold: Minimum Levenshtein distance.
+
+    Returns:
+        Tuple of matching track's ID and artist - title or None if no match.
+    """
+    ret = None
+    parts = _parse_title(title)
+    if not all(parts):
+        return ret
+
+    matches = []
+    for track, artist in [parts, parts[::-1]]:
+        try:
+            results = spotify.search(
+                q=f"track:{track} artist:{artist}",
+                type="track",
+                limit=50,
+            )
+        except Exception as exc:
+            logger.error(f'Error searching for "{track} - {artist}": {exc}')
+            continue
+
+        artist = ", ".join(sorted([x.strip() for x in artist.split(",")]))
+        match, dist = filter_results(
+            spotify, results, threshold, track, artist
+        )
+        if match:
+            artists = ", ".join([y["name"] for y in match["artists"]])
+            matches.append((dist, match["id"], f'{match["name"]} - {artists}'))
+
+    if matches:
+        ret = tuple(max(matches, key=itemgetter(0))[1:])
+
+    return ret
+
+
+def _parse_title(title: str) -> List[str]:
+    """Attempts to split submission title into two parts
+        (track name, artist(s)).
+
+    Args:
+        title: Submission title.
+
+    Returns:
+        Pair of strings that represent (in no particular order) the artist(s)
+            and track name(s).
+    """
+    try:
+        title, artist = map(str.strip, title.split(" - "))
+    except ValueError:
+        try:
+            title, artist = map(str.strip, title.lower().split(" by "))
+        except ValueError:
+            return [None, None]
+
+    title, artist = map(str.strip, [title.split("(")[0], artist.split("(")[0]])
+    title, artist = map(str.strip, [title.split("[")[0], artist.split("[")[0]])
+
+    return [title, artist]
+
+
+def _process(
     submission: praw.models.Submission,
     spotify: spotipy.Spotify,
     threshold: float,
@@ -417,10 +437,12 @@ def process(
     if "spotify.com/track/" in submission.url:
         return (submission.url, submission.title)
 
-    return fuzzy_match(spotify, submission.title, threshold)
+    return _fuzzy_match(spotify, submission.title, threshold)
 
 
-def track_name_too_similar(track: str, playlist_track_names: Set[str]) -> bool:
+def _track_name_too_similar(
+    track: str, playlist_track_names: Set[str]
+) -> bool:
     """Fuzzy matches candidate new track with tracks already in playlist to see
         if it's a duplicate.
 
@@ -442,7 +464,7 @@ def track_name_too_similar(track: str, playlist_track_names: Set[str]) -> bool:
     return False
 
 
-def update_existing_playlist(
+def _update_existing_playlist(
     spotify: spotipy.Spotify,
     playlist: str,
     new_tracks: str,
@@ -493,7 +515,7 @@ def update_existing_playlist(
                 f'Candidate new track "{track}" is already in the playlist'
             )
             continue
-        if track_name_too_similar(track, playlist_track_names):
+        if _track_name_too_similar(track, playlist_track_names):
             continue
         tracks_added.append(track)
         add_payload.append(id_)
@@ -530,17 +552,3 @@ def update_existing_playlist(
         spotify.playlist_add_items(playlist, add_payload)
 
     return _playlist
-
-
-def write_playlist_ids(playlist_ids: Dict[str, str]):
-    """Write playlist IDs to file.
-
-    Args:
-        playlist_ids: Dictionary of Spotify playlist names mapped to playlist
-            IDs.
-    """
-    ids_path = (
-        Path(__file__).parent.parent / "configs" / "spotify_playlists.yaml"
-    )
-    with open(ids_path, mode="w", encoding="utf-8") as _file:
-        yaml.dump(playlist_ids, _file)

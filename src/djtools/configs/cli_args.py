@@ -7,72 +7,6 @@ from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 
-def convert_to_paths(paths: Union[str, List[str]]) -> Path:
-    """Convert CLI argument from string to pathlib.Path.
-
-    Args:
-        paths: String(s) representing path(s).
-
-    Returns:
-        Path
-    """
-    if isinstance(paths, List):
-        return list(map(Path, filter(None, paths)))
-
-    return Path(paths) if paths else ""
-
-
-def parse_json(_json: str) -> Dict:
-    """Parses a JSON string and returns a dict.
-
-    Args:
-        _json: String representing JSON.
-
-    Raises:
-        Exception: JSON string must be valid JSON.
-
-    Returns:
-        Dictionary.
-    """
-    try:
-        return json.loads(_json)
-    except Exception as exc:
-        raise ValueError(
-            f'Unable to parse JSON type argument "{_json}": {exc}'
-        ) from Exception
-
-
-class NonEmptyListElementAction(Action):
-    """This Action implementation permits overriding list defaults.
-
-    Some configuration options, like UPLOAD_EXCLUDE_DIRS, may be set to some
-    sensible default in config.yaml. Because of this users will be unable to
-    run "--upload-music" in conjunction with "--download-include-dirs" without
-    having to first make an edit to their config.yaml (because the
-    include/exclude options are mutually exclusive).
-    """
-
-    def __call__(
-        self,
-        parser: ArgumentParser,
-        namespace: Namespace,
-        values: List[str],
-        option_string: Optional[str] = None,
-    ):
-        """Filter list-type arguments for empty strings.
-
-        Args:
-            parser: The ArgumentParser object which contains this action.
-            namespace: The Namespace object returned by parse_args().
-            values: The associated command-line arguments.
-            option_string: The option string used to invoke this action.
-        """
-        values = values or []
-        dest = getattr(namespace, self.dest) or []
-        dest.extend(filter(None, values))
-        setattr(namespace, self.dest, dest)
-
-
 def get_arg_parser() -> ArgumentParser:
     """Build an argparse.ArgumentParser object.
 
@@ -90,7 +24,7 @@ def get_arg_parser() -> ArgumentParser:
     )
     parser.add_argument(
         "--link-configs",
-        type=convert_to_paths,
+        type=_convert_to_paths,
         help=(
             "The configuration files used by djtools are included at the "
             "location where this package is installed...\nUse this option to "
@@ -132,7 +66,7 @@ def get_arg_parser() -> ArgumentParser:
     )
     collection_parser.add_argument(
         "--collection-path",
-        type=convert_to_paths,
+        type=_convert_to_paths,
         help='Path to a collection database (e.g. "rekordbox.xml").',
     )
     collection_parser.add_argument(
@@ -176,7 +110,7 @@ def get_arg_parser() -> ArgumentParser:
     )
     collection_parser.add_argument(
         "--copy-playlists-destination",
-        type=convert_to_paths,
+        type=_convert_to_paths,
         help="Location to copy playlists' audio files to.",
     )
     collection_parser.add_argument(
@@ -269,7 +203,7 @@ def get_arg_parser() -> ArgumentParser:
     )
     spotify_parser.add_argument(
         "--spotify-playlist-subreddits",
-        type=parse_json,
+        type=_parse_json,
         help=(
             "List of subreddits configs to build playlists from.\nFormat as "
             'a JSON string containing a list of dictionaries with "name", '
@@ -348,7 +282,7 @@ def get_arg_parser() -> ArgumentParser:
     )
     sync_parser.add_argument(
         "--download-exclude-dirs",
-        type=convert_to_paths,
+        type=_convert_to_paths,
         nargs="+",
         action=NonEmptyListElementAction,
         help=(
@@ -358,7 +292,7 @@ def get_arg_parser() -> ArgumentParser:
     )
     sync_parser.add_argument(
         "--download-include-dirs",
-        type=convert_to_paths,
+        type=_convert_to_paths,
         nargs="+",
         action=NonEmptyListElementAction,
         help=(
@@ -399,7 +333,7 @@ def get_arg_parser() -> ArgumentParser:
     )
     sync_parser.add_argument(
         "--upload-exclude-dirs",
-        type=convert_to_paths,
+        type=_convert_to_paths,
         nargs="+",
         action=NonEmptyListElementAction,
         help=(
@@ -408,7 +342,7 @@ def get_arg_parser() -> ArgumentParser:
     )
     sync_parser.add_argument(
         "--upload-include-dirs",
-        type=convert_to_paths,
+        type=_convert_to_paths,
         nargs="+",
         action=NonEmptyListElementAction,
         help=(
@@ -422,7 +356,7 @@ def get_arg_parser() -> ArgumentParser:
     )
     sync_parser.add_argument(
         "--usb-path",
-        type=convert_to_paths,
+        type=_convert_to_paths,
         help=(
             "Path to a drive containing completely and exclusively your set of"
             " audio files."
@@ -449,7 +383,10 @@ def get_arg_parser() -> ArgumentParser:
             "comparing tracks located in a list of Spotify playlists and/or a "
             "list of local paths to tracks in the Beatcloud to determine if "
             "you have redundancies\n  - downloading audio files from a URL "
-            "containing embedded audio (e.g. Soundcloud)"
+            "containing embedded audio (e.g. Soundcloud)\n  - normalizing the "
+            "peak amplitude of audio files in a list of directories\n  - "
+            "processing a recording file using track data from a Spotify "
+            "playlist"
         ),
         formatter_class=RawTextHelpFormatter,
     )
@@ -460,7 +397,7 @@ def get_arg_parser() -> ArgumentParser:
     )
     utils_parser.add_argument(
         "--audio-destination",
-        type=convert_to_paths,
+        type=_convert_to_paths,
         help="Location to download audio file(s) to.",
     )
     utils_parser.add_argument(
@@ -497,7 +434,7 @@ def get_arg_parser() -> ArgumentParser:
     )
     utils_parser.add_argument(
         "--local-dirs",
-        type=convert_to_paths,
+        type=_convert_to_paths,
         nargs="+",
         action=NonEmptyListElementAction,
         help="List of local directories to check against the Beatcloud.",
@@ -517,7 +454,7 @@ def get_arg_parser() -> ArgumentParser:
     )
     utils_parser.add_argument(
         "--recording-file",
-        type=convert_to_paths,
+        type=_convert_to_paths,
         help='Audio recording to pair with "--recording-playlist".',
     )
     utils_parser.add_argument(
@@ -532,3 +469,69 @@ def get_arg_parser() -> ArgumentParser:
     )
 
     return parser
+
+
+class NonEmptyListElementAction(Action):
+    """This Action implementation permits overriding list defaults.
+
+    Some configuration options, like UPLOAD_EXCLUDE_DIRS, may be set to some
+    sensible default in config.yaml. Because of this users will be unable to
+    run "--upload-music" in conjunction with "--download-include-dirs" without
+    having to first make an edit to their config.yaml (because the
+    include/exclude options are mutually exclusive).
+    """
+
+    def __call__(
+        self,
+        parser: ArgumentParser,
+        namespace: Namespace,
+        values: List[str],
+        option_string: Optional[str] = None,
+    ):
+        """Filter list-type arguments for empty strings.
+
+        Args:
+            parser: The ArgumentParser object which contains this action.
+            namespace: The Namespace object returned by parse_args().
+            values: The associated command-line arguments.
+            option_string: The option string used to invoke this action.
+        """
+        values = values or []
+        dest = getattr(namespace, self.dest) or []
+        dest.extend(filter(None, values))
+        setattr(namespace, self.dest, dest)
+
+
+def _convert_to_paths(paths: Union[str, List[str]]) -> Union[Path, List[Path]]:
+    """Convert CLI argument from string to pathlib.Path.
+
+    Args:
+        paths: String(s) representing path(s).
+
+    Returns:
+        Path or list of Paths.
+    """
+    if isinstance(paths, List):
+        return list(map(Path, filter(None, paths)))
+
+    return Path(paths) if paths else ""
+
+
+def _parse_json(_json: str) -> Dict:
+    """Parses a JSON string and returns a dict.
+
+    Args:
+        _json: String representing JSON.
+
+    Raises:
+        Exception: JSON string must be valid JSON.
+
+    Returns:
+        Dictionary.
+    """
+    try:
+        return json.loads(_json)
+    except Exception as exc:
+        raise ValueError(
+            f'Unable to parse JSON type argument "{_json}": {exc}'
+        ) from Exception

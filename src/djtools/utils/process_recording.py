@@ -59,7 +59,7 @@ def process(config: BaseConfig):
                 track["track"]["album"]["release_date"], "%Y-%m-%d"
             )
 
-        # TODO(a-rich): why won't Rekordbox load "label" and "year" tags?!
+        # TODO(a-rich): Why won't Rekordbox load "label" and "year" tags?!
         data = {
             "album": track["track"]["album"]["name"],
             "artist": ", ".join(

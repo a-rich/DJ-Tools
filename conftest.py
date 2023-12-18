@@ -12,9 +12,9 @@ import pytest
 import yaml
 
 from djtools.configs.config import BaseConfig
-from djtools.configs.helpers import filter_dict, PKG_CFG
+from djtools.configs.helpers import _filter_dict, PKG_CFG
 from djtools.collection.collections import RekordboxCollection
-from djtools.collection.playlists import RekordboxPlaylist
+from djtools.collection.config import PlaylistConfig
 from djtools.collection.tracks import RekordboxTrack
 
 
@@ -33,7 +33,7 @@ def config():
         **{
             k: v
             for cfg in configs.values()
-            for k, v in filter_dict(cfg).items()
+            for k, v in _filter_dict(cfg).items()
         }
     )
 
@@ -70,40 +70,41 @@ def playlist_config():
         return yaml.load(_file.read(), Loader=yaml.FullLoader)
 
 
+@pytest.fixture
+def playlist_config_obj(
+    playlist_config,
+):  # pylint: disable=redefined-outer-name
+    """Test playlist config object fixture."""
+    return PlaylistConfig(**playlist_config)
+
+
 @pytest.fixture(scope="session")
 def rekordbox_playlist_tag():  # pylint: disable=redefined-outer-name
     """Fixture for Rekordbox playlist tag."""
     playlist_string = (
-        """<NODE Name="ROOT" Type="0" Count="2">"""
-        """  <NODE Name="Genres" Type="0" Count="1">"""
-        """    <NODE Name="Hip Hop" Type="1" Entries="1">"""
-        """      <TRACK Key="2"/>"""
-        """    </NODE>"""
-        """  </NODE>"""
-        """  <NODE Name="My Tags" Type="0" Count="1">"""
-        """    <NODE Name="Dark" Type="1" Entries="0"/>"""
-        """  </NODE>"""
+        """<NODE Name="ROOT" Type="0" Count="2">\n"""
+        """  <NODE Name="Genres" Type="0" Count="1">\n"""
+        """    <NODE Name="Hip Hop" Type="1" Entries="1">\n"""
+        """      <TRACK Key="2"/>\n"""
+        """    </NODE>\n"""
+        """  </NODE>\n"""
+        """  <NODE Name="My Tags" Type="0" Count="1">\n"""
+        """    <NODE Name="Dark" Type="1" Entries="0"/>\n"""
+        """  </NODE>\n"""
         """</NODE>"""
     )
     return BeautifulSoup(playlist_string, "xml").find("NODE")
 
 
 @pytest.fixture(scope="session")
-def rekordbox_playlist(
-    rekordbox_playlist_tag,
-):  # pylint: disable=redefined-outer-name
-    """Fixture for Rekordbox playlist object."""
-    return RekordboxPlaylist(rekordbox_playlist_tag)
-
-
-@pytest.fixture(scope="session")
 def rekordbox_track_tag(input_tmpdir):  # pylint: disable=redefined-outer-name
     """Fixture for Rekordbox track tag."""
     track_string = (
-        """<TRACK AverageBpm="140.00" Comments="/* Dark */" """
-        """DateAdded="2023-06-24" Genre="Dubstep" """
-        """Location="file://localhost/track1.mp3" Rating="255" TrackID="1" """
-        """TrackNumber="1">\n<TEMPO/>\n<POSITION_MARK/>\n</TRACK>"""
+        """<TRACK Artist="A Tribe Called Quest" AverageBpm="86.00" """
+        """Comments=" /* Gangsta */ " DateAdded="2022-06-24" Genre="Hip Hop / R&amp;B" """
+        """Label="Label" Location="file://localhost/track2.mp3" """
+        """Tonality="7B" Rating="0" TrackID="2" """
+        """TrackNumber="2" Year="2022"/>"""
     )
     track_tag = BeautifulSoup(track_string, "xml").find("TRACK")
     test_dir = Path(input_tmpdir) / "input"
@@ -135,7 +136,7 @@ def rekordbox_xml(input_tmpdir):  # pylint: disable=redefined-outer-name
         with open(track.get_location(), mode="w", encoding="utf-8") as _file:
             _file.write("")
 
-    return collection.serialize(output_path=input_tmpdir / "rekordbox.xml")
+    return collection.serialize(path=input_tmpdir / "rekordbox.xml")
 
 
 @pytest.fixture(scope="session")
@@ -157,6 +158,14 @@ def rekordbox_collection(
 ):  # pylint: disable=redefined-outer-name
     """Fixture for Rekordbox collection object."""
     return RekordboxCollection(rekordbox_xml)
+
+
+@pytest.fixture(scope="session")
+def rekordbox_playlist(
+    rekordbox_collection,
+):  # pylint: disable=redefined-outer-name
+    """Fixture for Rekordbox playlist object."""
+    return rekordbox_collection.get_playlists()
 
 
 ###############################################################################

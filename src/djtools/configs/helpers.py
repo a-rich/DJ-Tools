@@ -31,63 +31,6 @@ PKG_CFG = {
 }
 
 
-def arg_parse() -> Dict:
-    """This function parses command-line arguments.
-
-    It also sets the log level and symlinks a user-provided directory to the
-    library's configs folder via the --link-configs argument.
-
-    Returns:
-        Dictionary of command-line arguments.
-    """
-    arg_parser = get_arg_parser()
-    args = arg_parser.parse_args()
-
-    if args.log_level:
-        logger.setLevel(args.log_level)
-
-    if args.version:
-        print(get_version())
-        sys.exit()
-
-    logger.info(get_version())
-
-    if args.link_configs:
-        args.link_configs = Path(args.link_configs)
-        if args.link_configs.exists():
-            msg = (
-                f"{args.link_configs} must be a directory that does not "
-                "already exist"
-            )
-            logger.error(msg)
-            raise ValueError(msg)
-        parent_dir = args.link_configs.parent
-        if not parent_dir.exists():
-            parent_dir.mkdir(parents=True, exist_ok=True)
-        args.link_configs.symlink_to(
-            Path(__file__).parent, target_is_directory=True
-        )
-
-    return vars(args)
-
-
-def filter_dict(
-    sub_config: Union[
-        CollectionConfig, SpotifyConfig, SyncConfig, UtilsConfig
-    ],
-) -> Dict[Any, Any]:
-    """Filters out the superclass key: value pairs of a subclass.
-
-    Args:
-        sub_config: Instance of any subclass of BaseConfig.
-
-    Returns:
-        Dictionary containing just the keys unique to "sub_config".
-    """
-    super_keys = set(BaseConfig.__fields__)
-    return {k: v for k, v in sub_config.dict().items() if k not in super_keys}
-
-
 @make_path
 def build_config(config_file: Optional[Path] = None) -> BaseConfig:
     """This function loads configurations for the library.
@@ -136,11 +79,16 @@ def build_config(config_file: Optional[Path] = None) -> BaseConfig:
     if entry_frame[1].endswith(("bin/djtools", "bin/pytest")):
         args = {
             k.upper(): v
-            for k, v in arg_parse().items()
+            for k, v in _arg_parse().items()
             if v or isinstance(v, list)
         }
 
     # Update config using command-line arguments.
+    args = {
+        k.upper(): v
+        for k, v in _arg_parse().items()
+        if v or isinstance(v, list)
+    }
     if args:
         logger.info(f"Args: {args}")
         args_set = set(args)
@@ -169,8 +117,65 @@ def build_config(config_file: Optional[Path] = None) -> BaseConfig:
         **{
             k: v
             for cfg in configs.values()
-            for k, v in filter_dict(cfg).items()
+            for k, v in _filter_dict(cfg).items()
         },
     )
 
     return joined_config
+
+
+def _arg_parse() -> Dict:
+    """This function parses command-line arguments.
+
+    It also sets the log level and symlinks a user-provided directory to the
+    library's configs folder via the --link-configs argument.
+
+    Returns:
+        Dictionary of command-line arguments.
+    """
+    arg_parser = get_arg_parser()
+    args = arg_parser.parse_args()
+
+    if args.log_level:
+        logger.setLevel(args.log_level)
+
+    if args.version:
+        print(get_version())
+        sys.exit()
+
+    logger.info(get_version())
+
+    if args.link_configs:
+        args.link_configs = Path(args.link_configs)
+        if args.link_configs.exists():
+            msg = (
+                f"{args.link_configs} must be a directory that does not "
+                "already exist"
+            )
+            logger.error(msg)
+            raise ValueError(msg)
+        parent_dir = args.link_configs.parent
+        if not parent_dir.exists():
+            parent_dir.mkdir(parents=True, exist_ok=True)
+        args.link_configs.symlink_to(
+            Path(__file__).parent, target_is_directory=True
+        )
+
+    return vars(args)
+
+
+def _filter_dict(
+    sub_config: Union[
+        CollectionConfig, SpotifyConfig, SyncConfig, UtilsConfig
+    ],
+) -> Dict[Any, Any]:
+    """Filters out the superclass key: value pairs of a subclass.
+
+    Args:
+        sub_config: Instance of any subclass of BaseConfig.
+
+    Returns:
+        Dictionary containing just the keys unique to "sub_config".
+    """
+    super_keys = set(BaseConfig.__fields__)
+    return {k: v for k, v in sub_config.dict().items() if k not in super_keys}

@@ -1,29 +1,31 @@
 """Testing for the helpers module."""
 import asyncio
+from pathlib import Path
 from unittest import mock
 
 import pytest
+import yaml
 
 from djtools.spotify.config import SubredditConfig
 from djtools.spotify.helpers import (
-    build_new_playlist,
-    catch,
+    _build_new_playlist,
+    _catch,
     filter_results,
-    filter_tracks,
-    fuzzy_match,
+    _filter_tracks,
+    _fuzzy_match,
     get_playlist_ids,
     get_reddit_client,
     get_spotify_client,
     get_subreddit_posts,
-    parse_title,
+    _parse_title,
     populate_playlist,
-    process,
-    track_name_too_similar,
-    update_existing_playlist,
+    _process,
+    _track_name_too_similar,
+    _update_existing_playlist,
     write_playlist_ids,
 )
 
-from ..test_utils import MockOpen
+from ..test_utils import mock_exists, MockOpen
 
 
 async def aiter(obj, num_subs):
@@ -49,7 +51,7 @@ def test_build_new_playlist(
     mock_spotify_user_playlist_create,
     mock_spotify_playlist_add_items,
 ):
-    """Test for the build_new_playlist function."""
+    """Test for the _build_new_playlist function."""
     mock_spotify.user_playlist_create.return_value = (
         mock_spotify_user_playlist_create.return_value
     )
@@ -57,14 +59,17 @@ def test_build_new_playlist(
         mock_spotify_playlist_add_items.return_value
     )
     new_tracks = [("test_id", "track title - artist name")]
-    ret = build_new_playlist(mock_spotify, "test_user", "r/techno", new_tracks)
+    ret = _build_new_playlist(
+        mock_spotify, "test_user", "r/techno", new_tracks
+    )
     assert isinstance(ret, dict)
+    assert ret == {"id": "test_id"}
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("message", ["", "oops"])
 async def test_catch(message, caplog):
-    """Test for the catch function."""
+    """Test for the _catch function."""
     exc = ZeroDivisionError("You can't divide by zero!")
 
     class Generator:
@@ -88,7 +93,7 @@ async def test_catch(message, caplog):
             return self._i
 
     caplog.set_level("WARNING")
-    _ = [x async for x in catch(Generator(), message=message)]
+    _ = [x async for x in _catch(Generator(), message=message)]
     assert caplog.records[0].message == (
         f"{message}: {str(exc)}" if message else str(exc)
     )
@@ -96,7 +101,7 @@ async def test_catch(message, caplog):
 
 @pytest.mark.parametrize("spotify_next_fails", [True, False])
 @mock.patch(
-    "djtools.spotify.helpers.filter_tracks",
+    "djtools.spotify.helpers._filter_tracks",
     return_value=[
         (
             {
@@ -175,7 +180,7 @@ def test_filter_results(mock_spotify, mock_filter_tracks, spotify_next_fails):
 
 
 def test_filter_tracks():
-    """Test for the filter_tracks function."""
+    """Test for the _filter_tracks function."""
     tracks = [
         {
             "name": "Arctic Oscillations",
@@ -193,7 +198,7 @@ def test_filter_tracks():
     threshold = 100
     title = "Arctic Oscillations"
     artist = "Fanu"
-    ret = filter_tracks(tracks, threshold, title, artist)
+    ret = _filter_tracks(tracks, threshold, title, artist)
     expected = [
         (
             {
@@ -246,11 +251,11 @@ def test_filter_tracks():
     },
 )
 def test_fuzzy_match(mock_spotify_search, mock_spotify, title, match_result):
-    """Test for the fuzzy_match function."""
+    """Test for the _fuzzy_match function."""
     mock_spotify.search.return_value = mock_spotify_search.return_value
     threshold = 100
     with mock.patch(
-        "djtools.spotify.helpers.parse_title",
+        "djtools.spotify.helpers._parse_title",
         return_value=title,
     ), mock.patch(
         "djtools.spotify.helpers.filter_results",
@@ -267,12 +272,16 @@ def test_fuzzy_match(mock_spotify_search, mock_spotify, title, match_result):
         if match_result
         else (None, 0),
     ) as mock_filter_results:
-        ret = fuzzy_match(mock_spotify, title, threshold)
+        ret = _fuzzy_match(mock_spotify, title, threshold)
     if not all(x for x in title):
+        # If a track title AND artist name aren't resolved, then None is
+        # returned.
         assert not ret
     if not match_result:
+        # If no matches are found, then None is returned.
         assert not ret
     if match_result and all(x for x in title):
+        # If no matches are found, then None is returned.
         assert isinstance(ret, tuple)
         id_, match = ret
         expected_ret = mock_filter_results.return_value[0]
@@ -288,17 +297,17 @@ def test_fuzzy_match(mock_spotify_search, mock_spotify, title, match_result):
 def test_fuzzy_match_handles_spotify_exception(
     mock_spotify_search, mock_spotify, caplog
 ):
-    """Test for the fuzzy_match function."""
+    """Test for the _fuzzy_match function."""
     caplog.set_level("ERROR")
     mock_spotify.search.side_effect = mock_spotify_search.side_effect
     threshold = 100
     title = "Arctic Oscillations"
     artist = "Fanu"
     with mock.patch(
-        "djtools.spotify.helpers.parse_title",
+        "djtools.spotify.helpers._parse_title",
         return_value=(title, artist),
     ):
-        ret = fuzzy_match(mock_spotify, title, threshold)
+        ret = _fuzzy_match(mock_spotify, title, threshold)
         assert caplog.records[0].message.startswith(
             f'Error searching for "{title} - {artist}"'
         )
@@ -312,10 +321,24 @@ def test_fuzzy_match_handles_spotify_exception(
         content="playlist: playlist-id",
     ).open,
 )
-def test_get_playlist_ids():
+@pytest.mark.parametrize(
+    "config_exists, expected",
+    [(True, {"playlist": "playlist-id"}), (False, {})],
+)
+def test_get_playlist_ids(config_exists, expected):
     """Test for the get_playlist_ids function."""
-    playlist_ids = get_playlist_ids()
+    with mock.patch(
+        "djtools.collection.config.Path.exists",
+        lambda path: mock_exists(
+            [
+                ("spotify_playlists.yaml", config_exists),
+            ],
+            path,
+        ),
+    ):
+        playlist_ids = get_playlist_ids()
     assert isinstance(playlist_ids, dict)
+    assert playlist_ids == expected
 
 
 @mock.patch("djtools.spotify.helpers.praw.Reddit")
@@ -340,7 +363,7 @@ def test_get_spotify_client(config):
 @pytest.mark.parametrize("subreddit_type", ["hot", "top"])
 @pytest.mark.parametrize("num_subs", [5, 0])
 @mock.patch("djtools.spotify.helpers.praw.Reddit.close", mock.Mock())
-@mock.patch("djtools.spotify.helpers.process")
+@mock.patch("djtools.spotify.helpers._process")
 @mock.patch("djtools.spotify.helpers.praw.models.Submission")
 @mock.patch("djtools.spotify.helpers.praw.Reddit")
 @mock.patch("djtools.spotify.helpers.get_spotify_client")
@@ -361,7 +384,7 @@ async def test_get_subreddit_posts(
     mock_praw_submission.id = "test_id"
     mock_process.return_value = "track - artist"
     with mock.patch(
-        "djtools.spotify.helpers.catch",
+        "djtools.spotify.helpers._catch",
     ) as mock_catch, mock.patch(
         "djtools.spotify.helpers.praw.Reddit.subreddit",
         new=mock.AsyncMock(),
@@ -389,6 +412,7 @@ async def test_get_subreddit_posts(
 @pytest.mark.parametrize(
     "title",
     [
+        "Arctic Oscillations by Fanu",
         "Arctic Oscillations - Fanu",
         "Arctic Oscillations - Fanu (this track is cool)",
         "Arctic Oscillations - Fanu [love this track]",
@@ -397,11 +421,11 @@ async def test_get_subreddit_posts(
     ],
 )
 def test_parse_title(title):
-    """Test for the parse_title function."""
+    """Test for the _parse_title function."""
     split_chars = ["[", "("]
-    ret = parse_title(title)
+    ret = _parse_title(title)
     assert isinstance(ret, list)
-    if " - " in title:
+    if " - " in title or " by " in title:
         assert all(x for x in ret)
         if any(x in title for x in split_chars):
             assert all(x not in r for x in split_chars for r in ret)
@@ -412,8 +436,8 @@ def test_parse_title(title):
 @pytest.mark.parametrize("playlist_ids", [{}, {"playlist": "id"}])
 @pytest.mark.parametrize("tracks", [[], [("id", "title - artist")]])
 @mock.patch("djtools.spotify.helpers.spotipy.Spotify.playlist")
-@mock.patch("djtools.spotify.helpers.build_new_playlist")
-@mock.patch("djtools.spotify.helpers.update_existing_playlist")
+@mock.patch("djtools.spotify.helpers._build_new_playlist")
+@mock.patch("djtools.spotify.helpers._update_existing_playlist")
 @mock.patch("djtools.spotify.helpers.spotipy.Spotify")
 def test_populate_playlist(
     mock_spotify,
@@ -445,17 +469,25 @@ def test_populate_playlist(
         tracks=tracks,
         playlist_limit=playlist_limit,
     )
+    # If there are tracks to add and the playlist to add them to exists
+    # already, then a call to _update_existing_playlist is expected.
     if playlist_ids and tracks:
         assert mock_update_existing_playlist.call_count == 1
+    # If there are tracks to add and the playlist to add them to does NOT exist
+    # already, then a call to _build_new_playlist is expected.
     elif tracks:
         assert caplog.records.pop(0).message == (
             f"Unable to get ID for {playlist_name}...creating a new playlist"
         )
         assert mock_build_new_playlist.call_count == 1
         assert playlist_name in ret_playlist_ids
+    # Even if there are no tracks being added, an existing playlist must have
+    # it's data retrieved for displaying info.
     elif playlist_ids:
         assert mock_spotify_playlist.call_count == 1
 
+    # If the playlist doesn't exist already AND there are no tracks, then
+    # nothing should happen.
     if not (playlist_ids or tracks):
         assert (
             mock_update_existing_playlist.call_count
@@ -464,6 +496,8 @@ def test_populate_playlist(
             == 0
         )
         assert len(caplog.records) == 0
+    # Whether a new playlist was created or an existing one updated, the
+    # playlist name and URL must be displayed.
     else:
         assert caplog.records.pop(0).message == (
             f'"{ret_val["name"]}": {ret_val["external_urls"].get("spotify")}'
@@ -489,13 +523,13 @@ def test_populate_playlist(
 @mock.patch("djtools.spotify.helpers.get_spotify_client")
 @mock.patch("djtools.spotify.helpers.praw.models.Submission", autospec=True)
 def test_process(mock_praw_submission, mock_spotipy, url, title):
-    """Test for the process function."""
+    """Test for the _process function."""
     mock_praw_submission.url = url
     mock_praw_submission.title = title
     with mock.patch(
-        "djtools.spotify.helpers.fuzzy_match", return_value=(url, title)
+        "djtools.spotify.helpers._fuzzy_match", return_value=(url, title)
     ):
-        ret = process(mock_praw_submission, mock_spotipy, 50)
+        ret = _process(mock_praw_submission, mock_spotipy, 50)
     assert isinstance(ret, tuple)
     assert ret == (url, title)
 
@@ -508,10 +542,10 @@ def test_process(mock_praw_submission, mock_spotipy, url, title):
     ],
 )
 def test_track_name_too_similar(playlist_track_names, caplog):
-    """Test for the track_name_too_similar function."""
+    """Test for the _track_name_too_similar function."""
     caplog.set_level("WARNING")
     track = "Arctic Oscillations - Fanu"
-    ret = track_name_too_similar(track, playlist_track_names)
+    ret = _track_name_too_similar(track, playlist_track_names)
     if any("Not a Match" in x for x in playlist_track_names):
         assert not ret
     else:
@@ -524,7 +558,7 @@ def test_track_name_too_similar(playlist_track_names, caplog):
 
 @pytest.mark.parametrize("too_similar", [True, False])
 @mock.patch(
-    "djtools.spotify.helpers.track_name_too_similar",
+    "djtools.spotify.helpers._track_name_too_similar",
     return_value=None,
 )
 @mock.patch(
@@ -598,7 +632,7 @@ def test_update_existing_playlist(
     too_similar,
     caplog,
 ):
-    """Test for the update_existing_playlist function."""
+    """Test for the _update_existing_playlist function."""
     caplog.set_level("WARNING")
     mock_spotify.playlist.return_value = mock_spotify_playlist.return_value
     mock_spotify.next.return_value = mock_spotify_next.return_value
@@ -618,7 +652,7 @@ def test_update_existing_playlist(
     ]
     limit = 1
     verbosity = 1
-    ret = update_existing_playlist(
+    ret = _update_existing_playlist(
         mock_spotify, playlist, new_tracks, limit, verbosity
     )
     assert isinstance(ret, dict)
@@ -627,7 +661,37 @@ def test_update_existing_playlist(
     )
 
 
-@mock.patch("builtins.open", MockOpen(files=["spotify_playlists.yaml"]).open)
 def test_write_playlist_ids():
     """Test for the write_playlist_ids function."""
-    write_playlist_ids({})
+    ids_path = (
+        Path(__file__).parent.parent.parent
+        / "src"
+        / "djtools"
+        / "configs"
+        / "spotify_playlists.yaml"
+    )
+
+    # Mock a single playlist as contents.
+    with mock.patch(
+        "builtins.open",
+        MockOpen(
+            files=["spotify_playlists.yaml"],
+            content="playlist: playlist-id",
+        ).open,
+    ):
+        with open(ids_path, mode="r", encoding="utf-8") as _file:
+            data = yaml.load(_file, Loader=yaml.FullLoader)
+    expected = {"playlist": "playlist-id"}
+    assert data == expected
+
+    # Write a new playlist to the config.
+    expected2 = {**expected, **{"another-playlist": "different-playlist-id"}}
+    write_playlist_ids(expected2)
+    with open(ids_path, mode="r", encoding="utf-8") as _file:
+        data = yaml.load(_file, Loader=yaml.FullLoader)
+
+    # Assert config contains both old data and new data.
+    assert data == expected2
+
+    # Remove config file written by test.
+    ids_path.unlink()

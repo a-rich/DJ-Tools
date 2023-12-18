@@ -7,8 +7,9 @@
       <TEMPO/>
       <POSITION_MARK/>
     </TRACK>
-    <TRACK Artist="A Tribe Called Quest" AverageBpm="86.00" Comments="" DateAdded="2022-06-24" Genre="Hip Hop / R&amp;B" Label="Label" Location="file://localhost/track2.mp3" Tonality="7B" Rating="0" TrackID="2" TrackNumber="2" Year="2022"/>
+    <TRACK Artist="A Tribe Called Quest" AverageBpm="86.00" Comments="Whatta classic" DateAdded="2022-06-24" Genre="Hip Hop / R&amp;B" Label="Label" Location="file://localhost/track2.mp3" Tonality="7B" Rating="0" TrackID="2" TrackNumber="2" Year="2022"/>
     <TRACK Artist="Carbon" AverageBpm="128.00" Comments="" DateAdded="2021-06-24" Genre="Techno / Minimal Deep Tech" Label="Some Label" Location="file://localhost/track3.mp3" Tonality="8A" Rating="0" TrackID="3" TrackNumber="3" Year="2021"/>
+    <TRACK Artist="Raar" AverageBpm="143.00" Comments=" /* Atmospheric / Groovy */" DateAdded="2023-06-18" Genre="Techno" Label="Antiverse Records" Location="file://localhost/track4.mp3" Rating="153" TrackID="4" TrackNumber="7" Tonality="4A" Year="2023"/>
   </COLLECTION>
   <PLAYLISTS>
     <NODE Name="ROOT" Type="0" Count="2">

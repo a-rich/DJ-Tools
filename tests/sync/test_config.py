@@ -1,4 +1,5 @@
 """Testing for the config module."""
+import os
 from pathlib import Path
 import re
 from unittest import mock
@@ -10,10 +11,9 @@ import pytest
 from djtools.sync.config import SyncConfig
 
 
-@pytest.mark.parametrize("operations", [(True, False), (False, True)])
-def test_syncconfig_download_or_upload_without_usb_path(operations):
+@pytest.mark.parametrize("download,upload", [(True, False), (False, True)])
+def test_syncconfig_download_or_upload_without_usb_path(download, upload):
     """Test for the SyncConfig class."""
-    download, upload = operations
     cfg = {
         "AWS_PROFILE": "myprofile",
         "DOWNLOAD_MUSIC": download,
@@ -30,10 +30,9 @@ def test_syncconfig_download_or_upload_without_usb_path(operations):
         SyncConfig(**cfg)
 
 
-@pytest.mark.parametrize("operations", [(True, False), (False, True)])
-def test_syncconfig_download_or_upload_with_missing_usb_path(operations):
+@pytest.mark.parametrize("download,upload", [(True, False), (False, True)])
+def test_syncconfig_download_or_upload_with_missing_usb_path(download, upload):
     """Test for the SyncConfig class."""
-    download, upload = operations
     usb_path = Path("not/real/usb/path")
     cfg = {
         "AWS_PROFILE": "myprofile",
@@ -62,9 +61,13 @@ def test_syncconfig_download_without_import_user():
         SyncConfig(**cfg)
 
 
-def test_syncconfig_mutually_exclusive_dirs():
+@pytest.mark.parametrize("sync_direction", ["DOWN", "UP"])
+def test_syncconfig_mutually_exclusive_dirs(sync_direction):
     """Test for the SyncConfig class."""
-    cfg = {"UPLOAD_INCLUDE_DIRS": ["test"], "UPLOAD_EXCLUDE_DIRS": ["test"]}
+    cfg = {
+        f"{sync_direction}LOAD_INCLUDE_DIRS": ["test"],
+        f"{sync_direction}LOAD_EXCLUDE_DIRS": ["test"],
+    }
     with pytest.raises(
         ValueError,
         match=(
@@ -76,9 +79,18 @@ def test_syncconfig_mutually_exclusive_dirs():
         SyncConfig(**cfg)
 
 
-def test_syncconfig_no_aws_profile():
+@pytest.mark.parametrize(
+    "aws_operation",
+    [
+        "DOWNLOAD_COLLECTION",
+        "DOWNLOAD_MUSIC",
+        "UPLOAD_COLLECTION",
+        "UPLOAD_MUSIC",
+    ],
+)
+def test_syncconfig_no_aws_profile(aws_operation):
     """Test for the SyncConfig class."""
-    cfg = {"AWS_PROFILE": "", "UPLOAD_COLLECTION": True}
+    cfg = {"AWS_PROFILE": "", aws_operation: True}
     with pytest.raises(
         RuntimeError,
         match="Config must include AWS_PROFILE for sync operations",
@@ -86,12 +98,24 @@ def test_syncconfig_no_aws_profile():
         SyncConfig(**cfg)
 
 
-def test_syncconfig_set_user():
+def test_syncconfig_sets_aws_profile_env_var():
     """Test for the SyncConfig class."""
-    cfg = {"USER": ""}
+    cfg = {"AWS_PROFILE": "test-profile"}
+    assert os.environ.get("AWS_PROFILE") != cfg["AWS_PROFILE"]
+    SyncConfig(**cfg)
+    assert os.environ.get("AWS_PROFILE") == cfg["AWS_PROFILE"]
+
+
+@pytest.mark.parametrize(
+    "input_user,output_user",
+    [("", getpass.getuser()), ("test-user", "test-user")],
+)
+def test_syncconfig_set_user(input_user, output_user):
+    """Test for the SyncConfig class."""
+    cfg = {"USER": input_user}
     assert not SyncConfig.__fields__["USER"].default
     sync_config = SyncConfig(**cfg)
-    assert sync_config.USER == getpass.getuser()
+    assert sync_config.USER == output_user
 
 
 @mock.patch("djtools.spotify.helpers.get_spotify_client", mock.MagicMock())
@@ -113,3 +137,13 @@ def test_syncconfig_upload_without_discord_url(rekordbox_xml, caplog):
         'DISCORD_URL is not configured...set this for "New Music" '
         "discord messages!"
     )
+
+
+@pytest.mark.parametrize(
+    "path", ["some/path/string", Path("some/path/object")]
+)
+def test_syncconfig_usb_path_is_path(path):
+    """Test for the SyncConfig class."""
+    cfg = {"USB_PATH": path}
+    sync_config = SyncConfig(**cfg)
+    assert isinstance(sync_config.USB_PATH, Path)

@@ -45,7 +45,7 @@ def download_music(
         if not beatcloud_matches:
             logger.warning(
                 "No Beatcloud matches were found! Make sure you've supplied "
-                "to correct playlist name."
+                "the correct playlist name."
             )
             return beatcloud_tracks
         config.DOWNLOAD_INCLUDE_DIRS = [

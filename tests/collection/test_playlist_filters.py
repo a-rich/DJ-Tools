@@ -3,18 +3,60 @@ from unittest import mock
 
 import pytest
 
-from djtools.collection.helpers import PLATFORM_REGISTRY
 from djtools.collection.playlist_filters import (
     ComplexTrackFilter,
     HipHopFilter,
     MinimalDeepTechFilter,
+    PlaylistFilter,
     TransitionTrackFilter,
 )
+from djtools.collection.playlists import RekordboxPlaylist
 from djtools.collection.tracks import RekordboxTrack
 
 
+def test_playlistfilter_cannot_be_instantiated():
+    """Test for the PlaylistFilter class."""
+    with pytest.raises(
+        TypeError,
+        match=(
+            "Can't instantiate abstract class PlaylistFilter with abstract "
+            "methods filter_track, is_filter_playlist"
+        ),
+    ):
+        PlaylistFilter()
+
+
 @pytest.mark.parametrize(
-    "bass_hip_hop,genre_tags,expected",
+    "parent_playlist,playlist,hip_hop_playlist,bass_hip_hop_playlist",
+    [
+        ("Bass", "Hip Hop", True, True),
+        ("Not Bass", "Hip Hop", True, False),
+        ("something", "irrelevant", False, False),
+    ],
+)
+def test_hiphopfilter_detects_playlists(
+    parent_playlist,
+    playlist,
+    hip_hop_playlist,
+    bass_hip_hop_playlist,
+):
+    """Test for the HipHopFilter class."""
+    track_filter = HipHopFilter()
+    playlist = RekordboxPlaylist.new_playlist(playlist, tracks={})
+    parent_playlist = RekordboxPlaylist.new_playlist(
+        parent_playlist, playlists=[playlist]
+    )
+    playlist.set_parent(parent_playlist)
+    result = track_filter.is_filter_playlist(playlist)
+    assert result == hip_hop_playlist
+    assert (
+        track_filter._bass_hip_hop  # pylint: disable=protected-access
+        == bass_hip_hop_playlist
+    )
+
+
+@pytest.mark.parametrize(
+    "bass_hip_hop,tags,expected",
     [
         (True, ["Hip Hop", "R&B"], False),
         (True, ["Hip Hop", "Trap"], True),
@@ -22,20 +64,60 @@ from djtools.collection.tracks import RekordboxTrack
         (False, ["Hip Hop", "Trap"], False),
     ],
 )
-def test_hiphopfilter(bass_hip_hop, genre_tags, expected, rekordbox_track):
+def test_hiphopfilter_filters_tracks(
+    bass_hip_hop, tags, expected, rekordbox_track
+):
     """Test for the HipHopFilter class."""
     track_filter = HipHopFilter()
     with mock.patch.object(
         track_filter, "_bass_hip_hop", bass_hip_hop, create=True
-    ), mock.patch.object(
-        RekordboxTrack, "get_genre_tags", lambda x: genre_tags
-    ):
+    ), mock.patch.object(RekordboxTrack, "get_genre_tags", lambda x: tags):
         result = track_filter.filter_track(rekordbox_track)
         assert result == expected
 
 
 @pytest.mark.parametrize(
-    "techno,genre_tags,expected",
+    "parent_playlist,playlist,minimal_deep_tech_playlist",
+    [
+        ("Techno", "Minimal Deep Tech", True),
+        ("House", "Minimal Deep Tech", True),
+        ("Techno", "Something", False),
+        ("House", "Something", False),
+        ("Something", "Minimal Deep Tech", False),
+    ],
+)
+def test_minimaldeeptechfilter_detects_playlists(
+    parent_playlist,
+    playlist,
+    minimal_deep_tech_playlist,
+):
+    """Test for the MinimalDeepTechFilter class."""
+    track_filter = MinimalDeepTechFilter()
+    playlist = RekordboxPlaylist.new_playlist(playlist, tracks={})
+    parent_playlist = RekordboxPlaylist.new_playlist(
+        parent_playlist, playlists=[playlist]
+    )
+    playlist.set_parent(parent_playlist)
+    result = track_filter.is_filter_playlist(playlist)
+    techno_playlist = (
+        parent_playlist.get_name() == "Techno" and minimal_deep_tech_playlist
+    )
+    house_playlist = (
+        parent_playlist.get_name() == "House" and minimal_deep_tech_playlist
+    )
+    assert result == minimal_deep_tech_playlist
+    assert (
+        track_filter._techno  # pylint: disable=protected-access
+        == techno_playlist
+    )
+    assert (
+        track_filter._house  # pylint: disable=protected-access
+        == house_playlist
+    )
+
+
+@pytest.mark.parametrize(
+    "techno,tags,expected",
     [
         (True, ["Techno", "Minimal Deep Tech"], True),
         (True, ["House", "Minimal Deep Tech"], False),
@@ -43,39 +125,40 @@ def test_hiphopfilter(bass_hip_hop, genre_tags, expected, rekordbox_track):
         (False, ["House", "Minimal Deep Tech"], True),
     ],
 )
-def test_minimaldeeptechfilter(techno, genre_tags, expected, rekordbox_track):
-    """Test for the HipHopFilter class."""
+def test_minimaldeeptechfilter_filters_tracks(
+    techno, tags, expected, rekordbox_track
+):
+    """Test for the MinimalDeepTechFilter class."""
     track_filter = MinimalDeepTechFilter()
     with mock.patch.object(
         track_filter, "_techno", techno, create=True
     ), mock.patch.object(
         track_filter, "_house", not techno, create=True
     ), mock.patch.object(
-        RekordboxTrack, "get_genre_tags", lambda x: genre_tags
+        RekordboxTrack, "get_genre_tags", lambda x: tags
     ):
         result = track_filter.filter_track(rekordbox_track)
         assert result == expected
 
 
 @pytest.mark.parametrize(
-    "parent_playlist_name,playlist_name,expected",
+    "parent_playlist,playlist,expected",
     [
         ("something", "complex", True),
         ("complex", "irrelevant", True),
         ("irrelevant", "something", False),
     ],
 )
-def test_complextrackfilter_skips_irrelevant_playlists(
-    parent_playlist_name,
-    playlist_name,
+def test_complextrackfilter_detects_playlists(
+    parent_playlist,
+    playlist,
     expected,
 ):
     """Test for the ComplexTrackFilter class."""
     track_filter = ComplexTrackFilter()
-    playlist_class = next(iter(PLATFORM_REGISTRY.values()))["playlist"]
-    playlist = playlist_class.new_playlist(playlist_name, tracks={})
-    parent_playlist = playlist_class.new_playlist(
-        parent_playlist_name, playlists=[playlist]
+    playlist = RekordboxPlaylist.new_playlist(playlist, tracks={})
+    parent_playlist = RekordboxPlaylist.new_playlist(
+        parent_playlist, playlists=[playlist]
     )
     playlist.set_parent(parent_playlist)
     result = track_filter.is_filter_playlist(playlist)
@@ -97,12 +180,11 @@ def test_complextrackfilter_filters_tracks(
 ):
     """Test for the ComplexTrackFilter class."""
     track_filter = ComplexTrackFilter(max_tags)
-    playlist_class = next(iter(PLATFORM_REGISTRY.values()))["playlist"]
     rekordbox_track._Tags = tags  # pylint: disable=protected-access
-    playlist = playlist_class.new_playlist(
+    playlist = RekordboxPlaylist.new_playlist(
         "genres", tracks={rekordbox_track.get_id(): rekordbox_track}
     )
-    root_playlist = playlist_class.new_playlist(
+    root_playlist = RekordboxPlaylist.new_playlist(
         "complex", playlists=[playlist]
     )
     playlist.set_parent(root_playlist)
@@ -111,7 +193,7 @@ def test_complextrackfilter_filters_tracks(
 
 
 @pytest.mark.parametrize(
-    "parent_playlist_name,playlist_name,expected",
+    "parent_playlist,playlist,expected",
     [
         ("transitions", "genres", True),
         ("transitions", "tempos", True),
@@ -120,17 +202,16 @@ def test_complextrackfilter_filters_tracks(
         ("irrelevant", "tempos", False),
     ],
 )
-def test_transitiontrackfilter_skips_irrelevant_playlists(
-    parent_playlist_name,
-    playlist_name,
+def test_transitiontrackfilter_detects_playlists(
+    parent_playlist,
+    playlist,
     expected,
 ):
     """Test for the TransitionTrackFilter class."""
     track_filter = TransitionTrackFilter()
-    playlist_class = next(iter(PLATFORM_REGISTRY.values()))["playlist"]
-    playlist = playlist_class.new_playlist(playlist_name, tracks={})
-    parent_playlist = playlist_class.new_playlist(
-        parent_playlist_name, playlists=[playlist]
+    playlist = RekordboxPlaylist.new_playlist(playlist, tracks={})
+    parent_playlist = RekordboxPlaylist.new_playlist(
+        parent_playlist, playlists=[playlist]
     )
     playlist.set_parent(parent_playlist)
     result = track_filter.is_filter_playlist(playlist)
@@ -140,17 +221,16 @@ def test_transitiontrackfilter_skips_irrelevant_playlists(
 def test_transitiontrackfilter_handles_playlist_with_multiple_supported_types():
     """Test for the TransitionTrackFilter class."""
     track_filter = TransitionTrackFilter()
-    playlist_class = next(iter(PLATFORM_REGISTRY.values()))["playlist"]
-    bad_playlist_name = "genres & tempos"
-    playlist = playlist_class.new_playlist(bad_playlist_name, tracks={})
-    parent_playlist = playlist_class.new_playlist(
+    bad_playlist = "genres & tempos"
+    playlist = RekordboxPlaylist.new_playlist(bad_playlist, tracks={})
+    parent_playlist = RekordboxPlaylist.new_playlist(
         "transitions", playlists=[playlist]
     )
     playlist.set_parent(parent_playlist)
     with pytest.raises(
         ValueError,
         match=(
-            f'"{bad_playlist_name}" matches multiple playlist types: genre, '
+            f'"{bad_playlist}" matches multiple playlist types: genre, '
             "tempo"
         ),
     ):
@@ -171,12 +251,11 @@ def test_transitiontrackfilter_filters_tracks(
 ):
     """Test for the TransitionTrackFilter class."""
     track_filter = TransitionTrackFilter(separator)
-    playlist_class = next(iter(PLATFORM_REGISTRY.values()))["playlist"]
     rekordbox_track._Comments = comments  # pylint: disable=protected-access
-    playlist = playlist_class.new_playlist(
+    playlist = RekordboxPlaylist.new_playlist(
         "genres", tracks={rekordbox_track.get_id(): rekordbox_track}
     )
-    root_playlist = playlist_class.new_playlist(
+    root_playlist = RekordboxPlaylist.new_playlist(
         "transitions", playlists=[playlist]
     )
     playlist.set_parent(root_playlist)
