@@ -632,21 +632,7 @@ def test_update_existing_playlist(
     too_similar,
     caplog,
 ):
-    """Test for the _update_existing_playlist function.
-
-    TODO(a-rich): explicitly test logic:
-        1. building track list
-        2. building ids, artists, track_names lists
-        3. if new track is Spotify URL
-        4. if new track ID exists already in playlist
-        5. if new track name is too similar to existing track
-        6. that overflowing playlist reduces size
-        7. that new tracks added are displayed
-        8. that old tracks removed are displayed
-        9. that a message about no changes is displayed
-        10. that playlist removal takes place
-        11. that playlist addition takes place
-    """
+    """Test for the _update_existing_playlist function."""
     caplog.set_level("WARNING")
     mock_spotify.playlist.return_value = mock_spotify_playlist.return_value
     mock_spotify.next.return_value = mock_spotify_next.return_value
