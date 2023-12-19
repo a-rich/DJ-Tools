@@ -9,13 +9,20 @@ information from the Spotify API to:
 - normalize the audio so the headroom is AUDIO_HEADROOM decibels
 - export the files with the configured AUDIO_BITRATE and AUDIO_FORMAT
 """
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 import logging
+import os
 
-from pydub import AudioSegment, effects
+from pydub import AudioSegment
+from tqdm import tqdm
 
 from djtools.configs.config import BaseConfig
-from djtools.utils.helpers import get_spotify_tracks
+from djtools.utils.helpers import (
+    get_spotify_tracks,
+    process_parallel,
+    trim_initial_silence,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -75,9 +82,15 @@ def process(config: BaseConfig):
         track_data.append(data)
         playlist_duration += data["duration"]
 
-    # Load the audio recording and check that it's at least as long as the
-    # playlist duration.
+    # Load the audio and trim the initial silence.
+    logger.info("Loading audio...")
     audio = AudioSegment.from_file(config.RECORDING_FILE)
+    if not config.SKIP_TRIM_INITIAL_SILENCE:
+        audio = trim_initial_silence(
+            audio, [track["duration"] for track in track_data]
+        )
+
+    # Check that the audio is at least as long as the playlist duration.
     audio_duration = len(audio)
     if audio_duration < playlist_duration:
         logger.warning(
@@ -88,46 +101,29 @@ def process(config: BaseConfig):
             "went as expected!"
         )
 
-    # Iterate through the track data and export chunks of the recording.
+    # Create destination for exported audio.
     write_path = config.AUDIO_DESTINATION
     write_path.mkdir(parents=True, exist_ok=True)
+
+    # Split recording into the individual tracks.
+    audio_chunks = []
     for track in track_data:
-        # Slice the portion of the recording for the track.
         track_audio = audio[: track["duration"]]
         audio = audio[track["duration"] :]
+        audio_chunks.append(track_audio)
 
-        # Normalize the audio such that the headroom is
-        # AUDIO_HEADROOM dB.
-        if abs(track_audio.max_dBFS + config.AUDIO_HEADROOM) > 0.001:
-            track_audio = effects.normalize(
-                track_audio, headroom=config.AUDIO_HEADROOM
+    # Normalize audio and export tracks with tags.
+    payload = [
+        [config] * len(audio_chunks),
+        audio_chunks,
+        track_data,
+        [write_path] * len(audio_chunks),
+    ]
+    with ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as executor:
+        _ = list(
+            tqdm(
+                executor.map(process_parallel, *payload),
+                total=len(audio_chunks),
+                desc="Exporting tracks",
             )
-
-        # Build the filename using the title, artist(s) and configured format.
-        filename = (
-            f'{track["artist"]} - {track["title"]}'
-            if config.ARTIST_FIRST
-            else f'{track["title"]} - {track["artist"]}'
-        )
-        filename = write_path / f"{filename}.{config.AUDIO_FORMAT}"
-
-        # Warn users about malformed filenames that could break other features
-        # of djtools.
-        if str(filename).count(" - ") > 1:
-            logger.warning(
-                f'{filename} has more than one occurrence of " - "! '
-                "Because djtools splits on this sequence of characters to "
-                "separate track title and artist(s), you might get unexpected "
-                'behavior while using features like "--check-tracks".'
-            )
-
-        # Export the audio with the configured format and bit rate with the tag
-        # data collected from the Spotify response.
-        track_audio.export(
-            filename,
-            format=config.AUDIO_FORMAT,
-            bitrate=f"{config.AUDIO_BITRATE}k",
-            tags={
-                key: value for key, value in track.items() if key != "duration"
-            },
         )

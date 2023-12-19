@@ -38,6 +38,7 @@ class UtilsConfig(BaseConfig):
     PROCESS_RECORDING: bool = False
     RECORDING_FILE: Path = None
     RECORDING_PLAYLIST: str = ""
+    SKIP_TRIM_INITIAL_SILENCE: bool = False
     URL_DOWNLOAD: str = ""
 
     def __init__(self, *args, **kwargs):

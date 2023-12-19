@@ -15,6 +15,8 @@ fixture_lines = []
 for line in data.split("\n"):
     if "[DEBUG]" not in line:
         continue
+    if "AssertionError" in line:
+        continue
     if "[fixture]" in line:
         fixture_lines.append(line)
     else:

@@ -12,7 +12,7 @@ from djtools.utils.process_recording import process
     "djtools.utils.process_recording.get_spotify_tracks",
     mock.Mock(return_value={}),
 )
-@mock.patch("djtools.utils.process_recording.AudioSegment.export", mock.Mock())
+@mock.patch("djtools.utils.helpers.AudioSegment.export", mock.Mock())
 def test_process_handles_missing_or_empty_playlist(config):
     """Test for the process function."""
     config.RECORDING_PLAYLIST = "playlist"
@@ -27,9 +27,51 @@ def test_process_handles_missing_or_empty_playlist(config):
         process(config)
 
 
+@mock.patch("djtools.utils.helpers.AudioSegment.export", mock.Mock())
+@mock.patch(
+    "djtools.utils.process_recording.get_spotify_tracks",
+    mock.Mock(
+        return_value={
+            "playlist": [
+                {
+                    "track": {
+                        "album": {
+                            "name": "",
+                            "release_date_precision": "year",
+                            "release_date": "2023",
+                            "label": "",
+                        },
+                        "artists": [{"name": "some artist"}],
+                        "duration_ms": 10000,
+                        "name": "some name",
+                    },
+                },
+            ]
+        }
+    ),
+)
+@mock.patch(
+    "djtools.utils.process_recording.AudioSegment.from_file",
+    mock.Mock(return_value=AudioSegment.silent(duration=2000)),
+)
+@mock.patch("djtools.utils.process_recording.process_parallel", mock.Mock())
+@mock.patch("djtools.utils.process_recording.trim_initial_silence")
+@pytest.mark.parametrize("skip,expected", [(False, 1), (True, 0)])
+def test_process_skips_trimming_initial_silence(
+    mock_trim_initial_silence, skip, expected, config, tmpdir
+):
+    """Test for the process function."""
+    config.AUDIO_DESTINATION = Path(tmpdir)
+    config.RECORDING_FILE = "file.wav"
+    config.RECORDING_PLAYLIST = "playlist"
+    config.SKIP_TRIM_INITIAL_SILENCE = skip
+    process(config)
+    assert mock_trim_initial_silence.call_count == expected
+
+
+@mock.patch("djtools.utils.helpers.AudioSegment.export", mock.Mock())
 @mock.patch("djtools.utils.process_recording.get_spotify_tracks")
 @mock.patch("djtools.utils.process_recording.AudioSegment.from_file")
-@mock.patch("djtools.utils.process_recording.AudioSegment.export", mock.Mock())
 def test_process_warns_when_recording_is_too_short(
     mock_audio_segment, mock_spotify_tracks, config, caplog, tmpdir
 ):
@@ -73,6 +115,8 @@ def test_process_warns_when_recording_is_too_short(
     )
 
 
+@mock.patch("djtools.utils.helpers.AudioSegment.export", mock.Mock())
+@mock.patch("djtools.utils.helpers.effects.normalize", mock.Mock())
 @mock.patch(
     "djtools.utils.process_recording.get_spotify_tracks",
     mock.Mock(
@@ -95,8 +139,6 @@ def test_process_warns_when_recording_is_too_short(
         },
     ),
 )
-@mock.patch("djtools.utils.process_recording.AudioSegment.export", mock.Mock())
-@mock.patch("djtools.utils.process_recording.effects.normalize", mock.Mock())
 @mock.patch(
     "djtools.utils.process_recording.AudioSegment.from_file",
     mock.Mock(return_value=AudioSegment.silent(duration=2000)),
@@ -116,15 +158,15 @@ def test_process_warns_when_filename_is_malformed(config, tmpdir, caplog):
     )
 
 
+@mock.patch("djtools.utils.helpers.AudioSegment.export")
+@mock.patch("djtools.utils.helpers.effects.normalize")
 @mock.patch("djtools.utils.process_recording.AudioSegment.from_file")
-@mock.patch("djtools.utils.process_recording.effects.normalize")
 @mock.patch("djtools.utils.process_recording.get_spotify_tracks")
-@mock.patch("djtools.utils.process_recording.AudioSegment.export")
 def test_process(
-    mock_export,
     mock_get_spotify_tracks,
-    mock_normalize,
     mock_audio,
+    mock_normalize,
+    mock_export,
     config,
     tmpdir,
 ):
