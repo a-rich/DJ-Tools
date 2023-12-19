@@ -6,6 +6,7 @@ from typing import Optional
 from unittest import mock
 
 import pytest
+from pydub import AudioSegment, generators
 
 from djtools.utils.helpers import (
     compute_distance,
@@ -17,6 +18,7 @@ from djtools.utils.helpers import (
     initialize_logger,
     make_path,
     reverse_title_and_artist,
+    trim_initial_silence,
 )
 
 
@@ -319,3 +321,19 @@ def test_reverse_title_and_artist():
     }
     new_path_lookup = reverse_title_and_artist(path_lookup)
     assert new_path_lookup == expected
+
+
+def test_trim_initial_silence():
+    """Test for the trim_initial_silence function."""
+    leading_silence = 5000
+    silence_len = 500
+    track_durations = [12345, 23456, 34567]
+    audio = AudioSegment.silent(duration=leading_silence)
+    for dur in track_durations:
+        audio += generators.WhiteNoise().to_audio_segment(duration=dur)
+        audio += AudioSegment.silent(duration=silence_len)
+
+    track_durations = [dur + silence_len for dur in track_durations]
+    assert len(audio) == leading_silence + sum(track_durations)
+    audio = trim_initial_silence(audio, track_durations)
+    assert len(audio) == sum(track_durations) + silence_len

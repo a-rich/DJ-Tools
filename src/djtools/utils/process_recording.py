@@ -13,9 +13,10 @@ from datetime import datetime
 import logging
 
 from pydub import AudioSegment, effects
+from tqdm import tqdm
 
 from djtools.configs.config import BaseConfig
-from djtools.utils.helpers import get_spotify_tracks
+from djtools.utils.helpers import get_spotify_tracks, trim_initial_silence
 
 
 logger = logging.getLogger(__name__)
@@ -75,9 +76,14 @@ def process(config: BaseConfig):
         track_data.append(data)
         playlist_duration += data["duration"]
 
-    # Load the audio recording and check that it's at least as long as the
-    # playlist duration.
+    # Load the audio and trim the initial silence.
+    logger.info("Loading audio...")
     audio = AudioSegment.from_file(config.RECORDING_FILE)
+    audio = trim_initial_silence(
+        audio, [track["duration"] for track in track_data]
+    )
+
+    # Check that the audio is at least as long as the playlist duration.
     audio_duration = len(audio)
     if audio_duration < playlist_duration:
         logger.warning(
@@ -91,7 +97,7 @@ def process(config: BaseConfig):
     # Iterate through the track data and export chunks of the recording.
     write_path = config.AUDIO_DESTINATION
     write_path.mkdir(parents=True, exist_ok=True)
-    for track in track_data:
+    for track in tqdm(track_data, desc="Exporting tracks"):
         # Slice the portion of the recording for the track.
         track_audio = audio[: track["duration"]]
         audio = audio[track["duration"] :]

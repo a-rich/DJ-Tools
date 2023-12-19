@@ -8,14 +8,16 @@ import inspect
 from itertools import product
 import logging
 import logging.config
+from operator import itemgetter
 import os
 import pathlib
 from pathlib import Path
 from subprocess import check_output
 import typing
-from typing import Callable, Dict, List, Set, Tuple
+from typing import Callable, Dict, List, Optional, Set, Tuple
 
 from fuzzywuzzy import fuzz
+from pydub import AudioSegment, silence
 import spotipy
 from tqdm import tqdm
 
@@ -364,3 +366,67 @@ def reverse_title_and_artist(path_lookup: Dict[str, str]) -> Dict[str, str]:
         new_path_lookup[f"{artist} - {title}"] = value
 
     return new_path_lookup
+
+
+def trim_initial_silence(
+    audio: AudioSegment,
+    track_durations: List[int],
+    silence_thresh: Optional[float] = -50,
+    min_start_silence_ms: Optional[int] = 5,
+    step_size: Optional[int] = 100,
+) -> AudioSegment:
+    """Heuristic for determining the amount of leading silence to trim.
+
+    Args:
+        audio: Audio with leading silence.
+        track_durations: List of track durations.
+        silence_thresh: Maximum decibel level that's still considered silence.
+        min_start_silence_ms: Leading milliseconds of each track to check for
+            silence.
+        step_size: Initial step size when checking for leading silences.
+
+    Returns:
+        AudioSegment: Audio with the beginning silence trimmed off.
+    """
+    # Use the track durations to infer the points in the recording where each
+    # track should begin.
+    start_points = []
+    index = 0
+    for track_duration in track_durations:
+        index += track_duration
+        start_points.append(index)
+
+    # Get the number of milliseconds of silence at the beginning of the
+    # recording.
+    leading_silence = silence.detect_leading_silence(
+        audio, silence_threshold=silence_thresh, chunk_size=1
+    )
+
+    # With a logarithmically decreasing step size, step through the potential
+    # offsets to trim off the beginning of the recording.
+    offsets = [0, leading_silence]
+    while step_size > 1:
+        scores = []
+        for offset in range(*offsets, step_size):
+            score = 0
+            # For each track in the recording, build up a score based on the
+            # number of leading milliseconds of silence.
+            for point in start_points:
+                for millisecond in range(1, min_start_silence_ms + 1):
+                    if (
+                        audio[offset + point + millisecond].dBFS
+                        <= silence_thresh
+                    ):
+                        score += 1
+            scores.append((score, offset))
+        # Sort scores in decreasing order.
+        scores = sorted(scores, key=itemgetter(0), reverse=True)
+        # Get the offsets for the highest two scores.
+        _, offsets = zip(*sorted(scores[:2], key=itemgetter(1)))
+        step_size //= 2
+
+    # Trim off the start of the recording using the best offset.
+    best_offset = max(scores, key=itemgetter(0))[1]
+    audio = audio[best_offset:]
+
+    return audio
