@@ -17,6 +17,7 @@ from djtools.utils.helpers import (
     get_spotify_tracks,
     initialize_logger,
     make_path,
+    process_parallel,
     reverse_title_and_artist,
     trim_initial_silence,
 )
@@ -309,6 +310,16 @@ def test_make_path_decorator_raises_error(arg, kwarg, expected):
         foo(arg, path_kwarg=kwarg)
 
 
+@mock.patch("djtools.utils.helpers.AudioSegment.export", new=mock.Mock())
+@mock.patch("djtools.utils.helpers.effects.normalize")
+def test_process_parallel(mock_normalize, config, audio_file, tmpdir):
+    """Test for the process_parallel function."""
+    audio, _ = audio_file
+    track = {"artist": "Artist", "title": "Title"}
+    process_parallel(config, audio, track, tmpdir)
+    assert mock_normalize.call_count == 1
+
+
 def test_reverse_title_and_artist():
     """Test for the reverse_title_and_artist function."""
     path_lookup = {
@@ -325,15 +336,29 @@ def test_reverse_title_and_artist():
 
 def test_trim_initial_silence():
     """Test for the trim_initial_silence function."""
-    leading_silence = 5000
+    leading_silence = 4567
+    step_size = 100
     silence_len = 500
-    track_durations = [12345, 23456, 34567]
+    track_durations = [1234, 2345, 3456]
+
+    # Build up a mock recording of multiple tracks.
     audio = AudioSegment.silent(duration=leading_silence)
     for dur in track_durations:
         audio += generators.WhiteNoise().to_audio_segment(duration=dur)
         audio += AudioSegment.silent(duration=silence_len)
+    init_len = len(audio)
 
+    # Track durations have to account for any silence inserted during playback.
     track_durations = [dur + silence_len for dur in track_durations]
-    assert len(audio) == leading_silence + sum(track_durations)
-    audio = trim_initial_silence(audio, track_durations)
-    assert len(audio) == sum(track_durations) + silence_len
+
+    # Sometimes pydub has an off-by-one difference in the length of audio
+    # constructed in this way.
+    assert abs(init_len - (leading_silence + sum(track_durations))) <= 1
+
+    # Trim leading silence.
+    audio = trim_initial_silence(audio, track_durations, step_size=step_size)
+
+    # The difference between the audio length, before and after, must be
+    # approximately the leading silence amount minus the tail silence.
+    diff = init_len - len(audio)
+    assert abs(leading_silence - silence_len - diff) <= step_size * 2

@@ -17,7 +17,7 @@ import typing
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
 from fuzzywuzzy import fuzz
-from pydub import AudioSegment, silence
+from pydub import AudioSegment, effects, silence
 import spotipy
 from tqdm import tqdm
 
@@ -349,6 +349,50 @@ def make_path(func: Callable) -> Callable:
     return str_to_path
 
 
+def process_parallel(
+    config: BaseConfig, audio: AudioSegment, track: Dict, write_path: Path
+):
+    """Normalize and export track with tags.
+
+    Args:
+        config: Configuration object.
+        audio: Audio for a track.
+        track: Metadata for track audio.
+        write_path: Destination for exported audio.
+    """
+    # Normalize the audio such that the headroom is
+    # AUDIO_HEADROOM dB.
+    if abs(audio.max_dBFS + config.AUDIO_HEADROOM) > 0.001:
+        audio = effects.normalize(audio, headroom=config.AUDIO_HEADROOM)
+
+    # Build the filename using the title, artist(s) and configured format.
+    filename = (
+        f'{track["artist"]} - {track["title"]}'
+        if config.ARTIST_FIRST
+        else f'{track["title"]} - {track["artist"]}'
+    )
+    filename = write_path / f"{filename}.{config.AUDIO_FORMAT}"
+
+    # Warn users about malformed filenames that could break other features
+    # of djtools.
+    if str(filename).count(" - ") > 1:
+        logger.warning(
+            f'{filename} has more than one occurrence of " - "! '
+            "Because djtools splits on this sequence of characters to "
+            "separate track title and artist(s), you might get unexpected "
+            'behavior while using features like "--check-tracks".'
+        )
+
+    # Export the audio with the configured format and bit rate with the tag
+    # data collected from the Spotify response.
+    audio.export(
+        filename,
+        format=config.AUDIO_FORMAT,
+        bitrate=f"{config.AUDIO_BITRATE}k",
+        tags={key: value for key, value in track.items() if key != "duration"},
+    )
+
+
 def reverse_title_and_artist(path_lookup: Dict[str, str]) -> Dict[str, str]:
     """Reverses the title and artist parts of the filename.
 
@@ -372,7 +416,7 @@ def trim_initial_silence(
     audio: AudioSegment,
     track_durations: List[int],
     silence_thresh: Optional[float] = -50,
-    min_start_silence_ms: Optional[int] = 5,
+    min_silence_ms: Optional[int] = 5,
     step_size: Optional[int] = 100,
 ) -> AudioSegment:
     """Heuristic for determining the amount of leading silence to trim.
@@ -381,13 +425,16 @@ def trim_initial_silence(
         audio: Audio with leading silence.
         track_durations: List of track durations.
         silence_thresh: Maximum decibel level that's still considered silence.
-        min_start_silence_ms: Leading milliseconds of each track to check for
+        min_silence_ms: Surrounding milliseconds of each track to check for
             silence.
         step_size: Initial step size when checking for leading silences.
 
     Returns:
         AudioSegment: Audio with the beginning silence trimmed off.
     """
+    # step_size must be a positive integer.
+    step_size = max(step_size, 1)
+
     # Use the track durations to infer the points in the recording where each
     # track should begin.
     start_points = []
@@ -405,20 +452,26 @@ def trim_initial_silence(
     # With a logarithmically decreasing step size, step through the potential
     # offsets to trim off the beginning of the recording.
     offsets = [0, leading_silence]
-    while step_size > 1:
+    while step_size >= 1:
         scores = []
         for offset in range(*offsets, step_size):
             score = 0
             # For each track in the recording, build up a score based on the
-            # number of leading milliseconds of silence.
+            # number of surrounding milliseconds of silence.
             for point in start_points:
-                for millisecond in range(1, min_start_silence_ms + 1):
+                for millisecond in range(1, min_silence_ms + 1):
                     if (
                         audio[offset + point + millisecond].dBFS
                         <= silence_thresh
                     ):
                         score += 1
+                    if (
+                        audio[offset + point - millisecond].dBFS
+                        <= silence_thresh
+                    ):
+                        score += 1
             scores.append((score, offset))
+
         # Sort scores in decreasing order.
         scores = sorted(scores, key=itemgetter(0), reverse=True)
         # Get the offsets for the highest two scores.

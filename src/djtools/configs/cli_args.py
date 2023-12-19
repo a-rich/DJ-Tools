@@ -463,6 +463,11 @@ def get_arg_parser() -> ArgumentParser:
         help='Spotify playlist to pair with "--recording-file".',
     )
     utils_parser.add_argument(
+        "--skip-trim-initial-silence",
+        action="store_true",
+        help='Flag to skip trimming initial silence of "--recording-file".',
+    )
+    utils_parser.add_argument(
         "--url-download",
         type=str,
         help="URL to download audio file(s) from.",

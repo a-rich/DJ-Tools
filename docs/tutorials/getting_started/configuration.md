@@ -68,4 +68,5 @@ In fact, removing the template `config.yaml` and building a config from scratch 
 * `PROCESS_RECORDING`: boolean flag to trigger processing an audio recording using a Spotify playlist
 * `RECORDING_FILE`: Audio recording to pair with `RECORDING_PLAYLIST`
 * `RECORDING_PLAYLIST`: Spotify playlist to pair with `RECORDING_FILE`
+* `SKIP_TRIM_INITIAL_SILENCE`: Flag to skip trimming initial silence of `RECORDING_FILE`
 * `URL_DOWNLOAD`: URL from which music files should be downloaded (i.e. a Soundcloud playlist)
