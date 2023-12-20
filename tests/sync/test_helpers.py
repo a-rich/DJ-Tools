@@ -137,6 +137,36 @@ def test_run_sync(mock_popen, tmpdir):
 
 
 @mock.patch("djtools.sync.helpers.Popen")
+@pytest.mark.parametrize(
+    "byte_sequence,expected",
+    [
+        (
+            b"upload: track.mp3 to s3://dj.beatcloud.com/dj/music/track.mp3\n",
+            ".: 1\n\ttrack.mp3\n",
+        ),
+        (b"\x80", ""),  # This will raise a UnicodeDecodeError.
+    ],
+)
+def test_run_sync_handles_decode_error(
+    mock_popen, byte_sequence, expected, tmpdir
+):
+    """Test for the run_sync function."""
+    with open(Path(tmpdir) / "track.mp3", mode="w", encoding="utf-8") as _file:
+        _file.write("")
+    cmd = ["aws", "s3", "sync", str(tmpdir), "s3://dj.beatcloud.com/dj/music/"]
+    with tempfile.NamedTemporaryFile(mode="wb", delete=False) as tmp_file:
+        tmp_file.write(byte_sequence)
+        tmp_file.seek(0)
+        tmp_file.close()
+        with open(tmp_file.name, mode="rb") as tmp_file:
+            process = mock_popen.return_value.__enter__.return_value
+            process.stdout = tmp_file
+            process.wait.return_value = 0
+            ret = run_sync(cmd)
+    assert ret == expected
+
+
+@mock.patch("djtools.sync.helpers.Popen")
 def test_run_sync_handles_return_code(mock_popen, tmpdir, caplog):
     """Test for the run_sync function."""
     caplog.set_level("CRITICAL")
