@@ -125,7 +125,10 @@ def run_sync(_cmd: str) -> str:
     try:
         with Popen(_cmd, stdout=PIPE) as proc:
             while True:
-                char = proc.stdout.read(1).decode()
+                try:
+                    char = proc.stdout.read(1).decode()
+                except UnicodeDecodeError:
+                    char = ""
                 if char == "" and proc.poll() is not None:
                     break
                 if char not in termination_chars:
