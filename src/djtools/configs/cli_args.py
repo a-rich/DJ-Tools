@@ -34,6 +34,19 @@ def get_arg_parser() -> ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--artist-first",
+        action="store_true",
+        help=(
+            "Indicate that Beatcloud tracks are in the format "
+            '"Artist - Track Title" instead of "Track Title - Artist".\nThe '
+            "ordering is important for any operation that compares your "
+            "tracks' filenames with Spotify tracks or other files...\n"
+            'This includes "--spotify-playlist-from-upload", '
+            '"--download-spotify-playlist", "--spotify-playlists", and '
+            '"--check-tracks".'
+        ),
+    )
+    parser.add_argument(
         "--log-level",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
         help="Logger level.",
@@ -239,19 +252,6 @@ def get_arg_parser() -> ArgumentParser:
             "and the Beatcloud."
         ),
         formatter_class=RawTextHelpFormatter,
-    )
-    sync_parser.add_argument(
-        "--artist-first",
-        action="store_true",
-        help=(
-            "Indicate that Beatcloud tracks are in the format "
-            '"Artist - Track Title" instead of "Track Title - Artist".\nThe '
-            "ordering is important for any operation that compares your "
-            "tracks' filenames with Spotify tracks or other files...\n"
-            'This includes "--spotify-playlist-from-upload", '
-            '"--download-spotify-playlist", "--spotify-playlists", and '
-            '"--check-tracks".'
-        ),
     )
     sync_parser.add_argument(
         "--aws-profile",
