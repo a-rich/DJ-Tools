@@ -120,7 +120,7 @@ def test_build_config_no_config_yaml(mock_parse_args, namespace):
     "builtins.open",
     MockOpen(
         files=["config.yaml"],
-        content="sync:\n  ARTIST_FIRST: false",
+        content="configs:\n  ARTIST_FIRST: false",
     ).open,
 )
 @mock.patch(

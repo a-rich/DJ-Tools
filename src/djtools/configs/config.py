@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 class BaseConfig(BaseModel, extra=Extra.allow):
     """Base configuration object used across the whole library."""
 
+    ARTIST_FIRST: bool = False
     LOG_LEVEL: Literal[
         "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"
     ] = "INFO"
