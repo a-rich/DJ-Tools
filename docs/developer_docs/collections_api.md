@@ -2,7 +2,7 @@
 
 
 Interacting with your collection is easy using the API provided by implementations of `Collection`, `Track`, and `Playlist`.
-For a complete description of the methods these classes provide, please see the [references](../../reference/collection/index.md).
+For a complete description of the methods these classes provide, please see the [references](../reference/collection/index.md).
 What follows is more of a list of examples to demonstrate how quick and useful interactive collection manipulations can be. 
 
 To load a collection, instantiate the class associated with the format of the serialized collection passed as a parameter:
