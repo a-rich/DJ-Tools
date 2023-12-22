@@ -41,4 +41,4 @@ Once your options are configured as desired, you can run the following command t
 
 Note that only one result (the one with the highest Levenshtein similarity that is greater than or equal to `SPOTIFY_PLAYLIST_FUZZ_RATIO`) will be added to the playlist for each submission.
 
-Also note that a [naive submission title parser][djtools.spotify.helpers.parse_title] is used unanimously for all subreddits. In the future, it would be helpful if an abstract interface for submission title parsing was defined and implementations could be sub-classed and configured inside the individual `SubredditConfig` objects.
+Also note that a naive submission title parser is used unanimously for all subreddits. In the future, it would be helpful if an abstract interface for submission title parsing was defined and implementations could be sub-classed and configured inside the individual `SubredditConfig` objects.

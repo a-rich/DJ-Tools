@@ -14,7 +14,7 @@
 
 ## Overview
 The `collection` package is designed to work with any serialized DJ collection that contains all the information about tracks and playlists.
-Each of these three components, `Collection`, `Playlist`, and `Track`, has an interface with which `djtools` uses to implement [these features](../../how_to_guides/index.md#collection).
+Each of these three components, `Collection`, `Playlist`, and `Track`, has an interface with which `djtools` uses to implement [these features](../how_to_guides/index.md#collection).
 
 In order to extend `djtools` so that these features can be used for other DJ platforms (Denon, Serato, Traktor, Virtual DJ, etc.), these three components must be subclassed to implement several abstract methods. 
 
