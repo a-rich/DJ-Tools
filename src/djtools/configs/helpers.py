@@ -84,11 +84,6 @@ def build_config(config_file: Optional[Path] = None) -> BaseConfig:
         }
 
     # Update config using command-line arguments.
-    args = {
-        k.upper(): v
-        for k, v in _arg_parse().items()
-        if v or isinstance(v, list)
-    }
     if args:
         logger.info(f"Args: {args}")
         args_set = set(args)
