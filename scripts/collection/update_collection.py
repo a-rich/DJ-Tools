@@ -75,8 +75,7 @@ if __name__ == "__main__":
     }
 
     # The old master collection tracks dict is needed for verbose info.
-    if args.verbose:
-        old_master_tracks = dict(master_tracks)
+    old_master_tracks = dict(master_tracks)
 
     # If not overwriting master collection tracks, then filter the new tracks
     # by those that don't have a key in the master collection tracks dict.
