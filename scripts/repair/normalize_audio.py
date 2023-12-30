@@ -12,8 +12,8 @@ import matplotlib.pyplot as plt
 from pydub import AudioSegment, effects, utils
 from tqdm import tqdm
 
-from djtools.collection.collections import RekordboxCollection
-from djtools.collection.tracks import RekordboxTrack
+from djtools.collection.rekordbox_collection import RekordboxCollection
+from djtools.collection.rekordbox_track import RekordboxTrack
 
 
 def thread(track: RekordboxTrack, data_dict: Dict):

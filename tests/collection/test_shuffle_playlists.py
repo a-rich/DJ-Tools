@@ -1,9 +1,9 @@
 """Testing for the shuffle_playlists module."""
 import pytest
 
-from djtools.collection.collections import RekordboxCollection
+from djtools.collection.base_playlist import Playlist
+from djtools.collection.rekordbox_collection import RekordboxCollection
 from djtools.collection.shuffle_playlists import shuffle_playlists
-from djtools.collection.playlists import Playlist
 
 
 def test_shuffle_playlists_handles_missing_playlist(config, rekordbox_xml):

@@ -7,7 +7,9 @@ from unittest import mock
 
 import pytest
 
-from djtools.collection.collections import Collection, RekordboxCollection
+from djtools.collection.base_collection import Collection
+from djtools.collection.base_playlist import Playlist
+from djtools.collection.base_track import Track
 from djtools.collection.config import PlaylistConfigContent, PlaylistName
 from djtools.collection.helpers import (
     add_selectors_to_tags,
@@ -27,8 +29,8 @@ from djtools.collection.helpers import (
     print_playlists_tag_statistics,
     scale_data,
 )
-from djtools.collection.playlists import Playlist, RekordboxPlaylist
-from djtools.collection.tracks import Track
+from djtools.collection.rekordbox_collection import RekordboxCollection
+from djtools.collection.rekordbox_playlist import RekordboxPlaylist
 
 
 # pylint: disable=duplicate-code

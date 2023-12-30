@@ -10,8 +10,8 @@ from djtools.collection.playlist_filters import (
     PlaylistFilter,
     TransitionTrackFilter,
 )
-from djtools.collection.playlists import RekordboxPlaylist
-from djtools.collection.tracks import RekordboxTrack
+from djtools.collection.rekordbox_playlist import RekordboxPlaylist
+from djtools.collection.rekordbox_track import RekordboxTrack
 
 
 def test_playlistfilter_cannot_be_instantiated():

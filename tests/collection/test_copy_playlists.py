@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from djtools.collection.collections import RekordboxCollection
 from djtools.collection.copy_playlists import copy_playlists
+from djtools.collection.rekordbox_collection import RekordboxCollection
 
 
 def test_copy_playlists_makes_destination_folder(

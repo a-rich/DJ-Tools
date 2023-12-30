@@ -7,10 +7,10 @@ import pandas as pd
 from sklearn.cluster import DBSCAN, KMeans, SpectralClustering
 from tqdm import tqdm
 
-from djtools.collection.collections import Collection
-from djtools.collection.playlists import Playlist
+from djtools.collection.base_collection import Collection
+from djtools.collection.base_playlist import Playlist
 from djtools.collection.helpers import PLATFORM_REGISTRY
-from djtools.collection.tracks import Track
+from djtools.collection.base_track import Track
 from djtools.configs import build_config
 
 

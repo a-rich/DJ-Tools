@@ -3,12 +3,12 @@ from unittest import mock
 
 import pytest
 
-from djtools.collection.collections import RekordboxCollection
 from djtools.collection.playlist_builder import (
     collection_playlists,
     PLAYLIST_NAME,
 )
-from djtools.collection.playlists import RekordboxPlaylist
+from djtools.collection.rekordbox_collection import RekordboxCollection
+from djtools.collection.rekordbox_playlist import RekordboxPlaylist
 
 from ..test_utils import MockOpen
 
@@ -183,7 +183,7 @@ def test_collection_playlists_removes_existing_playlist(
             files=["collection_playlists.yaml"], content=f"{playlist_config}"
         ).open,
     ), mock.patch(
-        "djtools.collection.collections.RekordboxCollection.add_playlist"
+        "djtools.collection.rekordbox_collection.RekordboxCollection.add_playlist"
     ):
         collection_playlists(config, path=new_path)
 

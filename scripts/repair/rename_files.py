@@ -87,8 +87,8 @@ import eyed3
 from pydub import AudioSegment
 from tqdm import tqdm
 
-from djtools.collection.collections import RekordboxCollection
-from djtools.collection.tracks import RekordboxTrack
+from djtools.collection.rekordbox_collection import RekordboxCollection
+from djtools.collection.rekordbox_track import RekordboxTrack
 from djtools.configs.cli_args import convert_to_paths
 
 

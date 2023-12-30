@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
 from djtools.configs import build_config
-from djtools.collection.collections import Collection
+from djtools.collection.base_collection import Collection
 from djtools.collection.helpers import PLATFORM_REGISTRY
 
 

@@ -9,15 +9,18 @@ import re
 import shutil
 from typing import Dict, List, Optional, Set, Tuple, Union
 
-from djtools.collection.collections import Collection, RekordboxCollection
+from djtools.collection.base_collection import Collection
+from djtools.collection.base_playlist import Playlist
+from djtools.collection.base_track import Track
 from djtools.collection.config import (
     PlaylistConfig,
     PlaylistConfigContent,
     PlaylistName,
 )
 from djtools.collection.playlist_filters import PlaylistFilter
-from djtools.collection.playlists import Playlist, RekordboxPlaylist
-from djtools.collection.tracks import Track, RekordboxTrack
+from djtools.collection.rekordbox_collection import RekordboxCollection
+from djtools.collection.rekordbox_playlist import RekordboxPlaylist
+from djtools.collection.rekordbox_track import RekordboxTrack
 from djtools.utils.helpers import make_path
 
 
