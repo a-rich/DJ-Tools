@@ -1,26 +1,13 @@
 """Testing for the collection module."""
 import bs4
-import pytest
 
-from djtools.collection.collections import (
-    Collection,
+from djtools.collection.rekordbox_collection import (
     CustomSubstitution,
     RekordboxCollection,
     UnsortedAttributes,
 )
-from djtools.collection.playlists import RekordboxPlaylist
-from djtools.collection.tracks import RekordboxTrack
-
-
-def test_collection_raises_type_error():
-    """Test Collection class."""
-    with pytest.raises(
-        TypeError,
-        match=(
-            "Can't instantiate abstract class Collection with abstract method"
-        ),
-    ):
-        Collection(path="")
+from djtools.collection.rekordbox_playlist import RekordboxPlaylist
+from djtools.collection.rekordbox_track import RekordboxTrack
 
 
 def test_rekordboxcollection_add_playlist(rekordbox_xml):

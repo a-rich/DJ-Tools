@@ -14,8 +14,8 @@ from abc import ABC, abstractmethod
 import re
 from typing import List, Optional
 
-from djtools.collection.playlists import Playlist
-from djtools.collection.tracks import Track
+from djtools.collection.base_playlist import Playlist
+from djtools.collection.base_track import Track
 
 
 class PlaylistFilter(ABC):

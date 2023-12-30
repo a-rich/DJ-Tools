@@ -4,16 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from djtools.collection.tracks import Track, RekordboxTrack
-
-
-def test_track_raises_type_error():
-    """Test Track class."""
-    with pytest.raises(
-        TypeError,
-        match=("Can't instantiate abstract class Track with abstract method"),
-    ):
-        Track()
+from djtools.collection.rekordbox_track import RekordboxTrack
 
 
 @pytest.mark.parametrize(

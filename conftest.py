@@ -13,9 +13,9 @@ import yaml
 
 from djtools.configs.config import BaseConfig
 from djtools.configs.helpers import _filter_dict, PKG_CFG
-from djtools.collection.collections import RekordboxCollection
 from djtools.collection.config import PlaylistConfig
-from djtools.collection.tracks import RekordboxTrack
+from djtools.collection.rekordbox_collection import RekordboxCollection
+from djtools.collection.rekordbox_track import RekordboxTrack
 
 
 @pytest.fixture

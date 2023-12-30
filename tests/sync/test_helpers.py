@@ -7,7 +7,7 @@ from unittest import mock
 
 import pytest
 
-from djtools.collection.collections import RekordboxCollection
+from djtools.collection.rekordbox_collection import RekordboxCollection
 from djtools.sync.helpers import (
     parse_sync_command,
     rewrite_track_paths,
