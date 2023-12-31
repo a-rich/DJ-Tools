@@ -76,27 +76,12 @@ The `RekordboxCollection` implements `__init__` by parsing the XML with Beautifu
 
 The `serialize` method of `RekordboxCollection` builds a new XML document, populates the COLLECTION tag by serializing the values of the `RekordboxTrack` dictionary, and then populates the PLAYLISTS tag by iterating the root `RekordboxPlaylist` and serializing its children:
 
-::: djtools.collection.rekordbox_collection.RekordboxCollection.serialize
-    options:
-        show_docstring_description: false
-        show_docstring_parameters: false
-        show_docstring_returns: false
-
-
 #### RekordboxTrack
 A track in an XML contains all the information about tracks except for what playlists they belong to. This information is stored directly in the attributes of the TRACK tag with the exception of the beat grid and hot cue data which are represented as sub-tags TEMPO and POSITION_MARK, respectively.
 
 The `RekordboxTrack` implements `__init__` by enumerating the attributes of the input Track tag and deserializing the string values as types that are more useful in Python, such as `datetime` objects, `lists`, `sets`, and numerical values:
 
 The `serialize` method of `RekordboxTrack` builds a new XML tag for a TRACK and populates the attributes of that tag using the `RekordboxTrack` members. Because Rekordbox serializes TRACK tags inside of the PLAYLISTS differently, this method accepts a parameter to indicate that the `RekordboxTrack` should serialize containing only its ID:
-
-::: djtools.collection.rekordbox_track.RekordboxTrack.serialize
-    options:
-        show_docstring_description: false
-        show_docstring_parameters: false
-        show_docstring_raises: false
-        show_docstring_returns: false
-
 
 #### RekordboxPlaylist
 A playlist in an XML is a NODE tag which is a recursive structure that contains other NODE tags. The leaves of this tree are NODE tags which contain only TRACK tags with just a single attribute, KEY, which maps to the TrackID attribute of the TRACK tags under the COLLECTION tag.
@@ -107,16 +92,4 @@ The `__init__` method deserializes a NODE tag by either recursively deserializin
 
 The `new_playlist` method creates a new Node tag and deserializes it as a `RekordboxPlaylist` before setting its members with either a `RekordboxTrack` dictionary or a list of `RekordboxPlaylist` objects:
 
-::: djtools.collection.rekordbox_playlist.RekordboxPlaylist.new_playlist
-    options:
-        show_docstring_description: false
-        show_docstring_parameters: false
-        show_docstring_raises: false
-        show_docstring_returns: false
-    
 The `serialize` method of `RekordboxPlaylist` builds a new XML tag for a NODE and populates the attributes and sub-tags recursively:
-
-::: djtools.collection.rekordbox_playlist.RekordboxPlaylist.serialize
-    options:
-        show_docstring_description: false
-        show_docstring_returns: false

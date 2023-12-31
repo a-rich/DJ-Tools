@@ -1,4 +1,4 @@
-"""This module is the single source for the version."""
+"""This module is the single source for this package's version."""
 import importlib.metadata
 import re
 
