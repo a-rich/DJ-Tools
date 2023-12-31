@@ -43,9 +43,12 @@ jobs:
           sed -i -E "s/$SEMVER_REGEX/version = \"$NEXT_VERSION\"/g" pyproject.toml
 
       - name: Build and publish wheel
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.DJTOOLS_PYPI_TOKEN }}
         run: |
           python -m build
-          twine upload dist/* -u 'aweeeezy' -p '${{ secrets.PYPI_PASSWORD }}'
+          twine upload dist/* --repository djtools
 
       - name: Commit changes
         run: |
