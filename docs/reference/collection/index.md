@@ -3,9 +3,6 @@
 ::: djtools.collection.config
 ::: djtools.collection.playlist_builder
 ::: djtools.collection.playlist_filters
-::: djtools.collection.rekordbox_collection
-::: djtools.collection.rekordbox_playlist
-::: djtools.collection.rekordbox_track
 ::: djtools.collection.shuffle_playlists
 ::: djtools.collection.copy_playlists
 ::: djtools.collection.helpers
