@@ -1,11 +1,11 @@
 # Setup
 
 ## Python
-The DJ Tools library uses [f-strings](https://peps.python.org/pep-0498/) and the [`asyncio` API](https://peps.python.org/pep-3156/) so a minimum version of Python 3.6 is required. As always, when working with a Python project, you're going to want to create a [virtual environment](https://docs.python.org/3/tutorial/venv.html); [Pyenv](https://github.com/pyenv/pyenv) is really nice but if you insist on doing a system-wide Python installation then proceed with the following instructions:
+The DJ Tools library requires a minimum version of Python 3.8. As always, when working with a Python project, you're going to want to create a [virtual environment](https://docs.python.org/3/tutorial/venv.html); [Pyenv](https://github.com/pyenv/pyenv) is really nice but if you insist on doing a system-wide Python installation then proceed with the following instructions:
 
-- Mac installation: `brew install python@3.6`
-- Linux installation: `sudo apt install python3.6`
-- Windows installation: [Windows releases](https://www.python.org/downloads/windows/) or [3.6.0 installer](https://www.python.org/ftp/python/3.6.0/python-3.6.0.exe)
+- Mac installation: `brew install python@3.8`
+- Linux installation: `sudo apt install python3.8`
+- Windows installation: [Windows releases](https://www.python.org/downloads/windows/) or [3.8.9 installer](https://www.python.org/ftp/python/3.8.9/python-3.8.9.exe)
 
 Note that, at the time of writing, Python versions up through 3.7 have reached [end-of-life](https://devguide.python.org/versions/)...best to use at least Python 3.8.
 

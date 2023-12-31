@@ -49,7 +49,9 @@ def shuffle_playlists(config: BaseConfig, path: Optional[Path] = None):
     # Apply the shuffled track number to the attribute of the tracks.
     shuffled_tracks = list(shuffled_tracks.values())
     payload = [shuffled_tracks, list(range(1, len(shuffled_tracks) + 1))]
-    with ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as executor:
+    with ThreadPoolExecutor(
+        max_workers=os.cpu_count() * 4  # pylint: disable=no-member
+    ) as executor:
         futures = [
             executor.submit(track.set_track_number, number)
             for track, number in zip(*payload)

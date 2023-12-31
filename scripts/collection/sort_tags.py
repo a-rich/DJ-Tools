@@ -1,8 +1,8 @@
 """This is a script for sorting the non-genre tags of a collection in
 alphabetical order.
 """
+# pylint: disable=protected-access
 from argparse import ArgumentParser
-from pathlib import Path
 import re
 
 from djtools.configs import build_config
@@ -42,20 +42,16 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    # Load config and, if provided, override path to collection.
+    # Load config and collection and get a dict of tracks keyed by location.
     config = build_config(args.config)
-    if args.collection:
-        config.COLLECTION_PATH = Path(args.collection)
-
-    # Load collection and get a dict of tracks keyed by location.
     collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
-        path=config.COLLECTION_PATH
+        path=args.collection or config.COLLECTION_PATH
     )
     playlist_class = PLATFORM_REGISTRY[config.PLATFORM]["playlist"]
 
     tracks = collection.get_tracks()
     tag_sets = [set(tags) for tags in TAG_ORDERINGS]
-    my_tags_regex = r"(?<=\/\*).*(?=\*\/)"
+    MY_TAGS_REGEX = r"(?<=\/\*).*(?=\*\/)"
     affected_tracks = {}
 
     for track_id, track in tracks.items():
@@ -64,9 +60,7 @@ if __name__ == "__main__":
         track_tag_set = set(all_tags).difference(genre_tags)
         new_tags = []
         for tag_order, tag_set in zip(TAG_ORDERINGS, tag_sets):
-            new_tags.extend(
-                sorted([tag for tag in track_tag_set.intersection(tag_set)])
-            )
+            new_tags.extend(sorted(track_tag_set.intersection(tag_set)))
 
         tags_before = [tag for tag in all_tags if tag not in genre_tags]
         if tags_before != new_tags:
@@ -74,7 +68,7 @@ if __name__ == "__main__":
                 f"{track._Name} - {track._Artist}\n{tags_before}\n{new_tags}\n"
             )
             track._Comments = re.sub(
-                my_tags_regex,
+                MY_TAGS_REGEX,
                 " " + " / ".join(new_tags) + " ",
                 track._Comments,
             )

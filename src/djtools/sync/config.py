@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 from typing import List, Optional, Union
 
-from pydantic import validator
+from pydantic import field_validator
 
 from djtools.configs.config import BaseConfig
 
@@ -72,7 +72,9 @@ class SyncConfig(BaseConfig):
                 logger.critical(msg)
                 raise RuntimeError(msg)
 
-        os.environ["AWS_PROFILE"] = self.AWS_PROFILE
+        os.environ[  # pylint: disable=no-member
+            "AWS_PROFILE"
+        ] = self.AWS_PROFILE
 
         if any([self.DOWNLOAD_MUSIC, self.UPLOAD_MUSIC]) and not self.USB_PATH:
             msg = (
@@ -101,7 +103,7 @@ class SyncConfig(BaseConfig):
                 "IMPORT_USER must be set to download a collection"
             )
 
-    @validator("USB_PATH")
+    @field_validator("USB_PATH")
     @classmethod
     def usb_path_as_pathlib_path(cls, value: str) -> Union[Path, str]:
         """Validator to convert USB_PATH to a pathlib.Path.

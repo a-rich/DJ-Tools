@@ -101,9 +101,15 @@ def test_syncconfig_no_aws_profile(aws_operation):
 def test_syncconfig_sets_aws_profile_env_var():
     """Test for the SyncConfig class."""
     cfg = {"AWS_PROFILE": "test-profile"}
-    assert os.environ.get("AWS_PROFILE") != cfg["AWS_PROFILE"]
+    assert (
+        os.environ.get("AWS_PROFILE")  # pylint: disable=no-member
+        != cfg["AWS_PROFILE"]
+    )
     SyncConfig(**cfg)
-    assert os.environ.get("AWS_PROFILE") == cfg["AWS_PROFILE"]
+    assert (
+        os.environ.get("AWS_PROFILE")  # pylint: disable=no-member
+        == cfg["AWS_PROFILE"]
+    )
 
 
 @pytest.mark.parametrize(
@@ -113,7 +119,7 @@ def test_syncconfig_sets_aws_profile_env_var():
 def test_syncconfig_set_user(input_user, output_user):
     """Test for the SyncConfig class."""
     cfg = {"USER": input_user}
-    assert not SyncConfig.__fields__["USER"].default
+    assert not SyncConfig.model_fields["USER"].default
     sync_config = SyncConfig(**cfg)
     assert sync_config.USER == output_user
 

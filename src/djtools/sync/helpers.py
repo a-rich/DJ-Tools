@@ -115,6 +115,7 @@ def run_sync(_cmd: str) -> str:
 
     Raises:
         CalledProcessError: raised if "aws s3 sync" command fails.
+        RuntimeError: raised if any other exception occurs while syncing.
 
     Returns:
         Formatted list of uploaded tracks; tracks are grouped by directory.
@@ -146,7 +147,7 @@ def run_sync(_cmd: str) -> str:
     except Exception as exc:
         msg = f"Failure while syncing: {exc}"
         logger.critical(msg)
-        raise Exception(msg) from exc
+        raise RuntimeError(msg) from exc
 
     new_music = ""
     for group_id, group in groupby(

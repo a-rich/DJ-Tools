@@ -1,4 +1,5 @@
 """Script for analyzing timing of unit tests and fixtures."""
+# pylint: disable=import-error
 from collections import defaultdict
 from itertools import groupby
 
@@ -46,8 +47,8 @@ sorted_test_lookup = {
         key: value[phase]
         for key, value in sorted(
             test_lookup.items(),
-            key=lambda x: x[1][phase],
-            reverse=True,  # pylint: disable=cell-var-from-loop
+            key=lambda x: x[1][phase],  # pylint: disable=cell-var-from-loop
+            reverse=True,
         )
     }
     for phase in ["call", "setup", "teardown"]

@@ -17,7 +17,7 @@ from ..test_utils import MockOpen
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "playlist_subreddits",
-    [[], [SubredditConfig(name="jungle").dict()]],
+    [[], [SubredditConfig(name="jungle").model_dump()]],
 )
 @pytest.mark.parametrize("got_playlist_ids", [True, False])
 @pytest.mark.parametrize("got_tracks", [True, False])
@@ -46,7 +46,7 @@ from ..test_utils import MockOpen
     "djtools.spotify.playlist_builder.get_subreddit_posts",
     return_value=[
         [("track-id", "track name")],
-        SubredditConfig(name="jungle").dict(),
+        SubredditConfig(name="jungle").model_dump(),
     ],
 )
 @mock.patch(

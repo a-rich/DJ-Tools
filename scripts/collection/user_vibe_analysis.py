@@ -1,4 +1,5 @@
 """This script is used to generate histograms of My Tags per user."""
+# pylint: disable=import-error,redefined-outer-name,unused-argument,invalid-name
 from argparse import ArgumentParser
 from collections import defaultdict
 from itertools import groupby
@@ -16,7 +17,6 @@ from djtools.collection.helpers import PLATFORM_REGISTRY
 def analyze_collection_vibes(
     collection: Collection,
     included_tags: Optional[Set] = None,
-    verbosity: int = 0,
     **kwargs,
 ):
     """Create histograms that show a collection's distribution of My Tags.
@@ -24,7 +24,6 @@ def analyze_collection_vibes(
     Args:
         collection: Collection object.
         included_tags: My Tags to include in the histograms.
-        verbosity: Verbosity level.
     """
     tracks = collection.get_tracks().values()
     tag_counts = {tag: 0 for tag in included_tags}
@@ -143,7 +142,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--collection",
         type=str,
-        required=True,
+        required=False,
         help="Path to collection.",
     )
     parser.add_argument(
@@ -197,12 +196,10 @@ if __name__ == "__main__":
     # Load config and, if provided, override path to collection.
     config_path = Path(args.config)
     config = build_config(config_path)
-    if args.collection:
-        config.COLLECTION_PATH = Path(args.collection)
 
     # Load collection and get a dict of tracks keyed by location.
     collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
-        path=config.COLLECTION_PATH
+        path=args.collection or config.COLLECTION_PATH
     )
     args.collection = collection
 

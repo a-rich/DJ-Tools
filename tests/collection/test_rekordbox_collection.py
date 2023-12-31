@@ -153,7 +153,7 @@ def test_customsubstitution():
 
 def test_unsortedattributes_formatter():
     """Test UnsortedAttributes class."""
-    expected = '<NODE Z_attr="" A_attr="">\n</NODE>'
+    expected = '<NODE Z_attr="" A_attr="">\n</NODE>\n'
     a_first_tag = bs4.Tag(name="NODE", attrs={"A_attr": "", "Z_attr": ""})
     z_first_tag = bs4.Tag(name="NODE", attrs={"Z_attr": "", "A_attr": ""})
     # BeautifulSoup alphabetizes attributes by default.

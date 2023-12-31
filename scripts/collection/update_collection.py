@@ -1,3 +1,5 @@
+"""Update master track Collection with local Collection."""
+# pylint: disable=duplicate-code
 from argparse import ArgumentParser
 from itertools import groupby
 from pathlib import Path
@@ -47,11 +49,13 @@ if __name__ == "__main__":
     config_path = Path(args.config)
     config = build_config(config_path)
     if args.collection:
-        config.COLLECTION_PATH = Path(args.collection)
+        collection_path = Path(args.collection)
+    else:
+        collection_path = config.COLLECTION_PATH
 
     # Load collection and get a dict of tracks keyed by location.
     collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
-        path=config.COLLECTION_PATH
+        path=collection_path
     )
     tracks = {
         track.get_location().as_posix(): track
@@ -61,7 +65,7 @@ if __name__ == "__main__":
     # Download the master collection and get a dict of its tracks too.
     master_collection_path = Path("master_collection.tmp")
     cmd = ["aws", "s3", "cp", args.master_collection, master_collection_path]
-    if config.COLLECTION_PATH.is_dir():
+    if collection_path.is_dir():
         cmd.append("--recursive")
     with Popen(cmd) as proc:
         proc.wait()
@@ -126,7 +130,7 @@ if __name__ == "__main__":
             master_collection_path,
             args.master_collection,
         ]
-        if config.COLLECTION_PATH.is_dir():
+        if collection_path.is_dir():
             cmd.append("--recursive")
         with Popen(cmd) as proc:
             proc.wait()

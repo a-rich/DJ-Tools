@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import List, Optional, Union
 from typing_extensions import Literal
 
-from pydantic import BaseModel, Extra, ValidationError
+from pydantic import BaseModel, ValidationError
 import yaml
 
 from djtools.configs.config import BaseConfig
@@ -82,19 +82,19 @@ class CollectionConfig(BaseConfig):
                 ) from exc
 
 
-class PlaylistName(BaseModel, extra=Extra.forbid):
+class PlaylistName(BaseModel, extra="forbid"):
     "A class for configuring the names of playlists."
     tag_content: str
     name: Optional[str] = None
 
 
-class PlaylistConfigContent(BaseModel, extra=Extra.forbid):
+class PlaylistConfigContent(BaseModel, extra="forbid"):
     "A class for type checking the content of the playlist config YAML."
     name: str
     playlists: List[Union[PlaylistConfigContent, PlaylistName, str]]
 
 
-class PlaylistConfig(BaseModel, extra=Extra.forbid):
+class PlaylistConfig(BaseModel, extra="forbid"):
     "A class for type checking the playlist config YAML."
     combiner: Optional[PlaylistConfigContent] = None
     tags: Optional[PlaylistConfigContent] = None

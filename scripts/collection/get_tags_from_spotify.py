@@ -3,6 +3,7 @@
 More specifically, it queries Spotify for each track and attempts to resolve
 the year, album, and label.
 """
+# pylint: disable=redefined-outer-name,duplicate-code
 from argparse import ArgumentParser
 from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import datetime

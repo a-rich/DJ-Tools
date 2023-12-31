@@ -28,7 +28,7 @@ from djtools.spotify.helpers import (
 from ..test_utils import mock_exists, MockOpen
 
 
-async def aiter(obj, num_subs):
+async def _aiter(obj, num_subs):
     """Helper function for mocking asyncpraw."""
     for _ in range(num_subs):
         yield obj
@@ -379,7 +379,9 @@ async def test_get_subreddit_posts(
 ):
     """Test for the get_subreddit_posts function."""
     caplog.set_level("INFO")
-    subreddit = SubredditConfig(name="techno", type=subreddit_type).dict()
+    subreddit = SubredditConfig(
+        name="techno", type=subreddit_type
+    ).model_dump()
     praw_cache = {}
     mock_praw_submission.id = "test_id"
     mock_process.return_value = "track - artist"
@@ -389,7 +391,7 @@ async def test_get_subreddit_posts(
         "djtools.spotify.helpers.praw.Reddit.subreddit",
         new=mock.AsyncMock(),
     ):
-        mock_catch.return_value = aiter(mock_praw_submission, num_subs)
+        mock_catch.return_value = _aiter(mock_praw_submission, num_subs)
         await get_subreddit_posts(
             mock_spotify, mock_praw, subreddit, config, praw_cache
         )
