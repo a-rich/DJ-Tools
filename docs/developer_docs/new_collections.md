@@ -25,43 +25,19 @@ The `__init__` must deserialize the `Track` and `Playlist` data under the `Path`
 
 The other method a `Collection` must implement is `serialize` which will write the `Collection` data in whatever format is native for that DJ platform and return the `Path` to it.
 
-::: djtools.collection.base_collection.Collection.serialize
-    options:
-        show_docstring_description: false
-        show_docstring_parameters: false
-        show_docstring_returns: false
-
 ---
 
 Subclasses of `Collection` inherit a few methods necessary to execute on the `djtools` feature set:
 
 ###### Appending a `Playlist` object to the root `Playlist`:
-::: djtools.collection.base_collection.Collection.add_playlist
-    options:
-        show_docstring_description: false
-        show_docstring_parameters: false
-###### Getting the root `Playlist` or, if a `name` is provided, the list of `Playlist` objects with matching names (supports fuzzy matching with the `glob` parameter):
-::: djtools.collection.base_collection.Collection.get_playlists
-    options:
-        show_docstring_description: false
-        show_docstring_parameters: false
-        show_docstring_returns: false
-###### Getting the dictionary mapping track IDs to `Track` objects:
-::: djtools.collection.base_collection.Collection.get_tracks
-    options:
-        show_docstring_description: false
-        show_docstring_returns: false
-###### Set the dictionary mapping track IDs to `Track` objects:
-::: djtools.collection.base_collection.Collection.set_tracks
-    options:
-        show_docstring_description: false
-        show_docstring_parameters: false
-###### Get a dictionary with the sorted set of genre tags and non-genre tags:
-::: djtools.collection.base_collection.Collection.get_all_tags
-    options:
-        show_docstring_description: false
-        show_docstring_returns: false
 
+###### Getting the root `Playlist` or, if a `name` is provided, the list of `Playlist` objects with matching names (supports fuzzy matching with the `glob` parameter):
+
+###### Getting the dictionary mapping track IDs to `Track` objects:
+
+###### Set the dictionary mapping track IDs to `Track` objects:
+
+###### Get a dictionary with the sorted set of genre tags and non-genre tags:
 
 ## Tracks
 Subclasses of the `Track` class have 16 abstract methods to be implemented, but 14 of those methods are simple getters or setters.
@@ -71,19 +47,7 @@ The requirements for a `Track` subclass' initialization are only that it parses 
 
 A `Track` subclass must implement a `serialize` which returns an exact match of the input object used with `__init__`. In other words, it must be the case that `input == Track(input).serialize()`:
 
-::: djtools.collection.base_track.Track.serialize
-    options:
-        show_docstring_description: false
-        show_docstring_returns: false
-
 Let's not enumerate the many getter and setters of the `Track` object here, but you can check them out for yourself:
-
-::: djtools.collection.base_track.Track
-    options:
-        show_bases: false
-        members: false
-        show_docstring_description: false
-
 
 ## Playlists 
 A subclass of the `Playlist` class must implement five abstract methods for working with a recursive playlist structure.
@@ -93,42 +57,17 @@ The `__init__` method must take an input that's either a playlist folder or a pl
 
 As with `Track`, `Playlist` subclasses must implement a `serialize` which returns an exact match of the input object used with `__init__`. In other words, it must be the case that `input == Playlist(input).serialize()`:
 
-::: djtools.collection.base_playlist.Playlist.serialize
-    options:
-        show_docstring_description: false
-        show_docstring_returns: false
-
 ---
 
 The other abstract methods that must be implemented are:
 
 The `get_name` and the `is_folder` methods are a simple getter and condition check:
 
-::: djtools.collection.base_playlist.Playlist.get_name
-    options:
-        show_docstring_description: false
-        show_docstring_returns: false
-
-::: djtools.collection.base_playlist.Playlist.is_folder
-    options:
-        show_docstring_description: false
-        show_docstring_returns: false
-
 A class method called `new_playlist` which can create a `Playlist` object from either a list of `Playlist` objects or a dictionary of `Track` objects:
-
-::: djtools.collection.base_playlist.Playlist.new_playlist
-    options:
-        show_docstring_description: false
-        show_docstring_parameters: false
-        show_docstring_raises: false
-        show_docstring_returns: false
-
 
 ## Appendix
 
-
 ### Rekordbox as an example
-
 
 #### RekordboxCollection
 Rekordbox supports exporting a collection to an XML file which contains two primary sections: a COLLECTION tag with TRACK tags, and a PLAYLISTS tag with NODE tags with either more NODE tags or TRACK tags that have a key referencing the COLLECTION TRACKS. A [minimal example XML](https://github.com/a-rich/DJ-Tools/blob/main/tests/data/rekordbox.xml) can be seen in the test data.
