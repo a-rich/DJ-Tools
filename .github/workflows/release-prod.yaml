@@ -46,9 +46,10 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.DJTOOLS_PYPI_TOKEN }}
+          TWINE_REPOSITORY_URL: https://pypi.org/project/djtools/
         run: |
           python -m build
-          twine upload dist/* --repository djtools
+          twine upload dist/*
 
       - name: Commit changes
         run: |
