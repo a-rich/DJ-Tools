@@ -23,12 +23,6 @@ In order to extend `djtools` so that these features can be used for other DJ pla
 Every `Collection` subclass must implement an `__init__` that accepts a `pathlib.Path` (or a `str` if you decorate it with `@make_path`).
 The `__init__` must deserialize the `Track` and `Playlist` data under the `Path` to create a `Collection` object.
 
-::: djtools.collection.base_collection.Collection.__init__
-    options:
-        show_docstring_description: false
-        show_docstring_parameters: false
-        show_docstring_returns: false
-
 The other method a `Collection` must implement is `serialize` which will write the `Collection` data in whatever format is native for that DJ platform and return the `Path` to it.
 
 ::: djtools.collection.base_collection.Collection.serialize
@@ -75,10 +69,6 @@ The two primary abstract methods are, again, `__init__` and `serialize`.
 
 The requirements for a `Track` subclass' initialization are only that it parses from the input object the dozen or so attributes that the other abstract methods either get or set:
 
-::: djtools.collection.base_track.Track.__init__
-    options:
-        show_docstring_description: false
-
 A `Track` subclass must implement a `serialize` which returns an exact match of the input object used with `__init__`. In other words, it must be the case that `input == Track(input).serialize()`:
 
 ::: djtools.collection.base_track.Track.serialize
@@ -100,10 +90,6 @@ A subclass of the `Playlist` class must implement five abstract methods for work
 Like the other components of a collection, the `Playlist` class also requires an `__init__` and `serialize` implementation.
 
 The `__init__` method must take an input that's either a playlist folder or a playlist that contains tracks:
-
-::: djtools.collection.base_playlist.Playlist.__init__
-    options:
-        show_docstring_description: false
 
 As with `Track`, `Playlist` subclasses must implement a `serialize` which returns an exact match of the input object used with `__init__`. In other words, it must be the case that `input == Playlist(input).serialize()`:
 
@@ -149,11 +135,6 @@ Rekordbox supports exporting a collection to an XML file which contains two prim
 
 The `RekordboxCollection` implements `__init__` by parsing the XML with BeautifulSoup, deserializing the tracks as a dictionary of `RekordboxTrack` objects, and deserializing the playlists into the root node of a `RekordboxPlaylist` tree:
 
-::: djtools.collection.rekordbox_collection.RekordboxCollection.__init__
-    options:
-        show_docstring_description: false
-        show_docstring_parameters: false
-
 The `serialize` method of `RekordboxCollection` builds a new XML document, populates the COLLECTION tag by serializing the values of the `RekordboxTrack` dictionary, and then populates the PLAYLISTS tag by iterating the root `RekordboxPlaylist` and serializing its children:
 
 ::: djtools.collection.rekordbox_collection.RekordboxCollection.serialize
@@ -167,11 +148,6 @@ The `serialize` method of `RekordboxCollection` builds a new XML document, popul
 A track in an XML contains all the information about tracks except for what playlists they belong to. This information is stored directly in the attributes of the TRACK tag with the exception of the beat grid and hot cue data which are represented as sub-tags TEMPO and POSITION_MARK, respectively.
 
 The `RekordboxTrack` implements `__init__` by enumerating the attributes of the input Track tag and deserializing the string values as types that are more useful in Python, such as `datetime` objects, `lists`, `sets`, and numerical values:
-
-::: djtools.collection.rekordbox_track.RekordboxTrack.__init__
-    options:
-        show_docstring_description: false
-        show_docstring_parameters: false
 
 The `serialize` method of `RekordboxTrack` builds a new XML tag for a TRACK and populates the attributes of that tag using the `RekordboxTrack` members. Because Rekordbox serializes TRACK tags inside of the PLAYLISTS differently, this method accepts a parameter to indicate that the `RekordboxTrack` should serialize containing only its ID:
 
@@ -189,11 +165,6 @@ A playlist in an XML is a NODE tag which is a recursive structure that contains 
 NODE tags also have attributes for the Name and Type (folder or not) and either a Count or an Entries attribute which has the number of playlists or number of tracks, respectively.
 
 The `__init__` method deserializes a NODE tag by either recursively deserializing its children NODE tags (if it's a folder) or else creating a dictionary of tracks from `RekordboxCollection` object's tracks passed as a parameter:
-
-::: djtools.collection.rekordbox_playlist.RekordboxPlaylist.__init__
-    options:
-        show_docstring_description: false
-        show_docstring_parameters: false
 
 The `new_playlist` method creates a new Node tag and deserializes it as a `RekordboxPlaylist` before setting its members with either a `RekordboxTrack` dictionary or a list of `RekordboxPlaylist` objects:
 
