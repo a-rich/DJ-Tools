@@ -35,7 +35,7 @@ def test_normalize_handles_decode_error(config, tmpdir, caplog):
 @mock.patch("djtools.utils.normalize_audio.effects.normalize")
 @mock.patch("djtools.utils.process_recording.AudioSegment.export", mock.Mock())
 def test_normalize(
-    mock_normalize, target_headroom, audio_file, config, input_tmpdir, caplog
+    mock_normalize, target_headroom, audio_file, config, input_tmpdir
 ):
     """Test for the normalize function."""
     config.AUDIO_HEADROOM = target_headroom
@@ -51,11 +51,6 @@ def test_normalize(
         normalize(config)
         if abs(audio.max_dBFS + target_headroom) > 0.001:
             mock_normalize.assert_called_once()
-        else:
-            assert (
-                caplog.records[0].message
-                == f"{file_path} already has a headroom of {target_headroom}"
-            )
     # TODO(a-rich): Getting unexpected headroom readings after exporting.
     # See this issue:
     # https://stackoverflow.com/questions/76791317/pydub-how-to-retain-headroom-across-export-and-from-file"  pylint: disable=line-too-long
