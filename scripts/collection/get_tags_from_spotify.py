@@ -51,15 +51,13 @@ def get_spotify_tags_thread(track, spotify, threshold, query_limit):
 
 if __name__ == "__main__":
     arg_parser = ArgumentParser()
-    arg_parser.add_argument(
-        "--collection", help="Path to a collection."
-    )
+    arg_parser.add_argument("--collection", help="Path to a collection.")
     arg_parser.add_argument("--config", help="Path to a config.yaml.")
     arg_parser.add_argument(
         "--mode",
         choices=["bulk", "interactive"],
         default="interactive",
-        help="Bulk process tracks or review individual tracks."
+        help="Bulk process tracks or review individual tracks.",
     )
     arg_parser.add_argument("--output", help="Path to output collection.")
     arg_parser.add_argument(
@@ -91,7 +89,9 @@ if __name__ == "__main__":
             total=len(tracks), desc="Adding tags from Spotify"
         ) as pbar, ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as pool:
             futures = [
-                pool.submit(get_spotify_tags_thread, track, spotify, args.similarity)
+                pool.submit(
+                    get_spotify_tags_thread, track, spotify, args.similarity
+                )
                 for track in tracks
             ]
             for future in as_completed(futures):
@@ -112,7 +112,9 @@ if __name__ == "__main__":
             title = track._Name
             artist = track.get_artists()
             query = f"track:{title} artist:{artist}"
-            results = spotify.search(q=query, type="track", limit=args.query_limit)
+            results = spotify.search(
+                q=query, type="track", limit=args.query_limit
+            )
 
             # Get result most similar to query.
             result, _ = filter_results(
@@ -128,7 +130,9 @@ if __name__ == "__main__":
             album = spotify.album(result["album"]["id"])
             for date_format in ["%Y-%m-%d", "%Y-%m", "%Y"]:
                 try:
-                    date = datetime.strptime(album["release_date"], date_format)
+                    date = datetime.strptime(
+                        album["release_date"], date_format
+                    )
                 except ValueError:
                     continue
 
@@ -158,7 +162,9 @@ if __name__ == "__main__":
                         updated_tracks[track_id] = track
                     next = True
                 else:
-                    print("Response must contain either 'n' or 'y' -- try again!")
+                    print(
+                        "Response must contain either 'n' or 'y' -- try again!"
+                    )
 
         playlist_class = PLATFORM_REGISTRY[config.PLATFORM]["playlist"]
         for name, set_tracks in [
@@ -166,7 +172,9 @@ if __name__ == "__main__":
             ("Same", same_tracks),
             ("Updated", updated_tracks),
         ]:
-            playlist = playlist_class.new_playlist(name=name, tracks=set_tracks)
+            playlist = playlist_class.new_playlist(
+                name=name, tracks=set_tracks
+            )
             collection.add_playlist(playlist)
 
     collection.serialize(path=args.output or config.COLLECTION_PATH)
