@@ -40,6 +40,16 @@ def config():
     return joined_config
 
 
+@pytest.fixture
+def config_file_teardown():
+    """Teardown config.yaml."""
+    yield
+    config_dir = Path(__file__).parent / "src" / "djtools" / "configs"
+    config_file = config_dir / "config.yaml"
+    if config_file.exists():
+        config_file.unlink()
+
+
 @pytest.fixture(scope="session")
 def input_tmpdir(tmpdir_factory):
     """Test tmpdir fixture."""

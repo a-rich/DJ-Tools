@@ -6,9 +6,7 @@ import getpass
 import logging
 import os
 from pathlib import Path
-from typing import List, Optional, Union
-
-from pydantic import field_validator
+from typing import List, Optional
 
 from djtools.configs.config import BaseConfig
 
@@ -33,7 +31,7 @@ class SyncConfig(BaseConfig):
     UPLOAD_EXCLUDE_DIRS: List[Path] = []
     UPLOAD_INCLUDE_DIRS: List[Path] = []
     UPLOAD_MUSIC: bool = False
-    USB_PATH: Optional[Union[str, Path]] = None
+    USB_PATH: Optional[Path] = None
     USER: str = ""
 
     def __init__(self, *args, **kwargs):
@@ -102,16 +100,3 @@ class SyncConfig(BaseConfig):
             raise RuntimeError(
                 "IMPORT_USER must be set to download a collection"
             )
-
-    @field_validator("USB_PATH")
-    @classmethod
-    def usb_path_as_pathlib_path(cls, value: str) -> Union[Path, str]:
-        """Validator to convert USB_PATH to a pathlib.Path.
-
-        Args:
-            value: USB_PATH field
-
-        Returns:
-            pathlib.Path representing the USB_PATH field or else an empty string.
-        """
-        return value if not value else Path(value)
