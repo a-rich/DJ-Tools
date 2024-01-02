@@ -3,7 +3,7 @@
 More specifically, it queries Spotify for each track and attempts to resolve
 the year, album, and label.
 """
-# pylint: disable=redefined-outer-name,duplicate-code
+# pylint: disable=redefined-outer-name,duplicate-code,protected-access,invalid-name
 from argparse import ArgumentParser
 from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import datetime
@@ -146,12 +146,12 @@ if __name__ == "__main__":
             )
 
             # Check input for signal to skip or accept new tags.
-            next = False
-            while not next:
+            next_track = False
+            while not next_track:
                 resp = input("[y] accept, [n] skip")
                 if "n" in resp:
                     same_tracks[track_id] = track
-                    next = True
+                    next_track = True
                 elif "y" in resp:
                     for attribute_name, attribute in [
                         ("album", album["name"]),
@@ -160,7 +160,7 @@ if __name__ == "__main__":
                     ]:
                         setattr(track, f"_{attribute_name.title()}", attribute)
                         updated_tracks[track_id] = track
-                    next = True
+                    next_track = True
                 else:
                     print(
                         "Response must contain either 'n' or 'y' -- try again!"
