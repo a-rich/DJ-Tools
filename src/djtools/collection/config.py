@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class CollectionConfig(BaseConfig):
     """Configuration object for the collection package."""
 
-    COLLECTION_PATH: Path = None
+    COLLECTION_PATH: Optional[Path] = None
     COLLECTION_PLAYLIST_FILTERS: List[
         Literal[
             "HipHopFilter",
@@ -32,7 +32,7 @@ class CollectionConfig(BaseConfig):
     COLLECTION_PLAYLISTS: bool = False
     COLLECTION_PLAYLISTS_REMAINDER: Literal["folder", "playlist"] = "folder"
     COPY_PLAYLISTS: List[str] = []
-    COPY_PLAYLISTS_DESTINATION: Path = None
+    COPY_PLAYLISTS_DESTINATION: Optional[Path] = None
     PLATFORM: Literal["rekordbox"] = "rekordbox"
     SHUFFLE_PLAYLISTS: List[str] = []
 

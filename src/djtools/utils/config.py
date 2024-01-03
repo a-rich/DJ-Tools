@@ -5,7 +5,7 @@ config.yaml
 import logging
 import os
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 from typing_extensions import Literal
 
 from pydantic import (
@@ -25,7 +25,7 @@ class UtilsConfig(BaseConfig):
     """Configuration object for the utils package."""
 
     AUDIO_BITRATE: str = "320"
-    AUDIO_DESTINATION: Path = None
+    AUDIO_DESTINATION: Optional[Path] = None
     AUDIO_FORMAT: Literal[
         "aac", "aiff", "alac", "flac", "mp3", "ogg", "pcm", "wav", "wma"
     ] = "mp3"
@@ -36,7 +36,7 @@ class UtilsConfig(BaseConfig):
     LOCAL_DIRS: List[Path] = []
     NORMALIZE_AUDIO: bool = False
     PROCESS_RECORDING: bool = False
-    RECORDING_FILE: Path = None
+    RECORDING_FILE: Optional[Path] = None
     RECORDING_PLAYLIST: str = ""
     SKIP_TRIM_INITIAL_SILENCE: bool = False
     URL_DOWNLOAD: str = ""

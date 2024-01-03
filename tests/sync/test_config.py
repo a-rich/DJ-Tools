@@ -18,7 +18,7 @@ def test_syncconfig_download_or_upload_without_usb_path(download, upload):
         "AWS_PROFILE": "myprofile",
         "DOWNLOAD_MUSIC": download,
         "UPLOAD_MUSIC": upload,
-        "USB_PATH": "",
+        "USB_PATH": None,
     }
     with pytest.raises(
         RuntimeError,

@@ -20,16 +20,6 @@ from djtools.version import get_version
 from ..test_utils import mock_exists, MockOpen
 
 
-def test_stack_inspection_for_cli_arg_parsing():
-    """Test stack inspection for cli arg parsing."""
-    stack = inspect.stack()
-    entry_frame = stack[-1]
-    test_loc = str(Path("bin") / "pytest")
-    windows_loc = str(Path("lib") / "runpy.py")
-    windows_frozen = "<frozen runpy>"
-    assert entry_frame[1].endswith((test_loc, windows_loc, windows_frozen))
-
-
 @pytest.mark.parametrize(
     "log_level_name, log_level", [("DEBUG", 10), ("WARNING", 30)]
 )
@@ -114,8 +104,11 @@ def test_build_config_invalid_config_yaml(caplog):
 
 @mock.patch("djtools.spotify.helpers.get_spotify_client", mock.Mock())
 @mock.patch("argparse.ArgumentParser.parse_args")
-def test_build_config_no_config_yaml(mock_parse_args, namespace):
+def test_build_config_no_config_yaml(
+    mock_parse_args, namespace, config_file_teardown
+):
     """Test for the build_config function."""
+    # pylint: disable=unused-argument
     mock_parse_args.return_value = namespace
     config_dir = (
         Path(__file__).parent.parent.parent / "src" / "djtools" / "configs"
@@ -124,7 +117,6 @@ def test_build_config_no_config_yaml(mock_parse_args, namespace):
     assert not config_file.exists()
     build_config()
     assert config_file.exists()
-    config_file.unlink()
 
 
 @mock.patch(
@@ -150,6 +142,31 @@ def test_build_config_overrides_using_args(mock_parse_args, namespace):
     mock_parse_args.return_value = namespace
     config = build_config()
     assert config.ARTIST_FIRST is True
+
+
+@mock.patch("argparse.ArgumentParser.parse_args")
+def test_build_config_reads_generated_config(
+    mock_parse_args, namespace, config_file_teardown
+):
+    """Test for the build_config function."""
+    # pylint: disable=unused-argument
+    namespace.log_level = "INFO"
+    mock_parse_args.return_value = namespace
+    config_dir = (
+        Path(__file__).parent.parent.parent / "src" / "djtools" / "configs"
+    )
+    config_file = config_dir / "config.yaml"
+
+    # config.yaml won't exist so build_config generates one.
+    assert not config_file.exists()
+    first_config = build_config()
+
+    # config.yaml now exists so build_config reads the pre-existing one.
+    assert config_file.exists()
+    second_config = build_config()
+
+    # Both configs should be identical.
+    assert first_config == second_config
 
 
 @mock.patch(
@@ -183,3 +200,13 @@ def test_filter_dict(config):
     assert result_keys.union(super_keys) == sub_keys
     assert sub_keys.difference(result_keys) == super_keys
     assert sub_keys.difference(super_keys) == result_keys
+
+
+def test_stack_inspection_for_cli_arg_parsing():
+    """Test stack inspection for cli arg parsing."""
+    stack = inspect.stack()
+    entry_frame = stack[-1]
+    test_loc = str(Path("bin") / "pytest")
+    windows_loc = str(Path("lib") / "runpy.py")
+    windows_frozen = "<frozen runpy>"
+    assert entry_frame[1].endswith((test_loc, windows_loc, windows_frozen))
