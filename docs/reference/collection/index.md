@@ -1,5 +1,6 @@
 # Collection
 
+::: djtools.collection
 ::: djtools.collection.config
 ::: djtools.collection.playlist_builder
 ::: djtools.collection.playlist_filters

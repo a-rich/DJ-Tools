@@ -1,4 +1,5 @@
 """The `collection` package contains modules:
+
     * `base_collection`: abstraction for Collection
     * `base_playlist`: abstraction for Playlist
     * `base_track`: abstraction for Track

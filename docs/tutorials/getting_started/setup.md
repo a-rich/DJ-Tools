@@ -7,14 +7,12 @@ The DJ Tools library requires a minimum version of Python 3.8. As always, when w
 - Linux installation: `sudo apt install python3.8`
 - Windows installation: [Windows releases](https://www.python.org/downloads/windows/) or [3.8.9 installer](https://www.python.org/ftp/python/3.8.9/python-3.8.9.exe)
 
-Note that, at the time of writing, Python versions up through 3.7 have reached [end-of-life](https://devguide.python.org/versions/)...best to use at least Python 3.8.
-
 ## DJ Tools
 1. Run `pip install "djtools[accelerated]"` to install the DJ Tools library
     - To install DJ Tools without the accelerated computation for Levenshtein distance (might be difficult to install the binaries for non-technical users), run `pip install djtools`
     - You can install the pre-release version with `pip install djtools --pre`
     - If you want to restrict the version being installed to not include, say, the next minor version's beta release then you can do so like `pip install djtools<2.5.0 --pre`
-    - Note that installing with the `--pre` flag will also install pre-release versions for all dependencies which may cause breakage, in that case you can target specific pre-release versions like this `pip install djtools==2.4.1-b9`
+    - Note that installing with the `--pre` flag will also install pre-release versions for all dependencies which may cause breakage, in that case you can target specific pre-release versions like this `pip install djtools==2.4.1-rc9`
 1. Confirm your installation works by running `djtools`
 1. [Optional] link the `configs` directory of the installation to a user-friendly location for easy editing of your config files: `djtools --link-configs path/to/new/location/`
 1. Edit your configuration files to support your usage needs ([see here for more details](configuration.md))

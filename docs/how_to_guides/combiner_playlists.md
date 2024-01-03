@@ -72,7 +72,7 @@ Suppose we want a playlist with tracks that _all have_ the following properties:
 - and have a rating of 5
 - and with BPMs in the range 130 to 150
 
-The expression a.k.a. the combiner playlist name will look this:
+The expression will look this:
 
     [2000-2023] & [5] & [130-150]
 
@@ -113,7 +113,7 @@ I hope you see how powerful the `Combiner` can become when used with a well inde
 1. Import the `PLAYLIST_BUILDER` folder from the generated collection
 
 ## Example
-As is done in the [Build Playlists From Tags](collection_playlists.md#example) how-to guide, we'll start by looking at some simple expressions configured in the pre-packaged [collection_playlists.yaml](https://github.com/a-rich/DJ-Tools/blob/main/djtools/configs/collection_playlists.yaml), but this time we'll focus only on the `combiner` section:
+As is done in the [Build Playlists From Tags](collection_playlists.md#example) how-to guide, we'll start by looking at some simple expressions configured in the pre-packaged [collection_playlists.yaml](https://github.com/a-rich/DJ-Tools/blob/main/tests/data/collection_playlists.yaml), but this time we'll focus only on the `combiner` section:
 
 Note that the examples below are trivial ones designed to get 100% code coverage in unit tests.
 
