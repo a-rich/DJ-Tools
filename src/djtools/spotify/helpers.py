@@ -1,5 +1,5 @@
 """This module contains helper functions used by the "spotify" module."""
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import as_completed, ThreadPoolExecutor
 import logging
 from operator import itemgetter
 from pathlib import Path
@@ -172,19 +172,21 @@ async def get_subreddit_posts(
             f'"r/{subreddit["name"]}"'
         )
         logger.info(msg)
-        payload = [
+        payload = zip(
             submissions,
             [spotify] * len(submissions),
             [config.SPOTIFY_PLAYLIST_FUZZ_RATIO] * len(submissions),
-        ]
+        )
+
         with ThreadPoolExecutor(max_workers=8) as executor:
-            new_tracks = list(
-                tqdm(
-                    executor.map(_process, *payload),
-                    total=len(submissions),
-                    desc=msg,
-                )
-            )
+            futures = [executor.submit(_process, *args) for args in payload]
+
+            with tqdm(total=len(futures), desc=msg) as pbar:
+                new_tracks = []
+                for future in as_completed(futures):
+                    new_tracks.append(future.result())
+                    pbar.update(1)
+
         new_tracks = [track for track in new_tracks if track]
         logger.info(
             f"Got {len(new_tracks)} Spotify track(s) from new "
