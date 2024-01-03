@@ -5,7 +5,7 @@ on:
       - main
       - 'releases/*'
     paths:
-      - 'src/**.py'
+      - '**.py'
 
 jobs:
   build:

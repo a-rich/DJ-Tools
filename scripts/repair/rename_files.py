@@ -75,6 +75,7 @@ the common path of tracks in your collection:
         --path-insert "" \
         --infer-file-names
 """
+# pylint: disable=import-error,redefined-outer-name,no-member
 from argparse import ArgumentParser
 from concurrent.futures import as_completed, ThreadPoolExecutor
 import json
@@ -87,8 +88,8 @@ import eyed3
 from pydub import AudioSegment
 from tqdm import tqdm
 
-from djtools.collection.collections import RekordboxCollection
-from djtools.collection.tracks import RekordboxTrack
+from djtools.collection.rekordbox_collection import RekordboxCollection
+from djtools.collection.rekordbox_track import RekordboxTrack
 from djtools.configs.cli_args import convert_to_paths
 
 
@@ -168,7 +169,7 @@ def analyze_tracks(collection: RekordboxCollection, usb: Path) -> str:
 
     # Write statistics to a JSON file.
     with open(
-        f"track_analysis_data.json",
+        "track_analysis_data.json",
         mode="w",
         encoding="utf-8",
     ) as _file:
@@ -256,7 +257,7 @@ def move_files(
         if path_insert is not None:
             path_suffix = path_insert
         else:
-            path_suffix = str(loc.parent).split(common_path)[-1]
+            path_suffix = str(loc.parent).split(common_path, maxsplit=1)[-1]
 
         # Either use the existing filename or infer a new one using the ID3
         # tags for 'title' and 'artist'.
@@ -307,7 +308,7 @@ def move_files(
                 pbar.update()
 
     # Serialize the updated collection to a new XML file.
-    collection.serialize(output_path="output_rekordbox.xml")
+    collection.serialize(path="output_rekordbox.xml")
 
     # Print statistics about tracks.
     for key, value in data.items():
@@ -315,7 +316,7 @@ def move_files(
 
     # Write statistics to a JSON file.
     with open(
-        f"track_move_data.json",
+        "track_move_data.json",
         mode="w",
         encoding="utf-8",
     ) as _file:

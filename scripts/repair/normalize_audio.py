@@ -1,6 +1,7 @@
 """This module is a script for normalizing the audio to have a peak amplitude
 of 0.0 decibels.
 """
+# pylint: disable=import-error
 from argparse import ArgumentParser
 from collections import defaultdict
 from concurrent.futures import as_completed, ThreadPoolExecutor
@@ -12,8 +13,8 @@ import matplotlib.pyplot as plt
 from pydub import AudioSegment, effects, utils
 from tqdm import tqdm
 
-from djtools.collection.collections import RekordboxCollection
-from djtools.collection.tracks import RekordboxTrack
+from djtools.collection.rekordbox_collection import RekordboxCollection
+from djtools.collection.rekordbox_track import RekordboxTrack
 
 
 def thread(track: RekordboxTrack, data_dict: Dict):

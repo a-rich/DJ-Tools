@@ -103,7 +103,7 @@ def rewrite_track_paths(config: BaseConfig, other_user_collection: Path):
             music_path / loc.split(str(music_path) + "/", maxsplit=-1)[-1]
         )
         track.set_location(config.USB_PATH / common_path)
-    collection.serialize(output_path=other_user_collection)
+    collection.serialize(path=other_user_collection)
 
 
 def run_sync(_cmd: str) -> str:
@@ -115,6 +115,7 @@ def run_sync(_cmd: str) -> str:
 
     Raises:
         CalledProcessError: raised if "aws s3 sync" command fails.
+        RuntimeError: raised if any other exception occurs while syncing.
 
     Returns:
         Formatted list of uploaded tracks; tracks are grouped by directory.
@@ -125,7 +126,10 @@ def run_sync(_cmd: str) -> str:
     try:
         with Popen(_cmd, stdout=PIPE) as proc:
             while True:
-                char = proc.stdout.read(1).decode()
+                try:
+                    char = proc.stdout.read(1).decode()
+                except UnicodeDecodeError:
+                    char = ""
                 if char == "" and proc.poll() is not None:
                     break
                 if char not in termination_chars:
@@ -143,7 +147,7 @@ def run_sync(_cmd: str) -> str:
     except Exception as exc:
         msg = f"Failure while syncing: {exc}"
         logger.critical(msg)
-        raise Exception(msg) from exc
+        raise RuntimeError(msg) from exc
 
     new_music = ""
     for group_id, group in groupby(
@@ -187,9 +191,11 @@ def upload_log(config: BaseConfig, log_file: Path):
     now = datetime.now()
     one_day = timedelta(days=1)
     for _file in log_file.parent.rglob("*"):
-        if _file.name == "__init__.py" or not _file.is_file():
-            continue
-        if _file.lstat().st_mtime < (now - one_day).timestamp():
+        if (
+            _file.name != "__init__.py"
+            and _file.is_file()
+            and _file.lstat().st_mtime < (now - one_day).timestamp()
+        ):
             _file.unlink()
 
 

@@ -1,6 +1,7 @@
 """Script used to relocate all music files from the old genre-top-level
 structure to the new username-top-level structure.
 """
+# pylint: disable=too-many-arguments,duplicate-code,no-member
 from argparse import ArgumentParser
 from concurrent.futures import ThreadPoolExecutor
 from itertools import groupby
@@ -72,7 +73,7 @@ def get_playlist_tracks(spotify, playlist_id, _playlist):
         playlist_id (str): playlist ID of Spotify playlist to pull tracks from
 
     Raises:
-        Exception: playlist_id must correspond with a valid Spotify playlist
+        RuntimeError: playlist_id must correspond with a valid Spotify playlist
 
     Returns:
         set: Spotify track titles and artist names from a given playlist
@@ -80,7 +81,7 @@ def get_playlist_tracks(spotify, playlist_id, _playlist):
     try:
         playlist = spotify.playlist(playlist_id)
     except Exception:
-        raise Exception(
+        raise RuntimeError(
             f"Failed to get playlist with ID {playlist_id}"
         ) from Exception
 
@@ -621,7 +622,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if not os.path.exists(args.structure_data):
-        raise Exception(
+        raise RuntimeError(
             f"required `--structure_data` JSON config "
             f"'{args.structure_data}' doesn't exist"
         )

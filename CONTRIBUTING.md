@@ -4,22 +4,30 @@ If you wish to contribute to DJ Tools, please follow these development rules:
     1. be linked to an Issue
     1. branch from `releases/*`
     1. have a concise name for the feature or bugfix specifically targeted by that branch (e.g. `xml-track-randomization` or `improve-spotify-stability`)
-1. Commit messages must:
-    1. follow the [Conventional Commits](https://www.conventionalcommits.org/) standard
-    1. include a `Why?` and `What?` section in the body describing the reason for and specifics of the commit
-    1. include necessary updates to the [docs](https://github.com/a-rich/DJ-Tools/tree/main/docs)
+1. Commits must:
+    1. have messages that follow the [Conventional Commits](https://www.conventionalcommits.org/) standard
+    1. (if non-trivial) have messages that include a `Why?` and `What?` section in the body describing the reason for and specifics of the commit
+    1. (if relevant) include updates to the [docs](https://github.com/a-rich/DJ-Tools/tree/main/docs)
 
 ## CI
-On `pull_request` events, [pytest-coverage](https://github.com/a-rich/DJ-Tools/actions/workflows/pytest-coverage.yaml) and [pylint](https://github.com/a-rich/DJ-Tools/actions/workflows/pylint.yaml) Actions are triggered. For build checks to pass on the PR, both of these Actions must pass with `100%` or `10.00/10` in the case of `pylint`. If you're unable to pass the `pytest-coverage` Action, please open an issue. If you're not able to pass `pylint`, first attempt to correct the errors before resorting to [messages control](https://pylint.readthedocs.io/en/latest/user_guide/messages/message_control.html).
+On `push` events (with `**.py` changes) to feature branches, the [format](https://github.com/a-rich/DJ-Tools/actions/workflows/format.yaml) Action will run the [black code formatter](https://github.com/psf/black) and commit changes if there are any.
 
-On `push` events to `releases/**`, the [deploy-dev-docs](https://github.com/a-rich/DJ-Tools/blob/pylint-check/.github/workflows/deploy-dev-docs.yaml) and the [release-dev](https://github.com/a-rich/DJ-Tools/blob/pylint-check/.github/workflows/release-dev.yaml) Actions are triggered.
+On `pull_request` events (with `src/**.py` or `tests/**.py` changes) the [test-lint](https://github.com/a-rich/DJ-Tools/actions/workflows/test-lint.yaml) Action is triggered. For build checks to pass on the PR, this Action must have `100%` test passing and coverage and a `10.00/10` linting score:
+- if you're unable to pass tests with `100%` coverage, please open an issue
+- if you're not getting a `10.00/10` lint score, first attempt to correct the errors before resorting to [messages control](https://pylint.readthedocs.io/en/latest/user_guide/messages/message_control.html)
 
-`push` events to `main` trigger [deploy-prod-docs](https://github.com/a-rich/DJ-Tools/blob/pylint-check/.github/workflows/deploy-prod-docs.yaml) and [release-prod](https://github.com/a-rich/DJ-Tools/blob/pylint-check/.github/workflows/release-prod.yaml).
+On `push` events to `releases/**` the following Actions are triggered:
+- [release-dev](https://github.com/a-rich/DJ-Tools/blob/pylint-check/.github/workflows/release-dev.yaml) (with `src/**.py` changes)
+- [deploy-dev-docs](https://github.com/a-rich/DJ-Tools/blob/pylint-check/.github/workflows/deploy-dev-docs.yaml) (with `src/**.py` or `docs/**.md` changes)
+
+On `push` events to `main`, for the same file change patterns, the [deploy-prod-docs](https://github.com/a-rich/DJ-Tools/blob/pylint-check/.github/workflows/deploy-prod-docs.yaml) and [release-prod](https://github.com/a-rich/DJ-Tools/blob/pylint-check/.github/workflows/release-prod.yaml) Actions are triggered.
 
 ## Local testing (run from DJ-Tools repo)
 ### Setup dev environment:
 ```
-pyenv virtualenv $(pyenv global) djtools-dev; pyenv activate djtools-dev; pip install -e ".[dev]"
+pyenv virtualenv $(pyenv global) djtools-dev && \
+pyenv activate djtools-dev && \
+pip install -e ".[dev]"
 ```
 ### Test suite & coverage reporting:
 ```
@@ -29,4 +37,9 @@ pytest --cov --cov-report term-missing
 ### Linting check:
 ```
 pylint $(git ls-files '*.py')
+```
+
+### Format code:
+```
+black .
 ```

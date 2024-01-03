@@ -21,13 +21,13 @@ logger = logging.getLogger(__name__)
 
 
 @make_path
-def shuffle_playlists(config: BaseConfig, output_path: Optional[Path] = None):
-    """For each playlist in "SHUFFLE_PLAYLISTS", shuffle the tracks and
+def shuffle_playlists(config: BaseConfig, path: Optional[Path] = None):
+    """For each playlist in "SHUFFLE_PLAYLISTS", randomize the tracks and
     sequentially set the track number to emulate shuffling.
 
     Args:
         config: Configuration object.
-        output_path: Path to write the new collection to.
+        path: Path to write the new collection to.
     """
     # Load collection.
     collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
@@ -49,7 +49,9 @@ def shuffle_playlists(config: BaseConfig, output_path: Optional[Path] = None):
     # Apply the shuffled track number to the attribute of the tracks.
     shuffled_tracks = list(shuffled_tracks.values())
     payload = [shuffled_tracks, list(range(1, len(shuffled_tracks) + 1))]
-    with ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as executor:
+    with ThreadPoolExecutor(
+        max_workers=os.cpu_count() * 4  # pylint: disable=no-member
+    ) as executor:
         futures = [
             executor.submit(track.set_track_number, number)
             for track, number in zip(*payload)
@@ -68,4 +70,4 @@ def shuffle_playlists(config: BaseConfig, output_path: Optional[Path] = None):
             tracks={track.get_id(): track for track in shuffled_tracks},
         )
     )
-    _ = collection.serialize(output_path=output_path)
+    _ = collection.serialize(path=path)

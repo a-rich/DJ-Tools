@@ -8,7 +8,7 @@ from unittest import mock
 class MockOpen:
     """Class for mocking the builtin open function."""
 
-    builtin_open = open
+    builtin_open = open  # pylint: disable=used-before-assignment
 
     def __init__(
         self,

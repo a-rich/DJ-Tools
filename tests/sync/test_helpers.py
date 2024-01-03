@@ -7,7 +7,7 @@ from unittest import mock
 
 import pytest
 
-from djtools.collection.collections import RekordboxCollection
+from djtools.collection.rekordbox_collection import RekordboxCollection
 from djtools.sync.helpers import (
     parse_sync_command,
     rewrite_track_paths,
@@ -19,10 +19,10 @@ from djtools.sync.helpers import (
 
 @pytest.mark.parametrize("upload", [True, False])
 @pytest.mark.parametrize(
-    "include_dirs", [[], ["path/to/stuff", "path/to/things.mp3"]]
+    "include_dirs", [[], [Path("path/to/stuff"), Path("path/to/things.mp3")]]
 )
 @pytest.mark.parametrize(
-    "exclude_dirs", [[], ["path/to/stuff", "path/to/things.mp3"]]
+    "exclude_dirs", [[], [Path("path/to/stuff"), Path("path/to/things.mp3")]]
 )
 @pytest.mark.parametrize("use_date_modified", [True, False])
 @pytest.mark.parametrize("dryrun", [True, False])
@@ -37,12 +37,12 @@ def test_parse_sync_command(
 ):
     """Test for the parse_sync_command function."""
     tmpdir = str(tmpdir)
-    if upload:
-        config.UPLOAD_INCLUDE_DIRS = include_dirs
-        config.UPLOAD_EXCLUDE_DIRS = exclude_dirs
-    else:
-        config.DOWNLOAD_INCLUDE_DIRS = include_dirs
-        config.DOWNLOAD_EXCLUDE_DIRS = exclude_dirs
+    setattr(
+        config, f"{'UP' if upload else 'DOWN'}LOAD_INCLUDE_DIRS", include_dirs
+    )
+    setattr(
+        config, f"{'UP' if upload else 'DOWN'}LOAD_EXCLUDE_DIRS", exclude_dirs
+    )
     config.AWS_USE_DATE_MODIFIED = not use_date_modified
     config.DRYRUN = dryrun
     partial_cmd = [
@@ -52,13 +52,20 @@ def test_parse_sync_command(
         tmpdir if upload else "s3://dj.beatcloud.com/dj/music/",
         "s3://dj.beatcloud.com/dj/music/" if upload else tmpdir,
     ]
-    cmd = parse_sync_command(partial_cmd, config, upload)
-    cmd = " ".join(cmd)
+    cmd = " ".join(parse_sync_command(partial_cmd, config, upload))
+    for dir_ in include_dirs:
+        assert (
+            f"--include {((dir_ / '*').as_posix() if not dir_.suffix else dir_.as_posix())}"
+            in cmd
+        )
+    for dir_ in exclude_dirs:
+        assert (
+            f"--exclude {((dir_ / '*').as_posix() if not dir_.suffix else dir_.as_posix())}"
+            in cmd
+        )
     if include_dirs:
-        assert all(f"--include {x}" in cmd for x in include_dirs)
         assert "--exclude *" in cmd
     elif exclude_dirs:
-        assert all(f"--exclude {x}" in cmd for x in exclude_dirs)
         assert "--include *" in cmd
     if use_date_modified:
         assert "--size-only" in cmd
@@ -68,31 +75,13 @@ def test_parse_sync_command(
 
 def test_rewrite_track_paths(config, rekordbox_xml):
     """Test for the rewrite_track_paths function."""
-    user_a = "first_user"
-    user_b = "other_user"
     user_a_path = Path("/Volumes/first_user_usb/")
     user_b_path = Path("/Volumes/other_user_usb/")
-    user_a_xml = rekordbox_xml.parent / "rekordbox.xml"
-    user_b_xml = rekordbox_xml.parent / f"{user_b}_rekordbox.xml"
-    user_a_xml.write_text(
-        Path(rekordbox_xml).read_text(encoding="utf-8"), encoding="utf-8"
-    )
+    user_b_xml = rekordbox_xml.parent / "other_user_rekordbox.xml"
     user_b_xml.write_text(
         Path(rekordbox_xml).read_text(encoding="utf-8"), encoding="utf-8"
     )
-    config.USER = user_a
-    config.COLLECTION_PATH = user_a_xml
     config.USB_PATH = user_a_path
-    config.IMPORT_USER = user_b
-
-    # Write the first user's USB_PATH into each track.
-    collection = RekordboxCollection(user_a_xml)
-    for track in collection.get_tracks().values():
-        loc = track.get_location()
-        track.set_location(
-            loc.parent / str(user_a_path).strip("/") / "DJ Music" / loc.name
-        )
-    collection.serialize(output_path=user_a_xml)
 
     # Write the second user's USB_PATH into each track.
     collection = RekordboxCollection(user_b_xml)
@@ -101,10 +90,12 @@ def test_rewrite_track_paths(config, rekordbox_xml):
         track.set_location(
             loc.parent / str(user_b_path).strip("/") / "DJ Music" / loc.name
         )
-    collection.serialize(output_path=user_b_xml)
+    collection.serialize(path=user_b_xml)
 
+    # Replaces all instances of user_b_path in user_b_xml with user_a_path.
     rewrite_track_paths(config, user_b_xml)
 
+    # Assert user_a_path no longer appears and user_b_path is in every track.
     collection = RekordboxCollection(user_b_xml)
     for track in collection.get_tracks().values():
         loc = track.get_location().as_posix()
@@ -152,6 +143,36 @@ def test_run_sync(mock_popen, tmpdir):
 
 
 @mock.patch("djtools.sync.helpers.Popen")
+@pytest.mark.parametrize(
+    "byte_sequence,expected",
+    [
+        (
+            b"upload: track.mp3 to s3://dj.beatcloud.com/dj/music/track.mp3\n",
+            ".: 1\n\ttrack.mp3\n",
+        ),
+        (b"\x80", ""),  # This will raise a UnicodeDecodeError.
+    ],
+)
+def test_run_sync_handles_decode_error(
+    mock_popen, byte_sequence, expected, tmpdir
+):
+    """Test for the run_sync function."""
+    with open(Path(tmpdir) / "track.mp3", mode="w", encoding="utf-8") as _file:
+        _file.write("")
+    cmd = ["aws", "s3", "sync", str(tmpdir), "s3://dj.beatcloud.com/dj/music/"]
+    with tempfile.NamedTemporaryFile(mode="wb", delete=False) as tmp_file:
+        tmp_file.write(byte_sequence)
+        tmp_file.seek(0)
+        tmp_file.close()
+        with open(tmp_file.name, mode="rb") as tmp_file:
+            process = mock_popen.return_value.__enter__.return_value
+            process.stdout = tmp_file
+            process.wait.return_value = 0
+            ret = run_sync(cmd)
+    assert ret == expected
+
+
+@mock.patch("djtools.sync.helpers.Popen")
 def test_run_sync_handles_return_code(mock_popen, tmpdir, caplog):
     """Test for the run_sync function."""
     caplog.set_level("CRITICAL")
@@ -186,10 +207,12 @@ def test_upload_log(mock_popen, tmpdir, config):
     """Test for the upload_log function."""
     config.AWS_PROFILE = "DJ"
     now = datetime.now()
-    one_day_ago = now - timedelta(days=1)
+    # Windows st_mtime includes fractional seconds which can cause a test
+    # failure due to a rounding error.
+    one_day_ago = now - timedelta(days=1) - timedelta(seconds=1)
     test_log = f'{now.strftime("%Y-%m-%d")}.log'
     filenames = [
-        "empty.txt",
+        "__init__.py",
         test_log,
         f'{one_day_ago.strftime("%Y-%m-%d")}.log',
     ]
@@ -197,9 +220,9 @@ def test_upload_log(mock_popen, tmpdir, config):
     for filename in filenames:
         file_path = Path(tmpdir) / filename
         with open(file_path, mode="w", encoding="utf-8") as _file:
-            _file.write("stuff")
+            _file.write("")
         if filename != test_log:
-            os.utime(file_path, (ctime, ctime))
+            os.utime(file_path, (ctime, ctime))  # pylint: disable=no-member
     process = mock_popen.return_value.__enter__.return_value
     process.wait.return_value = 0
     upload_log(config, Path(tmpdir) / test_log)

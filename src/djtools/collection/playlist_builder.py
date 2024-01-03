@@ -22,12 +22,11 @@ from djtools.utils.helpers import make_path
 
 
 logger = logging.getLogger(__name__)
+PLAYLIST_NAME = "PLAYLIST_BUILDER"
 
 
 @make_path
-def collection_playlists(
-    config: BaseConfig, output_path: Optional[Path] = None
-):
+def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
     """Builds playlists automatically.
 
     By maintaining a collection with tracks having tag data (e.g. genre tags,
@@ -56,8 +55,8 @@ def collection_playlists(
     In addition to creating playlists from tags, this function also supports
     creating "combiner" playlists by evaluating boolean algebra expressions.
     This is an incredibly powerful feature which allows users to apply set
-    operations {union, intersection, difference, negation} to a diverse range
-    of operands {tag, playlists, BPM ranges, rating ranges}.
+    operations {union, intersection, and difference} to a diverse range of
+    operands {tag, playlists, BPMs, ratings, etc.}.
 
     Combiner playlists are declared in the "combiner" specification of the
     playlist config with playlists whose names are the boolean algebra
@@ -65,7 +64,7 @@ def collection_playlists(
 
     Here's an example combiner playlist to illustrate this:
 
-        ((Dubstep ~ [1-3]) | {My Favorites} | (*Techno & [135-145])) & Dark
+        ((Dubstep ~ [1-3]) | {playlist: My Favorites} | (*Techno & [135-145])) & Dark
 
     The resulting combiner playlist will be comprised of tracks that are:
 
@@ -77,7 +76,7 @@ def collection_playlists(
 
     Args:
         config: Configuration object.
-        output_path: Path to write the new collection to.
+        path: Path to write the new collection to.
     """
     # Load the playlist config.
     with open(
@@ -113,6 +112,12 @@ def collection_playlists(
     # This will hold the playlists being built.
     auto_playlists = []
 
+    # List of PlaylistFilter implementations to run against built playlists.
+    filters = [
+        getattr(playlist_filters, playlist_filter)()
+        for playlist_filter in config.COLLECTION_PLAYLIST_FILTERS
+    ]
+
     # Create playlists for the "tags" portion of the playlist config.
     if playlist_config.tags:
         # A set of tags seen is maintained while creating the tags playlists so
@@ -128,13 +133,7 @@ def collection_playlists(
         tag_playlists.set_parent()
 
         # Apply the filtering logic of the configured PlaylistFilter implementations.
-        filter_tag_playlists(
-            tag_playlists,
-            [
-                getattr(playlist_filters, playlist_filter)()
-                for playlist_filter in config.COLLECTION_PLAYLIST_FILTERS
-            ],
-        )
+        filter_tag_playlists(tag_playlists, filters)
 
         # Recursively traverse the playlist tree and create "all" playlists
         # within each folder containing more than one playlist. These "all"
@@ -151,7 +150,9 @@ def collection_playlists(
         if config.COLLECTION_PLAYLISTS_REMAINDER == "folder":
             auto_playlists.append(
                 build_tag_playlists(
-                    PlaylistConfigContent(name="Other", playlists=other_tags),
+                    PlaylistConfigContent(
+                        name="Unused Tags", playlists=other_tags
+                    ),
                     tags_tracks,
                     playlist_class,
                 )
@@ -159,9 +160,9 @@ def collection_playlists(
         else:
             auto_playlists.append(
                 build_tag_playlists(
-                    "Other",
+                    "Unused Tags",
                     {
-                        "Other": {
+                        "Unused Tags": {
                             track_id: track
                             for tag, track_dict in tags_tracks.items()
                             for track_id, track in track_dict.items()
@@ -185,16 +186,36 @@ def collection_playlists(
             playlist_config.combiner, tags_tracks, playlist_class
         )
 
-        auto_playlists.append(combiner_playlists)
+        # The tag playlists must have their "parent" attribute set so that
+        # PlaylistFilter implementations may apply logic that depends on the
+        # relative position of the playlist with the playlist tree.
+        combiner_playlists.set_parent()
+
+        # Apply the filtering logic of the configured PlaylistFilter implementations.
+        filter_tag_playlists(combiner_playlists, filters)
+
+        # Recursively traverse the playlist tree and create "all" playlists
+        # within each folder containing more than one playlist. These "all"
+        # playlists aggregate the set of tracks contained within all the other
+        # playlists within the same folder.
+        _ = aggregate_playlists(combiner_playlists, playlist_class)
+
+        auto_playlists.extend(combiner_playlists)
 
         # Print tag statistics for each combiner playlist.
         if config.VERBOSITY and combiner_playlists:
             print_playlists_tag_statistics(combiner_playlists)
 
+    # Remove any previous playlist builder playlists.
+    previous_playlists = collection.get_playlists(name=PLAYLIST_NAME)
+    root = collection.get_playlists()
+    for playlist in previous_playlists:
+        root.remove_playlist(playlist)
+
     # Insert a new playlist containing the built playlists.
     auto_playlist = playlist_class.new_playlist(
-        name="PLAYLIST_BUILDER", playlists=auto_playlists
+        name=PLAYLIST_NAME, playlists=auto_playlists
     )
     auto_playlist.set_parent(collection.get_playlists())
     collection.add_playlist(auto_playlist)
-    collection.serialize(output_path=output_path)
+    collection.serialize(path=path)

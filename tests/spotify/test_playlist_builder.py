@@ -17,13 +17,13 @@ from ..test_utils import MockOpen
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "playlist_subreddits",
-    [[], [SubredditConfig(name="jungle").dict()]],
+    [[], [SubredditConfig(name="jungle").model_dump()]],
 )
 @pytest.mark.parametrize("got_playlist_ids", [True, False])
 @pytest.mark.parametrize("got_tracks", [True, False])
 @mock.patch.object(Path, "exists", mock.Mock(return_value=True))
 @mock.patch(
-    "djtools.spotify.helpers.update_existing_playlist",
+    "djtools.spotify.helpers._update_existing_playlist",
     mock.Mock(
         return_value={
             "name": "test_playlist",
@@ -33,7 +33,7 @@ from ..test_utils import MockOpen
     ),
 )
 @mock.patch(
-    "djtools.spotify.helpers.build_new_playlist",
+    "djtools.spotify.helpers._build_new_playlist",
     mock.Mock(
         return_value={
             "name": "test_playlist",
@@ -46,7 +46,7 @@ from ..test_utils import MockOpen
     "djtools.spotify.playlist_builder.get_subreddit_posts",
     return_value=[
         [("track-id", "track name")],
-        SubredditConfig(name="jungle").dict(),
+        SubredditConfig(name="jungle").model_dump(),
     ],
 )
 @mock.patch(
@@ -103,17 +103,17 @@ async def test_async_spotify_playlists(
 @mock.patch(
     "pyperclip.paste",
     return_value="""aweeeezy/Bass/2022-09-03: 5
-                   Brazil - A.M.C.mp3
-                   Endless Haze - Koherent.mp3
-                   Two Rangers - Two Rangers.mp3
-                   Under Pressure - Alix Perez, T-Man.mp3
-                   zoom.1 - Relativity Lounge, wicker's portal.mp3
-                  aweeeezy/House/2022-09-03: 2
-                   Shirt - Cour T..mp3
-                   UNKNOWN - 1 - Unknown Artist.mp3""",
+ Brazil - A.M.C.mp3
+ Endless Haze - Koherent.mp3
+ Two Rangers - Two Rangers.mp3
+ Under Pressure - Alix Perez, T-Man.mp3
+ zoom.1 - Relativity Lounge, wicker's portal.mp3
+aweeeezy/House/2022-09-03: 2
+ Shirt - Cour T..mp3""",
 )
-def test_spotify_playlist_from_upload(config):
+def test_spotify_playlist_from_upload(config, caplog):
     """Test for the spotify_playlist_from_upload function."""
+    caplog.set_level("INFO")
     config.SPOTIFY_CLIENT_ID = "test_client_id"
     config.SPOTIFY_CLIENT_SECRET = "test_client_secret"
     config.SPOTIFY_REDIRECT_URI = "test_redirect_uri"
@@ -123,6 +123,38 @@ def test_spotify_playlist_from_upload(config):
         MockOpen(files=["spotify_playlists.yaml"], content="{}").open,
     ):
         spotify_playlist_from_upload(config)
+
+    for rec in caplog.records:
+        assert rec.message.startswith("Matched")
+
+
+@mock.patch(
+    "djtools.spotify.playlist_builder.get_spotify_client", mock.MagicMock()
+)
+@mock.patch(
+    "pyperclip.paste",
+    return_value="""aweeeezy/House/2022-09-03: 2
+ UNKNOWN - 1 - Unknown Artist.mp3""",
+)
+def test_spotify_playlist_from_upload_handles_file_with_multiple_dashes(
+    config, caplog
+):
+    """Test for the spotify_playlist_from_upload function."""
+    caplog.set_level("WARNING")
+    config.SPOTIFY_CLIENT_ID = "test_client_id"
+    config.SPOTIFY_CLIENT_SECRET = "test_client_secret"
+    config.SPOTIFY_REDIRECT_URI = "test_redirect_uri"
+    config.SPOTIFY_PLAYLIST_FROM_UPLOAD = True
+    with mock.patch(
+        "builtins.open",
+        MockOpen(files=["spotify_playlists.yaml"], content="{}").open,
+    ):
+        spotify_playlist_from_upload(config)
+
+    assert (
+        caplog.records[0].message
+        == "UNKNOWN - 1 - Unknown Artist.mp3 is not a valid file"
+    )
 
 
 @mock.patch(
@@ -199,10 +231,11 @@ def test_spotify_playlist_from_upload_raises_runtimeerror(config):
         spotify_playlist_from_upload(config)
 
 
-@mock.patch(
-    "djtools.spotify.playlist_builder.async_spotify_playlists",
-    mock.AsyncMock(return_value=lambda x: None),
-)
 def test_spotify_playlists(config):
     """Test for the spotify_playlists function."""
-    spotify_playlists(config)
+    with mock.patch(
+        "djtools.spotify.playlist_builder.async_spotify_playlists"
+    ) as mock_async_spotify_playlists:
+        mock_async_spotify_playlists.return_value = lambda x: None
+        spotify_playlists(config)
+        assert mock_async_spotify_playlists.called

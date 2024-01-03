@@ -5,14 +5,14 @@ config.yaml
 import logging
 import os
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 from typing_extensions import Literal
 
 from pydantic import (
+    field_validator,
     NonNegativeFloat,
     NonNegativeInt,
     root_validator,
-    validator,
 )
 
 from djtools.configs.config import BaseConfig
@@ -24,8 +24,8 @@ logger = logging.getLogger(__name__)
 class UtilsConfig(BaseConfig):
     """Configuration object for the utils package."""
 
-    AUDIO_BITRATE: int = 320
-    AUDIO_DESTINATION: Path = None
+    AUDIO_BITRATE: str = "320"
+    AUDIO_DESTINATION: Optional[Path] = None
     AUDIO_FORMAT: Literal[
         "aac", "aiff", "alac", "flac", "mp3", "ogg", "pcm", "wav", "wma"
     ] = "mp3"
@@ -36,8 +36,9 @@ class UtilsConfig(BaseConfig):
     LOCAL_DIRS: List[Path] = []
     NORMALIZE_AUDIO: bool = False
     PROCESS_RECORDING: bool = False
-    RECORDING_FILE: Path = None
+    RECORDING_FILE: Optional[Path] = None
     RECORDING_PLAYLIST: str = ""
+    SKIP_TRIM_INITIAL_SILENCE: bool = False
     URL_DOWNLOAD: str = ""
 
     def __init__(self, *args, **kwargs):
@@ -71,9 +72,9 @@ class UtilsConfig(BaseConfig):
                     "and this name must exists in spotify_playlists.yaml."
                 )
 
-    @validator("AUDIO_BITRATE")
+    @field_validator("AUDIO_BITRATE")
     @classmethod
-    def bitrate_validation(cls, value: int) -> str:
+    def bitrate_validation(cls, value: str) -> str:
         """Validates AUDIO_BITRATE is in the range and casts it to a string.
 
         Args:
@@ -85,12 +86,13 @@ class UtilsConfig(BaseConfig):
         Returns:
             String representing the bit rate.
         """
+        value = int(value)
         if value < 36 or value > 320:
             raise ValueError("AUDIO_BITRATE must be in the range [36, 320]")
 
         return str(value)
 
-    @root_validator
+    @root_validator(skip_on_failure=True)
     @classmethod
     def format_validation(cls, values: Dict) -> str:
         """Logs a warning message to install FFmpeg if AUDIO_FORMAT isn't wav.

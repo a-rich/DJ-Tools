@@ -6,6 +6,7 @@ from typing import Optional
 from unittest import mock
 
 import pytest
+from pydub import AudioSegment, generators
 
 from djtools.utils.helpers import (
     compute_distance,
@@ -16,10 +17,10 @@ from djtools.utils.helpers import (
     get_spotify_tracks,
     initialize_logger,
     make_path,
+    process_parallel,
     reverse_title_and_artist,
+    trim_initial_silence,
 )
-
-from ..test_utils import mock_exists, MockOpen
 
 
 @pytest.mark.parametrize("track_a", ["some track", "another track"])
@@ -30,7 +31,7 @@ def test_compute_distance(track_a, track_b):
         "playlist",
         track_a,
         track_b,
-        99,
+        100,
     )
     if track_a == track_b:
         assert ret
@@ -44,27 +45,27 @@ def test_compute_distance(track_a, track_b):
 
 def test_find_matches(config):
     """Test for the find_matches function."""
-    config.CHECK_TRACKS_FUZZ_RATIO = 99
+    config.CHECK_TRACKS_FUZZ_RATIO = 100
     expected_matches = [
         "track 1 - someone unique",
         "track 2 - seen them before",
     ]
     matches = find_matches(
         spotify_tracks={
-            "playlist_A": expected_matches,
+            "playlist_a": expected_matches,
             "playlist_b": [
                 "track 3 - special person",
                 "track 4 - seen them before",
             ],
         },
         beatcloud_tracks=[
-            "track 99 - who's that?",
+            "track 5 - who's that?",
         ]
         + expected_matches,
         config=config,
     )
     assert all(
-        match[-1] >= config.CHECK_TRACKS_FUZZ_RATIO for match in matches
+        match[-1] == config.CHECK_TRACKS_FUZZ_RATIO for match in matches
     )
     assert len(matches) == 2
     assert [x[1] for x in matches] == expected_matches
@@ -94,15 +95,30 @@ def test_get_beatcloud_tracks(mock_os_popen, proc_dump):
         assert track == line
 
 
-def test_get_local_tracks(tmpdir, config):
+def test_get_local_tracks_dir_does_not_exist(config, caplog):
     """Test for the get_local_tracks function."""
+    caplog.set_level("INFO")
+    local_dir = Path("not-a-real-dir")
+    config.LOCAL_DIRS = [local_dir]
+    local_dir_tracks = get_local_tracks(config)
+    assert caplog.records[0].message == (
+        f"{local_dir.as_posix()} does not exist; will not be able to check "
+        "its contents against the beatcloud"
+    )
+    assert not local_dir_tracks
+    assert caplog.records[1].message == "Got 0 files under local directories"
+
+
+def test_get_local_tracks_dir_does_exist(tmpdir, config, caplog):
+    """Test for the get_local_tracks function."""
+    caplog.set_level("INFO")
     check_dirs = []
     tmpdir = Path(tmpdir)
     for _dir in ["dir1", "dir2"]:
         path = tmpdir / _dir
         path.mkdir(parents=True, exist_ok=True)
         check_dirs.append(path)
-    config.LOCAL_DIRS = check_dirs + [Path("nonexistent_dir")]
+    config.LOCAL_DIRS = check_dirs
     beatcloud_tracks = ["test_file1.mp3", "test_file2.mp3"]
     for index, track in enumerate(beatcloud_tracks):
         with open(
@@ -112,17 +128,11 @@ def test_get_local_tracks(tmpdir, config):
         ) as _file:
             _file.write("")
     local_dir_tracks = get_local_tracks(config)
-    assert all(x in local_dir_tracks for x in check_dirs)
-    assert len(local_dir_tracks) == len(check_dirs)
-
-
-def test_get_local_tracks_empty(tmpdir, config, caplog):
-    """Test for the get_local_tracks function."""
-    caplog.set_level("INFO")
-    config.LOCAL_DIRS = [Path(tmpdir)]
-    local_dir_tracks = get_local_tracks(config)
-    assert not local_dir_tracks
-    assert caplog.records[0].message == "Got 0 files under local directories"
+    assert set(local_dir_tracks).union(set(check_dirs)) == set(check_dirs)
+    assert (
+        caplog.records[0].message
+        == f"Got {len(check_dirs)} files under local directories"
+    )
 
 
 @mock.patch("djtools.spotify.helpers.spotipy.Spotify")
@@ -197,22 +207,31 @@ def test_get_playlist_tracks_handles_spotipy_exception(
         get_playlist_tracks(mock_spotipy, test_playlist_id)
 
 
-@pytest.mark.parametrize("verbosity", [0, 1])
+@mock.patch("djtools.utils.helpers.get_spotify_client", new=mock.Mock())
 @mock.patch(
-    "djtools.collection.config.Path.exists",
-    lambda path: mock_exists(
-        [
-            ("spotify_playlists.yaml", True),
-        ],
-        path,
+    "djtools.utils.helpers.get_playlist_ids",
+    new=mock.Mock(
+        return_value={"r/techno | Top weekly Posts": "5gex4eBgWH9nieoVuV8hDC"}
     ),
 )
+def test_get_spotify_tracks_no_matching_playlist_id(config, caplog):
+    """Test for the get_spotify_tracks function."""
+    caplog.set_level("ERROR")
+    playlist = "not-a-real-playlist"
+    get_spotify_tracks(config, [playlist])
+    assert (
+        caplog.records[0].message
+        == f"{playlist} not in spotify_playlists.yaml"
+    )
+
+
+@pytest.mark.parametrize("verbosity", [0, 1])
+@mock.patch("djtools.utils.helpers.get_spotify_client", new=mock.Mock())
 @mock.patch(
-    "builtins.open",
-    MockOpen(
-        files=["spotify_playlists.yaml"],
-        content='{"r/techno | Top weekly Posts": "5gex4eBgWH9nieoVuV8hDC"}',
-    ).open,
+    "djtools.utils.helpers.get_playlist_ids",
+    new=mock.Mock(
+        return_value={"r/techno | Top weekly Posts": "5gex4eBgWH9nieoVuV8hDC"}
+    ),
 )
 @mock.patch(
     "djtools.utils.helpers.get_playlist_tracks",
@@ -223,24 +242,14 @@ def test_get_spotify_tracks(
 ):
     """Test for the get_spotify_tracks function."""
     caplog.set_level("INFO")
-    config.SPOTIFY_CLIENT_ID = "spotify client ID"
-    config.SPOTIFY_CLIENT_SECRET = "spotify client secret"
-    config.SPOTIFY_REDIRECT_URI = "spotify redirect uri"
-    config.CHECK_TRACKS_SPOTIFY_PLAYLISTS = [
-        "playlist A",
-        "r/techno | Top weekly Posts",
-    ]
     config.VERBOSITY = verbosity
-    tracks = get_spotify_tracks(config, config.CHECK_TRACKS_SPOTIFY_PLAYLISTS)
+    tracks = get_spotify_tracks(config, ["r/techno | Top weekly Posts"])
     assert isinstance(tracks, dict)
     assert caplog.records[0].message == (
-        "playlist A not in spotify_playlists.yaml"
-    )
-    assert caplog.records[1].message == (
         'Got 1 track from Spotify playlist "r/techno | Top weekly Posts"'
     )
     if verbosity:
-        assert caplog.records[2].message == "\tsome track - some artist"
+        assert caplog.records[1].message == "\tsome track - some artist"
     mock_get_playlist_tracks.assert_called_once()
 
 
@@ -301,9 +310,55 @@ def test_make_path_decorator_raises_error(arg, kwarg, expected):
         foo(arg, path_kwarg=kwarg)
 
 
+@mock.patch("djtools.utils.helpers.AudioSegment.export", new=mock.Mock())
+@mock.patch("djtools.utils.helpers.effects.normalize")
+def test_process_parallel(mock_normalize, config, audio_file, tmpdir):
+    """Test for the process_parallel function."""
+    audio, _ = audio_file
+    track = {"artist": "Artist", "title": "Title"}
+    process_parallel(config, audio, track, tmpdir)
+    assert mock_normalize.call_count == 1
+
+
 def test_reverse_title_and_artist():
     """Test for the reverse_title_and_artist function."""
-    path_lookup = {"title - artist": "path/to/title - artist.mp3"}
-    expected = {"artist - title": "path/to/title - artist.mp3"}
+    path_lookup = {
+        "title - artist": "path/to/title - artist.mp3",
+        "multiple - hyphens - artist": "path/to/multiple - hyphens - artist.mp3",
+    }
+    expected = {
+        "artist - title": "path/to/title - artist.mp3",
+        "artist - multiple - hyphens": "path/to/multiple - hyphens - artist.mp3",
+    }
     new_path_lookup = reverse_title_and_artist(path_lookup)
     assert new_path_lookup == expected
+
+
+def test_trim_initial_silence():
+    """Test for the trim_initial_silence function."""
+    leading_silence = 4567
+    step_size = 100
+    silence_len = 500
+    track_durations = [1234, 2345, 3456]
+
+    # Build up a mock recording of multiple tracks.
+    audio = AudioSegment.silent(duration=leading_silence)
+    for dur in track_durations:
+        audio += generators.WhiteNoise().to_audio_segment(duration=dur)
+        audio += AudioSegment.silent(duration=silence_len)
+    init_len = len(audio)
+
+    # Track durations have to account for any silence inserted during playback.
+    track_durations = [dur + silence_len for dur in track_durations]
+
+    # Sometimes pydub has an off-by-one difference in the length of audio
+    # constructed in this way.
+    assert abs(init_len - (leading_silence + sum(track_durations))) <= 1
+
+    # Trim leading silence.
+    audio = trim_initial_silence(audio, track_durations, step_size=step_size)
+
+    # The difference between the audio length, before and after, must be
+    # approximately the leading silence amount minus the tail silence.
+    diff = init_len - len(audio)
+    assert abs(leading_silence - silence_len - diff) <= step_size * 2

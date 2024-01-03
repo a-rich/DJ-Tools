@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import List, Optional, Union
 from typing_extensions import Literal
 
-from pydantic import BaseModel, Extra, ValidationError
+from pydantic import BaseModel, ValidationError
 import yaml
 
 from djtools.configs.config import BaseConfig
@@ -20,14 +20,19 @@ logger = logging.getLogger(__name__)
 class CollectionConfig(BaseConfig):
     """Configuration object for the collection package."""
 
-    COLLECTION_PATH: Path = None
+    COLLECTION_PATH: Optional[Path] = None
     COLLECTION_PLAYLIST_FILTERS: List[
-        Literal["HipHopFilter", "MinimalDeepTechFilter"]
+        Literal[
+            "HipHopFilter",
+            "MinimalDeepTechFilter",
+            "ComplexTrackFilter",
+            "TransitionTrackFilter",
+        ]
     ] = []
     COLLECTION_PLAYLISTS: bool = False
     COLLECTION_PLAYLISTS_REMAINDER: Literal["folder", "playlist"] = "folder"
     COPY_PLAYLISTS: List[str] = []
-    COPY_PLAYLISTS_DESTINATION: Path = None
+    COPY_PLAYLISTS_DESTINATION: Optional[Path] = None
     PLATFORM: Literal["rekordbox"] = "rekordbox"
     SHUFFLE_PLAYLISTS: List[str] = []
 
@@ -58,12 +63,11 @@ class CollectionConfig(BaseConfig):
                 / "configs"
                 / "collection_playlists.yaml"
             )
-            err = (
-                "collection_playlists.yaml must be a valid YAML to use the "
-                "COLLECTION_PLAYLISTS feature"
-            )
             if not playlist_config_path.exists():
-                raise RuntimeError(err)
+                raise RuntimeError(
+                    "collection_playlists.yaml must exist to use the "
+                    "COLLECTION_PLAYLISTS feature"
+                )
             try:
                 with open(
                     playlist_config_path, mode="r", encoding="utf-8"
@@ -72,16 +76,25 @@ class CollectionConfig(BaseConfig):
                         **yaml.load(_file, Loader=yaml.FullLoader) or {}
                     )
             except ValidationError as exc:
-                raise RuntimeError(err) from exc
+                raise RuntimeError(
+                    "collection_playlists.yaml must be a valid YAML to use "
+                    "the COLLECTION_PLAYLISTS feature"
+                ) from exc
 
 
-class PlaylistConfigContent(BaseModel, extra=Extra.forbid):
+class PlaylistName(BaseModel, extra="forbid"):
+    "A class for configuring the names of playlists."
+    tag_content: str
+    name: Optional[str] = None
+
+
+class PlaylistConfigContent(BaseModel, extra="forbid"):
     "A class for type checking the content of the playlist config YAML."
     name: str
-    playlists: List[Union[PlaylistConfigContent, str]]
+    playlists: List[Union[PlaylistConfigContent, PlaylistName, str]]
 
 
-class PlaylistConfig(BaseModel, extra=Extra.forbid):
+class PlaylistConfig(BaseModel, extra="forbid"):
     "A class for type checking the playlist config YAML."
     combiner: Optional[PlaylistConfigContent] = None
     tags: Optional[PlaylistConfigContent] = None

@@ -7,6 +7,7 @@ The purpose of this utility is to:
 * backup subsets of your library
 * ensure you have easy access to a preparation independent of the setup
 """
+# pylint: disable=duplicate-code
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 import os
@@ -21,14 +22,14 @@ from djtools.utils.helpers import make_path
 
 
 @make_path
-def copy_playlists(config: BaseConfig, output_path: Optional[Path] = None):
+def copy_playlists(config: BaseConfig, path: Optional[Path] = None):
     """Copies tracks from provided playlists to a destination.
 
     Serializes the collection with these playlists and updated locations.
 
     Args:
         config: Configuration object.
-        output_path: Path to write the new collection to.
+        path: Path to write the new collection to.
 
     Raises:
         LookupError: Playlist names in COPY_PLAYLISTS must exist in
@@ -65,12 +66,11 @@ def copy_playlists(config: BaseConfig, output_path: Optional[Path] = None):
         playlist_tracks.update(playlist.get_tracks())
         parent = playlist.get_parent()
         while parent:
+            lineage[parent] = set()
             for child in list(parent):
-                if child is not playlist and child not in lineage:
+                if child not in playlists and child not in lineage:
                     lineage[parent].add(child)
                     continue
-                if any(child in children for children in lineage.values()):
-                    lineage[parent].discard(child)
             parent = parent.get_parent()
     collection.set_tracks(playlist_tracks)
 
@@ -84,7 +84,9 @@ def copy_playlists(config: BaseConfig, output_path: Optional[Path] = None):
         playlist_tracks.values(),
         [config.COPY_PLAYLISTS_DESTINATION] * len(playlist_tracks),
     ]
-    with ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as executor:
+    with ThreadPoolExecutor(
+        max_workers=os.cpu_count() * 4  # pylint: disable=no-member
+    ) as executor:
         _ = list(
             tqdm(
                 executor.map(copy_file, *payload),
@@ -95,11 +97,11 @@ def copy_playlists(config: BaseConfig, output_path: Optional[Path] = None):
 
     # Unless specified, write the output collection to the same directory that
     # the files are being copied to.
-    if not output_path:
-        output_path = (
+    if not path:
+        path = (
             config.COPY_PLAYLISTS_DESTINATION
             / f"copied_playlists_collection{config.COLLECTION_PATH.suffix}"
         )
 
     # Serialize the new collection.
-    _ = collection.serialize(output_path=output_path)
+    _ = collection.serialize(path=path)

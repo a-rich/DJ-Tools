@@ -1,6 +1,7 @@
 """This module is used to compare tracks from Spotify playlists and / or local
 directories to see if there is any overlap with the contents of the Beatcloud.
 """
+from collections import defaultdict
 from itertools import groupby
 import logging
 from operator import itemgetter
@@ -35,22 +36,21 @@ def compare_tracks(
         beatcloud_tracks: Cached list of tracks from S3.
 
     Returns:
-        List of all tracks and list of full paths to matching Beatcloud tracks.
+        Tuple with a list of all Beatcloud tracks and list of full paths to
+            matching Beatcloud tracks.
     """
     if config.DOWNLOAD_SPOTIFY_PLAYLIST:
         cached_local_dirs = config.LOCAL_DIRS
         config.LOCAL_DIRS = []
+        spotify_playlists = [config.DOWNLOAD_SPOTIFY_PLAYLIST]
+    else:
+        spotify_playlists = config.CHECK_TRACKS_SPOTIFY_PLAYLISTS
 
     track_sets = []
     beatcloud_matches = []
-    spotify_playlists = (
-        [config.DOWNLOAD_SPOTIFY_PLAYLIST]
-        if config.DOWNLOAD_SPOTIFY_PLAYLIST
-        else config.CHECK_TRACKS_SPOTIFY_PLAYLISTS
-    )
     if spotify_playlists:
-        tracks = get_spotify_tracks(config, spotify_playlists)
-        if not tracks:
+        spotify_tracks = get_spotify_tracks(config, spotify_playlists)
+        if not spotify_tracks:
             if config.DOWNLOAD_SPOTIFY_PLAYLIST:
                 substring = "DOWNLOAD_SPOTIFY_PLAYLIST is a key"
             else:
@@ -58,37 +58,39 @@ def compare_tracks(
                     "CHECK_TRACKS_SPOTIFY_PLAYLISTS has one or more keys"
                 )
             logger.warning(
-                f"There are no Spotify tracks; make sure {substring} from "
+                f"There are no Spotify tracks; make sure {substring} in "
                 "spotify_playlists.yaml"
             )
         else:
-            for playlist_name, playlist_tracks in tracks.items():
-                track_title_artists = []
+            track_results = defaultdict(list)
+            for playlist_name, playlist_tracks in spotify_tracks.items():
                 for track in playlist_tracks:
                     title = track["track"]["name"]
                     artists = ", ".join(
                         [y["name"] for y in track["track"]["artists"]]
                     )
-                    track_title_artists.append(
+                    track_results[playlist_name].append(
                         f"{artists} - {title}"
                         if config.ARTIST_FIRST
                         else f"{title} - {artists}"
                     )
-                tracks[playlist_name] = track_title_artists
-            track_sets.append((tracks, "Spotify Playlist Tracks"))
+            track_sets.append((track_results, "Spotify Playlist Tracks"))
     if config.LOCAL_DIRS:
-        tracks = get_local_tracks(config)
-        if not tracks:
+        local_tracks = get_local_tracks(config)
+        if not local_tracks:
             logger.warning(
                 "There are no local tracks; make sure LOCAL_DIRS has one or "
                 "more directories containing one or more tracks"
             )
         else:
-            tracks = {
+            track_results = {
                 key: [track.stem for track in value]
-                for key, value in tracks.items()
+                for key, value in local_tracks.items()
             }
-            track_sets.append((tracks, "Local Directory Tracks"))
+            track_sets.append((track_results, "Local Directory Tracks"))
+
+    if config.DOWNLOAD_SPOTIFY_PLAYLIST:
+        config.LOCAL_DIRS = cached_local_dirs
 
     if not track_sets:
         return beatcloud_tracks, beatcloud_matches
@@ -114,8 +116,5 @@ def compare_tracks(
             for _, track, beatcloud_track, fuzz_ratio in matches:
                 beatcloud_matches.append(path_lookup[beatcloud_track])
                 logger.info(f"\t{fuzz_ratio}: {track} | {beatcloud_track}")
-
-    if config.DOWNLOAD_SPOTIFY_PLAYLIST:
-        config.LOCAL_DIRS = cached_local_dirs
 
     return beatcloud_tracks, beatcloud_matches

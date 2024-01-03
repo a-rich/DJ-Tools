@@ -10,12 +10,6 @@ nav:
       - Setup: tutorials/getting_started/setup.md
       - Usage: tutorials/getting_started/usage.md
       - Configuration: tutorials/getting_started/configuration.md
-    - Developer Docs:
-      - Home: tutorials/developer_docs/index.md
-      - System Overview: tutorials/developer_docs/system_overview.md
-      - Adding DJ Software Support to the Collections Package: tutorials/developer_docs/new_collections.md
-      - Using the Collections API: tutorials/developer_docs/collections_api.md
-      - Adding Custom PlaylistFilters: tutorials/developer_docs/playlist_filters.md
   - How-to Guides:
     - Home: how_to_guides/index.md
     - Collection:
@@ -39,6 +33,7 @@ nav:
   - Conceptual Guides:
     - Home: conceptual_guides/index.md
     - Get to Know Your Rekordbox Collection: conceptual_guides/rekordbox_collection.md
+    - Tagging Guide: conceptual_guides/tagging_guide.md
     - The Importance of Standardization and Quality Control: conceptual_guides/file_standardization.md
   - Reference:
     - Config: reference/configs/index.md
@@ -46,6 +41,12 @@ nav:
     - Spotify: reference/spotify/index.md
     - Sync: reference/sync/index.md
     - Utils: reference/utils/index.md
+  - Developer Docs:
+    - Home: developer_docs/index.md
+    - System Overview: developer_docs/system_overview.md
+    - Adding DJ Software Support to the Collections Package: developer_docs/new_collections.md
+    - Using the Collections API: developer_docs/collections_api.md
+    - Adding Custom PlaylistFilters: developer_docs/playlist_filters.md
 theme: material
 plugins:
   - search

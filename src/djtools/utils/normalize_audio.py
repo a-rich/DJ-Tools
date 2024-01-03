@@ -64,7 +64,3 @@ def normalize(config: BaseConfig):
                 format=config.AUDIO_FORMAT,
             )
             continue
-
-        logger.info(
-            f"{track} already has a headroom of {config.AUDIO_HEADROOM}"
-        )

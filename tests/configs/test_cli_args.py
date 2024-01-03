@@ -1,22 +1,21 @@
 """Testing for the cli_args module."""
 from pathlib import Path
 from typing import List
-from unittest import mock
 
 import pytest
 
 from djtools.configs.cli_args import (
-    convert_to_paths,
+    _convert_to_paths,
     get_arg_parser,
-    parse_json,
+    NonEmptyListElementAction,
+    _parse_json,
 )
-from djtools.configs.helpers import build_config
 
 
 @pytest.mark.parametrize("paths", ["path", ["path1", "path2"]])
 def test_convert_to_paths(paths):
     """Test for the convert_to_paths function."""
-    paths = convert_to_paths(paths)
+    paths = _convert_to_paths(paths)
     if isinstance(paths, List):
         for path in paths:
             assert isinstance(path, Path)
@@ -24,7 +23,7 @@ def test_convert_to_paths(paths):
         assert isinstance(paths, Path)
 
 
-def test_get_arg_parser_arg_for_every_field(namespace):
+def test_get_arg_parser_arg_for_every_field(config):
     """Test the get_arg_parser function."""
     # Get CLI args.
     parser = get_arg_parser()
@@ -38,13 +37,6 @@ def test_get_arg_parser_arg_for_every_field(namespace):
         ]
         for arg in parser.parse_args(args).__dict__.keys()
     }
-
-    # Get config options.
-    with mock.patch(
-        "argparse.ArgumentParser.parse_args",
-    ) as mock_parse_args:
-        mock_parse_args.return_value = namespace
-        config = build_config()  # pylint: disable=duplicate-code
     config_set = {key.lower() for key in dict(config).keys()}
 
     # Test that the only CLI exclusive args are linking configs and displaying
@@ -63,10 +55,19 @@ def test_get_arg_parser_arg_for_every_field(namespace):
     )
 
 
+def test_non_empty_list_element_action(namespace):
+    """Test for the NonEmptyListElementAction class."""
+    namespace.local_dirs = ["first"]
+    parser = get_arg_parser()
+    action = NonEmptyListElementAction(option_strings=None, dest="local_dirs")
+    action(parser, namespace, values=[None, "second"])
+    assert namespace.local_dirs == ["first", "second"]
+
+
 def test_parse_json():
     """Test for the parse_json function."""
     json_string = '{"name": ["stuff"]}'
-    json_obj = parse_json(json_string)
+    json_obj = _parse_json(json_string)
     assert isinstance(json_obj, dict)
     assert isinstance(json_obj["name"], list)
 
@@ -75,4 +76,4 @@ def test_parse_json_invalid():
     """Test for the parse_json function."""
     json_string = '{"name": {"stuff"}}'
     with pytest.raises(ValueError):
-        parse_json(json_string)
+        _parse_json(json_string)

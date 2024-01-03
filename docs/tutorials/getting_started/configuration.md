@@ -6,13 +6,14 @@ If `config.yaml`, or any of the values it might contain, is missing then the def
 In fact, removing the template `config.yaml` and building a config from scratch is what I do before every new release to ensure that `config.yaml` always reflects whatever options are available in DJ Tools.
 
 ## [Base config][djtools.configs.config.BaseConfig]
+* `ARTIST_FIRST`: used to indicate that your Beatcloud tracks adhere to the `Artist1, Artist2 - Title (Artist2 Remix)` format rather than the `Title (Artist2 Remix) - Artist1, Artist2` format expected by default 
 * `LOG_LEVEL`: logger log level
 * `VERBOSITY`: verbosity level for logging messages
 
 ## [Collection config][djtools.collection.config.CollectionConfig]
 * `COLLECTION_PATH`: the full path to your collection...the parent directory where this points to is also where all other collections generated or utilized by this library will exist
 * `COLLECTION_PLAYLISTS`: boolean flag to trigger the generation of a playlist structure (as informed by `collection_playlists.yaml`) using the tags in `COLLECTION_PATH`...the resulting collection is the file at `COLLECTION_PATH`
-* `COLLECTION_PLAYLISTS_REMAINDER`: whether tracks of remainder tags (those not specified in `collection_playlists.yaml`) will be placed in a `folder` called "Other" with individual tag playlists or a `playlist` called "Other"
+* `COLLECTION_PLAYLISTS_REMAINDER`: whether tracks of remainder tags (those not specified in `collection_playlists.yaml`) will be placed in a `folder` called "Unused Tags" with individual tag playlists or a `playlist` called "Unused Tags"
 * `COLLECTION_PLAYLIST_FILTERS`: list of `PlaylistFilter` classes used to apply special filtering logic to tag playlists
 * `COPY_PLAYLISTS`: list of playlists in `COLLECTION_PATH` to (a) have audio files copied and (b) have track data written to a new collection with updated locations
 * `COPY_PLAYLISTS_DESTINATION`: path to copy audio files to
@@ -37,7 +38,6 @@ In fact, removing the template `config.yaml` and building a config from scratch 
 * `SPOTIFY_USERNAME`: Spotify username that will keep playlists automatically generated
 
 ## [Sync config][djtools.sync.config.SyncConfig]
-* `ARTIST_FIRST`: used to indicate that your Beatcloud tracks adhere to the `Artist1, Artist2 - Title (Artist2 Remix)` format rather than the `Title (Artist2 Remix) - Artist1, Artist2` format expected by default 
 * `AWS_PROFILE`: the name of the profile used when running `aws configure --profile`
 * `AWS_USE_DATE_MODIFIED`: up/download files that already exist at the destination if the date modified field at the source is after that of the destination...BE SURE THAT ALL USERS OF YOUR `BEATCLOUD` INSTANCE ARE ON BOARD BEFORE UPLOADING WITH THIS FLAG SET!
 * `DISCORD_URL`: webhook URL for messaging a Discord server's channel when new music has been uploaded to the `beatcloud`
@@ -68,4 +68,5 @@ In fact, removing the template `config.yaml` and building a config from scratch 
 * `PROCESS_RECORDING`: boolean flag to trigger processing an audio recording using a Spotify playlist
 * `RECORDING_FILE`: Audio recording to pair with `RECORDING_PLAYLIST`
 * `RECORDING_PLAYLIST`: Spotify playlist to pair with `RECORDING_FILE`
+* `SKIP_TRIM_INITIAL_SILENCE`: Flag to skip trimming initial silence of `RECORDING_FILE`
 * `URL_DOWNLOAD`: URL from which music files should be downloaded (i.e. a Soundcloud playlist)

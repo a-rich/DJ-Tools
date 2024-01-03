@@ -14,7 +14,8 @@ combiner:
     - name: Dubstep
       playlists:
         - "(Dubstep | Hip Hop) | (Dubstep | Hip Hop)"
-        - "Dubstep & {date:<2022} & [5]"
+        - tag_content: "Dubstep & {date:<2022} & [5]"
+          name: Pre 2022 High Energy Dubstep
     - "{artist:*Tribe*} | {comment:*Dark*} | {date:2022} | {date:<2022} | {key:7A} | {label:Some Label}"
 tags:
   name: "Tags"
@@ -40,7 +41,7 @@ tags:
               playlists:
                 - Halftime
                 - Hip Hop
-                - Pure Halftime
+                - tag_content: Pure Halftime
             - Space Bass
             - name: "[___] Step"
               playlists:
