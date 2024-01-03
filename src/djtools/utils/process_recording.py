@@ -9,7 +9,7 @@ information from the Spotify API to:
 - normalize the audio so the headroom is AUDIO_HEADROOM decibels
 - export the files with the configured AUDIO_BITRATE and AUDIO_FORMAT
 """
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import datetime
 import logging
 import os
@@ -113,19 +113,21 @@ def process(config: BaseConfig):
         audio_chunks.append(track_audio)
 
     # Normalize audio and export tracks with tags.
-    payload = [
+    payload = zip(
         [config] * len(audio_chunks),
         audio_chunks,
         track_data,
         [write_path] * len(audio_chunks),
-    ]
+    )
+
     with ThreadPoolExecutor(
         max_workers=os.cpu_count() * 4  # pylint: disable=no-member
     ) as executor:
-        _ = list(
-            tqdm(
-                executor.map(process_parallel, *payload),
-                total=len(audio_chunks),
-                desc="Exporting tracks",
-            )
-        )
+        futures = [
+            executor.submit(process_parallel, *args) for args in payload
+        ]
+
+        with tqdm(total=len(futures), desc="Exporting tracks") as pbar:
+            for future in as_completed(futures):
+                _ = future.result()
+                pbar.update(1)

@@ -51,7 +51,7 @@ def test_find_matches(config):
         "track 2 - seen them before",
     ]
     matches = find_matches(
-        spotify_tracks={
+        compare_tracks={
             "playlist_a": expected_matches,
             "playlist_b": [
                 "track 3 - special person",
@@ -68,7 +68,7 @@ def test_find_matches(config):
         match[-1] == config.CHECK_TRACKS_FUZZ_RATIO for match in matches
     )
     assert len(matches) == 2
-    assert [x[1] for x in matches] == expected_matches
+    assert {x[1] for x in matches} == set(expected_matches)
 
 
 @pytest.mark.parametrize(

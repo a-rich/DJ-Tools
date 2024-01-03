@@ -9,7 +9,7 @@ The purpose of this utility is to:
 """
 # pylint: disable=duplicate-code
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import as_completed, ThreadPoolExecutor
 import os
 from pathlib import Path
 from typing import Optional
@@ -80,20 +80,20 @@ def copy_playlists(config: BaseConfig, path: Optional[Path] = None):
             parent.remove_playlist(child)
 
     # Copy tracks to the destination and update their location.
-    payload = [
+    payload = zip(
         playlist_tracks.values(),
         [config.COPY_PLAYLISTS_DESTINATION] * len(playlist_tracks),
-    ]
+    )
+
     with ThreadPoolExecutor(
         max_workers=os.cpu_count() * 4  # pylint: disable=no-member
     ) as executor:
-        _ = list(
-            tqdm(
-                executor.map(copy_file, *payload),
-                total=len(playlist_tracks),
-                desc=f"Copying {len(playlist_tracks)} tracks",
-            )
-        )
+        futures = [executor.submit(copy_file, *args) for args in payload]
+
+        with tqdm(total=len(futures), desc="Copying tracks") as pbar:
+            for future in as_completed(futures):
+                _ = future.result()
+                pbar.update(1)
 
     # Unless specified, write the output collection to the same directory that
     # the files are being copied to.
