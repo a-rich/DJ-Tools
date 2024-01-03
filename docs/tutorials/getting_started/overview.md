@@ -6,17 +6,16 @@ If you want to learn more about how to use DJ Tools to achieve any of the follow
 ## Collection
 This package reads and writes a collection of tracks and playlists. Operations can be performed on this collection such as shuffling and creating backups of playlists and the files that they're comprised of.
 
-Perhaps the most useful features in the `collection` package:
+Perhaps the most useful feature in the `collection` package is the playlist builder.
+The playlist builder automatically builds playlists using the metadata associated with tracks in your collection and a `collection_playlists.yaml` configuration file.
 
-1. automatically build playlists based on your tags and a desired folder structure 
-1. allow you to define playlists using powerful [boolean algebra expressions](https://en.wikipedia.org/wiki/Set_theory#Basic_concepts_and_notation) that combine and filter playlists
+The `tags` key in your `collection_playlists.yaml` specifies a desired playlist structure using singular tags (genre tags and "other" tags).
+The `combiner` key specifies playlists using powerful [boolean algebra expressions](https://en.wikipedia.org/wiki/Set_theory#Basic_concepts_and_notation) that apply operations on a variety of operands including, but not limited to: tags, playlists, BPM, rating, release year, date added, comments, artists, labels, etc.
 
-With this latter feature, you can create, for example, a playlist that has all your `Dark` tracks that are also in the set of tracks that are either `Dubstep`, in the BPM range `138` to `142`, or have `Eprom` somewhere in the artist field, but don't come from a playlist called `Weak Beats`:
-
-`Dark & (Dubstep | [138-142] | {artist: *Eprom*}) ~ {playlist: Weak Beats}`
+For more information on the playlist builder, see the How-to Guides for [tag](../../how_to_guides/collection_playlists.md) and [combiner](../../how_to_guides/combiner_playlists.md) playlists.
 
 ## Spotify
-This package uses the Spotify and Reddit APIs to automatically generate playlists from Reddit submission and the uploads of other users of your Beatcloud instance.
+This package uses the Spotify and Reddit APIs to automatically generate playlists from Reddit submissions and the uploads of other users of your Beatcloud instance.
 
 By configuring particular subreddits, you can ensure that you're getting a steady stream of focused music discovery that caters to your interests.
 

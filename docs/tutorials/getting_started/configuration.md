@@ -1,9 +1,10 @@
 # Configuration
-When the `djtools` command is run, `build_config` looks for a `config.yaml` in the package's `config` directory and creates a `BaseConfig` object using its values. If `djtools` was run with any CLI options, those values override whatever was set in the `BaseConfig` using the values in `config.yaml`.
+When the `djtools` command is run, `build_config` looks for a `config.yaml` in the package's `config` directory and creates a `BaseConfig` object using its values. 
+If `djtools` was run with any CLI options, those values override whatever was set in the `BaseConfig` using the values in `config.yaml`.
 
-If `config.yaml`, or any of the values it might contain, is missing then the default values in the Python object are used instead. In fact, if `config.yaml` is missing, then a default one will be created by serializing the fully instantiated `BaseConfig` object. This makes it easy for users to then edit `config.yaml` to get the desired behavior without having to reference the API to see what options are available.
-
-In fact, removing the template `config.yaml` and building a config from scratch is what I do before every new release to ensure that `config.yaml` always reflects whatever options are available in DJ Tools.
+If `config.yaml` doesn't exist, it will be generated when running `djtools`.
+If `config.yaml`, or any of the values it might contain, is missing then the default values in the Python object are used instead.
+If `config.yaml` contains any unsupported options, `djtools` will fail as extra keys are forbidden.
 
 ## [Base config][djtools.configs.config.BaseConfig]
 * `ARTIST_FIRST`: used to indicate that your Beatcloud tracks adhere to the `Artist1, Artist2 - Title (Artist2 Remix)` format rather than the `Title (Artist2 Remix) - Artist1, Artist2` format expected by default 
@@ -56,7 +57,7 @@ In fact, removing the template `config.yaml` and building a config from scratch 
 * `USER`: this is the username of the current user...if left as an empty string, then your operating system username will be used...it's recommended that you only override this if your username changes from what other users of your `beatcloud` instance are expecting (to ensure consistency...i.e. when you get a new computer with a different username)
 
 ## [Utils config][djtools.utils.config.UtilsConfig]
-* `AUDIO_BITRATE`: integer in the range [`36`, `320`] representing the bitrate to write audio at e.g. `320`
+* `AUDIO_BITRATE`: string representing the integer in the range [`36`, `320`] for the bitrate to write audio at e.g. `"320"`
 * `AUDIO_DESTINATION`: path to where downloaded and / or exported files go to
 * `AUDIO_FORMAT`: string representing the file format write audio in e.g. `"mp3"`
 * `AUDIO_HEADROOM`: non-negative float representing the amount of headroom in decibels to leave when normalizing audio
