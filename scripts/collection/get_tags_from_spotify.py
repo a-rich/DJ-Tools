@@ -7,11 +7,14 @@ the year, album, and label.
 from argparse import ArgumentParser
 from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import datetime
+from itertools import groupby
 import os
+from typing import Dict, Union
 
 from tqdm import tqdm
 
 from djtools.configs.helpers import build_config
+from djtools.collection.base_track import Track
 from djtools.collection.helpers import PLATFORM_REGISTRY
 from djtools.spotify.helpers import filter_results, get_spotify_client
 
@@ -49,10 +52,71 @@ def get_spotify_tags_thread(track, spotify, threshold, query_limit):
             setattr(track, f"_{attribute_name.title()}", attribute)
 
 
+def convert_to_datetime(arg: str) -> Union[datetime, str]:
+    """Convert string to datetime.
+
+    Args:
+        arg: datetime as a YYYY-MM-DD string
+
+    Returns:
+        Either the datetime object to filter after or a string indicating that
+            the most recent upload should be filtered.
+    """
+    if arg == "most-recent":
+        return arg
+
+    try:
+        return datetime.strptime(arg, "%Y-%m-%d")
+    except ValueError as exc:
+        raise ValueError(
+            f"Couldn't convert --date-filter argument '{arg}' into a datetime."
+        ) from exc
+
+
+def filter_tracks(
+    tracks: Dict[str, Track], date_filter: Union[datetime, str]
+) -> Dict[str, Track]:
+    """Filter tracks using a date filter.
+
+    Args:
+        tracks: Dictionary of tracks to filter.
+        date_filter: datetime to filter tracks with.
+
+    Returns:
+        Dictionary of filtered tracks.
+    """
+    if date_filter == "all":
+        return tracks
+
+    sorted_tracks = sorted(tracks.values(), key=lambda x: x.get_date_added())
+
+    if date_filter == "most-recent":
+        date_filter = sorted_tracks[-1].get_date_added()
+
+    filtered_tracks = []
+    for date, track_list in groupby(
+        sorted_tracks, key=lambda x: x.get_date_added()
+    ):
+        if date < date_filter:
+            continue
+        filtered_tracks.extend(list(track_list))
+
+    return {track.get_id(): track for track in filtered_tracks}
+
+
 if __name__ == "__main__":
     arg_parser = ArgumentParser()
     arg_parser.add_argument("--collection", help="Path to a collection.")
     arg_parser.add_argument("--config", help="Path to a config.yaml.")
+    arg_parser.add_argument(
+        "--date-filter",
+        type=convert_to_datetime,
+        default="most-recent",
+        help=(
+            "Datetime to after which tracks should have tags added from "
+            "Spotify. Default is 'most-recent'."
+        ),
+    )
     arg_parser.add_argument(
         "--mode",
         choices=["bulk", "interactive"],
@@ -79,7 +143,7 @@ if __name__ == "__main__":
     collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
         path=args.collection or config.COLLECTION_PATH
     )
-    tracks = collection.get_tracks()
+    tracks = filter_tracks(collection.get_tracks(), args.date_filter)
     spotify = get_spotify_client(config)
     playlist_class = PLATFORM_REGISTRY[config.PLATFORM]["playlist"]
 
