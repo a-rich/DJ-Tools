@@ -84,11 +84,12 @@ def test_find_matches(config):
 @mock.patch("djtools.utils.helpers.check_output")
 def test_get_beatcloud_tracks(mock_os_popen, proc_dump):
     """Test for the get_beatcloud_tracks function."""
+    bucket_url = "s3://some-bucket.com"
     proc_dump = list(map(Path, proc_dump))
     mock_os_popen.return_value = b"\n".join(
         map(lambda x: x.as_posix().encode(), proc_dump)
     )
-    tracks = get_beatcloud_tracks()
+    tracks = get_beatcloud_tracks(bucket_url)
     mock_os_popen.assert_called_once()
     assert len(tracks) == len(proc_dump)
     for track, line in zip(tracks, proc_dump):

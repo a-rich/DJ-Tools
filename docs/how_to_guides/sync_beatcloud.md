@@ -41,7 +41,7 @@ Syncing your database files also improves reliability since you may lose, damage
 
 ### Downloading collection
 1. Set the `IMPORT_USER` option to the username of another user in your Beatcloud
-    - This username must exist as a directory in the Beatcloud under `dj.beatcloud.com/collections` (it will if this user has ever run `--upload-collection`)
+    - This username must exist as a directory in the Beatcloud under `<BUCKET_URL>/collections` (it will if this user has ever run `--upload-collection`)
 1. Run the command `djtools --download-collection`
 
 `Note`: you can set `IMPORT_USER` to your own `USER` value to retrieve a backup of your collection.

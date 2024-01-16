@@ -16,6 +16,7 @@ def test_syncconfig_download_or_upload_without_usb_path(download, upload):
     """Test for the SyncConfig class."""
     cfg = {
         "AWS_PROFILE": "myprofile",
+        "BUCKET_URL": "s3://some-bucket.com",
         "DOWNLOAD_MUSIC": download,
         "UPLOAD_MUSIC": upload,
         "USB_PATH": None,
@@ -36,6 +37,7 @@ def test_syncconfig_download_or_upload_with_missing_usb_path(download, upload):
     usb_path = Path("not/real/usb/path")
     cfg = {
         "AWS_PROFILE": "myprofile",
+        "BUCKET_URL": "s3://some-bucket.com",
         "DOWNLOAD_MUSIC": download,
         "UPLOAD_MUSIC": upload,
         "USB_PATH": usb_path,
@@ -52,6 +54,7 @@ def test_syncconfig_download_without_import_user():
     cfg = {
         "DOWNLOAD_COLLECTION": True,
         "AWS_PROFILE": "myprofile",
+        "BUCKET_URL": "s3://some-bucket.com",
         "IMPORT_USER": "",
     }
     with pytest.raises(
@@ -98,6 +101,25 @@ def test_syncconfig_no_aws_profile(aws_operation):
         SyncConfig(**cfg)
 
 
+@pytest.mark.parametrize(
+    "aws_operation",
+    [
+        "DOWNLOAD_COLLECTION",
+        "DOWNLOAD_MUSIC",
+        "UPLOAD_COLLECTION",
+        "UPLOAD_MUSIC",
+    ],
+)
+def test_syncconfig_no_bucket(aws_operation):
+    """Test for the SyncConfig class."""
+    cfg = {"AWS_PROFILE": "default", aws_operation: True}
+    with pytest.raises(
+        RuntimeError,
+        match="Config must include BUCKET_URL for sync operations",
+    ):
+        SyncConfig(**cfg)
+
+
 def test_syncconfig_sets_aws_profile_env_var():
     """Test for the SyncConfig class."""
     cfg = {"AWS_PROFILE": "test-profile"}
@@ -131,6 +153,7 @@ def test_syncconfig_upload_without_discord_url(rekordbox_xml, caplog):
     cfg = {
         "USB_PATH": ".",
         "UPLOAD_MUSIC": True,
+        "BUCKET_URL": "s3://some-bucket.com",
         "DISCORD_URL": "",
         "COLLECTION_PATH": rekordbox_xml,
         "SPOTIFY_CLIENT_ID": "id",
