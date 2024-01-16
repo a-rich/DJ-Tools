@@ -41,6 +41,7 @@ If `config.yaml` contains any unsupported options, `djtools` will fail as extra 
 ## [Sync config][djtools.sync.config.SyncConfig]
 * `AWS_PROFILE`: the name of the profile used when running `aws configure --profile`
 * `AWS_USE_DATE_MODIFIED`: up/download files that already exist at the destination if the date modified field at the source is after that of the destination...BE SURE THAT ALL USERS OF YOUR `BEATCLOUD` INSTANCE ARE ON BOARD BEFORE UPLOADING WITH THIS FLAG SET!
+* `BUCKET_URL`: URL for an AWS S3 API compliant storage location
 * `DISCORD_URL`: webhook URL for messaging a Discord server's channel when new music has been uploaded to the `beatcloud`
 * `DOWNLOAD_COLLECTION`: sync the collection of `IMPORT_USER` from the `beatcloud` to the directory that `COLLECTION_PATH` is in
 * `DOWNLOAD_EXCLUDE_DIRS`: the list of paths (relative to the `DJ Music` folder on your `USB_PATH`) that should NOT be downloaded from the `beatcloud` when running the `download_music` sync operation
