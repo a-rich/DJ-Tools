@@ -65,10 +65,10 @@ def download_music(
         "aws",
         "s3",
         "sync",
-        "s3://dj.beatcloud.com/dj/music/",
+        f"{config.BUCKET_URL}/dj/music/",
         dest.as_posix(),
     ]
-    run_sync(parse_sync_command(cmd, config))
+    run_sync(parse_sync_command(cmd, config), config.BUCKET_URL)
 
     new = {str(p) for p in dest.rglob(glob_path)}
     difference = sorted(list(new.difference(old)), key=getmtime)
@@ -94,7 +94,7 @@ def download_collection(config: BaseConfig):
     )
     collection_dir = config.COLLECTION_PATH.parent
     src = (
-        f"s3://dj.beatcloud.com/dj/collections/{config.IMPORT_USER}/"
+        f"{config.BUCKET_URL}/dj/collections/{config.IMPORT_USER}/"
         f"{config.PLATFORM}_collection"
     )
     dst = (
@@ -134,15 +134,19 @@ def upload_music(config: BaseConfig):
 
     logger.info("Uploading track collection...")
     src = (Path(config.USB_PATH) / "DJ Music").as_posix()
-    cmd = ["aws", "s3", "sync", src, "s3://dj.beatcloud.com/dj/music/"]
+    cmd = ["aws", "s3", "sync", src, f"{config.BUCKET_URL}/dj/music/"]
 
     if config.DISCORD_URL and not config.DRYRUN:
         webhook(
             config.DISCORD_URL,
-            content=run_sync(parse_sync_command(cmd, config, upload=True)),
+            content=run_sync(
+                parse_sync_command(cmd, config, upload=True), config.BUCKET_URL
+            ),
         )
     else:
-        run_sync(parse_sync_command(cmd, config, upload=True))
+        run_sync(
+            parse_sync_command(cmd, config, upload=True), config.BUCKET_URL
+        )
 
 
 def upload_collection(config: BaseConfig):
@@ -153,7 +157,7 @@ def upload_collection(config: BaseConfig):
     """
     logger.info(f"Uploading {config.USER}'s {config.PLATFORM} collection...")
     dst = (
-        f"s3://dj.beatcloud.com/dj/collections/{config.USER}/"
+        f"{config.BUCKET_URL}/dj/collections/{config.USER}/"
         f"{config.PLATFORM}_collection"
     )
     cmd = ["aws", "s3", "cp", config.COLLECTION_PATH.as_posix(), dst]

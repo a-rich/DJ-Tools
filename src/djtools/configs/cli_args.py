@@ -268,6 +268,11 @@ def get_arg_parser() -> ArgumentParser:
         ),
     )
     sync_parser.add_argument(
+        "--bucket-url",
+        type=str,
+        help="URL for an AWS S3 API compliant bucket.",
+    )
+    sync_parser.add_argument(
         "--discord-url",
         type=str,
         help="Discord webhook URL used to post uploaded tracks.",

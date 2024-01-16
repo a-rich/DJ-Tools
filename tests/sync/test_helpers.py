@@ -16,6 +16,8 @@ from djtools.sync.helpers import (
     webhook,
 )
 
+TEST_BUCKET = "s3://some-bucket.com"
+
 
 @pytest.mark.parametrize("upload", [True, False])
 @pytest.mark.parametrize(
@@ -49,8 +51,8 @@ def test_parse_sync_command(
         "aws",
         "s3",
         "sync",
-        tmpdir if upload else "s3://dj.beatcloud.com/dj/music/",
-        "s3://dj.beatcloud.com/dj/music/" if upload else tmpdir,
+        tmpdir if upload else f"{TEST_BUCKET}/dj/music/",
+        f"{TEST_BUCKET}/dj/music/" if upload else tmpdir,
     ]
     cmd = " ".join(parse_sync_command(partial_cmd, config, upload))
     for dir_ in include_dirs:
@@ -108,16 +110,16 @@ def test_run_sync(mock_popen, tmpdir):
     """Test for the run_sync function."""
     with open(Path(tmpdir) / "track.mp3", mode="w", encoding="utf-8") as _file:
         _file.write("")
-    cmd = ["aws", "s3", "sync", str(tmpdir), "s3://dj.beatcloud.com/dj/music/"]
+    cmd = ["aws", "s3", "sync", str(tmpdir), f"{TEST_BUCKET}/dj/music/"]
     sync_output = (
         "upload: ../../Volumes/AWEEEEZY/DJ Music/Bass/2022-12-21/track - "
-        "artist.mp3 to s3://dj.beatcloud.com/dj/music/Bass/2022-12-21/"
+        f"artist.mp3 to {TEST_BUCKET}/dj/music/Bass/2022-12-21/"
         "track - artist.mp3\n"
         "upload: ../../Volumes/AWEEEEZY/DJ Music/Bass/2O22-12-21/other track "
-        "- other artist.mp3 to s3://dj.beatcloud.com/dj/music/Bass/"
+        f"- other artist.mp3 to {TEST_BUCKET}/dj/music/Bass/"
         "2O22-12-21/other track - other artist.mp3\n"
         "upload: ../../Volumes/AWEEEEZY/DJ Music/Techno/2022-12-22/last track "
-        "- last artist.mp3 to s3://dj.beatcloud.com/dj/music/Techno/"
+        f"- last artist.mp3 to {TEST_BUCKET}/dj/music/Techno/"
         "2022-12-22/last track - last artist.mp3"
         "\nirrelevant line"
     )
@@ -133,7 +135,7 @@ def test_run_sync(mock_popen, tmpdir):
             process = mock_popen.return_value.__enter__.return_value
             process.stdout = tmp_file
             process.wait.return_value = 0
-            ret = run_sync(cmd)
+            ret = run_sync(cmd, TEST_BUCKET)
     expected = (
         "Bass/2022-12-21: 1\n\ttrack - artist.mp3\nBass/2O22-12-21: 1\n\tother"
         " track - other artist.mp3\nTechno/2022-12-22: 1\n\tlast track - last "
@@ -147,7 +149,9 @@ def test_run_sync(mock_popen, tmpdir):
     "byte_sequence,expected",
     [
         (
-            b"upload: track.mp3 to s3://dj.beatcloud.com/dj/music/track.mp3\n",
+            f"upload: track.mp3 to {TEST_BUCKET}/dj/music/track.mp3\n".encode(
+                "utf-8"
+            ),
             ".: 1\n\ttrack.mp3\n",
         ),
         (b"\x80", ""),  # This will raise a UnicodeDecodeError.
@@ -159,7 +163,7 @@ def test_run_sync_handles_decode_error(
     """Test for the run_sync function."""
     with open(Path(tmpdir) / "track.mp3", mode="w", encoding="utf-8") as _file:
         _file.write("")
-    cmd = ["aws", "s3", "sync", str(tmpdir), "s3://dj.beatcloud.com/dj/music/"]
+    cmd = ["aws", "s3", "sync", str(tmpdir), f"{TEST_BUCKET}/dj/music/"]
     with tempfile.NamedTemporaryFile(mode="wb", delete=False) as tmp_file:
         tmp_file.write(byte_sequence)
         tmp_file.seek(0)
@@ -168,7 +172,7 @@ def test_run_sync_handles_decode_error(
             process = mock_popen.return_value.__enter__.return_value
             process.stdout = tmp_file
             process.wait.return_value = 0
-            ret = run_sync(cmd)
+            ret = run_sync(cmd, TEST_BUCKET)
     assert ret == expected
 
 
@@ -183,7 +187,7 @@ def test_run_sync_handles_return_code(mock_popen, tmpdir, caplog):
         "s3",
         "sync",
         Path(tmpdir).as_posix(),
-        "s3://dj.beatcloud.com/dj/music/",
+        f"{TEST_BUCKET}/dj/music/",
     ]
     with tempfile.NamedTemporaryFile(mode="wb", delete=False) as tmp_file:
         tmp_file.write(bytes("".encode("utf-8")))
@@ -198,7 +202,7 @@ def test_run_sync_handles_return_code(mock_popen, tmpdir, caplog):
                 f"non-zero exit status {process.wait.return_value}."
             )
             with pytest.raises(Exception, match=msg):
-                run_sync(cmd)
+                run_sync(cmd, TEST_BUCKET)
     assert caplog.records[0].message == msg
 
 

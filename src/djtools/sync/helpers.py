@@ -106,12 +106,13 @@ def rewrite_track_paths(config: BaseConfig, other_user_collection: Path):
     collection.serialize(path=other_user_collection)
 
 
-def run_sync(_cmd: str) -> str:
+def run_sync(_cmd: str, bucket_url: str) -> str:
     """Runs subprocess for "aws s3 sync" command. Output is collected and
         formatted such that uploaded tracks are grouped by their directories.
 
     Args:
         _cmd: "aws s3 sync" command.
+        bucket_url: URL to an AWS S3 API compliant bucket.
 
     Raises:
         CalledProcessError: raised if "aws s3 sync" command fails.
@@ -137,7 +138,7 @@ def run_sync(_cmd: str) -> str:
                     continue
                 print(line, end=char)
                 if char != "\r" and "upload: " in line:
-                    line = line.split("s3://dj.beatcloud.com/dj/music/")[-1]
+                    line = line.split(f"{bucket_url}/dj/music/")[-1]
                     tracks.append(Path(line))
                 line = ""
             proc.stdout.close()
@@ -182,7 +183,7 @@ def upload_log(config: BaseConfig, log_file: Path):
         )
         return
 
-    dst = f"s3://dj.beatcloud.com/dj/logs/{config.USER}/{log_file.name}"
+    dst = f"{config.BUCKET_URL}/dj/logs/{config.USER}/{log_file.name}"
     cmd = ["aws", "s3", "cp", log_file.as_posix(), dst]
     logger.info(" ".join(cmd))
     with Popen(cmd) as proc:

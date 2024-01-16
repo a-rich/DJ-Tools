@@ -19,6 +19,7 @@ class SyncConfig(BaseConfig):
 
     AWS_PROFILE: str = "default"
     AWS_USE_DATE_MODIFIED: bool = False
+    BUCKET_URL: str = ""
     DISCORD_URL: str = ""
     DOWNLOAD_COLLECTION: bool = False
     DOWNLOAD_EXCLUDE_DIRS: List[Path] = []
@@ -67,6 +68,11 @@ class SyncConfig(BaseConfig):
         ):
             if not self.AWS_PROFILE:
                 msg = "Config must include AWS_PROFILE for sync operations"
+                logger.critical(msg)
+                raise RuntimeError(msg)
+
+            if not self.BUCKET_URL:
+                msg = "Config must include BUCKET_URL for sync operations"
                 logger.critical(msg)
                 raise RuntimeError(msg)
 

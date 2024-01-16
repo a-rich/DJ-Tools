@@ -107,14 +107,17 @@ def find_matches(
     return matches
 
 
-def get_beatcloud_tracks() -> List[str]:
+def get_beatcloud_tracks(bucket_url) -> List[str]:
     """Lists all the music files in S3 and parses out the track titles and
         artist names.
+
+    Args:
+        bucket_url: URL to an AWS S3 API compliant bucket.
 
     Returns:
         Beatcloud track titles and artist names.
     """
-    cmd = ["aws", "s3", "ls", "--recursive", "s3://dj.beatcloud.com/dj/music/"]
+    cmd = ["aws", "s3", "ls", "--recursive", f"{bucket_url}/dj/music/"]
     output = check_output(cmd).decode("utf-8").split("\n")
     tracks = [Path(track) for track in output if track]
     logger.info(f"Got {len(tracks)} tracks from the beatcloud")

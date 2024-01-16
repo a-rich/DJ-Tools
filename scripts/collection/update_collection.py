@@ -70,12 +70,12 @@ if __name__ == "__main__":
 
     # Set the path to the remote master collection either from the CLI arg or
     # dynamically. The default path is:
-    # s3://dj.beatcloud.com/dj/collections/master/rekordbox_collection
+    # <BUCKET-URL>/dj/collections/master/rekordbox_collection
     if args.master_collection:
         remote_master_collection = args.master_collection
     else:
         remote_master_collection = (
-            "s3://dj.beatcloud.com/dj/collections/"
+            f"{config.BUCKET_URL}/dj/collections/"
             f"{args.master_collection_user}/{config.PLATFORM}_collection"
         )
 
