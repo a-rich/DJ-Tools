@@ -85,9 +85,11 @@ def process(config: BaseConfig):
     # Load the audio and trim the initial silence.
     logger.info("Loading audio...")
     audio = AudioSegment.from_file(config.RECORDING_FILE)
-    if not config.SKIP_TRIM_INITIAL_SILENCE:
+    if config.TRIM_INITIAL_SILENCE:
         audio = trim_initial_silence(
-            audio, [track["duration"] for track in track_data]
+            audio,
+            [track["duration"] for track in track_data],
+            config.TRIM_INITIAL_SILENCE,
         )
 
     # Check that the audio is at least as long as the playlist duration.

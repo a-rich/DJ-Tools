@@ -14,7 +14,7 @@ import pathlib
 from pathlib import Path
 from subprocess import check_output
 import typing
-from typing import Callable, Dict, List, Optional, Set, Tuple
+from typing import Callable, Dict, List, Literal, Optional, Set, Tuple, Union
 
 from fuzzywuzzy import fuzz
 from pydub import AudioSegment, effects, silence
@@ -423,6 +423,7 @@ def reverse_title_and_artist(path_lookup: Dict[str, str]) -> Dict[str, str]:
 def trim_initial_silence(
     audio: AudioSegment,
     track_durations: List[int],
+    trim_amount: Union[int, Literal["auto"]],
     silence_thresh: Optional[float] = -50,
     min_silence_ms: Optional[int] = 5,
     step_size: Optional[int] = 100,
@@ -432,6 +433,7 @@ def trim_initial_silence(
     Args:
         audio: Audio with leading silence.
         track_durations: List of track durations.
+        trim_amount: Number of milliseconds to trim off the beginning.
         silence_thresh: Maximum decibel level that's still considered silence.
         min_silence_ms: Surrounding milliseconds of each track to check for
             silence.
@@ -440,6 +442,11 @@ def trim_initial_silence(
     Returns:
         AudioSegment: Audio with the beginning silence trimmed off.
     """
+    # If trim_amount is an integer, then it's the number of milliseconds to
+    # trim off the beginning of the recording.
+    if isinstance(trim_amount, int):
+        return audio[trim_amount:]
+
     # step_size must be a positive integer.
     step_size = max(step_size, 1)
 

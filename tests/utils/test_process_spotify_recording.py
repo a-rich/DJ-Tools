@@ -56,15 +56,15 @@ def test_process_handles_missing_or_empty_playlist(config):
 )
 @mock.patch("djtools.utils.process_recording.process_parallel", mock.Mock())
 @mock.patch("djtools.utils.process_recording.trim_initial_silence")
-@pytest.mark.parametrize("skip,expected", [(False, 1), (True, 0)])
+@pytest.mark.parametrize("trim,expected", [(0, 0), (1, 1), ("auto", 1)])
 def test_process_skips_trimming_initial_silence(
-    mock_trim_initial_silence, skip, expected, config, tmpdir
+    mock_trim_initial_silence, trim, expected, config, tmpdir
 ):
     """Test for the process function."""
     config.AUDIO_DESTINATION = Path(tmpdir)
     config.RECORDING_FILE = "file.wav"
     config.RECORDING_PLAYLIST = "playlist"
-    config.SKIP_TRIM_INITIAL_SILENCE = skip
+    config.TRIM_INITIAL_SILENCE = trim
     process(config)
     assert mock_trim_initial_silence.call_count == expected
 

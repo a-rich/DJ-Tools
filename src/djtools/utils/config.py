@@ -6,12 +6,13 @@ import logging
 import os
 from pathlib import Path
 from typing import Dict, List, Optional
-from typing_extensions import Literal
+from typing_extensions import Literal, Union
 
 from pydantic import (
     field_validator,
     NonNegativeFloat,
     NonNegativeInt,
+    PositiveInt,
     root_validator,
 )
 
@@ -38,7 +39,7 @@ class UtilsConfig(BaseConfig):
     PROCESS_RECORDING: bool = False
     RECORDING_FILE: Optional[Path] = None
     RECORDING_PLAYLIST: str = ""
-    SKIP_TRIM_INITIAL_SILENCE: bool = False
+    TRIM_INITIAL_SILENCE: Union[PositiveInt, Literal["auto"]] = "auto"
     URL_DOWNLOAD: str = ""
 
     def __init__(self, *args, **kwargs):
