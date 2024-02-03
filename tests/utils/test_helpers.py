@@ -1,4 +1,5 @@
 """Testing for the helpers module."""
+
 from datetime import datetime
 from pathlib import Path
 import logging
@@ -335,7 +336,7 @@ def test_reverse_title_and_artist():
     assert new_path_lookup == expected
 
 
-@pytest.mark.parametrize("trim_amount", [0, 1, "auto"])
+@pytest.mark.parametrize("trim_amount", [-1000, 0, 1000, "auto", "smart"])
 def test_trim_initial_silence(trim_amount):
     """Test for the trim_initial_silence function."""
     leading_silence = 4567
@@ -366,6 +367,8 @@ def test_trim_initial_silence(trim_amount):
     # approximately the leading silence amount minus the tail silence.
     diff = init_len - len(audio)
     if isinstance(trim_amount, int):
-        assert diff == trim_amount
+        assert abs(diff - trim_amount) <= 1
+    elif trim_amount == "auto":
+        assert abs(diff - leading_silence) <= 1
     else:
         assert abs(leading_silence - silence_len - diff) <= step_size * 2

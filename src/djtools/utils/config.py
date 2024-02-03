@@ -2,6 +2,7 @@
 attributes of this configuration object correspond with the "utils" key of
 config.yaml
 """
+
 import logging
 import os
 from pathlib import Path
@@ -12,7 +13,6 @@ from pydantic import (
     field_validator,
     NonNegativeFloat,
     NonNegativeInt,
-    PositiveInt,
     root_validator,
 )
 
@@ -39,7 +39,7 @@ class UtilsConfig(BaseConfig):
     PROCESS_RECORDING: bool = False
     RECORDING_FILE: Optional[Path] = None
     RECORDING_PLAYLIST: str = ""
-    TRIM_INITIAL_SILENCE: Union[PositiveInt, Literal["auto"]] = "auto"
+    TRIM_INITIAL_SILENCE: Union[int, Literal["auto", "smart"]] = 0
     URL_DOWNLOAD: str = ""
 
     def __init__(self, *args, **kwargs):

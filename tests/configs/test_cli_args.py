@@ -1,4 +1,5 @@
 """Testing for the cli_args module."""
+
 from pathlib import Path
 from typing import List
 
@@ -98,21 +99,14 @@ def test_parse_trim_initial_silence_str():
     assert result == "auto"
 
 
-def test_parse_trim_initial_silence_invalid_int():
-    """Test for the _parse_trim_initial_silence function."""
-    arg = "0"
-    with pytest.raises(
-        ValueError,
-        match='--trim-initial-silence must be either "auto" or a positive integer.',
-    ):
-        _parse_trim_initial_silence(arg)
-
-
 def test_parse_trim_initial_silence_invalid_str():
     """Test for the _parse_trim_initial_silence function."""
     arg = "stuff"
     with pytest.raises(
         ValueError,
-        match='--trim-initial-silence must be either "auto" or a positive integer.',
+        match=(
+            '--trim-initial-silence must be either "auto", "smart", or an '
+            "integer."
+        ),
     ):
         _parse_trim_initial_silence(arg)

@@ -70,5 +70,5 @@ If `config.yaml` contains any unsupported options, `djtools` will fail as extra 
 * `PROCESS_RECORDING`: boolean flag to trigger processing an audio recording using a Spotify playlist
 * `RECORDING_FILE`: Audio recording to pair with `RECORDING_PLAYLIST`
 * `RECORDING_PLAYLIST`: Spotify playlist to pair with `RECORDING_FILE`
-* `TRIM_INITIAL_SILENCE`: Milliseconds of initial silence to trim off `RECORDING_FILE`
+* `TRIM_INITIAL_SILENCE`: Milliseconds of initial silence to trim off `RECORDING_FILE`. Can also be a negative integer to prepend silence. Can also be "auto" or "smart" for automatic silence detection or a home-brewed algorithm for finding the optimal offset.
 * `URL_DOWNLOAD`: URL from which music files should be downloaded (i.e. a Soundcloud playlist)

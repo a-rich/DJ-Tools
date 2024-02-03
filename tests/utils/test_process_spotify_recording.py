@@ -1,4 +1,5 @@
 """Testing for the process_recording module."""
+
 from pathlib import Path
 from unittest import mock
 

@@ -1,4 +1,5 @@
 """Testing the version module."""
+
 from unittest import mock
 
 import semver

@@ -9,6 +9,7 @@ information from the Spotify API to:
 - normalize the audio so the headroom is AUDIO_HEADROOM decibels
 - export the files with the configured AUDIO_BITRATE and AUDIO_FORMAT
 """
+
 from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import datetime
 import logging

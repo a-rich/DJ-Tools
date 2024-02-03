@@ -1,6 +1,7 @@
 """This module contains helper functions that are not specific to any
 particular sub-package of this library.
 """
+
 from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import datetime
 from functools import wraps
@@ -423,7 +424,7 @@ def reverse_title_and_artist(path_lookup: Dict[str, str]) -> Dict[str, str]:
 def trim_initial_silence(
     audio: AudioSegment,
     track_durations: List[int],
-    trim_amount: Union[int, Literal["auto"]],
+    trim_amount: Union[int, Literal["auto", "smart"]],
     silence_thresh: Optional[float] = -50,
     min_silence_ms: Optional[int] = 5,
     step_size: Optional[int] = 100,
@@ -443,12 +444,23 @@ def trim_initial_silence(
         AudioSegment: Audio with the beginning silence trimmed off.
     """
     # If trim_amount is an integer, then it's the number of milliseconds to
-    # trim off the beginning of the recording.
+    # trim off the beginning of the recording. If a negative integer is
+    # provided, then insert that many milliseconds of silence at the beginning
+    # of the recording.
     if isinstance(trim_amount, int):
-        return audio[trim_amount:]
+        if trim_amount >= 0:
+            return audio[trim_amount:]
+        return AudioSegment.silent(duration=abs(trim_amount)) + audio
 
-    # step_size must be a positive integer.
-    step_size = max(step_size, 1)
+    # Get the number of milliseconds of silence at the beginning of the
+    # recording.
+    leading_silence = silence.detect_leading_silence(
+        audio, silence_threshold=silence_thresh, chunk_size=1
+    )
+
+    # If trim_amount is "auto", simply trim off the detected leading silence.
+    if trim_amount == "auto":
+        return audio[leading_silence:]
 
     # Use the track durations to infer the points in the recording where each
     # track should begin.
@@ -458,14 +470,9 @@ def trim_initial_silence(
         index += track_duration
         start_points.append(index)
 
-    # Get the number of milliseconds of silence at the beginning of the
-    # recording.
-    leading_silence = silence.detect_leading_silence(
-        audio, silence_threshold=silence_thresh, chunk_size=1
-    )
-
     # With a logarithmically decreasing step size, step through the potential
     # offsets to trim off the beginning of the recording.
+    step_size = max(step_size, 1)
     offsets = [0, leading_silence]
     while step_size >= 1:
         scores = []

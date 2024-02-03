@@ -1,6 +1,7 @@
 """This is a script for sorting the non-genre tags of a collection in
 alphabetical order.
 """
+
 # pylint: disable=protected-access
 from argparse import ArgumentParser
 import re

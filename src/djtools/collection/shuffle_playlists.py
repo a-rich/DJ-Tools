@@ -3,6 +3,7 @@ playlists. This is done by setting the track number attribute of each track in
 sequential order after collecting the set of Tracks from the provided
 playlist(s).
 """
+
 from concurrent.futures import as_completed, ThreadPoolExecutor
 import logging
 import os

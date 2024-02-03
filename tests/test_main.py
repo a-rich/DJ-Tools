@@ -1,4 +1,5 @@
 """Testing the main entrypoint for the djtools library."""
+
 from unittest import mock
 
 from djtools import main

@@ -7,6 +7,7 @@ The purpose of this utility is to:
 * backup subsets of your library
 * ensure you have easy access to a preparation independent of the setup
 """
+
 # pylint: disable=duplicate-code
 from collections import defaultdict
 from concurrent.futures import as_completed, ThreadPoolExecutor

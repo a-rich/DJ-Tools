@@ -4,6 +4,7 @@ RekordboxCollection is an implementation of Collection which operates on the
 XML format that Rekordbox exports. The CustomSubstitution and
 UnsortedAttributes classes are helpers for serializing a RekordboxCollection.
 """
+
 from __future__ import annotations
 from copy import copy
 from pathlib import Path

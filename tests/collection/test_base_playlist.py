@@ -1,4 +1,5 @@
 """Testing for the playlists module."""
+
 import pytest
 
 from djtools.collection.base_playlist import Playlist

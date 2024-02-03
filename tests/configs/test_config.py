@@ -1,4 +1,5 @@
 """Testing for the config module."""
+
 from unittest import mock
 
 import pytest

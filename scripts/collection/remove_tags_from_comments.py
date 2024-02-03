@@ -5,6 +5,7 @@ the year, album, and label. In addition, it removes "situation" tags
 {"Opener", "Build", "Peak Time"} from the Comments field. This is done because
 I'm now re-purposing the "Rating" field to convey the energy level of tracks.
 """
+
 # pylint: disable=redefined-outer-name,duplicate-code
 from argparse import ArgumentParser
 from concurrent.futures import as_completed, ThreadPoolExecutor

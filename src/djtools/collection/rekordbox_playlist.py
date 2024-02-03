@@ -3,6 +3,7 @@
 RekordboxPlaylist is an implementation of Playlist which operates on the XML
 format that Rekordbox exports.
 """
+
 from __future__ import annotations
 import inspect
 from pathlib import Path

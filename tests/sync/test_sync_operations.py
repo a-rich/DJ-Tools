@@ -1,4 +1,5 @@
 """Testing for the sync_operations module."""
+
 from pathlib import Path
 from unittest import mock
 

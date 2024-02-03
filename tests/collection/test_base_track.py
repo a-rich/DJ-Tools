@@ -1,4 +1,5 @@
 """Testing for the tracks module."""
+
 import pytest
 
 from djtools.collection.base_track import Track

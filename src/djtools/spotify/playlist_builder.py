@@ -14,6 +14,7 @@ are then used to search the Spotify API for tracks. The resulting tracks have
 their title and artist fields compared with the reddit post title and are added
 to the respective playlist if the Levenshtein similarity passes a threshold.
 """
+
 import asyncio
 import logging
 from pathlib import Path
