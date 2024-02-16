@@ -1,4 +1,5 @@
 """Testing for the playlist_builder module."""
+
 from unittest import mock
 
 import pytest

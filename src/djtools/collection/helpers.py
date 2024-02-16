@@ -1,4 +1,5 @@
 """This module contains helpers for the collection package."""
+
 from __future__ import annotations
 from collections import defaultdict
 from datetime import datetime
@@ -489,9 +490,9 @@ def parse_numerical_selectors(
             logger.error(f"Malformed numerical selector: {match}")
             continue
 
-        numerical_value_lookup[
-            tuple(map(str, _range or [])) or match
-        ] = f"[{match}]"
+        numerical_value_lookup[tuple(map(str, _range or [])) or match] = (
+            f"[{match}]"
+        )
 
     return numerical_values
 
@@ -522,9 +523,9 @@ def parse_string_selectors(
             logger.warning(f"{selector_type} is not a supported selector!")
             continue
         if selector_type != "date":
-            string_value_lookup[
-                (selector_type, selector_value)
-            ] = f"{{{match}}}"
+            string_value_lookup[(selector_type, selector_value)] = (
+                f"{{{match}}}"
+            )
             continue
 
         dates, formats, inequalities = [], [], []

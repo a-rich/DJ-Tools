@@ -1,10 +1,11 @@
 """This module is responsible for creating the argparse.NameSpace object from
 the CLI args.
 """
+
 from argparse import Action, ArgumentParser, Namespace, RawTextHelpFormatter
 import json
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Literal, Optional, Union
 
 
 def get_arg_parser() -> ArgumentParser:
@@ -468,9 +469,15 @@ def get_arg_parser() -> ArgumentParser:
         help='Spotify playlist to pair with "--recording-file".',
     )
     utils_parser.add_argument(
-        "--skip-trim-initial-silence",
-        action="store_true",
-        help='Flag to skip trimming initial silence of "--recording-file".',
+        "--trim-initial-silence",
+        type=_parse_trim_initial_silence,
+        default=0,
+        help=(
+            'Milliseconds of initial silence to trim off "--recording-file". '
+            "Can also be a negative integer to prepend silence. Can also be "
+            '"auto" or "smart" for automatic silence detection or a '
+            "home-brewed algorithm for finding the optimal offset."
+        ),
     )
     utils_parser.add_argument(
         "--url-download",
@@ -545,3 +552,19 @@ def _parse_json(_json: str) -> Dict:
         raise ValueError(
             f'Unable to parse JSON type argument "{_json}": {exc}'
         ) from Exception
+
+
+def _parse_trim_initial_silence(
+    arg: str,
+) -> Union[int, Literal["auto", "smart"]]:
+    if arg in {"auto", "smart"}:
+        return arg
+
+    try:
+        arg = int(arg)
+    except Exception as exc:
+        raise ValueError(
+            '--trim-initial-silence must be either "auto", "smart", or an integer.'
+        ) from exc
+
+    return arg

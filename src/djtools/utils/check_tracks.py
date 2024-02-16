@@ -1,6 +1,7 @@
 """This module is used to compare tracks from Spotify playlists and / or local
 directories to see if there is any overlap with the contents of the Beatcloud.
 """
+
 from collections import defaultdict
 from itertools import groupby
 import logging

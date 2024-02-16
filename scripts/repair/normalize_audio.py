@@ -1,6 +1,7 @@
 """This module is a script for normalizing the audio to have a peak amplitude
 of 0.0 decibels.
 """
+
 # pylint: disable=import-error
 from argparse import ArgumentParser
 from collections import defaultdict

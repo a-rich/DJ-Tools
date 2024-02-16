@@ -2,6 +2,7 @@
 The attributes of this configuration object correspond with the "sync" key
 of config.yaml
 """
+
 import getpass
 import logging
 import os
@@ -76,9 +77,9 @@ class SyncConfig(BaseConfig):
                 logger.critical(msg)
                 raise RuntimeError(msg)
 
-        os.environ[  # pylint: disable=no-member
-            "AWS_PROFILE"
-        ] = self.AWS_PROFILE
+        os.environ["AWS_PROFILE"] = (  # pylint: disable=no-member
+            self.AWS_PROFILE
+        )
 
         if any([self.DOWNLOAD_MUSIC, self.UPLOAD_MUSIC]) and not self.USB_PATH:
             msg = (

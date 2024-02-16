@@ -1,5 +1,6 @@
 """This module is used to normalize audio files in one or more directories.
 """
+
 import logging
 
 from pydub import AudioSegment, effects, utils

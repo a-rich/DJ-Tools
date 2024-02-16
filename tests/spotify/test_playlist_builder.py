@@ -1,4 +1,5 @@
 """Testing for the playlist_builder module."""
+
 from pathlib import Path
 from unittest import mock
 

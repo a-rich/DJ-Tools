@@ -2,6 +2,7 @@
 The attributes of this configuration object correspond with the "collection"
 key of config.yaml
 """
+
 from __future__ import annotations
 import logging
 from pathlib import Path

@@ -75,6 +75,7 @@ the common path of tracks in your collection:
         --path-insert "" \
         --infer-file-names
 """
+
 # pylint: disable=import-error,redefined-outer-name,no-member
 from argparse import ArgumentParser
 from concurrent.futures import as_completed, ThreadPoolExecutor

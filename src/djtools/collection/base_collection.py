@@ -5,6 +5,7 @@ Collection is an abstract base class which defines the interface expected of a
 collection; namely methods for (de)serialization to/from the representation
 recognized by the DJ software for which Collection is being sub-classed.
 """
+
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from pathlib import Path

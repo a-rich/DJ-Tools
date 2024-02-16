@@ -2,6 +2,7 @@
 this configuration object either don't apply to any particular package or they
 apply to multiple packages. The attributes of this configuration object
 correspond with the "configs" key of config.yaml."""
+
 import inspect
 import logging
 from typing_extensions import Literal
@@ -16,9 +17,9 @@ class BaseConfig(BaseModel, extra="allow"):
     """Base configuration object used across the whole library."""
 
     ARTIST_FIRST: bool = False
-    LOG_LEVEL: Literal[
-        "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"
-    ] = "INFO"
+    LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = (
+        "INFO"
+    )
     VERBOSITY: NonNegativeInt = 0
 
     def __init__(self, *args, **kwargs):

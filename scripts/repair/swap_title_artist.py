@@ -46,6 +46,7 @@ correct Location field, you can set your import XML to be this one and import
 the tracks in this missing files playlist into your collection to relocate them
 while retaining the original beatgrid, hot cues, etc.
 """
+
 # pylint: disable=import-error,no-member
 from argparse import ArgumentParser
 from datetime import datetime

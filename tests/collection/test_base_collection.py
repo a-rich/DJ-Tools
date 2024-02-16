@@ -1,4 +1,5 @@
 """Testing for the collection module."""
+
 import pytest
 
 from djtools.collection.base_collection import Collection

@@ -3,11 +3,11 @@
 More specifically, it queries Spotify for each track and attempts to resolve
 the year, album, and label.
 """
+
 # pylint: disable=redefined-outer-name,duplicate-code,protected-access,invalid-name
 from argparse import ArgumentParser
 from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import datetime
-from itertools import groupby
 import os
 from typing import Dict, Union
 
@@ -88,18 +88,18 @@ def filter_tracks(
     if date_filter == "all":
         return tracks
 
-    sorted_tracks = sorted(tracks.values(), key=lambda x: x.get_date_added())
+    sorted_tracks = sorted(
+        tracks.values(), key=lambda x: x.get_date_added(), reverse=True
+    )
 
     if date_filter == "most-recent":
-        date_filter = sorted_tracks[-1].get_date_added()
+        date_filter = sorted_tracks[0].get_date_added()
 
     filtered_tracks = []
-    for date, track_list in groupby(
-        sorted_tracks, key=lambda x: x.get_date_added()
-    ):
-        if date < date_filter:
-            continue
-        filtered_tracks.extend(list(track_list))
+    for track in sorted_tracks:
+        if track.get_date_added() < date_filter:
+            break
+        filtered_tracks.append(track)
 
     return {track.get_id(): track for track in filtered_tracks}
 
@@ -154,17 +154,19 @@ if __name__ == "__main__":
         ) as pbar, ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as pool:
             futures = [
                 pool.submit(
-                    get_spotify_tags_thread, track, spotify, args.similarity
+                    get_spotify_tags_thread,
+                    track,
+                    spotify,
+                    args.similarity,
+                    args.query_limit,
                 )
-                for track in tracks
+                for track in tracks.values()
             ]
             for future in as_completed(futures):
                 future.result()
                 pbar.update(1)
 
-        playlist = playlist_class.new_playlist(
-            name=args.playlist_name, tracks=tracks
-        )
+        playlist = playlist_class.new_playlist(name="Matches", tracks=tracks)
         collection.add_playlist(playlist)
     elif args.mode == "interactive":
         no_matches = {}

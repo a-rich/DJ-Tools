@@ -4,6 +4,7 @@ located at "COLLECTION_PATH" and downloading the collection uploaded to the
 Beatcloud by "IMPORT_USER" before modifying it to point to track locations at
 "USB_PATH".
 """
+
 import logging
 from os.path import getmtime
 from pathlib import Path

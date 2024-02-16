@@ -1,4 +1,5 @@
 """Testing for the collection module."""
+
 import bs4
 
 from djtools.collection.rekordbox_collection import (

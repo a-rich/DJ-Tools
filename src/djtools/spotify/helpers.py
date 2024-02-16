@@ -1,4 +1,5 @@
 """This module contains helper functions used by the "spotify" module."""
+
 from concurrent.futures import as_completed, ThreadPoolExecutor
 import logging
 from operator import itemgetter

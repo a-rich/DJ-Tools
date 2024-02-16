@@ -1,6 +1,7 @@
 """Script used to relocate all music files from the old genre-top-level
 structure to the new username-top-level structure.
 """
+
 # pylint: disable=too-many-arguments,duplicate-code,no-member
 from argparse import ArgumentParser
 from concurrent.futures import ThreadPoolExecutor
