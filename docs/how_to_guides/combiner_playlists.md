@@ -50,6 +50,9 @@ The `Combiner` solves all these issues in the following ways:
     - `{date:2022}`
     - `{date:>2021-10-05}`
     - `{date:<=2020-05}`
+    - `{date:1y}`
+    - `{date:>=3m}`
+    - `{date:<10w5d}`
     - `{key:7A}`
     - `{label:duploc}`
     - `{playlist: Deep House}`
@@ -64,7 +67,19 @@ The `Combiner` solves all these issues in the following ways:
     - `(`
     - `)`
 
-Let's look at an example playlist to see how the syntax works.
+### Date string selectors can take two forms:
+1. ISO format date strings e.g. `2024-06-22`, `2024-06`, `2024`
+2. `ymwd` (year, month, week, day) format timedelta strings e.g. `1y`, `3m2w`, `5d`
+
+Here's how playlists can be built using the different date string selector types using the examples from above.
+- `{date:2022}`: tracks added in the year 2022
+- `{date:>2021-10-05}`: track added after October 5th, 2021
+- `{date:<=2020-05}`: tracks added on or before May, 2020
+- `{date:1y}`: tracks added exactly 1 year ago today
+- `{date:>=3m}`: tracks added within the last 3 months
+- `{date:<10w5d}`: tracks at least 75 days old
+
+### Let's look at an example playlist to see how the syntax works.
 
 Suppose we want a playlist with tracks that _all have_ the following properties:
 
