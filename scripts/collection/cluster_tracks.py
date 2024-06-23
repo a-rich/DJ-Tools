@@ -1,4 +1,5 @@
 """Cluster tracks by tags."""
+
 # pylint: disable=import-error,redefined-outer-name,duplicate-code
 from argparse import ArgumentParser
 from pathlib import Path

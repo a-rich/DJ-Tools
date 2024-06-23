@@ -2,6 +2,7 @@
 The attributes of this configuration object correspond with the "spotify" key
 of config.yaml
 """
+
 import logging
 from typing import List
 from typing_extensions import Literal

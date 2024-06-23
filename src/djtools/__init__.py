@@ -8,6 +8,7 @@ operations of the library and calls the corresponding function with the
 appropriate configuration object. Finally, the log file generated from this run
 is uploaded to the Beatcloud.
 """
+
 from .configs import build_config
 from .collection import (
     COLLECTION_OPERATIONS,

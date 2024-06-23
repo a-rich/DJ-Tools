@@ -10,6 +10,7 @@ The 'is_filter_playlist' method, when given a 'Playlist', returns true if that
 The 'filter_track' method, when given a 'Track', returns true if that 'Track'
 should remain in the playlist.
 """
+
 from abc import ABC, abstractmethod
 import re
 from typing import List, Optional

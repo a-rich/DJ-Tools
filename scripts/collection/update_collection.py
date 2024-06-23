@@ -1,4 +1,5 @@
 """Update master track Collection with local Collection."""
+
 # pylint: disable=duplicate-code
 from argparse import ArgumentParser
 from itertools import groupby
@@ -20,8 +21,14 @@ if __name__ == "__main__":
     )
     arg_parser.add_argument(
         "--master-collection",
-        required=True,
+        required=False,
         help="Path to a remote master collection.",
+    )
+    arg_parser.add_argument(
+        "--master-collection-user",
+        required=False,
+        default="master",
+        help="Username for remote master collection.",
     )
     arg_parser.add_argument(
         "--overwrite",
@@ -62,9 +69,20 @@ if __name__ == "__main__":
         for _, track in collection.get_tracks().items()
     }
 
+    # Set the path to the remote master collection either from the CLI arg or
+    # dynamically. The default path is:
+    # <BUCKET-URL>/dj/collections/master/rekordbox_collection
+    if args.master_collection:
+        remote_master_collection = args.master_collection
+    else:
+        remote_master_collection = (
+            f"{config.BUCKET_URL}/dj/collections/"
+            f"{args.master_collection_user}/{config.PLATFORM}_collection"
+        )
+
     # Download the master collection and get a dict of its tracks too.
     master_collection_path = Path("master_collection.tmp")
-    cmd = ["aws", "s3", "cp", args.master_collection, master_collection_path]
+    cmd = ["aws", "s3", "cp", remote_master_collection, master_collection_path]
     if collection_path.is_dir():
         cmd.append("--recursive")
     with Popen(cmd) as proc:
@@ -128,7 +146,7 @@ if __name__ == "__main__":
             "s3",
             "cp",
             master_collection_path,
-            args.master_collection,
+            remote_master_collection,
         ]
         if collection_path.is_dir():
             cmd.append("--recursive")

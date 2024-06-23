@@ -1,4 +1,5 @@
 """Testing for the config module."""
+
 import os
 import re
 

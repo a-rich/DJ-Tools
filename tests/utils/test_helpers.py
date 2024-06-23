@@ -1,4 +1,5 @@
 """Testing for the helpers module."""
+
 from datetime import datetime
 from pathlib import Path
 import logging
@@ -51,7 +52,7 @@ def test_find_matches(config):
         "track 2 - seen them before",
     ]
     matches = find_matches(
-        spotify_tracks={
+        compare_tracks={
             "playlist_a": expected_matches,
             "playlist_b": [
                 "track 3 - special person",
@@ -68,7 +69,7 @@ def test_find_matches(config):
         match[-1] == config.CHECK_TRACKS_FUZZ_RATIO for match in matches
     )
     assert len(matches) == 2
-    assert [x[1] for x in matches] == expected_matches
+    assert {x[1] for x in matches} == set(expected_matches)
 
 
 @pytest.mark.parametrize(
@@ -84,11 +85,12 @@ def test_find_matches(config):
 @mock.patch("djtools.utils.helpers.check_output")
 def test_get_beatcloud_tracks(mock_os_popen, proc_dump):
     """Test for the get_beatcloud_tracks function."""
+    bucket_url = "s3://some-bucket.com"
     proc_dump = list(map(Path, proc_dump))
     mock_os_popen.return_value = b"\n".join(
         map(lambda x: x.as_posix().encode(), proc_dump)
     )
-    tracks = get_beatcloud_tracks()
+    tracks = get_beatcloud_tracks(bucket_url)
     mock_os_popen.assert_called_once()
     assert len(tracks) == len(proc_dump)
     for track, line in zip(tracks, proc_dump):
@@ -334,7 +336,8 @@ def test_reverse_title_and_artist():
     assert new_path_lookup == expected
 
 
-def test_trim_initial_silence():
+@pytest.mark.parametrize("trim_amount", [-1000, 0, 1000, "auto", "smart"])
+def test_trim_initial_silence(trim_amount):
     """Test for the trim_initial_silence function."""
     leading_silence = 4567
     step_size = 100
@@ -356,9 +359,16 @@ def test_trim_initial_silence():
     assert abs(init_len - (leading_silence + sum(track_durations))) <= 1
 
     # Trim leading silence.
-    audio = trim_initial_silence(audio, track_durations, step_size=step_size)
+    audio = trim_initial_silence(
+        audio, track_durations, trim_amount, step_size=step_size
+    )
 
     # The difference between the audio length, before and after, must be
     # approximately the leading silence amount minus the tail silence.
     diff = init_len - len(audio)
-    assert abs(leading_silence - silence_len - diff) <= step_size * 2
+    if isinstance(trim_amount, int):
+        assert abs(diff - trim_amount) <= 1
+    elif trim_amount == "auto":
+        assert abs(diff - leading_silence) <= 1
+    else:
+        assert abs(leading_silence - silence_len - diff) <= step_size * 2

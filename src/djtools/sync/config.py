@@ -2,6 +2,7 @@
 The attributes of this configuration object correspond with the "sync" key
 of config.yaml
 """
+
 import getpass
 import logging
 import os
@@ -19,6 +20,7 @@ class SyncConfig(BaseConfig):
 
     AWS_PROFILE: str = "default"
     AWS_USE_DATE_MODIFIED: bool = False
+    BUCKET_URL: str = ""
     DISCORD_URL: str = ""
     DOWNLOAD_COLLECTION: bool = False
     DOWNLOAD_EXCLUDE_DIRS: List[Path] = []
@@ -70,9 +72,14 @@ class SyncConfig(BaseConfig):
                 logger.critical(msg)
                 raise RuntimeError(msg)
 
-        os.environ[  # pylint: disable=no-member
-            "AWS_PROFILE"
-        ] = self.AWS_PROFILE
+            if not self.BUCKET_URL:
+                msg = "Config must include BUCKET_URL for sync operations"
+                logger.critical(msg)
+                raise RuntimeError(msg)
+
+        os.environ["AWS_PROFILE"] = (
+            self.AWS_PROFILE
+        )  # pylint: disable=no-member
 
         if any([self.DOWNLOAD_MUSIC, self.UPLOAD_MUSIC]) and not self.USB_PATH:
             msg = (

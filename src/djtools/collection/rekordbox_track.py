@@ -3,6 +3,7 @@
 RekordboxTrack is an implementation of Track which operates on the XML format
 that Rekordbox exports.
 """
+
 from __future__ import annotations
 from datetime import datetime
 import os

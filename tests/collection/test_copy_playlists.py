@@ -1,4 +1,5 @@
 """Testing for the copy_playlists module."""
+
 from pathlib import Path
 
 import pytest

@@ -1,4 +1,5 @@
 """Testing for the sync_operations module."""
+
 from pathlib import Path
 from unittest import mock
 
@@ -13,6 +14,7 @@ from djtools.sync.sync_operations import (
 
 
 # pylint: disable=duplicate-code
+TEST_BUCKET = "s3://some-bucket.com"
 
 
 @pytest.mark.parametrize("playlist_name", ["", "playlist Uploads"])
@@ -28,6 +30,7 @@ from djtools.sync.sync_operations import (
 def test_download_music(playlist_name, config, tmpdir, caplog):
     """Test for the download_music function."""
     caplog.set_level("INFO")
+    config.BUCKET_URL = TEST_BUCKET
     config.USB_PATH = tmpdir
     config.DOWNLOAD_SPOTIFY_PLAYLIST = playlist_name
     write_path = Path(tmpdir) / "DJ Music" / "file.mp3"
@@ -35,7 +38,7 @@ def test_download_music(playlist_name, config, tmpdir, caplog):
         "aws",
         "s3",
         "sync",
-        "s3://dj.beatcloud.com/dj/music/",
+        f"{TEST_BUCKET}/dj/music/",
         write_path.parent.as_posix(),
     ]
     if playlist_name:
@@ -51,7 +54,7 @@ def test_download_music(playlist_name, config, tmpdir, caplog):
         side_effect=lambda *args, **kwargs: dummy_func(),
     ) as mock_run_sync:
         download_music(config)
-        mock_run_sync.assert_called_with(cmd)
+        mock_run_sync.assert_called_with(cmd, TEST_BUCKET)
     assert caplog.records[0].message == "Downloading track collection..."
     assert caplog.records[1].message == f"Found 0 files at {config.USB_PATH}"
     assert caplog.records[2].message == " ".join(cmd)
@@ -97,6 +100,7 @@ def test_download_collection(
     test_user = "test_user"
     other_user = "other_user"
     import_user = test_user if user_is_import_user else other_user
+    config.BUCKET_URL = TEST_BUCKET
     config.USER = test_user
     config.IMPORT_USER = import_user
     config.COLLECTION_PATH = rekordbox_xml
@@ -111,7 +115,7 @@ def test_download_collection(
         "aws",
         "s3",
         "cp",
-        f"s3://dj.beatcloud.com/dj/collections/{import_user}/"
+        f"{TEST_BUCKET}/dj/collections/{import_user}/"
         f"{config.PLATFORM}_collection",
         # NOTE(a-rich): since we could be passing a `rekordbox_xml` formatted
         # as a WindowsPath, the comparison needs to be made with `str(new_xml)`
@@ -144,6 +148,7 @@ def test_upload_music(
 ):
     """Test for the upload_music function."""
     caplog.set_level("INFO")
+    config.BUCKET_URL = TEST_BUCKET
     config.USB_PATH = tmpdir
     config.DISCORD_URL = discord_url
     test_dir = Path(tmpdir) / "DJ Music"
@@ -157,7 +162,7 @@ def test_upload_music(
         "s3",
         "sync",
         test_dir.as_posix(),
-        "s3://dj.beatcloud.com/dj/music/",
+        f"{TEST_BUCKET}/dj/music/",
         "--size-only",
     ]
     assert caplog.records[0].message == "Removed 1 files..."
@@ -165,7 +170,7 @@ def test_upload_music(
     assert caplog.records[2].message == "Uploading track collection..."
     assert caplog.records[3].message == " ".join(cmd)
     assert len(list(test_dir.iterdir())) == 1
-    mock_run_sync.assert_called_with(cmd)
+    mock_run_sync.assert_called_with(cmd, TEST_BUCKET)
     if discord_url:
         mock_webhook.assert_called_with(
             "https://discord.com/api/webhooks/some-id/", content=None
@@ -180,6 +185,7 @@ def test_upload_collection(
     """Test for the upload_collection function."""
     caplog.set_level("INFO")
     user = "user"
+    config.BUCKET_URL = TEST_BUCKET
     config.USER = user
     config.COLLECTION_PATH = rekordbox_xml
     config.PLATFORM = "rekordbox"
@@ -188,7 +194,7 @@ def test_upload_collection(
         "s3",
         "cp",
         config.COLLECTION_PATH.as_posix(),
-        f"s3://dj.beatcloud.com/dj/collections/{user}/{config.PLATFORM}_collection",
+        f"{TEST_BUCKET}/dj/collections/{user}/{config.PLATFORM}_collection",
     ]
     if collection_is_dir:
         cmd.append("--recursive")

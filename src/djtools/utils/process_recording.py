@@ -9,7 +9,8 @@ information from the Spotify API to:
 - normalize the audio so the headroom is AUDIO_HEADROOM decibels
 - export the files with the configured AUDIO_BITRATE and AUDIO_FORMAT
 """
-from concurrent.futures import ThreadPoolExecutor
+
+from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import datetime
 import logging
 import os
@@ -53,18 +54,15 @@ def process(config: BaseConfig):
     playlist_duration = 0
     for track in tracks[config.RECORDING_PLAYLIST]:
         # Parse release date field based on the date precision
-        if track["track"]["album"]["release_date_precision"] == "year":
-            date = datetime.strptime(
-                track["track"]["album"]["release_date"], "%Y"
-            )
-        elif track["track"]["album"]["release_date_precision"] == "month":
-            date = datetime.strptime(
-                track["track"]["album"]["release_date"], "%Y-%m"
-            )
-        elif track["track"]["album"]["release_date_precision"] == "day":
-            date = datetime.strptime(
-                track["track"]["album"]["release_date"], "%Y-%m-%d"
-            )
+        date_year = ""
+        release_date = track["track"]["album"]["release_date"]
+        release_precision = track["track"]["album"]["release_date_precision"]
+        if release_precision == "year":
+            date_year = datetime.strptime(release_date, "%Y").year
+        elif release_precision == "month":
+            date_year = datetime.strptime(release_date, "%Y-%m").year
+        elif release_precision == "day":
+            date_year = datetime.strptime(release_date, "%Y-%m-%d").year
 
         # TODO(a-rich): Why won't Rekordbox load "label" and "year" tags?!
         data = {
@@ -77,7 +75,7 @@ def process(config: BaseConfig):
             "duration": track["track"]["duration_ms"] + 500,
             "label": track["track"]["album"].get("label", ""),
             "title": track["track"]["name"],
-            "year": str(date.year),
+            "year": date_year,
         }
         track_data.append(data)
         playlist_duration += data["duration"]
@@ -85,9 +83,11 @@ def process(config: BaseConfig):
     # Load the audio and trim the initial silence.
     logger.info("Loading audio...")
     audio = AudioSegment.from_file(config.RECORDING_FILE)
-    if not config.SKIP_TRIM_INITIAL_SILENCE:
+    if config.TRIM_INITIAL_SILENCE:
         audio = trim_initial_silence(
-            audio, [track["duration"] for track in track_data]
+            audio,
+            [track["duration"] for track in track_data],
+            config.TRIM_INITIAL_SILENCE,
         )
 
     # Check that the audio is at least as long as the playlist duration.
@@ -113,19 +113,21 @@ def process(config: BaseConfig):
         audio_chunks.append(track_audio)
 
     # Normalize audio and export tracks with tags.
-    payload = [
+    payload = zip(
         [config] * len(audio_chunks),
         audio_chunks,
         track_data,
         [write_path] * len(audio_chunks),
-    ]
+    )
+
     with ThreadPoolExecutor(
         max_workers=os.cpu_count() * 4  # pylint: disable=no-member
     ) as executor:
-        _ = list(
-            tqdm(
-                executor.map(process_parallel, *payload),
-                total=len(audio_chunks),
-                desc="Exporting tracks",
-            )
-        )
+        futures = [
+            executor.submit(process_parallel, *args) for args in payload
+        ]
+
+        with tqdm(total=len(futures), desc="Exporting tracks") as pbar:
+            for future in as_completed(futures):
+                _ = future.result()
+                pbar.update(1)

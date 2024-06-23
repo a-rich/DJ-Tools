@@ -5,6 +5,7 @@ Playlist is an abstract base class which defines the interface expected of a
 playlist; namely methods for (de)serialization to/from the representation
 recognized by the DJ software for which Playlist is being sub-classed.
 """
+
 from __future__ import annotations
 from abc import ABC, abstractmethod
 import re

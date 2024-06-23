@@ -1,4 +1,5 @@
 """Testing for the cli_args module."""
+
 from pathlib import Path
 from typing import List
 
@@ -9,6 +10,7 @@ from djtools.configs.cli_args import (
     get_arg_parser,
     NonEmptyListElementAction,
     _parse_json,
+    _parse_trim_initial_silence,
 )
 
 
@@ -77,3 +79,34 @@ def test_parse_json_invalid():
     json_string = '{"name": {"stuff"}}'
     with pytest.raises(ValueError):
         _parse_json(json_string)
+
+
+def test_parse_trim_initial_silence_int():
+    """Test for the _parse_trim_initial_silence function."""
+    arg = "1"
+    assert isinstance(arg, str)
+    result = _parse_trim_initial_silence(arg)
+    assert isinstance(result, int)
+    assert result == 1
+
+
+def test_parse_trim_initial_silence_str():
+    """Test for the _parse_trim_initial_silence function."""
+    arg = "auto"
+    assert isinstance(arg, str)
+    result = _parse_trim_initial_silence(arg)
+    assert isinstance(result, str)
+    assert result == "auto"
+
+
+def test_parse_trim_initial_silence_invalid_str():
+    """Test for the _parse_trim_initial_silence function."""
+    arg = "stuff"
+    with pytest.raises(
+        ValueError,
+        match=(
+            '--trim-initial-silence must be either "auto", "smart", or an '
+            "integer."
+        ),
+    ):
+        _parse_trim_initial_silence(arg)

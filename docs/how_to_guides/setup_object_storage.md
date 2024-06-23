@@ -18,7 +18,6 @@ There are two primary reasons to sync your files to the cloud:
 &nbsp;&nbsp;&nbsp;`msiexec.exe /i https://awscli.amazonaws.com/AWSCLIV2.msi`
 
 1. [Create and setup an account for AWS S3](https://docs.aws.amazon.com/AmazonS3/latest/userguide/GetStartedWithS3.html) (you could use any AWS S3 API compliant cloud storage solution, e.g. [MinIO](https://min.io/), but I've not tested anything else)
-1. At the time of writing, it's required that your bucket has the address `dj.beatcloud.com`
 1. Setup a profile (so as to not conflict with pre-existing or future profiles) for your keys:
 
     &nbsp;&nbsp;&nbsp;`aws configure --profile DJ`

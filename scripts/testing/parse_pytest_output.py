@@ -1,4 +1,5 @@
 """Script for analyzing timing of unit tests and fixtures."""
+
 # pylint: disable=import-error
 from collections import defaultdict
 from itertools import groupby

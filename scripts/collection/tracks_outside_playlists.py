@@ -2,6 +2,7 @@
 not appear in a given playlist (or, if using '--folder', any playlists in a
 folder).
 """
+
 from argparse import ArgumentParser
 import logging
 from traceback import format_exc

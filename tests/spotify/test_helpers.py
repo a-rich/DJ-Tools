@@ -1,4 +1,5 @@
 """Testing for the helpers module."""
+
 import asyncio
 from pathlib import Path
 from unittest import mock
@@ -260,17 +261,19 @@ def test_fuzzy_match(mock_spotify_search, mock_spotify, title, match_result):
     ), mock.patch(
         "djtools.spotify.helpers.filter_results",
         return_value=(
-            {
-                "id": "some_id",
-                "name": "Arctic Oscillations",
-                "artists": [
-                    {"name": "Fanu"},
-                ],
-            },
-            100,
-        )
-        if match_result
-        else (None, 0),
+            (
+                {
+                    "id": "some_id",
+                    "name": "Arctic Oscillations",
+                    "artists": [
+                        {"name": "Fanu"},
+                    ],
+                },
+                100,
+            )
+            if match_result
+            else (None, 0)
+        ),
     ) as mock_filter_results:
         ret = _fuzzy_match(mock_spotify, title, threshold)
     if not all(x for x in title):

@@ -1,7 +1,8 @@
 """This module contains helper functions that are not specific to any
 particular sub-package of this library.
 """
-from concurrent.futures import ThreadPoolExecutor
+
+from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import datetime
 from functools import wraps
 import inspect
@@ -14,7 +15,7 @@ import pathlib
 from pathlib import Path
 from subprocess import check_output
 import typing
-from typing import Callable, Dict, List, Optional, Set, Tuple
+from typing import Callable, Dict, List, Literal, Optional, Set, Tuple, Union
 
 from fuzzywuzzy import fuzz
 from pydub import AudioSegment, effects, silence
@@ -55,63 +56,69 @@ def compute_distance(
 
 
 def find_matches(
-    spotify_tracks: Dict[str, Set[str]],
+    compare_tracks: Dict[str, Set[str]],
     beatcloud_tracks: List[str],
     config: BaseConfig,
 ) -> List[Tuple[str, float]]:
-    """Computes the Levenshtein similarity between the product of all beatcloud
-        tracks with all the tracks in the given Spotify playlist(s) and returns
-        those that match above a threshold.
+    """Computes the Levenshtein similarity between beatcloud tracks the given
+        tracks to compare with and returns those that match above a threshold.
 
     Args:
-        spotify_tracks: Spotify track titles and artist names.
+        compare_tracks: Dictionary with either local directory or Spotify
+            playlist keys and filenames or title and artists values.
         beatcloud_tracks: Beatcloud track titles and artist names.
         config: Configuration object.
 
     Returns:
-        List of tuples of Spotify playlist, Spotify track, Beatcloud track, and
-            Levenshtein distance.
+        List of tuples of track location (directory or playlist), track name,
+            Beatcloud track, and Levenshtein distance.
     """
-    spotify_tracks = [
+    playlist_tracks = [
         (playlist, track)
-        for playlist, tracks in spotify_tracks.items()
+        for playlist, tracks in compare_tracks.items()
         for track in tracks
     ]
-    _product = list(product(spotify_tracks, beatcloud_tracks))
+    _product = list(product(playlist_tracks, beatcloud_tracks))
     _temp, beatcloud_tracks = zip(*_product)
-    spotify_playlists, spotify_tracks = zip(*_temp)
-    fuzz_ratio = config.CHECK_TRACKS_FUZZ_RATIO
-    payload = [
-        spotify_playlists,
-        spotify_tracks,
+    locations, tracks = zip(*_temp)
+    payload = zip(
+        locations,
+        tracks,
         beatcloud_tracks,
-        [fuzz_ratio] * len(_product),
-    ]
+        [config.CHECK_TRACKS_FUZZ_RATIO] * len(_product),
+    )
+
     with ThreadPoolExecutor(
         max_workers=os.cpu_count() * 4  # pylint: disable=no-member
     ) as executor:
-        matches = list(
-            filter(
-                None,
-                tqdm(
-                    executor.map(compute_distance, *payload),
-                    total=len(_product),
-                    desc="Matching new and Beatcloud tracks",
-                ),
-            )
-        )
+        futures = [
+            executor.submit(compute_distance, *args) for args in payload
+        ]
+
+        with tqdm(
+            total=len(futures), desc="Matching new tracks and Beatcloud tracks"
+        ) as pbar:
+            matches = []
+            for future in as_completed(futures):
+                result = future.result()
+                if result:
+                    matches.append(result)
+                pbar.update(1)
 
     return matches
 
 
-def get_beatcloud_tracks() -> List[str]:
+def get_beatcloud_tracks(bucket_url) -> List[str]:
     """Lists all the music files in S3 and parses out the track titles and
         artist names.
+
+    Args:
+        bucket_url: URL to an AWS S3 API compliant bucket.
 
     Returns:
         Beatcloud track titles and artist names.
     """
-    cmd = ["aws", "s3", "ls", "--recursive", "s3://dj.beatcloud.com/dj/music/"]
+    cmd = ["aws", "s3", "ls", "--recursive", f"{bucket_url}/dj/music/"]
     output = check_output(cmd).decode("utf-8").split("\n")
     tracks = [Path(track) for track in output if track]
     logger.info(f"Got {len(tracks)} tracks from the beatcloud")
@@ -417,6 +424,7 @@ def reverse_title_and_artist(path_lookup: Dict[str, str]) -> Dict[str, str]:
 def trim_initial_silence(
     audio: AudioSegment,
     track_durations: List[int],
+    trim_amount: Union[int, Literal["auto", "smart"]],
     silence_thresh: Optional[float] = -50,
     min_silence_ms: Optional[int] = 5,
     step_size: Optional[int] = 100,
@@ -426,6 +434,7 @@ def trim_initial_silence(
     Args:
         audio: Audio with leading silence.
         track_durations: List of track durations.
+        trim_amount: Number of milliseconds to trim off the beginning.
         silence_thresh: Maximum decibel level that's still considered silence.
         min_silence_ms: Surrounding milliseconds of each track to check for
             silence.
@@ -434,8 +443,24 @@ def trim_initial_silence(
     Returns:
         AudioSegment: Audio with the beginning silence trimmed off.
     """
-    # step_size must be a positive integer.
-    step_size = max(step_size, 1)
+    # If trim_amount is an integer, then it's the number of milliseconds to
+    # trim off the beginning of the recording. If a negative integer is
+    # provided, then insert that many milliseconds of silence at the beginning
+    # of the recording.
+    if isinstance(trim_amount, int):
+        if trim_amount >= 0:
+            return audio[trim_amount:]
+        return AudioSegment.silent(duration=abs(trim_amount)) + audio
+
+    # Get the number of milliseconds of silence at the beginning of the
+    # recording.
+    leading_silence = silence.detect_leading_silence(
+        audio, silence_threshold=silence_thresh, chunk_size=1
+    )
+
+    # If trim_amount is "auto", simply trim off the detected leading silence.
+    if trim_amount == "auto":
+        return audio[leading_silence:]
 
     # Use the track durations to infer the points in the recording where each
     # track should begin.
@@ -445,14 +470,9 @@ def trim_initial_silence(
         index += track_duration
         start_points.append(index)
 
-    # Get the number of milliseconds of silence at the beginning of the
-    # recording.
-    leading_silence = silence.detect_leading_silence(
-        audio, silence_threshold=silence_thresh, chunk_size=1
-    )
-
     # With a logarithmically decreasing step size, step through the potential
     # offsets to trim off the beginning of the recording.
+    step_size = max(step_size, 1)
     offsets = [0, leading_silence]
     while step_size >= 1:
         scores = []

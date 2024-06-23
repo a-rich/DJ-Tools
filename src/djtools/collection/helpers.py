@@ -1,4 +1,5 @@
 """This module contains helpers for the collection package."""
+
 from __future__ import annotations
 from collections import defaultdict
 from datetime import datetime
@@ -8,6 +9,8 @@ from pathlib import Path
 import re
 import shutil
 from typing import Dict, List, Optional, Set, Tuple, Union
+
+from dateutil.relativedelta import relativedelta
 
 from djtools.collection.base_collection import Collection
 from djtools.collection.base_playlist import Playlist
@@ -28,6 +31,13 @@ logger = logging.getLogger(__name__)
 NUMERICAL_SELECTOR_REGEX = re.compile(r"(?<=\[)[^\[\]]*(?=\])")
 STRING_SELECTOR_REGEX = re.compile(r"(?<={)[^{}]+:[^{}]+(?=})")
 DATE_SELECTOR_REGEX = re.compile(r"(>=|>|<=|<)")
+TIMEDELTA_REGEX = re.compile(
+    r"^("
+    r"(?P<years>[\.\d]+?)y)?"
+    r"((?P<months>[\.\d]+?)m)?"
+    r"((?P<weeks>[\.\d]+?)w)?"
+    r"((?P<days>[\.\d]+?)d)?$"
+)
 INEQUALITY_MAP = {
     ">": lambda x, y: x > y,
     "<": lambda x, y: x < y,
@@ -489,9 +499,9 @@ def parse_numerical_selectors(
             logger.error(f"Malformed numerical selector: {match}")
             continue
 
-        numerical_value_lookup[
-            tuple(map(str, _range or [])) or match
-        ] = f"[{match}]"
+        numerical_value_lookup[tuple(map(str, _range or [])) or match] = (
+            f"[{match}]"
+        )
 
     return numerical_values
 
@@ -500,7 +510,7 @@ def parse_string_selectors(
     string_matches: List[str],
     string_value_lookup: Dict[Union[str, Tuple], str],
     string_selector_type_map: Dict[str],
-    playlists: Set(str),
+    playlists: Set[str],
 ):
     """Parses a string match of one or more string selectors.
 
@@ -522,9 +532,9 @@ def parse_string_selectors(
             logger.warning(f"{selector_type} is not a supported selector!")
             continue
         if selector_type != "date":
-            string_value_lookup[
-                (selector_type, selector_value)
-            ] = f"{{{match}}}"
+            string_value_lookup[(selector_type, selector_value)] = (
+                f"{{{match}}}"
+            )
             continue
 
         dates, formats, inequalities = [], [], []
@@ -532,20 +542,31 @@ def parse_string_selectors(
         for part in filter(
             None, re.split(DATE_SELECTOR_REGEX, selector_value)
         ):
+            date = None
+            date_format = "%Y-%m-%d"
+
+            # Note if the part is an inequality and move onto the next part.
             if re.search(DATE_SELECTOR_REGEX, part):
                 inequalities.append(INEQUALITY_MAP[part])
                 continue
 
-            date = None
-            for date_format in date_formats:
-                try:
-                    date = datetime.strptime(part, date_format)
-                except ValueError:
-                    continue
-                break
+            # The following part may be a timedelta string...
+            date = parse_timedelta(part)
+
+            # ...but if it wasn't, it's probably an ISO format date string.
+            if not date:
+                for date_format in date_formats:
+                    try:
+                        date = datetime.strptime(part, date_format)
+                    except ValueError:
+                        continue
+                    break
+
+            # If there's no date, then the selector wasn't formatted correctly.
             if not date:
                 skip_date_selector = True
                 break
+
             dates.append(date)
             formats.append(date_format)
 
@@ -567,6 +588,46 @@ def parse_string_selectors(
                 ),
             )
         ] = f"{{{match}}}"
+
+
+def parse_timedelta(time_str) -> Optional[datetime]:
+    """
+    Parse a timedelta from a string and return the relative offset from now.
+
+    Supported units of time:
+      - years
+      - months
+      - weeks
+      - days
+
+    Some example strings:
+      - 1y
+      - 6m
+      - 3m2w
+      - 7d
+
+    Modified from peter's answer at https://stackoverflow.com/a/51916936
+
+    Args:
+        time_str: A string identifying a duration.
+
+    Returns:
+        A datetime.datetime object.
+    """
+    parts = TIMEDELTA_REGEX.match(time_str)
+
+    if not parts:
+        return None
+
+    time_params = {
+        name: float(val) for name, val in parts.groupdict().items() if val
+    }
+
+    now = datetime.now()
+    time_delta = relativedelta(**time_params)
+    relative_time = now - time_delta
+
+    return relative_time
 
 
 def parse_expression(

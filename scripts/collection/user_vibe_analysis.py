@@ -1,4 +1,5 @@
 """This script is used to generate histograms of My Tags per user."""
+
 # pylint: disable=import-error,redefined-outer-name,unused-argument,invalid-name
 from argparse import ArgumentParser
 from collections import defaultdict

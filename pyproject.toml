@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "djtools"
-version = "2.7.13"
+version = "2.7.14-rc7"
 authors = [
     {name = "Alex Richards", email = "alex.richards006@gmail.com"},
 ]
@@ -52,6 +52,7 @@ dependencies = [
     "pydantic",
     "pydub",
     "pyperclip",
+    "python-dateutil",
     "PyYAML",
     "requests",
     "spotipy",

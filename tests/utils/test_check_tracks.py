@@ -1,4 +1,5 @@
 """Testing for the check_tracks module."""
+
 from pathlib import Path
 from unittest import mock
 
