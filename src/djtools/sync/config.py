@@ -77,9 +77,9 @@ class SyncConfig(BaseConfig):
                 logger.critical(msg)
                 raise RuntimeError(msg)
 
-        os.environ["AWS_PROFILE"] = (  # pylint: disable=no-member
+        os.environ["AWS_PROFILE"] = (
             self.AWS_PROFILE
-        )
+        )  # pylint: disable=no-member
 
         if any([self.DOWNLOAD_MUSIC, self.UPLOAD_MUSIC]) and not self.USB_PATH:
             msg = (

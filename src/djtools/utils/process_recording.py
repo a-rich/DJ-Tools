@@ -54,18 +54,15 @@ def process(config: BaseConfig):
     playlist_duration = 0
     for track in tracks[config.RECORDING_PLAYLIST]:
         # Parse release date field based on the date precision
-        if track["track"]["album"]["release_date_precision"] == "year":
-            date = datetime.strptime(
-                track["track"]["album"]["release_date"], "%Y"
-            )
-        elif track["track"]["album"]["release_date_precision"] == "month":
-            date = datetime.strptime(
-                track["track"]["album"]["release_date"], "%Y-%m"
-            )
-        elif track["track"]["album"]["release_date_precision"] == "day":
-            date = datetime.strptime(
-                track["track"]["album"]["release_date"], "%Y-%m-%d"
-            )
+        date_year = ""
+        release_date = track["track"]["album"]["release_date"]
+        release_precision = track["track"]["album"]["release_date_precision"]
+        if release_precision == "year":
+            date_year = datetime.strptime(release_date, "%Y").year
+        elif release_precision == "month":
+            date_year = datetime.strptime(release_date, "%Y-%m").year
+        elif release_precision == "day":
+            date_year = datetime.strptime(release_date, "%Y-%m-%d").year
 
         # TODO(a-rich): Why won't Rekordbox load "label" and "year" tags?!
         data = {
@@ -78,7 +75,7 @@ def process(config: BaseConfig):
             "duration": track["track"]["duration_ms"] + 500,
             "label": track["track"]["album"].get("label", ""),
             "title": track["track"]["name"],
-            "year": str(date.year),
+            "year": date_year,
         }
         track_data.append(data)
         playlist_duration += data["duration"]
