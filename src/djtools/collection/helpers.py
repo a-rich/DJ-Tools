@@ -542,17 +542,16 @@ def parse_string_selectors(
         for part in filter(
             None, re.split(DATE_SELECTOR_REGEX, selector_value)
         ):
+            date = None
+            date_format = "%Y-%m-%d"
+
             # Note if the part is an inequality and move onto the next part.
             if re.search(DATE_SELECTOR_REGEX, part):
                 inequalities.append(INEQUALITY_MAP[part])
                 continue
 
-            # If a former part was an inequality, then the following part may
-            # be a timedelta string...
-            date = None
-            if inequalities:
-                date = parse_timedelta(part)
-                date_format = "%Y-%m-%d"
+            # The following part may be a timedelta string...
+            date = parse_timedelta(part)
 
             # ...but if it wasn't, it's probably an ISO format date string.
             if not date:
