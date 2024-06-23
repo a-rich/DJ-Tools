@@ -52,6 +52,7 @@ dependencies = [
     "pydantic",
     "pydub",
     "pyperclip",
+    "python-dateutil",
     "PyYAML",
     "requests",
     "spotipy",

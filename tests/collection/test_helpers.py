@@ -25,6 +25,7 @@ from djtools.collection.helpers import (
     parse_expression,
     parse_numerical_selectors,
     parse_string_selectors,
+    parse_timedelta,
     PLATFORM_REGISTRY,
     print_data,
     print_playlists_tag_statistics,
@@ -476,6 +477,12 @@ def test_aggregate_playlists(rekordbox_collection):
             ["{playlist:Hip Hop}", "[0]"],
             [{"2"}],
         ),
+        # Test that timedelta evaluate properly.
+        (
+            "{date:>1m}",
+            ["{date:>1m}"],
+            [{"1", "4"}],
+        ),
     ],
 )
 def test_add_selectors_to_tags(
@@ -483,9 +490,12 @@ def test_add_selectors_to_tags(
 ):
     """Test for the add_selectors_to_tags function."""
     tags_tracks = defaultdict(dict)
-    add_selectors_to_tags(
-        playlist_content, tags_tracks, rekordbox_collection, []
-    )
+    with mock.patch("djtools.collection.helpers.datetime") as mock_datetime:
+        mock_datetime.strptime.side_effect = datetime.strptime
+        mock_datetime.now.return_value = datetime(2023, 6, 25, 0, 0)
+        add_selectors_to_tags(
+            playlist_content, tags_tracks, rekordbox_collection, []
+        )
     assert set(expected_tags) == set(tags_tracks)
     for tag, tracks in zip(expected_tags, expected_tracks):
         assert set(tags_tracks[tag]) == tracks
@@ -605,6 +615,15 @@ def test_parse_string_selectors_warns_bad(matches, expected, caplog):
     caplog.set_level("WARNING")
     parse_string_selectors(matches, {}, {"date": "get_date_added"}, set())
     assert caplog.records[0].message == expected
+
+
+@pytest.mark.parametrize("time_str", ["1y", "6m", "3m2w", "7d"])
+def test_parse_timedelta(time_str):
+    """Test for the parse_timedelta function."""
+    with mock.patch("datetime.datetime") as mock_datetime:
+        mock_datetime.now.return_value = datetime(2024, 6, 22, 0, 0)
+        relative_time = parse_timedelta(time_str)
+        assert relative_time < mock_datetime.now.return_value
 
 
 def test_parse_expression(rekordbox_track):
