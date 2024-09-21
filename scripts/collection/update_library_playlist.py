@@ -103,9 +103,7 @@ def find_track(track: Track, config: BaseConfig, spotify: Spotify):
     try:
         results = spotify.search(q=query, type="track", limit=50)
     except Exception as exc:
-        logger.error(
-            f'Error searching for "{title} - {artist}": {exc}'
-        )
+        logger.error(f'Error searching for "{title} - {artist}": {exc}')
         return
 
     match, _ = filter_results(spotify, results, threshold, title, artist)
@@ -136,17 +134,16 @@ def main(config_path: Path, date_filter: datetime, playlist_name: str):
             [
                 find_track(track, config, spotify)
                 for track in tqdm(tracks, desc="Searching Spotify")
-            ]
+            ],
         )
     )
 
     num_chunks = len(found_tracks) // REQ_ID_LIMIT
-    num_chunks += 0 if len(found_tracks) / REQ_ID_LIMIT == 0 else 1 
+    num_chunks += 0 if len(found_tracks) / REQ_ID_LIMIT == 0 else 1
     for index in tqdm(
-        range(0, len(found_tracks), REQ_ID_LIMIT),
-        total=num_chunks
+        range(0, len(found_tracks), REQ_ID_LIMIT), total=num_chunks
     ):
-        chunk = found_tracks[index:index+REQ_ID_LIMIT]
+        chunk = found_tracks[index : index + REQ_ID_LIMIT]
         playlist_ids = populate_playlist(
             playlist_name=playlist_name,
             playlist_ids=playlist_ids,
