@@ -4,13 +4,15 @@ key of config.yaml
 """
 
 from __future__ import annotations
+
 import logging
 from pathlib import Path
 from typing import List, Optional, Union
 from typing_extensions import Literal
 
-from pydantic import BaseModel, ValidationError
 import yaml
+from jinja2 import Environment, FileSystemLoader, TemplateNotFound
+from pydantic import BaseModel, ValidationError
 
 from djtools.configs.config import BaseConfig
 
@@ -41,6 +43,10 @@ class CollectionConfig(BaseConfig):
         """Constructor.
 
         Raises:
+            RuntimeError: Using the collection package requires a valid
+                COLLECTION_PATH.
+            RuntimeError: Failed to render collection_playlist.yaml from
+                template.
             RuntimeError: COLLECTION_PATH must be a valid collection path.
             RuntimeError: collection_playlists.yaml must be a valid YAML file.
         """
@@ -59,21 +65,51 @@ class CollectionConfig(BaseConfig):
             )
 
         if self.COLLECTION_PLAYLISTS:
-            playlist_config_path = (
-                Path(__file__).parent.parent
-                / "configs"
-                / "collection_playlists.yaml"
+            config_path = Path(__file__).parent.parent / "configs"
+            env = Environment(
+                loader=FileSystemLoader(config_path / "playlist_templates")
             )
+            playlists_template = None
+            playlists_template_path = "collection_playlists.j2"
+            playlist_config_path = config_path / "collection_playlists.yaml"
+
+            try:
+                playlist_template = env.get_template(playlists_template_path)
+            except TemplateNotFound:
+                pass
+
+            if playlists_template:
+                try:
+                    playlist_config = playlist_template.render()
+                except Exception as exc:
+                    raise RuntimeError(
+                        f"Failed to render {playlists_template_path}: {exc}"
+                    )
+
+                if playlist_config_path.exists():
+                    logger.warning(
+                        f"Both {playlists_template_path} and "
+                        f"{playlist_config_path.name} exist. Overwriting "
+                        f"{playlist_config_path.name} with the rendered "
+                        "template"
+                    )
+
+                with open(
+                    playlist_config_path, mode="w", encoding="utf-8"
+                ) as _file:
+                    _file.write(playlist_config)
+
             if not playlist_config_path.exists():
                 raise RuntimeError(
                     "collection_playlists.yaml must exist to use the "
                     "COLLECTION_PLAYLISTS feature"
                 )
+
             try:
                 with open(
                     playlist_config_path, mode="r", encoding="utf-8"
                 ) as _file:
-                    PlaylistConfig(
+                    self.playlist_config = PlaylistConfig(
                         **yaml.load(_file, Loader=yaml.FullLoader) or {}
                     )
             except ValidationError as exc:

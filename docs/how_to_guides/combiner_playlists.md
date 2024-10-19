@@ -44,7 +44,7 @@ The `Combiner` solves all these issues in the following ways:
     - `&`
     - `|`
     - `~`
-* string selectors (not case-sensative):
+* string selectors (not case-sensitive):
     - `{artist:*Eprom*}`
     - `{comment:*hollaback*}`
     - `{date:2022}`
@@ -120,6 +120,113 @@ Finally, let's see how we can create one master playlist from all three of these
     ({artist: *Eprom*} & {date:>2010} & {comment:*absolute banger*} ~ {key:*A})
     
 I hope you see how powerful the `Combiner` can become when used with a well indexed collection!
+
+## Templating
+
+Once the potential of these Combiner playlists is realized, you might find your `collection_playlists.yaml` starting to become unwieldy with many nested folders of repetitive expressions.
+For this reason, `djtools` supports templating out your playlist config's substructures using [Jinja](https://jinja.palletsprojects.com/en/3.1.x/).
+`djtools` looks for a Jinja template located at `configs/playlist_templates/collection_playlists.j2` and uses it to build a `collection_playlist.yaml` at runtime.
+With templating, I've replaced manually maintaining a 2,300 line `collection_playlists.yaml` file with a 300 line `collection_playlists.j2`!
+
+Here's an example of my `configs` directory:
+```
+.
+├── collection_playlists.yaml
+├── config.yaml
+├── playlist_templates
+│   ├── collection_playlists.j2
+│   └── macros.j2
+└── spotify_playlists.yaml
+```
+
+I've decided to keep the patterns I commonly use in my playlists in the `macros.j2` file and import them into my `collection_playlists.js2`.
+Here's what my `macros.j2` looks like:
+```
+{%- macro Vibes(var, name='') %}
+{%- set vibes = [
+  "Aggro", "Atmospheric", "Bounce", "Dark", "Deep", "Gangsta", "Groovy",
+  "Heavy", "Hypnotic", "Melancholy", "Melodic", "Rave", "Strange", "Uplifting"
+] -%}
+
+name: {{ name if name else var }}
+playlists:
+  {%- for vibe in vibes %}
+  - name: {{ vibe }}
+    tag_content: "{{ var }} & {{ vibe }}"
+  {%- endfor %}
+{%- endmacro %}
+
+{%- macro Genres(var, name='') %}
+{%- set genres = [
+    {"name": "140ish Bass", "tag": "([130-150] & {playlist:All Bass})"},
+    {"name": "4/4", "tag": "({playlist:All House} | {playlist:All Techno} | {playlist:All Trance} | {playlist:Midtempo})"},
+    {"name": "Breakbeat & Garage", "tag": "({playlist:All Breakbeat} | {playlist:All Garage})"},
+    {"name": "DnB", "tag": "{playlist:All DnB}"},
+    {"name": "Hip Hop Beats (slow)", "tag": "([6-119] & {playlist:All Hip Hop Beats})"},
+    {"name": "Hip Hop Beats (fast)", "tag": "([120-999] & {playlist:All Hip Hop Beats})"},
+    {"name": "Other Bass", "tag": "({playlist:All Bass} ~ [130-150] ~ {playlist:All DnB} ~ {playlist:All Hip Hop Beats})"},
+    {"name": "Everything Else", "tag": "({playlist:All Bass} | {playlist:All Breakbeat} | {playlist:All Garage} | {playlist:All House} | {playlist:Midtempo} | {playlist:All Techno} | {playlist:All Trance})"}
+] -%}
+
+name: {{ name if name else var }}
+playlists:
+  {%- for genre in genres %}
+  - name: {{ genre.name }}
+    tag_content: "{{ var }} & {{ genre.tag }}"
+  {%- endfor %}
+{%- endmacro %}% 
+```
+
+To demonstrate how I'm using macros, I'm including a sample of my `collection_playlists.j2` -- note the use of the `|indent` filter to ensure the macros indent the content filled by the macros in order to produce valid YAML:
+```
+{%- import 'macros.j2' as macros -%}
+
+combiner:
+  name: Combinations
+  playlists:
+    - name: Genre Vibes
+      playlists:
+        - name: DnB
+          playlists:
+            - {{ macros.Vibes("All DnB")|indent(14) }}
+            - {{ macros.Vibes("Darkstep")|indent(14) }}
+            - {{ macros.Vibes("Halftime")|indent(14) }}
+            - {{ macros.Vibes("Jungle")|indent(14) }}
+            - {{ macros.Vibes("Liquid Funk")|indent(14) }}
+            - {{ macros.Vibes("Minimal DnB")|indent(14) }}
+            - {{ macros.Vibes("Neurofunk")|indent(14) }}
+            - {{ macros.Vibes("Techstep")|indent(14) }}
+        - name: Techno
+          playlists:
+            - {{ macros.Vibes("All Techno")|indent(14) }}
+            - {{ macros.Vibes("Pure Techno")|indent(14) }}
+            - {{ macros.Vibes("Acid Techno")|indent(14) }}
+            - {{ macros.Vibes("Hard Techno")|indent(14) }}
+            - {{ macros.Vibes("Hardstyle")|indent(14) }}
+            - {{ macros.Vibes("Industrial Techno")|indent(14) }}
+            - {{ macros.Vibes("Melodic Techno")|indent(14) }}
+            - {{ macros.Vibes("Minimal Deep Tech")|indent(14) }}
+            - {{ macros.Vibes("Minimal Techno")|indent(14) }}
+            - {{ macros.Vibes("Psytechno")|indent(14) }}
+            - {{ macros.Vibes("Techno")|indent(14) }}
+            - {{ macros.Vibes("Tech Trance")|indent(14) }}
+    - name: Vibes
+      playlists:
+        - {{ macros.Genres("Aggro")|indent(10) }}
+        - {{ macros.Genres("Atmospheric")|indent(10) }}
+        - {{ macros.Genres("Bounce")|indent(10) }}
+        - {{ macros.Genres("Dark")|indent(10) }}
+        - {{ macros.Genres("Deep")|indent(10) }}
+        - {{ macros.Genres("Gangsta")|indent(10) }}
+        - {{ macros.Genres("Groovy")|indent(10) }}
+        - {{ macros.Genres("Heavy")|indent(10) }}
+        - {{ macros.Genres("Hypnotic")|indent(10) }}
+        - {{ macros.Genres("Melancholy")|indent(10) }}
+        - {{ macros.Genres("Melodic")|indent(10) }}
+        - {{ macros.Genres("Rave")|indent(10) }}
+        - {{ macros.Genres("Strange")|indent(10) }}
+        - {{ macros.Genres("Uplifting")|indent(10) }}
+```
 
 ## How it's done
 
