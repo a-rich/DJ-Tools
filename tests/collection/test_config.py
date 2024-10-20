@@ -75,6 +75,15 @@ def test_collectionconfig_invalid_collection_playlists_config(rekordbox_xml):
         CollectionConfig(**cfg)
 
 
+@mock.patch(
+    "djtools.collection.config.Path.exists",
+    lambda path: mock_exists(
+        [
+            ("collection_playlists.yaml", True),
+        ],
+        path,
+    ),
+)
 def test_collectionconfig_without_template(
     rekordbox_xml, playlist_config_content, playlist_config_obj
 ):
@@ -91,6 +100,21 @@ def test_collectionconfig_without_template(
     assert config.playlist_config == playlist_config_obj
 
 
+@mock.patch(
+    "djtools.collection.config.Path.exists",
+    lambda path: mock_exists(
+        [
+            ("collection_playlists.yaml", True),
+        ],
+        path,
+    ),
+)
+@mock.patch(
+    "builtins.open",
+    MockOpen(
+        files=["collection_playlists.yaml"],
+    ).open,
+)
 @mock.patch("djtools.collection.config.Environment.get_template")
 def test_collectionconfig_with_template(mock_get_template, rekordbox_xml):
     """Test for the CollectionConfig class."""
