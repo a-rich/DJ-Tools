@@ -37,14 +37,9 @@ def test_collection_playlists_makes_unused_tags_playlists(
 
     del playlist_config["combiner"]
     playlist_config["tags"]["playlists"] = [some_tag]
+    config.playlist_config = playlist_config
 
-    with mock.patch(
-        "builtins.open",
-        MockOpen(
-            files=["collection_playlists.yaml"], content=f"{playlist_config}"
-        ).open,
-    ):
-        collection_playlists(config, path=new_path)
+    collection_playlists(config, path=new_path)
 
     # Since our "tags" config only specifies one tag, and there is more than
     # one tag in the collection, there must be a playlist called "Unused Tags".
@@ -107,16 +102,10 @@ def test_collection_playlists_prints_playlist_tag_statistics(
     """Test for the collection_playlists function."""
     config.COLLECTION_PATH = rekordbox_xml
     config.VERBOSITY = 1
+    config.playlist_config = playlist_config
 
-    with mock.patch(
-        "builtins.open",
-        MockOpen(
-            files=["collection_playlists.yaml"], content=f"{playlist_config}"
-        ).open,
-    ):
-        collection_playlists(
-            config, path=rekordbox_xml.parent / "test_collection"
-        )
+    collection_playlists(config, path=rekordbox_xml.parent / "test_collection")
+
     assert mock_print_playlists_tag_statistics.call_count == 1
 
 
@@ -140,15 +129,10 @@ def test_collection_playlists_handles_error_parsing_expression(
     playlist_config["combiner"]["playlists"] = [
         {"name": "test", "playlists": [invalid_expression]}
     ]
-    with mock.patch(
-        "builtins.open",
-        MockOpen(
-            files=["collection_playlists.yaml"], content=f"{playlist_config}"
-        ).open,
-    ):
-        collection_playlists(
-            config, path=rekordbox_xml.parent / "test_collection"
-        )
+    config.playlist_config = playlist_config
+
+    collection_playlists(config, path=rekordbox_xml.parent / "test_collection")
+
     assert caplog.records[0].message.startswith(
         "Error parsing expression: this & & will be invalid"
     )
@@ -175,15 +159,11 @@ def test_collection_playlists_removes_existing_playlist(
     new_path = rekordbox_xml.parent / "test_collection"
     collection.serialize(path=new_path)
     config.COLLECTION_PATH = new_path
+    config.playlist_config = playlist_config
 
     # Run the playlist_builder on this collection to test removing the existing
     # playlist_builder playlist.
     with mock.patch(
-        "builtins.open",
-        MockOpen(
-            files=["collection_playlists.yaml"], content=f"{playlist_config}"
-        ).open,
-    ), mock.patch(
         "djtools.collection.rekordbox_collection.RekordboxCollection.add_playlist"
     ):
         collection_playlists(config, path=new_path)
@@ -192,16 +172,13 @@ def test_collection_playlists_removes_existing_playlist(
     assert not collection.get_playlists(PLAYLIST_NAME)
 
 
-@mock.patch(
-    "builtins.open",
-    MockOpen(files=["collection_playlists.yaml"], content="{}").open,
-)
 def test_collection_playlists_with_empty_playlistconfig_returns_early(
     config, rekordbox_xml, caplog
 ):
     """Test for the collection_playlists function."""
     caplog.set_level("WARNING")
     config.COLLECTION_PATH = rekordbox_xml
+    config.playlist_config = {}
     collection_playlists(config, path=rekordbox_xml.parent / "test_collection")
     assert caplog.records[0].message == (
         "Not building playlists because the playlist config is empty."

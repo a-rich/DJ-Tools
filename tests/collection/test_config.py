@@ -3,6 +3,7 @@
 from unittest import mock
 
 import pytest
+from jinja2 import Template
 from pydantic import ValidationError
 
 from djtools.collection.config import (
@@ -71,6 +72,46 @@ def test_collectionconfig_invalid_collection_playlists_config(rekordbox_xml):
         match="collection_playlists.yaml must be a valid YAML to use the "
         "COLLECTION_PLAYLISTS feature",
     ):
+        CollectionConfig(**cfg)
+
+
+def test_collectionconfig_without_template(
+    rekordbox_xml, playlist_config_content, playlist_config_obj
+):
+    """Test for the CollectionConfig class."""
+    cfg = {"COLLECTION_PLAYLISTS": True, "COLLECTION_PATH": rekordbox_xml}
+    with mock.patch(
+        "builtins.open",
+        MockOpen(
+            files=["collection_playlists.yaml"],
+            content=playlist_config_content,
+        ).open,
+    ):
+        config = CollectionConfig(**cfg)
+    assert config.playlist_config == playlist_config_obj
+
+
+@mock.patch("djtools.collection.config.Environment.get_template")
+def test_collectionconfig_with_template(mock_get_template, rekordbox_xml):
+    """Test for the CollectionConfig class."""
+    new_content = ""
+    mock_get_template.return_value = Template(new_content)
+    cfg = {"COLLECTION_PLAYLISTS": True, "COLLECTION_PATH": rekordbox_xml}
+    config = CollectionConfig(**cfg)
+    assert config.playlist_config == PlaylistConfig()
+
+
+@mock.patch("djtools.collection.config.Environment.get_template")
+def test_collectionconfig_with_invalid_template(
+    mock_get_template, rekordbox_xml
+):
+    """Test for the CollectionConfig class."""
+    mock_template = mock.MagicMock()
+    mock_template.render.side_effect = Exception("Render failed")
+    mock_get_template.return_value = mock_template
+
+    cfg = {"COLLECTION_PLAYLISTS": True, "COLLECTION_PATH": rekordbox_xml}
+    with pytest.raises(RuntimeError):
         CollectionConfig(**cfg)
 
 

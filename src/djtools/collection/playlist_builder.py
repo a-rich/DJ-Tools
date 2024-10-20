@@ -78,7 +78,7 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
         config: Configuration object.
         path: Path to write the new collection to.
     """
-    config.playlist_config = PlaylistConfig(**config.playlist_config)
+    config.playlist_config = PlaylistConfig(**config.playlist_config or {})
 
     # Check if the playlist config is populated before continuing.
     if not (config.playlist_config.tags or config.playlist_config.combiner):

@@ -38,6 +38,7 @@ class CollectionConfig(BaseConfig):
     COPY_PLAYLISTS_DESTINATION: Optional[Path] = None
     PLATFORM: Literal["rekordbox"] = "rekordbox"
     SHUFFLE_PLAYLISTS: List[str] = []
+    playlist_config: Optional[PlaylistConfig] = None
 
     def __init__(self, *args, **kwargs):
         """Constructor.
@@ -69,26 +70,26 @@ class CollectionConfig(BaseConfig):
             env = Environment(
                 loader=FileSystemLoader(config_path / "playlist_templates")
             )
-            playlists_template = None
-            playlists_template_path = "collection_playlists.j2"
+            playlist_template = None
+            playlist_template_name = "collection_playlists.j2"
             playlist_config_path = config_path / "collection_playlists.yaml"
 
             try:
-                playlist_template = env.get_template(playlists_template_path)
+                playlist_template = env.get_template(playlist_template_name)
             except TemplateNotFound:
                 pass
 
-            if playlists_template:
+            if playlist_template:
                 try:
                     playlist_config = playlist_template.render()
                 except Exception as exc:
                     raise RuntimeError(
-                        f"Failed to render {playlists_template_path}: {exc}"
+                        f"Failed to render {playlist_template_name}: {exc}"
                     )
 
                 if playlist_config_path.exists():
                     logger.warning(
-                        f"Both {playlists_template_path} and "
+                        f"Both {playlist_template_name} and "
                         f"{playlist_config_path.name} exist. Overwriting "
                         f"{playlist_config_path.name} with the rendered "
                         "template"

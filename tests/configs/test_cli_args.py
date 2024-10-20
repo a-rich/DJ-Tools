@@ -51,7 +51,11 @@ def test_get_arg_parser_arg_for_every_field(config):
 
     # Test that every config option has a corresponding CLI arg.
     config_only = config_set.difference(args_set)
-    assert config_only == set(), (
+
+    # NOTE: playlist_config is the only BaseConfig attribute that doesn't have
+    # a corresponding CLI arg. This is because the CollectionConfig preloads
+    # the user's collection playlists.
+    assert config_only == {"playlist_config"}, (
         "Expected a CLI arg for every config option but these were missing:"
         f"\n{config_only}"
     )
