@@ -3,7 +3,7 @@ on:
   push:
     branches-ignore:
       - main
-      - 'releases/*'
+      - 'release/*'
     paths:
       - '**.py'
 
