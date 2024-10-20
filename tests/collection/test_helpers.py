@@ -501,6 +501,25 @@ def test_add_selectors_to_tags(
         assert set(tags_tracks[tag]) == tracks
 
 
+@pytest.mark.parametrize(
+    "playlist_selector,in_tags_tracks",
+    [
+        ("{playlist:Genres}", False),
+        ("{playlist:Hip Hop}", True),
+    ],
+)
+def test_add_selectors_to_tags_skips_playlists_that_are_folders(
+    playlist_selector, in_tags_tracks, rekordbox_collection
+):
+    """Test for the add_selectors_to_tags function."""
+    playlist_content = f"{playlist_selector} & [0]"
+    tags_tracks = defaultdict(dict)
+    add_selectors_to_tags(
+        playlist_content, tags_tracks, rekordbox_collection, []
+    )
+    assert (playlist_selector in tags_tracks) == in_tags_tracks
+
+
 def test_parse_numerical_selectors():
     """Test for the parse_numerical_selectors function."""
     matches = ["1", "2-4", "140", "141-143", "2021", "2021-2023"]
@@ -620,7 +639,7 @@ def test_parse_string_selectors_warns_bad(matches, expected, caplog):
 @pytest.mark.parametrize("time_str", ["1y", "6m", "3m2w", "7d"])
 def test_parse_timedelta(time_str):
     """Test for the parse_timedelta function."""
-    with mock.patch("datetime.datetime") as mock_datetime:
+    with mock.patch("djtools.collection.helpers.datetime") as mock_datetime:
         mock_datetime.now.return_value = datetime(2024, 6, 22, 0, 0)
         relative_time = parse_timedelta(time_str)
         assert relative_time < mock_datetime.now.return_value

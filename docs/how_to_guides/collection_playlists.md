@@ -16,7 +16,7 @@ If a user diligently tags their Collection using, say, the `Genre` tag, they the
 * Having a change of heart with respect to the genre that a particular track belongs to means that that track must be removed from some existing playlist(s) and added to some different playlist(s)
 * Searching, for example, "Techno" will show not only tracks that contain the word "techno" in their `Genre` tag but also any track that has *any* mention of the word "techno" associated with it (like a dubstep track whose title is "This track is not techno")
 
-The [collection_playlists][djtools.collection.playlist_builder.collection_playlists] feature solves all of these issues! It allows the wisest of users to configure a YAML file with a specification of arbitrary folders and playlists. The playlists' names match the tags that exist in your Collection.
+The [collection_playlists][djtools.collection.playlist_builder.collection_playlists] feature solves all of these issues! It allows the wisest of users to configure a [YAML](https://en.wikipedia.org/wiki/YAML) file with a specification of arbitrary folders and playlists. The playlists' names match the tags that exist in your Collection.
 
 ## How it's done
 
@@ -25,7 +25,7 @@ The [collection_playlists][djtools.collection.playlist_builder.collection_playli
 1. Import the `PLAYLIST_BUILDER` folder from the generated collection
 
 ## Example
-Let's start by examining the pre-packaged [YAML](https://en.wikipedia.org/wiki/YAML) file [collection_playlists.yaml](https://github.com/a-rich/DJ-Tools/blob/main/tests/data/collection_playlists.yaml):
+Let's start by examining the pre-packaged YAML file [collection_playlists.yaml](https://github.com/a-rich/DJ-Tools/blob/main/tests/data/collection_playlists.yaml):
 ![alt text](../images/Rekordbox_playlists_tags_yaml.png "Collection playlists YAML")
 
 You can ignore the `combiner` part of the YAML for now. Although it's similar to the `tags` section, it's covered in the [Combine Playlists With Boolean Algebra](combiner_playlists.md) how-to guide.

@@ -4,8 +4,6 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-import yaml
-
 from djtools.collection.config import PlaylistConfig, PlaylistConfigContent
 from djtools.collection.helpers import (
     add_selectors_to_tags,
@@ -78,18 +76,10 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
         config: Configuration object.
         path: Path to write the new collection to.
     """
-    # Load the playlist config.
-    with open(
-        Path(__file__).parent.parent / "configs" / "collection_playlists.yaml",
-        mode="r",
-        encoding="utf-8",
-    ) as _file:
-        playlist_config = PlaylistConfig(
-            **yaml.load(_file, Loader=yaml.FullLoader) or {}
-        )
+    config.playlist_config = PlaylistConfig(**config.playlist_config or {})
 
     # Check if the playlist config is populated before continuing.
-    if not (playlist_config.tags or playlist_config.combiner):
+    if not (config.playlist_config.tags or config.playlist_config.combiner):
         logger.warning(
             "Not building playlists because the playlist config is empty."
         )
@@ -119,12 +109,12 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
     ]
 
     # Create playlists for the "tags" portion of the playlist config.
-    if playlist_config.tags:
+    if config.playlist_config.tags:
         # A set of tags seen is maintained while creating the tags playlists so
         # that they are ignored when creating the "Other" playlists.
         seen_tags = set()
         tag_playlists = build_tag_playlists(
-            playlist_config.tags, tags_tracks, playlist_class, seen_tags
+            config.playlist_config.tags, tags_tracks, playlist_class, seen_tags
         )
 
         # The tag playlists must have their "parent" attribute set so that
@@ -174,16 +164,19 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
             )
 
     # Create playlists for the "combiner" portion of the playlist config.
-    if playlist_config.combiner:
+    if config.playlist_config.combiner:
         # Parse selectors from the combiner playlist names and update the
         # tags_tracks mapping.
         add_selectors_to_tags(
-            playlist_config.combiner, tags_tracks, collection, auto_playlists
+            config.playlist_config.combiner,
+            tags_tracks,
+            collection,
+            auto_playlists,
         )
 
         # Evaluate the boolean logic of the combiner playlists.
         combiner_playlists = build_combiner_playlists(
-            playlist_config.combiner, tags_tracks, playlist_class
+            config.playlist_config.combiner, tags_tracks, playlist_class
         )
 
         # The tag playlists must have their "parent" attribute set so that
