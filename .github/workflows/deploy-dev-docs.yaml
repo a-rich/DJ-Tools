@@ -2,7 +2,7 @@ name: Deploy Development Docs
 on:
   push:
     branches:
-      - 'releases/**'
+      - 'release/**'
     paths:
       - 'src/**.py'
       - 'docs/**.md'

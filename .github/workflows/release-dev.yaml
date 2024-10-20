@@ -2,7 +2,7 @@ name: Development Release
 on:
   push:
     branches:
-      - 'releases/*'
+      - 'release/*'
     paths:
       - 'src/**.py'
 
