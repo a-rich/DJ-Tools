@@ -4,8 +4,6 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-import yaml
-
 from djtools.collection.config import PlaylistConfig, PlaylistConfigContent
 from djtools.collection.helpers import (
     add_selectors_to_tags,

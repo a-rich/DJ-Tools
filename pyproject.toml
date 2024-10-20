@@ -102,7 +102,9 @@ disable = [
     "abstract-class-instantiated",
     "broad-except",
     "import-outside-toplevel",
+    "logging-not-lazy",
     "no-name-in-module",
+    "too-many-positional-arguments"
 ]
 good-names = [
     "USER"

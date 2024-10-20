@@ -11,8 +11,6 @@ from djtools.collection.playlist_builder import (
 from djtools.collection.rekordbox_collection import RekordboxCollection
 from djtools.collection.rekordbox_playlist import RekordboxPlaylist
 
-from ..test_utils import MockOpen
-
 
 @pytest.mark.parametrize("remainder_type", ["folder", "playlist"])
 def test_collection_playlists_makes_unused_tags_playlists(

@@ -85,7 +85,7 @@ class CollectionConfig(BaseConfig):
                 except Exception as exc:
                     raise RuntimeError(
                         f"Failed to render {playlist_template_name}: {exc}"
-                    )
+                    ) from exc
 
                 if playlist_config_path.exists():
                     logger.warning(
