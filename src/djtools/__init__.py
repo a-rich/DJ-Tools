@@ -68,7 +68,7 @@ __all__ = (
 
 
 def main():
-    """This is the main entry point for the DJ Tools library."""
+    """This is the entry point for the DJ Tools library."""
 
     # Test ci
     logger, log_file = initialize_logger()
