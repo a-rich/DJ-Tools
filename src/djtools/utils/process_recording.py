@@ -10,13 +10,12 @@ information from the Spotify API to:
 - export the files with the configured AUDIO_BITRATE and AUDIO_FORMAT
 """
 
-from concurrent.futures import as_completed, ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 import logging
 import os
 
 from pydub import AudioSegment
-from tqdm import tqdm
 
 from djtools.configs.config import BaseConfig
 from djtools.utils.helpers import (
@@ -119,15 +118,15 @@ def process(config: BaseConfig):
         track_data,
         [write_path] * len(audio_chunks),
     )
+    exported_files = []
 
     with ThreadPoolExecutor(
         max_workers=os.cpu_count() * 4  # pylint: disable=no-member
     ) as executor:
-        futures = [
-            executor.submit(process_parallel, *args) for args in payload
-        ]
+        exported_files = executor.map(
+            lambda args: process_parallel(*args), payload
+        )
 
-        with tqdm(total=len(futures), desc="Exporting tracks") as pbar:
-            for future in as_completed(futures):
-                _ = future.result()
-                pbar.update(1)
+    for index, filepath in enumerate(exported_files):
+        creation_time = datetime.now().timestamp() + index
+        os.utime(filepath, (creation_time, creation_time))

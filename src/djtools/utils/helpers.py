@@ -360,7 +360,7 @@ def make_path(func: Callable) -> Callable:
 
 def process_parallel(
     config: BaseConfig, audio: AudioSegment, track: Dict, write_path: Path
-):
+) -> Path:
     """Normalize and export track with tags.
 
     Args:
@@ -368,6 +368,9 @@ def process_parallel(
         audio: Audio for a track.
         track: Metadata for track audio.
         write_path: Destination for exported audio.
+
+    Returns:
+        Path that the file was written to.
     """
     # Normalize the audio such that the headroom is
     # AUDIO_HEADROOM dB.
@@ -400,6 +403,8 @@ def process_parallel(
         bitrate=f"{config.AUDIO_BITRATE}k",
         tags={key: value for key, value in track.items() if key != "duration"},
     )
+
+    return filename
 
 
 def reverse_title_and_artist(path_lookup: Dict[str, str]) -> Dict[str, str]:
