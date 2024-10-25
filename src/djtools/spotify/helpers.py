@@ -487,11 +487,20 @@ def _update_existing_playlist(
     Returns:
         Playlist object for the newly constructed playlist.
     """
-    _playlist = spotify.playlist(playlist)
+    playlist_object = spotify.playlist(playlist)
+    _playlist = playlist_object
     tracks = _playlist["tracks"]["items"]
-    while _playlist["tracks"]["next"]:
-        _playlist = spotify.next(_playlist["tracks"])
-        tracks.extend(_playlist["tracks"]["items"])
+    try:
+        while _playlist["tracks"]["next"]:
+            _playlist = spotify.next(_playlist["tracks"])
+            try:
+                tracks.extend(_playlist["tracks"]["items"])
+            except KeyError:
+                tracks.extend(_playlist["items"])
+    except KeyError:
+        tracks.extend(_playlist["items"])
+    except Exception as exc:
+        logger.error(f"Failed to get tracks from playlist: {exc}")
 
     track_count = len(tracks)
     track_index = 0
@@ -554,4 +563,4 @@ def _update_existing_playlist(
     if add_payload:
         spotify.playlist_add_items(playlist, add_payload)
 
-    return _playlist
+    return playlist_object

@@ -62,7 +62,7 @@ def convert_to_datetime(arg: str) -> Union[datetime, str]:
         Either the datetime object to filter after or a string indicating that
             the most recent upload should be filtered.
     """
-    if arg == "most-recent":
+    if arg in ["most-recent", "all"]:
         return arg
 
     try:

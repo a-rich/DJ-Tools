@@ -666,6 +666,129 @@ def test_update_existing_playlist(
     )
 
 
+@mock.patch(
+    "djtools.spotify.helpers.spotipy.Spotify.next",
+    side_effect=[
+        {
+            "tracks": {
+                "next": True,
+            },
+            "items": [
+                {
+                    "track": {
+                        "uri": "test_uri",
+                        "id": "test_id",
+                        "name": "last track title",
+                        "artists": [{"name": "final artist name"}],
+                    },
+                },
+            ],
+        },
+        {
+            "tracks": {},
+            "items": [],
+        },
+    ],
+)
+@mock.patch(
+    "djtools.spotify.helpers.spotipy.Spotify.playlist",
+    return_value={
+        "tracks": {
+            "items": [
+                {
+                    "track": {
+                        "uri": "test_uri",
+                        "id": "test_id",
+                        "name": "last track title",
+                        "artists": [{"name": "final artist name"}],
+                    },
+                },
+            ],
+            "next": True,
+        },
+    },
+)
+@mock.patch("djtools.spotify.helpers.get_spotify_client")
+def test_update_existing_playlist_keyerror_handling(
+    mock_spotify,
+    mock_spotify_playlist,
+    mock_spotify_next,
+    caplog,
+):
+    """Test for KeyError exception handling in _update_existing_playlist."""
+    caplog.set_level("ERROR")
+
+    mock_spotify.playlist.return_value = mock_spotify_playlist.return_value
+    mock_spotify.next.return_value = mock_spotify_next.return_value
+    mock_spotify.next.side_effect = mock_spotify_next.side_effect
+
+    playlist = ""
+    new_tracks = [("test_id", "test track")]
+    limit = 1
+    verbosity = 1
+
+    ret = _update_existing_playlist(
+        mock_spotify, playlist, new_tracks, limit, verbosity
+    )
+
+    assert isinstance(ret, dict)
+    assert len(caplog.records) == 0
+    # assert "Failed to get tracks from playlist" in caplog.records[0].message
+
+
+@mock.patch(
+    "djtools.spotify.helpers.spotipy.Spotify.next",
+    side_effect=Exception("Some random exception"),
+)
+@mock.patch(
+    "djtools.spotify.helpers.spotipy.Spotify.playlist",
+    return_value={
+        "tracks": {
+            "items": [
+                {
+                    "track": {
+                        "uri": "test_uri",
+                        "id": "test_id",
+                        "name": "last track title",
+                        "artists": [
+                            {"name": "final artist name"},
+                        ],
+                    },
+                },
+            ],
+            "next": True,
+        },
+    },
+)
+@mock.patch("djtools.spotify.helpers.get_spotify_client")
+def test_update_existing_playlist_general_exception_handling(
+    mock_spotify,
+    mock_spotify_playlist,
+    mock_spotify_next,
+    caplog,
+):
+    """Test for general exception handling in _update_existing_playlist."""
+    caplog.set_level("ERROR")
+    mock_spotify.playlist.return_value = mock_spotify_playlist.return_value
+    mock_spotify.next.return_value = mock_spotify_next.return_value
+    mock_spotify.next.side_effect = Exception("Some random exception")
+
+    playlist = ""
+    new_tracks = [
+        ("test_id", "test track"),
+    ]
+    limit = 1
+    verbosity = 1
+
+    ret = _update_existing_playlist(
+        mock_spotify, playlist, new_tracks, limit, verbosity
+    )
+
+    assert isinstance(ret, dict)
+    assert len(caplog.records) > 0
+    assert "Some random exception" in caplog.records[0].message
+
+
 def test_write_playlist_ids():
     """Test for the write_playlist_ids function."""
     ids_path = (

@@ -4,7 +4,7 @@ DJ Tools started out as a set of scripts used to sync audio files to the cloud s
 
 This library is DJ-platform agnostic. That being said, a subset of features (those under the `collection` package) depend on implementations for `Collection`, `Playlist`, and `Track` abstractions (see the [references](reference/collection/index.md)) for which there are currently only Rekordbox implementations. If you're interested in adding implementations for other DJ platforms, please read the [Adding DJ Software Support to the Collections Package](./developer_docs/new_collections.md) developer doc and create an [issue](https://github.com/a-rich/DJ-Tools/issues).
 
-DJ Tools is tested on Ubuntu and Windows operating systems and Python versions 3.8 through 3.12.
+DJ Tools is tested on Ubuntu and Windows operating systems and Python versions 3.9 through 3.12.
 
 ## Where to start
 Check out the [Getting Started](tutorials/getting_started/index.md) tutorial!
