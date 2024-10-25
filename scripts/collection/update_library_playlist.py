@@ -1,3 +1,8 @@
+"""This script is used to populate a Spotify playlist with tracks added to a
+collection.
+"""
+
+# pylint: disable=missing-function-docstring,inconsistent-return-statements,protected-access,redefined-outer-name,R0801
 import logging
 from argparse import ArgumentParser, Namespace
 from datetime import datetime
@@ -53,7 +58,7 @@ def convert_to_datetime(arg: str) -> Union[datetime, str]:
         Either the datetime object to filter after or a string indicating that
             the most recent upload should be filtered.
     """
-    if arg == "most-recent" or arg == "all":
+    if arg in ["most-recent", "all"]:
         return arg
 
     try:

@@ -497,8 +497,6 @@ def _update_existing_playlist(
                 tracks.extend(_playlist["tracks"]["items"])
             except KeyError:
                 tracks.extend(_playlist["items"])
-            except Exception as exc:
-                logger.error(f"Failed to get tracks from playlist: {exc}")
     except KeyError:
         tracks.extend(_playlist["items"])
     except Exception as exc:

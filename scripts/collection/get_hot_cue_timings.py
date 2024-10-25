@@ -1,3 +1,8 @@
+"""This script is used to print the time, in seconds, of hot cues in a
+collection.
+"""
+
+# pylint: disable=consider-using-f-string,invalid-name,missing-class-docstring,missing-function-docstring,pointless-statement,redefined-outer-name
 import json
 import logging
 import re
@@ -11,13 +16,13 @@ logger = logging.getLogger(__name__)
 
 try:
     from bs4 import BeautifulSoup, FeatureNotFound, Tag
-except ModuleNotFoundError:
+except ModuleNotFoundError as exc:
     msg = (
         'The "BeautifulSoup" library is required; install with '
         "'pip install bs4'"
     )
     logger.critical(msg)
-    raise RuntimeError(msg)
+    raise RuntimeError(msg) from exc
 
 
 def main() -> None:
@@ -157,13 +162,13 @@ def get_tracks_from_collection(xml_path: str) -> List[Track]:
     try:
         with open(path, mode="r", encoding="utf-8") as _file:
             doc = BeautifulSoup(_file.read(), "xml")
-    except FeatureNotFound:
+    except FeatureNotFound as exc:
         msg = (
             'Could not open %s; please install "lxml" by running '
             "'pip install lxml'" % str(path)
         )
         logger.critical(msg)
-        raise RuntimeError(msg)
+        raise RuntimeError(msg) from exc
 
     tracks = list(
         filter(
