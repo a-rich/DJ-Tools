@@ -76,7 +76,7 @@ dev = [
     "mkdocs",
     "mkdocs-material",
     "mkdocstrings-python",
-    "pylint",
+    "pylint~=3.3.1",
     "pytest",
     "pytest-asyncio",
     "pytest-cov",
