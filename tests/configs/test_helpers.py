@@ -96,8 +96,9 @@ def test_arg_parse_links_configs_dir_parent_does_not_exist(
 def test_build_config_invalid_config_yaml(caplog):
     """Test for the build_config function."""
     caplog.set_level("CRITICAL")
-    with mock.patch.object(Path, "exists", return_value=True), pytest.raises(
-        RuntimeError
+    with (
+        mock.patch.object(Path, "exists", return_value=True),
+        pytest.raises(RuntimeError),
     ):
         build_config()
     assert 'Error reading "config.yaml"' in caplog.records[0].message

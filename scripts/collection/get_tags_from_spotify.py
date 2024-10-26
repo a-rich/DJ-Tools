@@ -149,9 +149,10 @@ if __name__ == "__main__":
 
     # Add tags from Spotify.
     if args.mode == "bulk":
-        with tqdm(
-            total=len(tracks), desc="Adding tags from Spotify"
-        ) as pbar, ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as pool:
+        with (
+            tqdm(total=len(tracks), desc="Adding tags from Spotify") as pbar,
+            ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as pool,
+        ):
             futures = [
                 pool.submit(
                     get_spotify_tags_thread,
