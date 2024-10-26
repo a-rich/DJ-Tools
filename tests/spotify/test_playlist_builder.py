@@ -173,13 +173,16 @@ def test_spotify_playlist_from_upload_handles_non_match(config, caplog):
     title = "Under Pressure"
     artist = "Alix Perez, T-Man"
     config.SPOTIFY_PLAYLIST_FROM_UPLOAD = True
-    with mock.patch(
-        "builtins.open",
-        MockOpen(files=["spotify_playlists.yaml"], content="{}").open,
-    ), mock.patch(
-        "pyperclip.paste",
-        return_value=f"""aweeeezy/Bass/2022-09-03: 5
+    with (
+        mock.patch(
+            "builtins.open",
+            MockOpen(files=["spotify_playlists.yaml"], content="{}").open,
+        ),
+        mock.patch(
+            "pyperclip.paste",
+            return_value=f"""aweeeezy/Bass/2022-09-03: 5
             {title} - {artist}.mp3""",
+        ),
     ):
         spotify_playlist_from_upload(config)
     assert caplog.records[0].message == (
@@ -205,13 +208,16 @@ def test_spotify_playlist_from_upload_handles_spotify_exception(
     config.SPOTIFY_CLIENT_ID = "test_client_id"
     config.SPOTIFY_CLIENT_SECRET = "test_client_secret"
     config.SPOTIFY_REDIRECT_URI = "test_redirect_uri"
-    with mock.patch(
-        "builtins.open",
-        MockOpen(files=["spotify_playlists.yaml"], content="{}").open,
-    ), mock.patch(
-        "pyperclip.paste",
-        return_value=f"""aweeeezy/Bass/2022-09-03: 5
+    with (
+        mock.patch(
+            "builtins.open",
+            MockOpen(files=["spotify_playlists.yaml"], content="{}").open,
+        ),
+        mock.patch(
+            "pyperclip.paste",
+            return_value=f"""aweeeezy/Bass/2022-09-03: 5
             {title} - {artist}.mp3""",
+        ),
     ):
         spotify_playlist_from_upload(config)
     assert caplog.records[0].message.startswith(

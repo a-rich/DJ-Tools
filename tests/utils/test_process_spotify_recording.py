@@ -28,6 +28,7 @@ def test_process_handles_missing_or_empty_playlist(config):
         process(config)
 
 
+@mock.patch("djtools.utils.helpers.os.utime", mock.Mock())
 @mock.patch("djtools.utils.helpers.AudioSegment.export", mock.Mock())
 @mock.patch(
     "djtools.utils.process_recording.get_spotify_tracks",
@@ -73,6 +74,7 @@ def test_process_skips_trimming_initial_silence(
 @mock.patch("djtools.utils.helpers.AudioSegment.export", mock.Mock())
 @mock.patch("djtools.utils.process_recording.get_spotify_tracks")
 @mock.patch("djtools.utils.process_recording.AudioSegment.from_file")
+@mock.patch("djtools.utils.helpers.os.utime", mock.Mock())
 def test_process_warns_when_recording_is_too_short(
     mock_audio_segment, mock_spotify_tracks, config, caplog, tmpdir
 ):
@@ -144,6 +146,7 @@ def test_process_warns_when_recording_is_too_short(
     "djtools.utils.process_recording.AudioSegment.from_file",
     mock.Mock(return_value=AudioSegment.silent(duration=2000)),
 )
+@mock.patch("djtools.utils.helpers.os.utime", mock.Mock())
 def test_process_warns_when_filename_is_malformed(config, tmpdir, caplog):
     """Test for the process function."""
     caplog.set_level("WARNING")

@@ -67,9 +67,12 @@ def test_hiphopfilter_filters_tracks(
 ):
     """Test for the HipHopFilter class."""
     track_filter = HipHopFilter()
-    with mock.patch.object(
-        track_filter, "_bass_hip_hop", bass_hip_hop, create=True
-    ), mock.patch.object(RekordboxTrack, "get_genre_tags", lambda x: tags):
+    with (
+        mock.patch.object(
+            track_filter, "_bass_hip_hop", bass_hip_hop, create=True
+        ),
+        mock.patch.object(RekordboxTrack, "get_genre_tags", lambda x: tags),
+    ):
         result = track_filter.filter_track(rekordbox_track)
         assert result == expected
 
@@ -128,12 +131,10 @@ def test_minimaldeeptechfilter_filters_tracks(
 ):
     """Test for the MinimalDeepTechFilter class."""
     track_filter = MinimalDeepTechFilter()
-    with mock.patch.object(
-        track_filter, "_techno", techno, create=True
-    ), mock.patch.object(
-        track_filter, "_house", not techno, create=True
-    ), mock.patch.object(
-        RekordboxTrack, "get_genre_tags", lambda x: tags
+    with (
+        mock.patch.object(track_filter, "_techno", techno, create=True),
+        mock.patch.object(track_filter, "_house", not techno, create=True),
+        mock.patch.object(RekordboxTrack, "get_genre_tags", lambda x: tags),
     ):
         result = track_filter.filter_track(rekordbox_track)
         assert result == expected
