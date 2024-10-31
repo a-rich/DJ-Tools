@@ -2,7 +2,7 @@
 If you wish to contribute to DJ Tools, please follow these development rules:
 1. Development branches must:
     1. be linked to an Issue
-    1. branch from `releases/*`
+    1. branch from `release/*`
     1. have a concise name for the feature or bugfix specifically targeted by that branch (e.g. `xml-track-randomization` or `improve-spotify-stability`)
 1. Commits must:
     1. have messages that follow the [Conventional Commits](https://www.conventionalcommits.org/) standard
@@ -16,7 +16,7 @@ On `pull_request` events (with `src/**.py` or `tests/**.py` changes) the [test-l
 - if you're unable to pass tests with `100%` coverage, please open an issue
 - if you're not getting a `10.00/10` lint score, first attempt to correct the errors before resorting to [messages control](https://pylint.readthedocs.io/en/latest/user_guide/messages/message_control.html)
 
-On `push` events to `releases/**` the following Actions are triggered:
+On `push` events to `release/**` the following Actions are triggered:
 - [release-dev](https://github.com/a-rich/DJ-Tools/blob/pylint-check/.github/workflows/release-dev.yaml) (with `src/**.py` changes)
 - [deploy-dev-docs](https://github.com/a-rich/DJ-Tools/blob/pylint-check/.github/workflows/deploy-dev-docs.yaml) (with `src/**.py` or `docs/**.md` changes)
 

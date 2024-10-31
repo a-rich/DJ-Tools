@@ -456,6 +456,8 @@ def add_selectors_to_tags(
 
         for playlist_object in [collection, *auto_playlists]:
             for playlist in playlist_object.get_playlists(playlist_name):
+                if playlist.is_folder():
+                    continue
                 tags_tracks[playlist_key].update(playlist.get_tracks())
 
 

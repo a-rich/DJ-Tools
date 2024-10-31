@@ -78,10 +78,13 @@ if __name__ == "__main__":
     # Remove tags from a particular field.
     tag_regex = re.compile(r"(?<=\/\*).*(?=\*\/)")
     remove_tags = set(args.remove_tags)
-    with tqdm(
-        total=len(tracks),
-        desc=f"Removing tags from {args.remove_tags_fields}",
-    ) as pbar, ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as pool:
+    with (
+        tqdm(
+            total=len(tracks),
+            desc=f"Removing tags from {args.remove_tags_fields}",
+        ) as pbar,
+        ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as pool,
+    ):
         futures = [
             pool.submit(remove_tags_thread, track, tag_regex, remove_tags)
             for track in tracks

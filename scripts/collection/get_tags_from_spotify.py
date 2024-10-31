@@ -62,7 +62,7 @@ def convert_to_datetime(arg: str) -> Union[datetime, str]:
         Either the datetime object to filter after or a string indicating that
             the most recent upload should be filtered.
     """
-    if arg == "most-recent":
+    if arg in ["most-recent", "all"]:
         return arg
 
     try:
@@ -149,9 +149,10 @@ if __name__ == "__main__":
 
     # Add tags from Spotify.
     if args.mode == "bulk":
-        with tqdm(
-            total=len(tracks), desc="Adding tags from Spotify"
-        ) as pbar, ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as pool:
+        with (
+            tqdm(total=len(tracks), desc="Adding tags from Spotify") as pbar,
+            ThreadPoolExecutor(max_workers=os.cpu_count() * 4) as pool,
+        ):
             futures = [
                 pool.submit(
                     get_spotify_tags_thread,

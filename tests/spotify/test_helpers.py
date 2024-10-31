@@ -255,26 +255,29 @@ def test_fuzzy_match(mock_spotify_search, mock_spotify, title, match_result):
     """Test for the _fuzzy_match function."""
     mock_spotify.search.return_value = mock_spotify_search.return_value
     threshold = 100
-    with mock.patch(
-        "djtools.spotify.helpers._parse_title",
-        return_value=title,
-    ), mock.patch(
-        "djtools.spotify.helpers.filter_results",
-        return_value=(
-            (
-                {
-                    "id": "some_id",
-                    "name": "Arctic Oscillations",
-                    "artists": [
-                        {"name": "Fanu"},
-                    ],
-                },
-                100,
-            )
-            if match_result
-            else (None, 0)
+    with (
+        mock.patch(
+            "djtools.spotify.helpers._parse_title",
+            return_value=title,
         ),
-    ) as mock_filter_results:
+        mock.patch(
+            "djtools.spotify.helpers.filter_results",
+            return_value=(
+                (
+                    {
+                        "id": "some_id",
+                        "name": "Arctic Oscillations",
+                        "artists": [
+                            {"name": "Fanu"},
+                        ],
+                    },
+                    100,
+                )
+                if match_result
+                else (None, 0)
+            ),
+        ) as mock_filter_results,
+    ):
         ret = _fuzzy_match(mock_spotify, title, threshold)
     if not all(x for x in title):
         # If a track title AND artist name aren't resolved, then None is
@@ -388,11 +391,14 @@ async def test_get_subreddit_posts(
     praw_cache = {}
     mock_praw_submission.id = "test_id"
     mock_process.return_value = "track - artist"
-    with mock.patch(
-        "djtools.spotify.helpers._catch",
-    ) as mock_catch, mock.patch(
-        "djtools.spotify.helpers.praw.Reddit.subreddit",
-        new=mock.AsyncMock(),
+    with (
+        mock.patch(
+            "djtools.spotify.helpers._catch",
+        ) as mock_catch,
+        mock.patch(
+            "djtools.spotify.helpers.praw.Reddit.subreddit",
+            new=mock.AsyncMock(),
+        ),
     ):
         mock_catch.return_value = _aiter(mock_praw_submission, num_subs)
         await get_subreddit_posts(
@@ -664,6 +670,129 @@ def test_update_existing_playlist(
     assert caplog.records[0].message == (
         'Candidate new track "test track" is already in the playlist'
     )
+
+
+@mock.patch(
+    "djtools.spotify.helpers.spotipy.Spotify.next",
+    side_effect=[
+        {
+            "tracks": {
+                "next": True,
+            },
+            "items": [
+                {
+                    "track": {
+                        "uri": "test_uri",
+                        "id": "test_id",
+                        "name": "last track title",
+                        "artists": [{"name": "final artist name"}],
+                    },
+                },
+            ],
+        },
+        {
+            "tracks": {},
+            "items": [],
+        },
+    ],
+)
+@mock.patch(
+    "djtools.spotify.helpers.spotipy.Spotify.playlist",
+    return_value={
+        "tracks": {
+            "items": [
+                {
+                    "track": {
+                        "uri": "test_uri",
+                        "id": "test_id",
+                        "name": "last track title",
+                        "artists": [{"name": "final artist name"}],
+                    },
+                },
+            ],
+            "next": True,
+        },
+    },
+)
+@mock.patch("djtools.spotify.helpers.get_spotify_client")
+def test_update_existing_playlist_keyerror_handling(
+    mock_spotify,
+    mock_spotify_playlist,
+    mock_spotify_next,
+    caplog,
+):
+    """Test for KeyError exception handling in _update_existing_playlist."""
+    caplog.set_level("ERROR")
+
+    mock_spotify.playlist.return_value = mock_spotify_playlist.return_value
+    mock_spotify.next.return_value = mock_spotify_next.return_value
+    mock_spotify.next.side_effect = mock_spotify_next.side_effect
+
+    playlist = ""
+    new_tracks = [("test_id", "test track")]
+    limit = 1
+    verbosity = 1
+
+    ret = _update_existing_playlist(
+        mock_spotify, playlist, new_tracks, limit, verbosity
+    )
+
+    assert isinstance(ret, dict)
+    assert len(caplog.records) == 0
+    # assert "Failed to get tracks from playlist" in caplog.records[0].message
+
+
+@mock.patch(
+    "djtools.spotify.helpers.spotipy.Spotify.next",
+    side_effect=Exception("Some random exception"),
+)
+@mock.patch(
+    "djtools.spotify.helpers.spotipy.Spotify.playlist",
+    return_value={
+        "tracks": {
+            "items": [
+                {
+                    "track": {
+                        "uri": "test_uri",
+                        "id": "test_id",
+                        "name": "last track title",
+                        "artists": [
+                            {"name": "final artist name"},
+                        ],
+                    },
+                },
+            ],
+            "next": True,
+        },
+    },
+)
+@mock.patch("djtools.spotify.helpers.get_spotify_client")
+def test_update_existing_playlist_general_exception_handling(
+    mock_spotify,
+    mock_spotify_playlist,
+    mock_spotify_next,
+    caplog,
+):
+    """Test for general exception handling in _update_existing_playlist."""
+    caplog.set_level("ERROR")
+    mock_spotify.playlist.return_value = mock_spotify_playlist.return_value
+    mock_spotify.next.return_value = mock_spotify_next.return_value
+    mock_spotify.next.side_effect = Exception("Some random exception")
+
+    playlist = ""
+    new_tracks = [
+        ("test_id", "test track"),
+    ]
+    limit = 1
+    verbosity = 1
+
+    ret = _update_existing_playlist(
+        mock_spotify, playlist, new_tracks, limit, verbosity
+    )
+
+    assert isinstance(ret, dict)
+    assert len(caplog.records) > 0
+    assert "Some random exception" in caplog.records[0].message
 
 
 def test_write_playlist_ids():

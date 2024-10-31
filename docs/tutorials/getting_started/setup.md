@@ -1,11 +1,11 @@
 # Setup
 
 ## Python
-The DJ Tools library requires a minimum version of Python 3.8. As always, when working with a Python project, you're going to want to create a [virtual environment](https://docs.python.org/3/tutorial/venv.html); [Pyenv](https://github.com/pyenv/pyenv) is really nice but if you insist on doing a system-wide Python installation then proceed with the following instructions:
+The DJ Tools library requires a minimum version of Python 3.9. As always, when working with a Python project, you're going to want to create a [virtual environment](https://docs.python.org/3/tutorial/venv.html); [Pyenv](https://github.com/pyenv/pyenv) is really nice but if you insist on doing a system-wide Python installation then proceed with the following instructions:
 
-- Mac installation: `brew install python@3.8`
-- Linux installation: `sudo apt install python3.8`
-- Windows installation: [Windows releases](https://www.python.org/downloads/windows/) or [3.8.9 installer](https://www.python.org/ftp/python/3.8.9/python-3.8.9.exe)
+- Mac installation: `brew install python@3.9`
+- Linux installation: `sudo apt install python3.9`
+- Windows installation: [Windows releases](https://www.python.org/downloads/windows/)
 
 ## DJ Tools
 1. Run `pip install "djtools[accelerated]"` to install the DJ Tools library

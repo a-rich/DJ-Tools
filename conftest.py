@@ -82,6 +82,15 @@ def playlist_config():
 
 
 @pytest.fixture
+def playlist_config_content():
+    """Test playlist config content fixture."""
+    with open(
+        "tests/data/collection_playlists.yaml", mode="r", encoding="utf-8"
+    ) as _file:
+        return _file.read()
+
+
+@pytest.fixture
 def playlist_config_obj(
     playlist_config,
 ):  # pylint: disable=redefined-outer-name

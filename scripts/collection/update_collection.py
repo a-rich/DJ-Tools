@@ -1,6 +1,6 @@
 """Update master track Collection with local Collection."""
 
-# pylint: disable=duplicate-code
+# pylint: disable=duplicate-code,invalid-name
 from argparse import ArgumentParser
 from itertools import groupby
 from pathlib import Path
