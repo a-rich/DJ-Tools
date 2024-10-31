@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "djtools"
-version = "2.7.15-rc4"
+version = "2.8.0"
 authors = [
     {name = "Alex Richards", email = "alex.richards006@gmail.com"},
 ]
