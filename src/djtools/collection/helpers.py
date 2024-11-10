@@ -133,6 +133,13 @@ def build_tag_playlists(
     # Initialize the set of tags in case the caller didn't provide one.
     tag_set = tag_set if tag_set is not None else set()
 
+    # Folders and playlists can opt-out of having and contributing towards
+    # aggregation playlists. 
+    disable_aggregation = None
+
+    if isinstance(content, (PlaylistConfigContent, PlaylistName)):
+        disable_aggregation = content.disable_aggregation
+
     # This is a folder so create playlists for those playlists within it.
     if isinstance(content, PlaylistConfigContent):
         # Update the set of tags seen so these are ignored in when creating the
@@ -154,7 +161,9 @@ def build_tag_playlists(
             return None
 
         return playlist_class.new_playlist(
-            name=content.name, playlists=playlists
+            name=content.name,
+            playlists=playlists,
+            disable_aggregation=disable_aggregation,
         )
 
     # This is not a folder so a playlist with tracks must be created.
@@ -200,7 +209,11 @@ def build_tag_playlists(
             )
             return None
 
-        return playlist_class.new_playlist(name=name, tracks=pure_tag_tracks)
+        return playlist_class.new_playlist(
+            name=name,
+            tracks=pure_tag_tracks,
+            disable_aggregation=disable_aggregation,
+        )
 
     # Get tracks with this tag and index it so that it's not added to the
     # "Unused Tags" playlists.
@@ -210,7 +223,11 @@ def build_tag_playlists(
         logger.warning(f'There are no tracks with the tag "{tag_content}"')
         return None
 
-    return playlist_class.new_playlist(name=name, tracks=tracks_with_tag)
+    return playlist_class.new_playlist(
+        name=name,
+        tracks=tracks_with_tag,
+        disable_aggregation=disable_aggregation,
+    )
 
 
 def build_combiner_playlists(
@@ -233,12 +250,18 @@ def build_combiner_playlists(
     """
     if not isinstance(content, (PlaylistConfigContent, PlaylistName, str)):
         raise ValueError(f"Invalid input type {type(content)}: {content}")
+    
+    # Folders and playlists can opt-out of having and contributing towards
+    # aggregation playlists. 
+    disable_aggregation = None
 
     if isinstance(content, PlaylistName):
         tag_content = content.tag_content
         name = content.name or tag_content
     elif isinstance(content, str):
         tag_content = name = content
+    if isinstance(content, (PlaylistConfigContent, PlaylistName)):
+        disable_aggregation = content.disable_aggregation
 
     # This is not a folder so a playlist with tracks must be created.
     if isinstance(content, (PlaylistName, str)):
@@ -247,7 +270,9 @@ def build_combiner_playlists(
         except Exception as exc:
             logger.warning(f"Error parsing expression: {tag_content}\n{exc}")
             return None
-        return playlist_class.new_playlist(name=name, tracks=tracks)
+        return playlist_class.new_playlist(
+            name=name, tracks=tracks, disable_aggregation=disable_aggregation
+        )
 
     # This is a folder so create playlists for those playlists within it.
     playlists = []
@@ -264,7 +289,11 @@ def build_combiner_playlists(
             f'There were no playlists created from "{content.playlists}"'
         )
 
-    return playlist_class.new_playlist(name=content.name, playlists=playlists)
+    return playlist_class.new_playlist(
+        name=content.name,
+        playlists=playlists,
+        disable_aggregation=disable_aggregation,
+    )
 
 
 def filter_tag_playlists(
@@ -302,34 +331,33 @@ def filter_tag_playlists(
 
 
 def aggregate_playlists(
-    playlist: Playlist, playlist_class: Playlist, top_level: bool = True
+    playlist: Playlist, playlist_class: Playlist
 ) -> Dict[str, Track]:
     """Recursively aggregate tracks from folders into "All" playlists.
 
     Args:
         playlist: Playlist which may be a folder or not.
         playlist_class: Playlist implementation class.
-        top_level: Whether or not this is the original method call.
 
     Returns:
         Dict of tracks.
     """
     # Get tracks from the playlist if it's not a folder.
     if not playlist.is_folder():
-        return playlist.get_tracks()
+        return playlist.get_tracks() if playlist.aggregate() else {}
 
     # Recursively get tracks from each playlist within this folder.
     aggregate_tracks = {
         track_id: track
         for p in playlist
         for track_id, track in aggregate_playlists(
-            p, playlist_class, top_level=False
+            p, playlist_class
         ).items()
     }
 
     # Create an "All" playlist in this folder if the folder contains more than
     # one playlist.
-    if len(playlist) > 1 and not top_level:
+    if playlist.aggregate():
         playlist.add_playlist(
             playlist_class.new_playlist(
                 name=f"All {playlist.get_name()}", tracks=aggregate_tracks

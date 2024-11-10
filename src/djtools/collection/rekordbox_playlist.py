@@ -24,9 +24,11 @@ class RekordboxPlaylist(Playlist):
     def __init__(
         self,
         playlist: bs4.element.Tag,
+        *args,
         tracks: Dict[str, RekordboxTrack] = None,
         playlist_tracks: Optional[Dict[str, RekordboxTrack]] = None,
         parent: Optional[RekordboxPlaylist] = None,
+        **kwargs,
     ):
         """Deserialize a Playlist from a BeautifulSoup NODE Tag.
 
@@ -36,7 +38,7 @@ class RekordboxPlaylist(Playlist):
             playlist_tracks: Tracks to set when initializing with new_playlist.
             parent: The folder this playlist is in.
         """
-        super().__init__()
+        super().__init__(*args, **kwargs)
         self._tracks = None
         self._playlists = None
         self._parent = parent
@@ -181,6 +183,7 @@ class RekordboxPlaylist(Playlist):
         name: str,
         playlists: Optional[List[RekordboxPlaylist]] = None,
         tracks: Optional[Dict[str, RekordboxTrack]] = None,
+        disable_aggregation: Optional[bool] = None,
     ) -> RekordboxPlaylist:
         """Creates a new playlist.
 
@@ -188,6 +191,8 @@ class RekordboxPlaylist(Playlist):
             name: The name of the Playlist to be created.
             playlists: A list of Playlists to add to this Playlist.
             tracks: A dict of Tracks to add to this Playlist.
+            disable_aggregation: Whether or not this playlist has or
+                contributes to an aggregation playlist.
 
         Raises:
             RuntimeError: You must provide either a list of Playlists or a list
@@ -222,7 +227,10 @@ class RekordboxPlaylist(Playlist):
             ),
         )
         playlist = RekordboxPlaylist(
-            playlist_tag, tracks=tracks, playlist_tracks=(tracks or {}).keys()
+            playlist_tag,
+            tracks=tracks,
+            playlist_tracks=(tracks or {}).keys(),
+            disable_aggregation=disable_aggregation,
         )
         playlist._playlists = playlists
 

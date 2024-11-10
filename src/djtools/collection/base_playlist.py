@@ -20,9 +20,12 @@ from djtools.collection.base_track import Track
 class Playlist(ABC):
     "Abstract base class for a playlist."
 
-    @abstractmethod
     def __init__(self, *args, **kwargs):
         "Deserializes a playlist from the native format of a DJ software."
+        self._aggregate = True
+        if kwargs.get("disable_aggregation"):
+            self._aggregate = False
+
 
     def __getitem__(self, index: int) -> Playlist:
         """Gets a Playlist from this Playlist's playlists.
@@ -69,6 +72,15 @@ class Playlist(ABC):
             self._playlists.insert(index, playlist)
         else:
             self._playlists.append(playlist)
+
+    def aggregate(self) -> bool:
+        """whether to aggregate or not.
+
+        Returns:
+            bool: Whether or not this playlist should have or contribute to an
+                aggregation playlist.
+        """
+        return self._aggregate and len(self) > 1
 
     @abstractmethod
     def get_name(self) -> str:
@@ -141,6 +153,7 @@ class Playlist(ABC):
         name: str,
         playlists: Optional[List[Playlist]] = None,
         tracks: Optional[Dict[str, Track]] = None,
+        disable_aggregation: Optional[bool] = None,
     ) -> Playlist:
         """Creates a new Playlist.
 
@@ -148,6 +161,8 @@ class Playlist(ABC):
             name: The name of the Playlist to be created.
             playlists: A list of Playlists to add to this Playlist.
             tracks: A dict of Tracks to add to this Playlist.
+            disable_aggregation: Whether or not this playlist has or
+                contributes to an aggregation playlist.
 
         Raises:
             RuntimeError: You must provide either a list of Playlists or a list
