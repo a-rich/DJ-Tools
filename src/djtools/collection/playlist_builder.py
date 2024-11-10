@@ -212,3 +212,6 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
     auto_playlist.set_parent(collection.get_playlists())
     collection.add_playlist(auto_playlist)
     collection.serialize(path=path)
+
+    num_playlists = collection.get_playlists().get_number_of_playlists()
+    logger.info(f"{PLAYLIST_NAME} generated with {num_playlists} playlists")

@@ -90,6 +90,17 @@ class Playlist(ABC):
             The name of this playlist.
         """
 
+    def get_number_of_playlists(self) -> int:
+        """Returns the number of playlists within this playlist recursively.
+
+        Returns:
+            Number of playlists within this playlist.
+        """
+        if not self.is_folder():
+            return 1
+
+        return sum(playlist.get_number_of_playlists() for playlist in self)
+
     def get_parent(self) -> Optional[Playlist]:
         """Returns the folder this playlist is in.
 
