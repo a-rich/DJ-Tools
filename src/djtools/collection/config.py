@@ -12,7 +12,7 @@ from typing_extensions import Literal
 
 import yaml
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, PositiveInt, ValidationError
 
 from djtools.configs.config import BaseConfig
 
@@ -36,6 +36,8 @@ class CollectionConfig(BaseConfig):
     COLLECTION_PLAYLISTS_REMAINDER: Literal["folder", "playlist"] = "folder"
     COPY_PLAYLISTS: List[str] = []
     COPY_PLAYLISTS_DESTINATION: Optional[Path] = None
+    MINIMUM_COMBINER_PLAYLIST_TRACKS: Optional[PositiveInt] = None
+    MINIMUM_TAG_PLAYLIST_TRACKS: Optional[PositiveInt] = None
     PLATFORM: Literal["rekordbox"] = "rekordbox"
     SHUFFLE_PLAYLISTS: List[str] = []
     playlist_config: Optional[PlaylistConfig] = None
