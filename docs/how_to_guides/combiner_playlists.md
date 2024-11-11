@@ -251,7 +251,11 @@ Here's an example of configuring a playlist name override:
       name: Pre 2022 High Energy Dubstep
 ```
 
-Also note that combiner playlists, like tag playlists, have `PlaylistFilter` logic and recursive track aggregation applied to them.
+Also note that combiner playlists, like tag playlists, support:
+
+1. `PlaylistFilters`
+1. `enable_aggregation`
+1. minimum track requirements, except use the option `MINIMUM_COMBINER_PLAYLIST_TRACKS` instead
 
 Once you've finalized your playlist configuration, run the following command to build the playlists:
 
