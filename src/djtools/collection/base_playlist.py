@@ -77,14 +77,12 @@ class Playlist(ABC):
         """whether to aggregate or not.
 
         Returns:
-            bool: Whether or not this playlist should have or contribute to an
-                aggregation playlist.
+            bool: Whether or not this playlist has an aggregation playlist.
         """
-        enough_content = len(self) > 0
-        if self.is_folder():
-            enough_content = len(self) > 1
+        if not self.is_folder():
+            return True
 
-        return self._aggregate and enough_content
+        return self._aggregate and len(self) > 1
 
     @abstractmethod
     def get_name(self) -> str:
@@ -176,8 +174,8 @@ class Playlist(ABC):
             name: The name of the Playlist to be created.
             playlists: A list of Playlists to add to this Playlist.
             tracks: A dict of Tracks to add to this Playlist.
-            enable_aggregation: Whether or not this playlist has or
-                contributes to an aggregation playlist.
+            enable_aggregation: Whether or not this playlist has an aggregation
+                playlist.
 
         Raises:
             RuntimeError: You must provide either a list of Playlists or a list

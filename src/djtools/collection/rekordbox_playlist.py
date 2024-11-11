@@ -191,8 +191,8 @@ class RekordboxPlaylist(Playlist):
             name: The name of the Playlist to be created.
             playlists: A list of Playlists to add to this Playlist.
             tracks: A dict of Tracks to add to this Playlist.
-            enable_aggregation: Whether or not this playlist has or
-                contributes to an aggregation playlist.
+            enable_aggregation: Whether or not this playlist has an aggregation
+                playlist.
 
         Raises:
             RuntimeError: You must provide either a list of Playlists or a list

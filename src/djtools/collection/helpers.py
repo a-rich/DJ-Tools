@@ -135,8 +135,7 @@ def build_tag_playlists(
     # Initialize the set of tags in case the caller didn't provide one.
     tag_set = tag_set if tag_set is not None else set()
 
-    # Folders and playlists can opt-in to having and contributing towards
-    # aggregation playlists. 
+    # Folders can opt-in to having an aggregation playlist.
     enable_aggregation = None
 
     if isinstance(content, (PlaylistConfigContent, PlaylistName)):
@@ -267,8 +266,7 @@ def build_combiner_playlists(
     if not isinstance(content, (PlaylistConfigContent, PlaylistName, str)):
         raise ValueError(f"Invalid input type {type(content)}: {content}")
     
-    # Folders and playlists can opt-out of having and contributing towards
-    # aggregation playlists. 
+    # Folders can opt-in to having an aggregation playlist.
     enable_aggregation = None
 
     if isinstance(content, PlaylistName):
