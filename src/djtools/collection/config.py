@@ -126,14 +126,14 @@ class PlaylistName(BaseModel, extra="forbid"):
     "A class for configuring the names of playlists."
     tag_content: str
     name: Optional[str] = None
-    disable_aggregation: Optional[bool] = None
+    enable_aggregation: Optional[bool] = None
 
 
 class PlaylistConfigContent(BaseModel, extra="forbid"):
     "A class for type checking the content of the playlist config YAML."
     name: str
     playlists: List[Union[PlaylistConfigContent, PlaylistName, str]]
-    disable_aggregation: Optional[bool] = None
+    enable_aggregation: Optional[bool] = None
 
 
 class PlaylistConfig(BaseModel, extra="forbid"):

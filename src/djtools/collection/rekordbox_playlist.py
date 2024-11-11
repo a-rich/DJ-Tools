@@ -183,7 +183,7 @@ class RekordboxPlaylist(Playlist):
         name: str,
         playlists: Optional[List[RekordboxPlaylist]] = None,
         tracks: Optional[Dict[str, RekordboxTrack]] = None,
-        disable_aggregation: Optional[bool] = None,
+        enable_aggregation: Optional[bool] = None,
     ) -> RekordboxPlaylist:
         """Creates a new playlist.
 
@@ -191,7 +191,7 @@ class RekordboxPlaylist(Playlist):
             name: The name of the Playlist to be created.
             playlists: A list of Playlists to add to this Playlist.
             tracks: A dict of Tracks to add to this Playlist.
-            disable_aggregation: Whether or not this playlist has or
+            enable_aggregation: Whether or not this playlist has or
                 contributes to an aggregation playlist.
 
         Raises:
@@ -230,7 +230,7 @@ class RekordboxPlaylist(Playlist):
             playlist_tag,
             tracks=tracks,
             playlist_tracks=(tracks or {}).keys(),
-            disable_aggregation=disable_aggregation,
+            enable_aggregation=enable_aggregation,
         )
         playlist._playlists = playlists
 

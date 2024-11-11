@@ -135,12 +135,12 @@ def build_tag_playlists(
     # Initialize the set of tags in case the caller didn't provide one.
     tag_set = tag_set if tag_set is not None else set()
 
-    # Folders and playlists can opt-out of having and contributing towards
+    # Folders and playlists can opt-in to having and contributing towards
     # aggregation playlists. 
-    disable_aggregation = None
+    enable_aggregation = None
 
     if isinstance(content, (PlaylistConfigContent, PlaylistName)):
-        disable_aggregation = content.disable_aggregation
+        enable_aggregation = content.enable_aggregation
 
     # This is a folder so create playlists for those playlists within it.
     if isinstance(content, PlaylistConfigContent):
@@ -171,7 +171,7 @@ def build_tag_playlists(
         return playlist_class.new_playlist(
             name=content.name,
             playlists=playlists,
-            disable_aggregation=disable_aggregation,
+            enable_aggregation=enable_aggregation,
         )
 
     # This is not a folder so a playlist with tracks must be created.
@@ -223,7 +223,7 @@ def build_tag_playlists(
         return playlist_class.new_playlist(
             name=name,
             tracks=pure_tag_tracks,
-            disable_aggregation=disable_aggregation,
+            enable_aggregation=enable_aggregation,
         )
 
     # Get tracks with this tag and index it so that it's not added to the
@@ -240,7 +240,7 @@ def build_tag_playlists(
     return playlist_class.new_playlist(
         name=name,
         tracks=tracks_with_tag,
-        disable_aggregation=disable_aggregation,
+        enable_aggregation=enable_aggregation,
     )
 
 
@@ -269,7 +269,7 @@ def build_combiner_playlists(
     
     # Folders and playlists can opt-out of having and contributing towards
     # aggregation playlists. 
-    disable_aggregation = None
+    enable_aggregation = None
 
     if isinstance(content, PlaylistName):
         tag_content = content.tag_content
@@ -277,7 +277,7 @@ def build_combiner_playlists(
     elif isinstance(content, str):
         tag_content = name = content
     if isinstance(content, (PlaylistConfigContent, PlaylistName)):
-        disable_aggregation = content.disable_aggregation
+        enable_aggregation = content.enable_aggregation
 
     # This is not a folder so a playlist with tracks must be created.
     if isinstance(content, (PlaylistName, str)):
@@ -291,7 +291,7 @@ def build_combiner_playlists(
             return None
 
         return playlist_class.new_playlist(
-            name=name, tracks=tracks, disable_aggregation=disable_aggregation
+            name=name, tracks=tracks, enable_aggregation=enable_aggregation
         )
 
     # This is a folder so create playlists for those playlists within it.
@@ -317,7 +317,7 @@ def build_combiner_playlists(
     return playlist_class.new_playlist(
         name=content.name,
         playlists=playlists,
-        disable_aggregation=disable_aggregation,
+        enable_aggregation=enable_aggregation,
     )
 
 

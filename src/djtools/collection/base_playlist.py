@@ -22,9 +22,9 @@ class Playlist(ABC):
 
     def __init__(self, *args, **kwargs):
         "Deserializes a playlist from the native format of a DJ software."
-        self._aggregate = True
-        if kwargs.get("disable_aggregation"):
-            self._aggregate = False
+        self._aggregate = False
+        if kwargs.get("enable_aggregation"):
+            self._aggregate = True
 
 
     def __getitem__(self, index: int) -> Playlist:
@@ -80,7 +80,11 @@ class Playlist(ABC):
             bool: Whether or not this playlist should have or contribute to an
                 aggregation playlist.
         """
-        return self._aggregate and len(self) > 1
+        enough_content = len(self) > 0
+        if self.is_folder():
+            enough_content = len(self) > 1
+
+        return self._aggregate and enough_content
 
     @abstractmethod
     def get_name(self) -> str:
@@ -164,7 +168,7 @@ class Playlist(ABC):
         name: str,
         playlists: Optional[List[Playlist]] = None,
         tracks: Optional[Dict[str, Track]] = None,
-        disable_aggregation: Optional[bool] = None,
+        enable_aggregation: Optional[bool] = None,
     ) -> Playlist:
         """Creates a new Playlist.
 
@@ -172,7 +176,7 @@ class Playlist(ABC):
             name: The name of the Playlist to be created.
             playlists: A list of Playlists to add to this Playlist.
             tracks: A dict of Tracks to add to this Playlist.
-            disable_aggregation: Whether or not this playlist has or
+            enable_aggregation: Whether or not this playlist has or
                 contributes to an aggregation playlist.
 
         Raises:
