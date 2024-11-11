@@ -26,7 +26,6 @@ class Playlist(ABC):
         if kwargs.get("enable_aggregation"):
             self._aggregate = True
 
-
     def __getitem__(self, index: int) -> Playlist:
         """Gets a Playlist from this Playlist's playlists.
 

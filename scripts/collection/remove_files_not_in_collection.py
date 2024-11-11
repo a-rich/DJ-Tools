@@ -38,7 +38,8 @@ def main():
         for path in usb_path.rglob("DJ Music/**/*.*")
     }
     files_not_in_collection = {
-        path: path_obj for path, path_obj in files.items()
+        path: path_obj
+        for path, path_obj in files.items()
         if path not in tracks
     }
 

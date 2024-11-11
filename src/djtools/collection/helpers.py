@@ -265,7 +265,7 @@ def build_combiner_playlists(
     """
     if not isinstance(content, (PlaylistConfigContent, PlaylistName, str)):
         raise ValueError(f"Invalid input type {type(content)}: {content}")
-    
+
     # Folders can opt-in to having an aggregation playlist.
     enable_aggregation = None
 
