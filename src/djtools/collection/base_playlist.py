@@ -20,7 +20,7 @@ from djtools.collection.base_track import Track
 class Playlist(ABC):
     "Abstract base class for a playlist."
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         "Deserializes a playlist from the native format of a DJ software."
         self._aggregate = False
         if kwargs.get("enable_aggregation"):

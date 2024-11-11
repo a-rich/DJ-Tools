@@ -138,7 +138,7 @@ def build_tag_playlists(
     # Folders can opt-in to having an aggregation playlist.
     enable_aggregation = None
 
-    if isinstance(content, (PlaylistConfigContent, PlaylistName)):
+    if isinstance(content, PlaylistConfigContent):
         enable_aggregation = content.enable_aggregation
 
     # This is a folder so create playlists for those playlists within it.
@@ -274,7 +274,7 @@ def build_combiner_playlists(
         name = content.name or tag_content
     elif isinstance(content, str):
         tag_content = name = content
-    if isinstance(content, (PlaylistConfigContent, PlaylistName)):
+    if isinstance(content, PlaylistConfigContent):
         enable_aggregation = content.enable_aggregation
 
     # This is not a folder so a playlist with tracks must be created.

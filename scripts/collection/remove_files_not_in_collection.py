@@ -1,8 +1,14 @@
+"""Script that removes files from a USB if they're not present in a collection.
+"""
+
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
 from djtools.configs import build_config
 from djtools.collection.helpers import PLATFORM_REGISTRY
+
+
+# pylint: disable=missing-function-docstring
 
 
 def parse_args() -> Namespace:

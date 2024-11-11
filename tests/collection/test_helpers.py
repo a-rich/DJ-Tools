@@ -72,6 +72,44 @@ def test_platform_registry_structure():
         )
 
 
+def test_build_tag_playlists_minimum_tracks_config():
+    """Test the build_tag_playlists function."""
+    playlist_content = PlaylistConfigContent(
+        name="playlists",
+        playlists=["Tag"],
+    )
+    playlists = build_tag_playlists(
+        playlist_content,
+        {"Tag": {1: None}},
+        RekordboxPlaylist,
+        minimum_tracks=2,
+    )
+    assert playlists is None
+
+
+@mock.patch(
+    "djtools.collection.helpers.RekordboxTrack.get_genre_tags",
+    mock.Mock(return_value=["Tag"]),
+)
+def test_build_tag_playlists_pure_playlist_minimum_tracks_config(
+    rekordbox_collection,
+):
+    """Test the build_tag_playlists function."""
+    tracks = rekordbox_collection.get_tracks()
+    example_track = tracks[list(tracks)[0]]
+    playlist_content = PlaylistConfigContent(
+        name="playlists",
+        playlists=["Pure Tag"],
+    )
+    playlists = build_tag_playlists(
+        playlist_content,
+        {"Tag": {1: example_track}},
+        RekordboxPlaylist,
+        minimum_tracks=2,
+    )
+    assert playlists is None
+
+
 def test_build_tag_playlists_raises_exception_for_invalid_input():
     """Test the build_tag_playlists function."""
     with pytest.raises(
@@ -234,6 +272,21 @@ def test_build_tag_playlists_warnings(
     )
 
 
+def test_build_combiner_playlists_minimum_tracks_config():
+    """Test the build_combiner_playlists function."""
+    playlist_content = PlaylistConfigContent(
+        name="playlists",
+        playlists=["Tag | Tag"],
+    )
+    playlists = build_combiner_playlists(
+        playlist_content,
+        {"Tag": {1: None}},
+        RekordboxPlaylist,
+        minimum_tracks=2,
+    )
+    assert len(playlists) == 0
+
+
 def test_build_combiner_playlists_raises_exception_for_invalid_input():
     """Test the build_combiner_playlists function."""
     with pytest.raises(
@@ -371,6 +424,9 @@ def test_filter_tag_playlists(rekordbox_track):
         assert playlist.get_tracks()
 
 
+@mock.patch(
+    "djtools.collection.helpers.RekordboxPlaylist.aggregate", return_value=True
+)
 def test_aggregate_playlists(rekordbox_collection):
     """Test for the aggregate_playlists function."""
     # Create a playlist for each track in the collection (one track per
@@ -390,7 +446,7 @@ def test_aggregate_playlists(rekordbox_collection):
     num_playlists = len(playlist)
 
     # Aggregate the tracks into an "All Tracks" playlist.
-    aggregate_playlists(playlist, RekordboxPlaylist, top_level=False)
+    aggregate_playlists(playlist, RekordboxPlaylist)
 
     # aggregate_playlists will have added a new playlist.
     assert len(playlist) == num_playlists + 1

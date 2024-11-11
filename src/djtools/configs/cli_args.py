@@ -128,6 +128,18 @@ def get_arg_parser() -> ArgumentParser:
         help="Location to copy playlists' audio files to.",
     )
     collection_parser.add_argument(
+        "--minimum-combiner-playlist-tracks",
+        type=int,
+        default=None,
+        help="Minimum number of tracks for a combiner playlist to be valid.",
+    )
+    collection_parser.add_argument(
+        "--minimum-tag-playlist-tracks",
+        type=int,
+        default=None,
+        help="Minimum number of tracks for a tag playlist to be valid.",
+    )
+    collection_parser.add_argument(
         "--platform",
         type=str,
         choices=["rekordbox"],

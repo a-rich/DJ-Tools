@@ -126,7 +126,6 @@ class PlaylistName(BaseModel, extra="forbid"):
     "A class for configuring the names of playlists."
     tag_content: str
     name: Optional[str] = None
-    enable_aggregation: Optional[bool] = None
 
 
 class PlaylistConfigContent(BaseModel, extra="forbid"):

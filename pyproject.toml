@@ -104,7 +104,8 @@ disable = [
     "import-outside-toplevel",
     "logging-not-lazy",
     "no-name-in-module",
-    "too-many-positional-arguments"
+    "too-many-positional-arguments",
+    "too-many-return-statements"
 ]
 good-names = [
     "USER"

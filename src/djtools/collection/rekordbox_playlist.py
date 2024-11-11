@@ -107,6 +107,7 @@ class RekordboxPlaylist(Playlist):
                 key.startswith(f"_{type(self).__name__}")
                 or not key.startswith("_")
                 or key == "_parent"
+                or key == "_aggregate"
             )
         }
 
@@ -254,6 +255,7 @@ class RekordboxPlaylist(Playlist):
                 key.startswith(f"_{type(self).__name__}")
                 or not key.startswith("_")
                 or key == "_parent"
+                or key == "_aggregate"
             )
         }
 
