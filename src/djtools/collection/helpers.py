@@ -110,6 +110,7 @@ def build_tag_playlists(
     tags_tracks: Dict[str, Dict[str, Track]],
     playlist_class: Playlist,
     tag_set: Optional[Set] = None,
+    minimum_tracks: Optional[int] = None,
 ) -> Optional[Playlist]:
     """Recursively traverses a playlist config to generate playlists from tags.
 
@@ -120,6 +121,7 @@ def build_tag_playlists(
         tag_set: A set of tags seen while creating playlists. This is used to
             indicate which tags should be ignored when creating the
             "Unused Tags" playlists.
+        minimum_tracks: Required number of tracks to make a playlist.
 
     Raises:
         ValueError: The user's playlist config must not be malformed.
@@ -133,6 +135,12 @@ def build_tag_playlists(
     # Initialize the set of tags in case the caller didn't provide one.
     tag_set = tag_set if tag_set is not None else set()
 
+    # Folders can opt-in to having an aggregation playlist.
+    enable_aggregation = None
+
+    if isinstance(content, PlaylistConfigContent):
+        enable_aggregation = content.enable_aggregation
+
     # This is a folder so create playlists for those playlists within it.
     if isinstance(content, PlaylistConfigContent):
         # Update the set of tags seen so these are ignored in when creating the
@@ -143,7 +151,13 @@ def build_tag_playlists(
 
         # Create playlists for each playlist in this folder.
         playlists = [
-            build_tag_playlists(item, tags_tracks, playlist_class, tag_set)
+            build_tag_playlists(
+                item,
+                tags_tracks,
+                playlist_class,
+                tag_set,
+                minimum_tracks=minimum_tracks,
+            )
             for item in content.playlists
         ]
         playlists = [playlist for playlist in playlists if playlist]
@@ -154,7 +168,9 @@ def build_tag_playlists(
             return None
 
         return playlist_class.new_playlist(
-            name=content.name, playlists=playlists
+            name=content.name,
+            playlists=playlists,
+            enable_aggregation=enable_aggregation,
         )
 
     # This is not a folder so a playlist with tracks must be created.
@@ -200,7 +216,14 @@ def build_tag_playlists(
             )
             return None
 
-        return playlist_class.new_playlist(name=name, tracks=pure_tag_tracks)
+        if minimum_tracks and len(pure_tag_tracks) < minimum_tracks:
+            return None
+
+        return playlist_class.new_playlist(
+            name=name,
+            tracks=pure_tag_tracks,
+            enable_aggregation=enable_aggregation,
+        )
 
     # Get tracks with this tag and index it so that it's not added to the
     # "Unused Tags" playlists.
@@ -210,13 +233,21 @@ def build_tag_playlists(
         logger.warning(f'There are no tracks with the tag "{tag_content}"')
         return None
 
-    return playlist_class.new_playlist(name=name, tracks=tracks_with_tag)
+    if minimum_tracks and len(tracks_with_tag) < minimum_tracks:
+        return None
+
+    return playlist_class.new_playlist(
+        name=name,
+        tracks=tracks_with_tag,
+        enable_aggregation=enable_aggregation,
+    )
 
 
 def build_combiner_playlists(
     content: Union[PlaylistConfig, PlaylistName, str],
     tags_tracks: Dict[str, Dict[str, Track]],
     playlist_class: Playlist,
+    minimum_tracks: Optional[int] = None,
 ) -> Optional[Playlist]:
     """Recursively traverses a playlist config to generate playlists from tags.
 
@@ -224,6 +255,7 @@ def build_combiner_playlists(
         content: A component of a playlist config to create a playlist for.
         tags_tracks: Dict of tags to tracks.
         playlist_class: Playlist implementation class.
+        minimum_tracks: Required number of tracks to make a playlist.
 
     Raises:
         ValueError: The user's playlist config must not be malformed.
@@ -234,11 +266,16 @@ def build_combiner_playlists(
     if not isinstance(content, (PlaylistConfigContent, PlaylistName, str)):
         raise ValueError(f"Invalid input type {type(content)}: {content}")
 
+    # Folders can opt-in to having an aggregation playlist.
+    enable_aggregation = None
+
     if isinstance(content, PlaylistName):
         tag_content = content.tag_content
         name = content.name or tag_content
     elif isinstance(content, str):
         tag_content = name = content
+    if isinstance(content, PlaylistConfigContent):
+        enable_aggregation = content.enable_aggregation
 
     # This is not a folder so a playlist with tracks must be created.
     if isinstance(content, (PlaylistName, str)):
@@ -247,12 +284,23 @@ def build_combiner_playlists(
         except Exception as exc:
             logger.warning(f"Error parsing expression: {tag_content}\n{exc}")
             return None
-        return playlist_class.new_playlist(name=name, tracks=tracks)
+
+        if minimum_tracks and len(tracks) < minimum_tracks:
+            return None
+
+        return playlist_class.new_playlist(
+            name=name, tracks=tracks, enable_aggregation=enable_aggregation
+        )
 
     # This is a folder so create playlists for those playlists within it.
     playlists = []
     for item in content.playlists:
-        playlist = build_combiner_playlists(item, tags_tracks, playlist_class)
+        playlist = build_combiner_playlists(
+            item,
+            tags_tracks,
+            playlist_class,
+            minimum_tracks=minimum_tracks,
+        )
         if playlist:
             playlists.append(playlist)
         else:
@@ -264,7 +312,11 @@ def build_combiner_playlists(
             f'There were no playlists created from "{content.playlists}"'
         )
 
-    return playlist_class.new_playlist(name=content.name, playlists=playlists)
+    return playlist_class.new_playlist(
+        name=content.name,
+        playlists=playlists,
+        enable_aggregation=enable_aggregation,
+    )
 
 
 def filter_tag_playlists(
@@ -302,34 +354,40 @@ def filter_tag_playlists(
 
 
 def aggregate_playlists(
-    playlist: Playlist, playlist_class: Playlist, top_level: bool = True
+    playlist: Playlist,
+    playlist_class: Playlist,
+    minimum_tracks: Optional[int] = None,
 ) -> Dict[str, Track]:
     """Recursively aggregate tracks from folders into "All" playlists.
 
     Args:
         playlist: Playlist which may be a folder or not.
         playlist_class: Playlist implementation class.
-        top_level: Whether or not this is the original method call.
+        minimum_tracks: Required number of tracks to make a playlist.
 
     Returns:
         Dict of tracks.
     """
     # Get tracks from the playlist if it's not a folder.
     if not playlist.is_folder():
-        return playlist.get_tracks()
+        return playlist.get_tracks() if playlist.aggregate() else {}
 
     # Recursively get tracks from each playlist within this folder.
     aggregate_tracks = {
         track_id: track
         for p in playlist
         for track_id, track in aggregate_playlists(
-            p, playlist_class, top_level=False
+            p, playlist_class, minimum_tracks
         ).items()
     }
 
+    playlist_too_small = (
+        minimum_tracks and len(aggregate_tracks) < minimum_tracks
+    )
+
     # Create an "All" playlist in this folder if the folder contains more than
     # one playlist.
-    if len(playlist) > 1 and not top_level:
+    if playlist.aggregate() and not playlist_too_small:
         playlist.add_playlist(
             playlist_class.new_playlist(
                 name=f"All {playlist.get_name()}", tracks=aggregate_tracks

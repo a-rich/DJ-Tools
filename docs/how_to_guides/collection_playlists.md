@@ -41,7 +41,9 @@ Here's an example of overriding the name of a Hard Techno playlist to be "Techno
       name: Techno that is hard
 ```
 
-Every folder will create an implicit playlist called `All <folder name>` which recursively aggregates the tracks from all the playlists within that folder. For example, my `Techno` folder will have a playlist called `All Techno` which contains the union of tracks between `Hard Techno` and `Minimal Deep Tech`.
+Another config option that's not shown in the picture above is `enable_aggregation`.
+Every folder with this option set to `true` will create an implicit playlist called `All <folder name>` which aggregates the tracks from all the playlists within that folder.
+For example, my `Techno` folder will have a playlist called `All Techno` which contains the union of tracks between `Hard Techno` and `Minimal Deep Tech`.
 
 You may only have one tag for each playlist. If you're interested in creating playlists that combine multiple tags, check out the [Combiner](combiner_playlists.md) how-to guide.
 
@@ -54,6 +56,8 @@ In general, each `PlaylistFilter` calls a `is_filter_playlist` method which retu
 For each track in the playlist, the `PlaylistFilter` method `filter_track` is called with the track and returns `True` if the track should remain in the playlist.
 
 You may configure which, if any, `PlaylistFilters` you want applied using the `COLLECTION_PLAYLIST_FILTERS` option. Check the [references](../reference/collection/index.md) for the current set of implemented `PlaylistFilters`.
+
+Finally, you may configure the option `MINIMUM_TAG_PLAYLIST_TRACKS` to any positive integer in order to place a lower bound on the number of tracks that must exist in a tag playlist in order for the playlist to be created.
 
 Once you've finalized your playlist configuration, run the following command to build the playlists:
 

@@ -93,6 +93,10 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
     # Get the Playlist implementation to use for this collection.
     playlist_class = PLATFORM_REGISTRY[config.PLATFORM]["playlist"]
 
+    # Required number of tracks to make tag and combiner playlists.
+    minimum_tag_tracks = config.MINIMUM_TAG_PLAYLIST_TRACKS
+    minimum_combiner_tracks = config.MINIMUM_COMBINER_PLAYLIST_TRACKS
+
     # Create a dict of tracks keyed by their individual tags.
     tags_tracks = defaultdict(dict)
     for track_id, track in collection.get_tracks().items():
@@ -114,7 +118,11 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
         # that they are ignored when creating the "Other" playlists.
         seen_tags = set()
         tag_playlists = build_tag_playlists(
-            config.playlist_config.tags, tags_tracks, playlist_class, seen_tags
+            config.playlist_config.tags,
+            tags_tracks,
+            playlist_class,
+            seen_tags,
+            minimum_tracks=minimum_tag_tracks,
         )
 
         # The tag playlists must have their "parent" attribute set so that
@@ -129,7 +137,9 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
         # within each folder containing more than one playlist. These "all"
         # playlists aggregate the set of tracks contained within all the other
         # playlists within the same folder.
-        _ = aggregate_playlists(tag_playlists, playlist_class)
+        _ = aggregate_playlists(
+            tag_playlists, playlist_class, minimum_tag_tracks
+        )
 
         auto_playlists.extend(tag_playlists)
 
@@ -145,6 +155,7 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
                     ),
                     tags_tracks,
                     playlist_class,
+                    minimum_tracks=minimum_tag_tracks,
                 )
             )
         else:
@@ -160,6 +171,7 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
                         }
                     },
                     playlist_class,
+                    minimum_tracks=minimum_tag_tracks,
                 )
             )
 
@@ -176,7 +188,10 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
 
         # Evaluate the boolean logic of the combiner playlists.
         combiner_playlists = build_combiner_playlists(
-            config.playlist_config.combiner, tags_tracks, playlist_class
+            config.playlist_config.combiner,
+            tags_tracks,
+            playlist_class,
+            minimum_tracks=minimum_combiner_tracks,
         )
 
         # The tag playlists must have their "parent" attribute set so that
@@ -191,7 +206,9 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
         # within each folder containing more than one playlist. These "all"
         # playlists aggregate the set of tracks contained within all the other
         # playlists within the same folder.
-        _ = aggregate_playlists(combiner_playlists, playlist_class)
+        _ = aggregate_playlists(
+            combiner_playlists, playlist_class, minimum_combiner_tracks
+        )
 
         auto_playlists.extend(combiner_playlists)
 
@@ -212,3 +229,6 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
     auto_playlist.set_parent(collection.get_playlists())
     collection.add_playlist(auto_playlist)
     collection.serialize(path=path)
+
+    num_playlists = collection.get_playlists().get_number_of_playlists()
+    logger.info(f"{PLAYLIST_NAME} generated with {num_playlists} playlists")

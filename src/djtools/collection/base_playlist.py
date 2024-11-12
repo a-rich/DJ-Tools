@@ -20,9 +20,11 @@ from djtools.collection.base_track import Track
 class Playlist(ABC):
     "Abstract base class for a playlist."
 
-    @abstractmethod
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         "Deserializes a playlist from the native format of a DJ software."
+        self._aggregate = False
+        if kwargs.get("enable_aggregation"):
+            self._aggregate = True
 
     def __getitem__(self, index: int) -> Playlist:
         """Gets a Playlist from this Playlist's playlists.
@@ -70,6 +72,17 @@ class Playlist(ABC):
         else:
             self._playlists.append(playlist)
 
+    def aggregate(self) -> bool:
+        """whether to aggregate or not.
+
+        Returns:
+            bool: Whether or not this playlist has an aggregation playlist.
+        """
+        if not self.is_folder():
+            return True
+
+        return self._aggregate and len(self) > 1
+
     @abstractmethod
     def get_name(self) -> str:
         """Returns the name of this playlist.
@@ -77,6 +90,17 @@ class Playlist(ABC):
         Returns:
             The name of this playlist.
         """
+
+    def get_number_of_playlists(self) -> int:
+        """Returns the number of playlists within this playlist recursively.
+
+        Returns:
+            Number of playlists within this playlist.
+        """
+        if not self.is_folder():
+            return 1
+
+        return sum(playlist.get_number_of_playlists() for playlist in self)
 
     def get_parent(self) -> Optional[Playlist]:
         """Returns the folder this playlist is in.
@@ -141,6 +165,7 @@ class Playlist(ABC):
         name: str,
         playlists: Optional[List[Playlist]] = None,
         tracks: Optional[Dict[str, Track]] = None,
+        enable_aggregation: Optional[bool] = None,
     ) -> Playlist:
         """Creates a new Playlist.
 
@@ -148,6 +173,8 @@ class Playlist(ABC):
             name: The name of the Playlist to be created.
             playlists: A list of Playlists to add to this Playlist.
             tracks: A dict of Tracks to add to this Playlist.
+            enable_aggregation: Whether or not this playlist has an aggregation
+                playlist.
 
         Raises:
             RuntimeError: You must provide either a list of Playlists or a list
