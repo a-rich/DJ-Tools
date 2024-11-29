@@ -9,9 +9,8 @@ import logging
 from os.path import getmtime
 from pathlib import Path
 from subprocess import Popen
-from typing import List, Optional
+from typing import List, Optional, Type
 
-from djtools.configs.config import BaseConfig
 from djtools.sync.helpers import (
     parse_sync_command,
     rewrite_track_paths,
@@ -22,6 +21,7 @@ from djtools.utils.check_tracks import compare_tracks
 
 
 logger = logging.getLogger(__name__)
+BaseConfig = Type["BaseConfig"]
 
 
 def download_music(
@@ -37,8 +37,8 @@ def download_music(
         config: Configuration object.
         beatcloud_tracks: List of track artist - titles from S3.
     """
-    if config.DOWNLOAD_SPOTIFY_PLAYLIST:
-        user = config.DOWNLOAD_SPOTIFY_PLAYLIST.split("Uploads")[0].strip()
+    if config.sync.DOWNLOAD_SPOTIFY_PLAYLIST:
+        user = config.sync.DOWNLOAD_SPOTIFY_PLAYLIST.split("Uploads")[0].strip()
         beatcloud_tracks, beatcloud_matches = compare_tracks(
             config,
             beatcloud_tracks=beatcloud_tracks,
@@ -49,27 +49,27 @@ def download_music(
                 "the correct playlist name."
             )
             return beatcloud_tracks
-        config.DOWNLOAD_INCLUDE_DIRS = [
+        config.sync.DOWNLOAD_INCLUDE_DIRS = [
             (Path(user) / path.as_posix().split(f"{Path(user)}/")[-1])
             for path in beatcloud_matches
         ]
-        config.DOWNLOAD_EXCLUDE_DIRS = []
+        config.sync.DOWNLOAD_EXCLUDE_DIRS = []
 
     logger.info("Downloading track collection...")
-    dest = Path(config.USB_PATH) / "DJ Music"
+    dest = Path(config.sync.USB_PATH) / "DJ Music"
     glob_path = (Path("**") / "*.*").as_posix()
     old = {str(p) for p in dest.rglob(glob_path)}
-    logger.info(f"Found {len(old)} files at {config.USB_PATH}")
+    logger.info(f"Found {len(old)} files at {config.sync.USB_PATH}")
 
     dest.mkdir(parents=True, exist_ok=True)
     cmd = [
         "aws",
         "s3",
         "sync",
-        f"{config.BUCKET_URL}/dj/music/",
+        f"{config.sync.BUCKET_URL}/dj/music/",
         dest.as_posix(),
     ]
-    run_sync(parse_sync_command(cmd, config), config.BUCKET_URL)
+    run_sync(parse_sync_command(cmd, config), config.sync.BUCKET_URL)
 
     new = {str(p) for p in dest.rglob(glob_path)}
     difference = sorted(list(new.difference(old)), key=getmtime)
@@ -91,24 +91,24 @@ def download_collection(config: BaseConfig):
         config: Configuration object.
     """
     logger.info(
-        f"Downloading {config.IMPORT_USER}'s {config.PLATFORM} collection..."
+        f"Downloading {config.sync.IMPORT_USER}'s {config.sync.PLATFORM} collection..."
     )
-    collection_dir = config.COLLECTION_PATH.parent
+    collection_dir = config.sync.COLLECTION_PATH.parent
     src = (
-        f"{config.BUCKET_URL}/dj/collections/{config.IMPORT_USER}/"
-        f"{config.PLATFORM}_collection"
+        f"{config.sync.BUCKET_URL}/dj/collections/{config.sync.IMPORT_USER}/"
+        f"{config.collection.PLATFORM}_collection"
     )
     dst = (
         Path(collection_dir)
-        / f"{config.IMPORT_USER}_{config.COLLECTION_PATH.name}"
+        / f"{config.sync.IMPORT_USER}_{config.collection.COLLECTION_PATH.name}"
     )
     cmd = ["aws", "s3", "cp", src, dst.as_posix()]
-    if config.COLLECTION_PATH.is_dir():
+    if config.collection.COLLECTION_PATH.is_dir():
         cmd.append("--recursive")
     logger.info(" ".join(cmd))
     with Popen(cmd) as proc:
         proc.wait()
-    if config.USER != config.IMPORT_USER:
+    if config.sync.USER != config.sync.IMPORT_USER:
         rewrite_track_paths(config, dst)
 
 
@@ -123,7 +123,7 @@ def upload_music(config: BaseConfig):
         config: Configuration object.
     """
     hidden_files = set(
-        (Path(config.USB_PATH) / "DJ Music").rglob(
+        (Path(config.sync.USB_PATH) / "DJ Music").rglob(
             (Path("**") / ".*.*").as_posix()
         )
     )
@@ -134,19 +134,19 @@ def upload_music(config: BaseConfig):
             _file.unlink()
 
     logger.info("Uploading track collection...")
-    src = (Path(config.USB_PATH) / "DJ Music").as_posix()
-    cmd = ["aws", "s3", "sync", src, f"{config.BUCKET_URL}/dj/music/"]
+    src = (Path(config.sync.USB_PATH) / "DJ Music").as_posix()
+    cmd = ["aws", "s3", "sync", src, f"{config.sync.BUCKET_URL}/dj/music/"]
 
-    if config.DISCORD_URL and not config.DRYRUN:
+    if config.sync.DISCORD_URL and not config.sync.DRYRUN:
         webhook(
-            config.DISCORD_URL,
+            config.sync.DISCORD_URL,
             content=run_sync(
-                parse_sync_command(cmd, config, upload=True), config.BUCKET_URL
+                parse_sync_command(cmd, config, upload=True), config.sync.BUCKET_URL
             ),
         )
     else:
         run_sync(
-            parse_sync_command(cmd, config, upload=True), config.BUCKET_URL
+            parse_sync_command(cmd, config, upload=True), config.sync.BUCKET_URL
         )
 
 
@@ -156,13 +156,13 @@ def upload_collection(config: BaseConfig):
     Args:
         config: Configuration object.
     """
-    logger.info(f"Uploading {config.USER}'s {config.PLATFORM} collection...")
+    logger.info(f"Uploading {config.sync.USER}'s {config.collection.PLATFORM} collection...")
     dst = (
-        f"{config.BUCKET_URL}/dj/collections/{config.USER}/"
-        f"{config.PLATFORM}_collection"
+        f"{config.sync.BUCKET_URL}/dj/collections/{config.sync.USER}/"
+        f"{config.collection.PLATFORM}_collection"
     )
-    cmd = ["aws", "s3", "cp", config.COLLECTION_PATH.as_posix(), dst]
-    if config.COLLECTION_PATH.is_dir():
+    cmd = ["aws", "s3", "cp", config.collection.COLLECTION_PATH.as_posix(), dst]
+    if config.collection.COLLECTION_PATH.is_dir():
         cmd.append("--recursive")
     logger.info(" ".join(cmd))
     with Popen(cmd) as proc:

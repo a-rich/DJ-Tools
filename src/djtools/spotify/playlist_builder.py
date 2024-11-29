@@ -18,11 +18,11 @@ to the respective playlist if the Levenshtein similarity passes a threshold.
 import asyncio
 import logging
 from pathlib import Path
+from typing import Type
 
 import pyperclip
 import yaml
 
-from djtools.configs.config import BaseConfig
 from djtools.spotify.helpers import (
     filter_results,
     get_playlist_ids,
@@ -32,6 +32,9 @@ from djtools.spotify.helpers import (
     populate_playlist,
     write_playlist_ids,
 )
+
+
+BaseConfig = Type["BaseConfig"]
 
 
 # Silence PRAW, Spotify, and urllib3 loggers.
@@ -135,7 +138,7 @@ def spotify_playlist_from_upload(config: BaseConfig):
         except ValueError:
             logger.warning(f"{line.strip()} is not a valid file")
             continue
-        if config.ARTIST_FIRST:
+        if config.sync.ARTIST_FIRST:
             track, artist = artist, track
         files.append((track, artist))
     files = list(filter(lambda x: len(x) == 2, files))

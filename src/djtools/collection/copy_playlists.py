@@ -13,13 +13,16 @@ from collections import defaultdict
 from concurrent.futures import as_completed, ThreadPoolExecutor
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Type
 
 from tqdm import tqdm
 
-from djtools.collection.helpers import copy_file, PLATFORM_REGISTRY
-from djtools.configs.config import BaseConfig
+from djtools.collection.helpers import copy_file
+from djtools.collection.platform_registry import PLATFORM_REGISTRY
 from djtools.utils.helpers import make_path
+
+
+BaseConfig = Type["BaseConfig"]
 
 
 @make_path
@@ -37,19 +40,19 @@ def copy_playlists(config: BaseConfig, path: Optional[Path] = None):
             "COLLECTION_PATH".
     """
     # Load collection.
-    collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
-        path=config.COLLECTION_PATH
+    collection = PLATFORM_REGISTRY[config.collection.PLATFORM]["collection"](
+        path=config.collection.COLLECTION_PATH
     )
 
     # Create destination directory.
-    config.COPY_PLAYLISTS_DESTINATION.mkdir(parents=True, exist_ok=True)
+    config.collection.COPY_PLAYLISTS_DESTINATION.mkdir(parents=True, exist_ok=True)
 
     playlist_tracks = {}
     lineage = defaultdict(set)
     playlists = []
 
     # Get the playlists from the collection.
-    for playlist_name in config.COPY_PLAYLISTS:
+    for playlist_name in config.collection.COPY_PLAYLISTS:
         found_playlists = collection.get_playlists(playlist_name)
         if not found_playlists:
             raise LookupError(f"{playlist_name} not found")
@@ -83,7 +86,7 @@ def copy_playlists(config: BaseConfig, path: Optional[Path] = None):
     # Copy tracks to the destination and update their location.
     payload = zip(
         playlist_tracks.values(),
-        [config.COPY_PLAYLISTS_DESTINATION] * len(playlist_tracks),
+        [config.collection.COPY_PLAYLISTS_DESTINATION] * len(playlist_tracks),
     )
 
     with ThreadPoolExecutor(
@@ -100,8 +103,8 @@ def copy_playlists(config: BaseConfig, path: Optional[Path] = None):
     # the files are being copied to.
     if not path:
         path = (
-            config.COPY_PLAYLISTS_DESTINATION
-            / f"copied_playlists_collection{config.COLLECTION_PATH.suffix}"
+            config.collection.COPY_PLAYLISTS_DESTINATION
+            / f"copied_playlists_collection{config.collection.COLLECTION_PATH.suffix}"
         )
 
     # Serialize the new collection.

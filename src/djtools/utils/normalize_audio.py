@@ -2,16 +2,17 @@
 """
 
 import logging
+from typing import Type
 
 from pydub import AudioSegment, effects, utils
 
-from djtools.configs.config import BaseConfig
 from djtools.utils.helpers import get_local_tracks
 
 
 logger = logging.getLogger(__name__)
 pydub_logger = logging.getLogger("pydub.converter")
 pydub_logger.setLevel(logging.CRITICAL)
+BaseConfig = Type["BaseConfig"]
 
 
 def normalize(config: BaseConfig):
@@ -44,10 +45,10 @@ def normalize(config: BaseConfig):
             logger.error(f"Couldn't decode {track}: {exc}")
             continue
 
-        if abs(audio.max_dBFS + config.AUDIO_HEADROOM) > 0.001:
+        if abs(audio.max_dBFS + config.utils.AUDIO_HEADROOM) > 0.001:
             logger.info(
                 f"{track} has a max dB of {audio.max_dBFS}, normalizing to "
-                f"have a headroom of {config.AUDIO_HEADROOM}..."
+                f"have a headroom of {config.utils.AUDIO_HEADROOM}..."
             )
             try:
                 tags = utils.mediainfo(track).get("TAG", {})
@@ -57,11 +58,11 @@ def normalize(config: BaseConfig):
                     f'"ffmpeg" is installed: {exc}'
                 )
                 tags = {}
-            audio = effects.normalize(audio, headroom=config.AUDIO_HEADROOM)
+            audio = effects.normalize(audio, headroom=config.utils.AUDIO_HEADROOM)
             audio.export(
-                track.parent / f"{track.stem}.{config.AUDIO_FORMAT}",
+                track.parent / f"{track.stem}.{config.utils.AUDIO_FORMAT}",
                 tags=tags,
-                bitrate=f"{config.AUDIO_BITRATE}k",
-                format=config.AUDIO_FORMAT,
+                bitrate=f"{config.utils.AUDIO_BITRATE}k",
+                format=config.utils.AUDIO_FORMAT,
             )
             continue

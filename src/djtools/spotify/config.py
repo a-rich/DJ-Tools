@@ -9,8 +9,6 @@ from typing_extensions import Literal
 
 from pydantic import BaseModel, NonNegativeInt
 
-from djtools.configs.config import BaseConfig
-
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +22,7 @@ class SubredditConfig(BaseModel):
     type: Literal["controversial", "hot", "new", "rising", "top"] = "hot"
 
 
-class SpotifyConfig(BaseConfig):
+class SpotifyConfig(BaseModel):
     """Configuration object for the spotify package."""
 
     SPOTIFY_PLAYLIST_DEFAULT_LIMIT: NonNegativeInt = 50

@@ -9,15 +9,16 @@ import os
 from pathlib import Path
 from typing import List, Optional
 
-from djtools.configs.config import BaseConfig
+from pydantic import BaseModel
 
 
 logger = logging.getLogger(__name__)
 
 
-class SyncConfig(BaseConfig):
+class SyncConfig(BaseModel):
     """Configuration object for the sync package."""
 
+    ARTIST_FIRST: bool = False
     AWS_PROFILE: str = "default"
     AWS_USE_DATE_MODIFIED: bool = False
     BUCKET_URL: str = ""

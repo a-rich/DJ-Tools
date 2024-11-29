@@ -14,13 +14,11 @@ import yaml
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 from pydantic import BaseModel, PositiveInt, ValidationError
 
-from djtools.configs.config import BaseConfig
-
 
 logger = logging.getLogger(__name__)
 
 
-class CollectionConfig(BaseConfig):
+class CollectionConfig(BaseModel):
     """Configuration object for the collection package."""
 
     COLLECTION_PATH: Optional[Path] = None

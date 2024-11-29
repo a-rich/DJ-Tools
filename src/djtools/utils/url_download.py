@@ -5,16 +5,17 @@ files by the youtube-dl package.
 """
 
 import logging
-from pathlib import Path
 import re
+from pathlib import Path
+from typing import Type
 
 import youtube_dl as ytdl
 
-from djtools.configs.config import BaseConfig
 from djtools.utils.helpers import make_path
 
 
 logger = logging.getLogger(__name__)
+BaseConfig = Type["BaseConfig"]
 
 
 @make_path
@@ -41,23 +42,23 @@ def url_download(config: BaseConfig):
     Args:
         config: Configuration object.
     """
-    dl_loc = config.AUDIO_DESTINATION or Path(".")
+    dl_loc = config.utils.AUDIO_DESTINATION or Path(".")
     dl_loc.mkdir(parents=True, exist_ok=True)
 
     ydl_opts = {
         "postprocessors": [
             {
                 "key": "FFmpegExtractAudio",
-                "preferredcodec": config.AUDIO_FORMAT,
-                "preferredquality": config.AUDIO_BITRATE,
+                "preferredcodec": config.utils.AUDIO_FORMAT,
+                "preferredquality": config.utils.AUDIO_BITRATE,
             }
         ],
         "outtmpl": (dl_loc / "%(title)s.tmp").as_posix(),
     }
 
     with ytdl.YoutubeDL(ydl_opts) as ydl:
-        logger.info(f"Downloading {config.URL_DOWNLOAD} to {dl_loc}")
-        ydl.download([config.URL_DOWNLOAD])
+        logger.info(f"Downloading {config.utils.URL_DOWNLOAD} to {dl_loc}")
+        ydl.download([config.utils.URL_DOWNLOAD])
 
     for _file in dl_loc.iterdir():
         (dl_loc / _file).rename(dl_loc / fix_up(_file))

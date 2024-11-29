@@ -2,7 +2,7 @@
 from collections import defaultdict
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Type
 
 from djtools.collection.config import PlaylistConfig, PlaylistConfigContent
 from djtools.collection.helpers import (
@@ -11,16 +11,16 @@ from djtools.collection.helpers import (
     build_combiner_playlists,
     build_tag_playlists,
     filter_tag_playlists,
-    PLATFORM_REGISTRY,
     print_playlists_tag_statistics,
 )
+from djtools.collection.platform_registry import PLATFORM_REGISTRY
 from djtools.collection import playlist_filters
-from djtools.configs.config import BaseConfig
 from djtools.utils.helpers import make_path
 
 
 logger = logging.getLogger(__name__)
 PLAYLIST_NAME = "PLAYLIST_BUILDER"
+BaseConfig = Type["BaseConfig"]
 
 
 @make_path
@@ -76,26 +76,26 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
         config: Configuration object.
         path: Path to write the new collection to.
     """
-    config.playlist_config = PlaylistConfig(**config.playlist_config or {})
+    config.collection.playlist_config = PlaylistConfig(**config.collection.playlist_config or {})
 
     # Check if the playlist config is populated before continuing.
-    if not (config.playlist_config.tags or config.playlist_config.combiner):
+    if not (config.collection.playlist_config.tags or config.collection.playlist_config.combiner):
         logger.warning(
             "Not building playlists because the playlist config is empty."
         )
         return
 
     # Load the collection.
-    collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
-        path=config.COLLECTION_PATH
+    collection = PLATFORM_REGISTRY[config.collection.PLATFORM]["collection"](
+        path=config.collection.COLLECTION_PATH
     )
 
     # Get the Playlist implementation to use for this collection.
-    playlist_class = PLATFORM_REGISTRY[config.PLATFORM]["playlist"]
+    playlist_class = PLATFORM_REGISTRY[config.collection.PLATFORM]["playlist"]
 
     # Required number of tracks to make tag and combiner playlists.
-    minimum_tag_tracks = config.MINIMUM_TAG_PLAYLIST_TRACKS
-    minimum_combiner_tracks = config.MINIMUM_COMBINER_PLAYLIST_TRACKS
+    minimum_tag_tracks = config.collection.MINIMUM_TAG_PLAYLIST_TRACKS
+    minimum_combiner_tracks = config.collection.MINIMUM_COMBINER_PLAYLIST_TRACKS
 
     # Create a dict of tracks keyed by their individual tags.
     tags_tracks = defaultdict(dict)
@@ -109,16 +109,16 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
     # List of PlaylistFilter implementations to run against built playlists.
     filters = [
         getattr(playlist_filters, playlist_filter)()
-        for playlist_filter in config.COLLECTION_PLAYLIST_FILTERS
+        for playlist_filter in config.collection.COLLECTION_PLAYLIST_FILTERS
     ]
 
     # Create playlists for the "tags" portion of the playlist config.
-    if config.playlist_config.tags:
+    if config.collection.playlist_config.tags:
         # A set of tags seen is maintained while creating the tags playlists so
         # that they are ignored when creating the "Other" playlists.
         seen_tags = set()
         tag_playlists = build_tag_playlists(
-            config.playlist_config.tags,
+            config.collection.playlist_config.tags,
             tags_tracks,
             playlist_class,
             seen_tags,
@@ -147,7 +147,7 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
         # and create either an "Other" folder of playlists or simply an "Other"
         # playlist.
         other_tags = sorted(set(tags_tracks).difference(seen_tags))
-        if config.COLLECTION_PLAYLISTS_REMAINDER == "folder":
+        if config.collection.COLLECTION_PLAYLISTS_REMAINDER == "folder":
             auto_playlists.append(
                 build_tag_playlists(
                     PlaylistConfigContent(
@@ -176,11 +176,11 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
             )
 
     # Create playlists for the "combiner" portion of the playlist config.
-    if config.playlist_config.combiner:
+    if config.collection.playlist_config.combiner:
         # Parse selectors from the combiner playlist names and update the
         # tags_tracks mapping.
         add_selectors_to_tags(
-            config.playlist_config.combiner,
+            config.collection.playlist_config.combiner,
             tags_tracks,
             collection,
             auto_playlists,
@@ -188,7 +188,7 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
 
         # Evaluate the boolean logic of the combiner playlists.
         combiner_playlists = build_combiner_playlists(
-            config.playlist_config.combiner,
+            config.collection.playlist_config.combiner,
             tags_tracks,
             playlist_class,
             minimum_tracks=minimum_combiner_tracks,

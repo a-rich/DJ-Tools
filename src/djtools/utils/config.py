@@ -10,19 +10,18 @@ from typing import Dict, List, Optional
 from typing_extensions import Literal, Union
 
 from pydantic import (
+    BaseModel,
     field_validator,
     NonNegativeFloat,
     NonNegativeInt,
     root_validator,
 )
 
-from djtools.configs.config import BaseConfig
-
 
 logger = logging.getLogger(__name__)
 
 
-class UtilsConfig(BaseConfig):
+class UtilsConfig(BaseModel):
     """Configuration object for the utils package."""
 
     AUDIO_BITRATE: str = "320"

@@ -7,7 +7,12 @@ import inspect
 import logging
 from typing_extensions import Literal
 
-from pydantic import BaseModel, NonNegativeInt
+from pydantic import BaseModel, Field, NonNegativeInt
+
+from djtools.collection.config import CollectionConfig
+from djtools.spotify.config import SpotifyConfig
+from djtools.sync.config import SyncConfig
+from djtools.utils.config import UtilsConfig
 
 
 logger = logging.getLogger(__name__)
@@ -16,10 +21,13 @@ logger = logging.getLogger(__name__)
 class BaseConfig(BaseModel, extra="allow"):
     """Base configuration object used across the whole library."""
 
-    ARTIST_FIRST: bool = False
+    collection: CollectionConfig = Field(default_factory=CollectionConfig)
     LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = (
         "INFO"
     )
+    spotify: SpotifyConfig = Field(default_factory=SpotifyConfig)
+    sync: SyncConfig = Field(default_factory=SyncConfig)
+    utils: UtilsConfig = Field(default_factory=UtilsConfig)
     VERBOSITY: NonNegativeInt = 0
 
     def __init__(self, *args, **kwargs):

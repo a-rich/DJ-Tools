@@ -21,9 +21,6 @@ from djtools.collection.config import (
     PlaylistName,
 )
 from djtools.collection.playlist_filters import PlaylistFilter
-from djtools.collection.rekordbox_collection import RekordboxCollection
-from djtools.collection.rekordbox_playlist import RekordboxPlaylist
-from djtools.collection.rekordbox_track import RekordboxTrack
 from djtools.utils.helpers import make_path
 
 
@@ -69,8 +66,6 @@ def copy_file(track: Track, destination: Path):
 
 # #############################################################################
 # This section includes helpers for the playlist_builder module.
-#   - PLATFORM_REGISTRY: used to determine which abstraction implementations to
-#       use e.g. "rekordbox"
 #   - build_tag_playlists: builds collection playlists using "tags" component
 #       of the PlaylistConfig
 #   - filter_tag_playlists: applies PlaylistFilter implementations to built tag
@@ -91,18 +86,6 @@ def copy_file(track: Track, destination: Path):
 #   - scale_data: scales tag frequencies to normalize histogram height
 #   - print_data: formats the string representing ASCII histograms
 # #############################################################################
-
-
-# As support for various platforms (Serato, Denon, Traktor, etc.) is added, the
-# platform name must be registered with references to their Collection,
-# Playlist, and Track implementations.
-PLATFORM_REGISTRY = {
-    "rekordbox": {
-        "collection": RekordboxCollection,
-        "playlist": RekordboxPlaylist,
-        "track": RekordboxTrack,
-    },
-}
 
 
 def build_tag_playlists(

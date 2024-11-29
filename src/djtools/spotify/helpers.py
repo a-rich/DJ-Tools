@@ -5,7 +5,9 @@ import logging
 from operator import itemgetter
 from pathlib import Path
 import sys
-from typing import Any, AsyncGenerator, Dict, List, Optional, Set, Tuple, Union
+from typing import (
+    Any, AsyncGenerator, Dict, List, Optional, Set, Tuple, Type, Union
+)
 
 import asyncpraw as praw
 from fuzzywuzzy import fuzz
@@ -14,10 +16,9 @@ from spotipy.oauth2 import SpotifyOAuth
 from tqdm import tqdm
 import yaml
 
-from djtools.configs.config import BaseConfig
-
 
 logger = logging.getLogger(__name__)
+BaseConfig = Type["BaseConfig"]
 
 
 def filter_results(
@@ -91,9 +92,9 @@ def get_reddit_client(config: BaseConfig) -> praw.Reddit:
         Reddit API client.
     """
     reddit = praw.Reddit(
-        client_id=config.REDDIT_CLIENT_ID,
-        client_secret=config.REDDIT_CLIENT_SECRET,
-        user_agent=config.REDDIT_USER_AGENT,
+        client_id=config.spotify.REDDIT_CLIENT_ID,
+        client_secret=config.spotify.REDDIT_CLIENT_SECRET,
+        user_agent=config.spotify.REDDIT_USER_AGENT,
         timeout=30,
     )
 
@@ -111,9 +112,9 @@ def get_spotify_client(config: BaseConfig) -> spotipy.Spotify:
     """
     spotify = spotipy.Spotify(
         auth_manager=SpotifyOAuth(
-            client_id=config.SPOTIFY_CLIENT_ID,
-            client_secret=config.SPOTIFY_CLIENT_SECRET,
-            redirect_uri=config.SPOTIFY_REDIRECT_URI,
+            client_id=config.spotify.SPOTIFY_CLIENT_ID,
+            client_secret=config.spotify.SPOTIFY_CLIENT_SECRET,
+            redirect_uri=config.spotify.SPOTIFY_REDIRECT_URI,
             scope="playlist-modify-public",
             requests_timeout=30,
             cache_handler=spotipy.CacheFileHandler(
@@ -149,7 +150,7 @@ async def get_subreddit_posts(
     """
     sub = await reddit.subreddit(subreddit["name"])
     func = getattr(sub, subreddit["type"])
-    kwargs = {"limit": config.SPOTIFY_PLAYLIST_POST_LIMIT}
+    kwargs = {"limit": config.spotify.SPOTIFY_PLAYLIST_POST_LIMIT}
     if subreddit["type"] == "top":
         kwargs["time_filter"] = subreddit["period"]
     subs = [
@@ -176,7 +177,7 @@ async def get_subreddit_posts(
         payload = zip(
             submissions,
             [spotify] * len(submissions),
-            [config.SPOTIFY_PLAYLIST_FUZZ_RATIO] * len(submissions),
+            [config.spotify.SPOTIFY_PLAYLIST_FUZZ_RATIO] * len(submissions),
         )
 
         with ThreadPoolExecutor(max_workers=8) as executor:

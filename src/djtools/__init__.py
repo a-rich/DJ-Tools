@@ -78,14 +78,15 @@ def main():
     # Run "collection", "spotify", "sync", and "utils" package operations if
     # any of the flags to do so are present in the config.
     beatcloud_cache = []
-    for package in [
-        COLLECTION_OPERATIONS,
-        SPOTIFY_OPERATIONS,
-        UTILS_OPERATIONS,
-        SYNC_OPERATIONS,
+    for package, package_ops in [
+        ("collection", COLLECTION_OPERATIONS),
+        ("spotify", SPOTIFY_OPERATIONS),
+        ("utils", UTILS_OPERATIONS),
+        ("sync", SYNC_OPERATIONS),
     ]:
-        for operation, func in package.items():
-            if not getattr(config, operation):
+        for operation, func in package_ops.items():
+            sub_config = getattr(config, package)
+            if not getattr(sub_config, operation):
                 continue
             logger.info(f"{operation}")
             if operation in ["CHECK_TRACKS", "DOWNLOAD_MUSIC"]:

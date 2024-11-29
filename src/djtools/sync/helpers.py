@@ -9,16 +9,16 @@ from itertools import groupby
 import logging
 from pathlib import Path
 from subprocess import Popen, PIPE, CalledProcessError
-from typing import Optional
+from typing import Optional, Type
 
 import requests
 
-from djtools.collection.helpers import PLATFORM_REGISTRY
-from djtools.configs.config import BaseConfig
+from djtools.collection.platform_registry import PLATFORM_REGISTRY
 from djtools.utils.helpers import make_path
 
 
 logger = logging.getLogger(__name__)
+BaseConfig = Type["BaseConfig"]
 
 
 def parse_sync_command(
@@ -42,8 +42,8 @@ def parse_sync_command(
     Returns:
         Fully constructed "aws s3 sync" command.
     """
-    if (upload and config.UPLOAD_INCLUDE_DIRS) or (
-        not upload and config.DOWNLOAD_INCLUDE_DIRS
+    if (upload and config.sync.UPLOAD_INCLUDE_DIRS) or (
+        not upload and config.sync.DOWNLOAD_INCLUDE_DIRS
     ):
         _cmd.extend(["--exclude", "*"])
         directories = map(
@@ -58,8 +58,8 @@ def parse_sync_command(
             else:
                 path = _dir.parent / path.with_suffix(ext)
             _cmd.extend(["--include", path.as_posix()])
-    if (upload and config.UPLOAD_EXCLUDE_DIRS) or (
-        not upload and config.DOWNLOAD_EXCLUDE_DIRS
+    if (upload and config.sync.UPLOAD_EXCLUDE_DIRS) or (
+        not upload and config.sync.DOWNLOAD_EXCLUDE_DIRS
     ):
         _cmd.extend(["--include", "*"])
         directories = map(
@@ -74,9 +74,9 @@ def parse_sync_command(
             else:
                 path = _dir.parent / path.with_suffix(ext)
             _cmd.extend(["--exclude", path.as_posix()])
-    if not config.AWS_USE_DATE_MODIFIED:
+    if not config.sync.AWS_USE_DATE_MODIFIED:
         _cmd.append("--size-only")
-    if config.DRYRUN:
+    if config.sync.DRYRUN:
         _cmd.append("--dryrun")
     logger.info(" ".join(_cmd))
 
@@ -95,7 +95,7 @@ def rewrite_track_paths(config: BaseConfig, other_user_collection: Path):
         other_user_collection: Path to another user's collection.
     """
     music_path = Path("DJ Music")
-    collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
+    collection = PLATFORM_REGISTRY[config.collection.PLATFORM]["collection"](
         path=other_user_collection
     )
     for track in collection.get_tracks().values():
@@ -103,7 +103,7 @@ def rewrite_track_paths(config: BaseConfig, other_user_collection: Path):
         common_path = (
             music_path / loc.split(str(music_path) + "/", maxsplit=-1)[-1]
         )
-        track.set_location(config.USB_PATH / common_path)
+        track.set_location(config.sync.USB_PATH / common_path)
     collection.serialize(path=other_user_collection)
 
 
@@ -177,14 +177,14 @@ def upload_log(config: BaseConfig, log_file: Path):
         config: Configuration object.
         log_file: Path to log file.
     """
-    if not config.AWS_PROFILE:
+    if not config.sync.AWS_PROFILE:
         logger.warning(
             "Logs cannot be backed up without specifying the config option "
             "AWS_PROFILE"
         )
         return
 
-    dst = f"{config.BUCKET_URL}/dj/logs/{config.USER}/{log_file.name}"
+    dst = f"{config.sync.BUCKET_URL}/dj/logs/{config.sync.USER}/{log_file.name}"
     cmd = ["aws", "s3", "cp", log_file.as_posix(), dst]
     logger.info(" ".join(cmd))
     with Popen(cmd) as proc:
