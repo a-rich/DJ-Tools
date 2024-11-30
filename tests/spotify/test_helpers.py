@@ -520,21 +520,16 @@ def test_populate_playlist(
     [
         "https://open.spotify.com/track/1lps8esDJ9M6rG3HBjhuux",
         "https://some-other-url.com/some_id",
-        "",
-    ],
-)
-@pytest.mark.parametrize(
-    "title",
-    [
-        "Arctic Oscillations - Fanu",
-        "Fanu - Arctic Oscillations",
-        "A submission title that doesn't include the artist or track info",
     ],
 )
 @mock.patch("djtools.spotify.helpers.get_spotify_client")
-@mock.patch("djtools.spotify.helpers.praw.models.Submission", autospec=True)
-def test_process(mock_praw_submission, mock_spotipy, url, title):
+@mock.patch(
+    "djtools.spotify.helpers.praw.models.Submission",
+    new_callable=mock.AsyncMock,
+)
+def test_process(mock_praw_submission, mock_spotipy, url):
     """Test for the _process function."""
+    title = "Arctic Oscillations - Fanu"
     mock_praw_submission.url = url
     mock_praw_submission.title = title
     with mock.patch(

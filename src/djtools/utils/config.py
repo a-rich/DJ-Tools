@@ -6,13 +6,13 @@ config.yaml
 import logging
 import os
 from pathlib import Path
-from typing import Dict, List, Literal, Optional, Union
+from typing import List, Literal, Optional, Union
 
 from pydantic import (
     field_validator,
+    model_validator,
     NonNegativeFloat,
     NonNegativeInt,
-    root_validator,
 )
 
 from djtools.configs.config_formatter import BaseConfigFormatter
@@ -45,7 +45,7 @@ class UtilsConfig(BaseConfigFormatter):
         """Constructor.
 
         Raises:
-            ValueError: aws_profile must be set for check_tracks.
+            RuntimeError: aws_profile must be set for check_tracks.
         """
 
         super().__init__(*args, **kwargs)
@@ -92,22 +92,22 @@ class UtilsConfig(BaseConfigFormatter):
 
         return str(value)
 
-    @root_validator(skip_on_failure=True)
+    @model_validator(mode="after")
     @classmethod
-    def format_validation(cls, values: Dict) -> str:
+    def format_validation(cls, model: "UtilsConfig") -> "UtilsConfig":
         """Logs a warning message to install FFmpeg if audio_format isn't wav.
 
         Args:
-            values: All model fields.
+            model: The validated model instance.
 
         Returns:
-            Dict of all model fields.
+            The validated model instance.
         """
-        if values["audio_format"] != "wav" and (
-            values["normalize_audio"] or values["process_recording"]
+        if model.audio_format != "wav" and (
+            model.normalize_audio or model.process_recording
         ):
             logger.warning(
                 "You must install FFmpeg in order to use non-wav file formats."
             )
 
-        return values
+        return model
