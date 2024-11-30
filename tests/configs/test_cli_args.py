@@ -42,16 +42,17 @@ def test_get_arg_parser_arg_for_every_field(config):
     }
     config_set = set()
     for field_name, field_info in config.__fields__.items():
-        if (
-            isinstance(field_info.annotation, type) and
-            issubclass(field_info.annotation, BaseModel)
+        if isinstance(field_info.annotation, type) and issubclass(
+            field_info.annotation, BaseModel
         ):
             sub_model = getattr(config, field_name)
-            config_set.update([field_name for field_name in sub_model.__fields__])
+            config_set.update(
+                [field_name for field_name in sub_model.__fields__]
+            )
             continue
 
         config_set.add(field_name)
-        
+
     # Test that the only CLI exclusive args are linking configs and displaying
     # the version.
     cli_only = args_set.difference(config_set)

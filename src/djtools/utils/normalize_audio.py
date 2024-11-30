@@ -45,10 +45,10 @@ def normalize(config: BaseConfig):
             logger.error(f"Couldn't decode {track}: {exc}")
             continue
 
-        if abs(audio.max_dBFS + config.utils.AUDIO_HEADROOM) > 0.001:
+        if abs(audio.max_dBFS + config.utils.audio_headroom) > 0.001:
             logger.info(
                 f"{track} has a max dB of {audio.max_dBFS}, normalizing to "
-                f"have a headroom of {config.utils.AUDIO_HEADROOM}..."
+                f"have a headroom of {config.utils.audio_headroom}..."
             )
             try:
                 tags = utils.mediainfo(track).get("TAG", {})
@@ -59,12 +59,12 @@ def normalize(config: BaseConfig):
                 )
                 tags = {}
             audio = effects.normalize(
-                audio, headroom=config.utils.AUDIO_HEADROOM
+                audio, headroom=config.utils.audio_headroom
             )
             audio.export(
-                track.parent / f"{track.stem}.{config.utils.AUDIO_FORMAT}",
+                track.parent / f"{track.stem}.{config.utils.audio_format}",
                 tags=tags,
-                bitrate=f"{config.utils.AUDIO_BITRATE}k",
-                format=config.utils.AUDIO_FORMAT,
+                bitrate=f"{config.utils.audio_bitrate}k",
+                format=config.utils.audio_format,
             )
             continue

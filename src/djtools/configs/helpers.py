@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 import yaml
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from djtools.configs.cli_args import get_arg_parser
 from djtools.configs.config import BaseConfig
@@ -57,10 +57,6 @@ def build_config(
         with open(config_file, mode="r", encoding="utf-8") as _file:
             config_data = yaml.load(_file, Loader=yaml.FullLoader) or {}
         config = BaseConfig(**config_data)
-    except ValidationError as exc:
-        msg = f"Failed to load config file {config_file}: {exc}"
-        logger.critical(msg)
-        raise InvalidConfigYaml(msg) from exc
     except Exception as exc:
         msg = f"Error reading config file {config_file}: {exc}"
         logger.critical(msg)
@@ -142,9 +138,8 @@ def _update_config_with_cli_args(
 
     for key, value in cli_args.items():
         for field_name, field_info in config.__fields__.items():
-            if (
-                isinstance(field_info.annotation, type) and
-                issubclass(field_info.annotation, BaseModel)
+            if isinstance(field_info.annotation, type) and issubclass(
+                field_info.annotation, BaseModel
             ):
                 sub_model = getattr(config, field_name)
 

@@ -42,23 +42,23 @@ def url_download(config: BaseConfig):
     Args:
         config: Configuration object.
     """
-    dl_loc = config.utils.AUDIO_DESTINATION or Path(".")
+    dl_loc = config.utils.audio_destination or Path(".")
     dl_loc.mkdir(parents=True, exist_ok=True)
 
     ydl_opts = {
         "postprocessors": [
             {
                 "key": "FFmpegExtractAudio",
-                "preferredcodec": config.utils.AUDIO_FORMAT,
-                "preferredquality": config.utils.AUDIO_BITRATE,
+                "preferredcodec": config.utils.audio_format,
+                "preferredquality": config.utils.audio_bitrate,
             }
         ],
         "outtmpl": (dl_loc / "%(title)s.tmp").as_posix(),
     }
 
     with ytdl.YoutubeDL(ydl_opts) as ydl:
-        logger.info(f"Downloading {config.utils.URL_DOWNLOAD} to {dl_loc}")
-        ydl.download([config.utils.URL_DOWNLOAD])
+        logger.info(f"Downloading {config.utils.url_download} to {dl_loc}")
+        ydl.download([config.utils.url_download])
 
     for _file in dl_loc.iterdir():
         (dl_loc / _file).rename(dl_loc / fix_up(_file))

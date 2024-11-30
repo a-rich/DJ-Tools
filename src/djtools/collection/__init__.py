@@ -31,9 +31,9 @@ from djtools.collection.shuffle_playlists import shuffle_playlists
 
 
 COLLECTION_OPERATIONS = {
-    "COLLECTION_PLAYLISTS": collection_playlists,
-    "COPY_PLAYLISTS": copy_playlists,
-    "SHUFFLE_PLAYLISTS": shuffle_playlists,
+    "collection_playlists": collection_playlists,
+    "copy_playlists": copy_playlists,
+    "shuffle_playlists": shuffle_playlists,
 }
 
 

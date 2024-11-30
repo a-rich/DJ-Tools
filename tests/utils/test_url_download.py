@@ -36,15 +36,17 @@ def test_fix_up(test_assets):
 def test_url_download(tmpdir, config):
     """Test for the url_download function."""
     tmpdir = Path(tmpdir)
-    config.url_download = (
+    config.utils.url_download = (
         "https://soundcloud.com/aweeeezy_music/sets/test-download"
     )
-    config.audio_destination = tmpdir / "new_dir"
-    assert not config.audio_destination.exists()
+    config.utils.audio_destination = tmpdir / "new_dir"
+    assert not config.utils.audio_destination.exists()
 
     def dummy_func():
         with open(
-            config.audio_destination / "file.mp3", mode="w", encoding="utf-8"
+            config.utils.audio_destination / "file.mp3",
+            mode="w",
+            encoding="utf-8",
         ) as _file:
             _file.write("")
 
@@ -55,5 +57,5 @@ def test_url_download(tmpdir, config):
         context.download.side_effect = lambda *args, **kwargs: dummy_func()
         url_download(config)
 
-    assert config.audio_destination.exists()
-    assert len(list(config.audio_destination.iterdir())) == 1
+    assert config.utils.audio_destination.exists()
+    assert len(list(config.utils.audio_destination.iterdir())) == 1

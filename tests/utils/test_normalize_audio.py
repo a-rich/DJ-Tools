@@ -10,7 +10,7 @@ from djtools.utils.normalize_audio import normalize
 
 def test_normalize_handles_no_local_tracks(config):
     """Test for the normalize function."""
-    config.local_dirs = []
+    config.utils.local_dirs = []
     with pytest.raises(
         RuntimeError,
         match=(
@@ -27,7 +27,7 @@ def test_normalize_handles_decode_error(config, tmpdir, caplog):
     tmpdir = Path(tmpdir)
     filename = tmpdir / "bad_audio_file.txt"
     filename.write_text("something")
-    config.local_dirs = [tmpdir]
+    config.utils.local_dirs = [tmpdir]
     normalize(config)
     assert caplog.records[0].message.startswith(f"Couldn't decode {filename}:")
 
@@ -39,7 +39,7 @@ def test_normalize(
     mock_normalize, target_headroom, audio_file, config, input_tmpdir
 ):
     """Test for the normalize function."""
-    config.audio_headroom = target_headroom
+    config.utils.audio_headroom = target_headroom
     audio, _ = audio_file
     file_path = Path(input_tmpdir) / "file.wav"
     with (
@@ -73,7 +73,7 @@ def test_normalize_handles_missing_ffmpeg(
 ):
     """Test for the normalize function."""
     caplog.set_level("WARNING")
-    config.audio_headroom = 0.0
+    config.utils.audio_headroom = 0.0
     audio, _ = audio_file
     with (
         mock.patch(

@@ -21,8 +21,8 @@ def test_collection_playlists_makes_unused_tags_playlists(
     playlist_config,
 ):
     """Test for the collection_playlists function."""
-    config.collection_path = rekordbox_xml
-    config.collection_playlists_remainder = remainder_type
+    config.collection.collection_path = rekordbox_xml
+    config.collection.collection_playlists_remainder = remainder_type
     new_path = rekordbox_xml.parent / "test_collection"
 
     tags = {
@@ -35,7 +35,7 @@ def test_collection_playlists_makes_unused_tags_playlists(
 
     del playlist_config["combiner"]
     playlist_config["tags"]["playlists"] = [some_tag]
-    config.playlist_config = playlist_config
+    config.collection.playlist_config = playlist_config
 
     collection_playlists(config, path=new_path)
 
@@ -46,7 +46,7 @@ def test_collection_playlists_makes_unused_tags_playlists(
     unused_tags_playlists = collection.get_playlists("Unused Tags")[0]
 
     if remainder_type == "folder":
-        # If COLLECTION_PLAYLISTS_REMAINDER is set to "folder", then
+        # If collection_playlists_remainder is set to "folder", then
         # "Unused Tags" will be a folder containing one playlist for each
         # unused tag.
         assert unused_tags_playlists.is_folder()
@@ -69,7 +69,7 @@ def test_collection_playlists_makes_unused_tags_playlists(
                 for track in playlist.get_tracks().values()
             )
     else:
-        # If COLLECTION_PLAYLISTS_REMAINDER is set to "playlist", then
+        # If collection_playlists_remainder is set to "playlist", then
         # "Unused Tags" will be a playlist containing all the tracks having at
         # least one of the unused tags.
         assert not unused_tags_playlists.is_folder()
@@ -98,9 +98,9 @@ def test_collection_playlists_prints_playlist_tag_statistics(
     playlist_config,
 ):
     """Test for the collection_playlists function."""
-    config.collection_path = rekordbox_xml
+    config.collection.collection_path = rekordbox_xml
     config.verbosity = 1
-    config.playlist_config = playlist_config
+    config.collection.playlist_config = playlist_config
 
     collection_playlists(config, path=rekordbox_xml.parent / "test_collection")
 
@@ -122,12 +122,12 @@ def test_collection_playlists_handles_error_parsing_expression(
 ):
     """Test for the collection_playlists function."""
     caplog.set_level("WARNING")
-    config.collection_path = rekordbox_xml
+    config.collection.collection_path = rekordbox_xml
     del playlist_config["tags"]
     playlist_config["combiner"]["playlists"] = [
         {"name": "test", "playlists": [invalid_expression]}
     ]
-    config.playlist_config = playlist_config
+    config.collection.playlist_config = playlist_config
 
     collection_playlists(config, path=rekordbox_xml.parent / "test_collection")
 
@@ -156,8 +156,8 @@ def test_collection_playlists_removes_existing_playlist(
     # Serialize the collection containing a playlist_builder playlist.
     new_path = rekordbox_xml.parent / "test_collection"
     collection.serialize(path=new_path)
-    config.collection_path = new_path
-    config.playlist_config = playlist_config
+    config.collection.collection_path = new_path
+    config.collection.playlist_config = playlist_config
 
     # Run the playlist_builder on this collection to test removing the existing
     # playlist_builder playlist.
@@ -175,8 +175,8 @@ def test_collection_playlists_with_empty_playlistconfig_returns_early(
 ):
     """Test for the collection_playlists function."""
     caplog.set_level("WARNING")
-    config.collection_path = rekordbox_xml
-    config.playlist_config = {}
+    config.collection.collection_path = rekordbox_xml
+    config.collection.playlist_config = {}
     collection_playlists(config, path=rekordbox_xml.parent / "test_collection")
     assert caplog.records[0].message == (
         "Not building playlists because the playlist config is empty."

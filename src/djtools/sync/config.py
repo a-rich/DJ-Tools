@@ -9,13 +9,13 @@ import os
 from pathlib import Path
 from typing import List, Optional
 
-from pydantic import BaseModel
+from djtools.configs.config_formatter import BaseConfigFormatter
 
 
 logger = logging.getLogger(__name__)
 
 
-class SyncConfig(BaseModel):
+class SyncConfig(BaseConfigFormatter):
     """Configuration object for the sync package."""
 
     artist_first: bool = False
@@ -43,7 +43,7 @@ class SyncConfig(BaseModel):
         Raises:
             ValueError: Both include and exclude dirs can't be provided at the
                 same time.
-            RuntimeError: AWS_PROFILE must be set.
+            RuntimeError: aws_profile must be set.
         """
         super().__init__(*args, **kwargs)
         if not self.user:
@@ -53,9 +53,9 @@ class SyncConfig(BaseModel):
             self.download_include_dirs and self.download_exclude_dirs
         ):
             msg = (
-                "Config must neither contain both UPLOAD_INCLUDE_DIRS and "
-                "UPLOAD_EXCLUDE_DIRS or both DOWNLOAD_INCLUDE_DIRS and "
-                "DOWNLOAD_EXCLUDE_DIRS"
+                "Config must neither contain both upload_include_dirs and "
+                "upload_exclude_dirs or both download_include_dirs and "
+                "download_exclude_dirs"
             )
             logger.critical(msg)
             raise ValueError(msg)
@@ -69,12 +69,12 @@ class SyncConfig(BaseModel):
             ]
         ):
             if not self.aws_profile:
-                msg = "Config must include AWS_PROFILE for sync operations"
+                msg = "Config must include aws_profile for sync operations"
                 logger.critical(msg)
                 raise RuntimeError(msg)
 
             if not self.bucket_url:
-                msg = "Config must include BUCKET_URL for sync operations"
+                msg = "Config must include bucket_url for sync operations"
                 logger.critical(msg)
                 raise RuntimeError(msg)
 
@@ -84,8 +84,8 @@ class SyncConfig(BaseModel):
 
         if any([self.download_music, self.upload_music]) and not self.usb_path:
             msg = (
-                "Config must include USB_PATH for both DOWNLOAD_MUSIC and "
-                "UPLOAD_MUSIC sync operations"
+                "Config must include usb_path for both download_music and "
+                "upload_music sync operations"
             )
             logger.critical(msg)
             raise RuntimeError(msg)
@@ -94,17 +94,17 @@ class SyncConfig(BaseModel):
             any([self.download_music, self.upload_music])
             and not self.usb_path.exists()
         ):
-            msg = f'Configured USB_PATH "{self.usb_path}" was not found!'
+            msg = f'Configured usb_path "{self.usb_path}" was not found!'
             logger.critical(msg)
             raise RuntimeError(msg)
 
         if self.upload_music and not self.discord_url:
             logger.warning(
-                'DISCORD_URL is not configured...set this for "New Music" '
+                'discord_url is not configured...set this for "New Music" '
                 "discord messages!"
             )
 
         if self.download_collection and not self.import_user:
             raise RuntimeError(
-                "IMPORT_USER must be set to download a collection"
+                "import_user must be set to download a collection"
             )

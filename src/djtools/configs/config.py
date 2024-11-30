@@ -4,7 +4,7 @@ apply to multiple packages. The attributes of this configuration object
 correspond with the "configs" key of config.yaml."""
 
 import logging
-from typing_extensions import Literal
+from typing import Literal
 
 from pydantic import Field, NonNegativeInt
 

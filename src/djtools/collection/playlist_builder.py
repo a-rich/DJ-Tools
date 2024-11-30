@@ -1,6 +1,6 @@
 "This module is used to automatically generate a playlist structure."
-from collections import defaultdict
 import logging
+from collections import defaultdict
 from pathlib import Path
 from typing import Optional, Type
 
@@ -44,7 +44,7 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
     Any tag in your collection that is not specified in the playlist config
     will automatically be added to either an "Other" folder of playlists or an
     "Other" playlist (depending on your configured choice for
-    COLLECTION_PLAYLISTS_REMAINDER).
+    collection_playlists_remainder).
 
     A special folder with the name "_ignore" may be included anywhere within
     the "tags" specification with playlists matching the set of tags to ignore
@@ -91,17 +91,17 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
         return
 
     # Load the collection.
-    collection = PLATFORM_REGISTRY[config.collection.PLATFORM]["collection"](
-        path=config.collection.COLLECTION_PATH
+    collection = PLATFORM_REGISTRY[config.collection.platform]["collection"](
+        path=config.collection.collection_path
     )
 
     # Get the Playlist implementation to use for this collection.
-    playlist_class = PLATFORM_REGISTRY[config.collection.PLATFORM]["playlist"]
+    playlist_class = PLATFORM_REGISTRY[config.collection.platform]["playlist"]
 
     # Required number of tracks to make tag and combiner playlists.
-    minimum_tag_tracks = config.collection.MINIMUM_TAG_PLAYLIST_TRACKS
+    minimum_tag_tracks = config.collection.minimum_tag_playlist_tracks
     minimum_combiner_tracks = (
-        config.collection.MINIMUM_COMBINER_PLAYLIST_TRACKS
+        config.collection.minimum_combiner_playlist_tracks
     )
 
     # Create a dict of tracks keyed by their individual tags.
@@ -116,7 +116,7 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
     # List of PlaylistFilter implementations to run against built playlists.
     filters = [
         getattr(playlist_filters, playlist_filter)()
-        for playlist_filter in config.collection.COLLECTION_PLAYLIST_FILTERS
+        for playlist_filter in config.collection.collection_playlist_filters
     ]
 
     # Create playlists for the "tags" portion of the playlist config.
@@ -154,7 +154,7 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
         # and create either an "Other" folder of playlists or simply an "Other"
         # playlist.
         other_tags = sorted(set(tags_tracks).difference(seen_tags))
-        if config.collection.COLLECTION_PLAYLISTS_REMAINDER == "folder":
+        if config.collection.collection_playlists_remainder == "folder":
             auto_playlists.append(
                 build_tag_playlists(
                     PlaylistConfigContent(

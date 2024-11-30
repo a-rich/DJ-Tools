@@ -1,9 +1,9 @@
 """Testing for the helpers module."""
 
-from datetime import datetime, timedelta
 import os
-from pathlib import Path
 import tempfile
+from datetime import datetime, timedelta
+from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -41,13 +41,17 @@ def test_parse_sync_command(
     """Test for the parse_sync_command function."""
     tmpdir = str(tmpdir)
     setattr(
-        config, f"{'UP' if upload else 'DOWN'}LOAD_INCLUDE_DIRS", include_dirs
+        config.sync,
+        f"{'up' if upload else 'down'}load_include_dirs",
+        include_dirs,
     )
     setattr(
-        config, f"{'UP' if upload else 'DOWN'}LOAD_EXCLUDE_DIRS", exclude_dirs
+        config.sync,
+        f"{'up' if upload else 'down'}load_exclude_dirs",
+        exclude_dirs,
     )
-    config.aws_use_date_modified = not use_date_modified
-    config.dryrun = dryrun
+    config.sync.aws_use_date_modified = not use_date_modified
+    config.sync.dryrun = dryrun
     partial_cmd = [
         "aws",
         "s3",
@@ -84,7 +88,7 @@ def test_rewrite_track_paths(config, rekordbox_xml):
     user_b_xml.write_text(
         Path(rekordbox_xml).read_text(encoding="utf-8"), encoding="utf-8"
     )
-    config.usb_path = user_a_path
+    config.sync.usb_path = user_a_path
 
     # Write the second user's USB_PATH into each track.
     collection = RekordboxCollection(user_b_xml)
@@ -210,7 +214,7 @@ def test_run_sync_handles_return_code(mock_popen, tmpdir, caplog):
 @mock.patch("djtools.sync.helpers.Popen")
 def test_upload_log(mock_popen, tmpdir, config):
     """Test for the upload_log function."""
-    config.aws_profile = "DJ"
+    config.sync.aws_profile = "DJ"
     now = datetime.now()
     # Windows st_mtime includes fractional seconds which can cause a test
     # failure due to a rounding error.
@@ -237,11 +241,11 @@ def test_upload_log(mock_popen, tmpdir, config):
 def test_upload_log_no_aws_profile(config, caplog):
     """Test for the upload_log function."""
     caplog.set_level("WARNING")
-    config.aws_profile = ""
+    config.sync.aws_profile = ""
     upload_log(config, "some_file.txt")
     assert (
         caplog.records[0].message == "Logs cannot be backed up without "
-        "specifying the config option AWS_PROFILE"
+        "specifying the config option aws_profile"
     )
 
 

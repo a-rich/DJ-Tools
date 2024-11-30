@@ -88,7 +88,7 @@ def test_build_tag_playlists_minimum_tracks_config():
 
 
 @mock.patch(
-    "djtools.collection.helpers.RekordboxTrack.get_genre_tags",
+    "djtools.collection.rekordbox_track.RekordboxTrack.get_genre_tags",
     mock.Mock(return_value=["Tag"]),
 )
 def test_build_tag_playlists_pure_playlist_minimum_tracks_config(
@@ -425,7 +425,8 @@ def test_filter_tag_playlists(rekordbox_track):
 
 
 @mock.patch(
-    "djtools.collection.helpers.RekordboxPlaylist.aggregate", return_value=True
+    "djtools.collection.rekordbox_playlist.RekordboxPlaylist.aggregate",
+    return_value=True,
 )
 def test_aggregate_playlists(rekordbox_collection):
     """Test for the aggregate_playlists function."""

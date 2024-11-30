@@ -2,19 +2,19 @@
 particular sub-package of this library.
 """
 
+import inspect
+import logging
+import logging.config
+import os
+import pathlib
+import typing
 from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import datetime
 from functools import wraps
-import inspect
 from itertools import product
-import logging
-import logging.config
 from operator import itemgetter
-import os
-import pathlib
 from pathlib import Path
 from subprocess import check_output
-import typing
 from typing import (
     Callable,
     Dict,
@@ -27,9 +27,9 @@ from typing import (
     Union,
 )
 
+import spotipy
 from fuzzywuzzy import fuzz
 from pydub import AudioSegment, effects, silence
-import spotipy
 from tqdm import tqdm
 
 from djtools.spotify.helpers import get_playlist_ids, get_spotify_client
@@ -95,7 +95,7 @@ def find_matches(
         locations,
         tracks,
         beatcloud_tracks,
-        [config.utils.CHECK_TRACKS_FUZZ_RATIO] * len(_product),
+        [config.utils.check_tracks_fuzz_ratio] * len(_product),
     )
 
     with ThreadPoolExecutor(
@@ -147,7 +147,7 @@ def get_local_tracks(config: BaseConfig) -> Dict[str, List[str]]:
         Local file names keyed by parent directory.
     """
     local_dir_tracks = {}
-    for _dir in config.utils.LOCAL_DIRS:
+    for _dir in config.utils.local_dirs:
         if not _dir.exists():
             logger.warning(
                 f"{_dir} does not exist; will not be able to check its "
@@ -384,16 +384,16 @@ def process_parallel(
     """
     # Normalize the audio such that the headroom is
     # AUDIO_HEADROOM dB.
-    if abs(audio.max_dBFS + config.utils.AUDIO_HEADROOM) > 0.001:
-        audio = effects.normalize(audio, headroom=config.utils.AUDIO_HEADROOM)
+    if abs(audio.max_dBFS + config.utils.audio_headroom) > 0.001:
+        audio = effects.normalize(audio, headroom=config.utils.audio_headroom)
 
     # Build the filename using the title, artist(s) and configured format.
     filename = (
         f'{track["artist"]} - {track["title"]}'
-        if config.sync.ARTIST_FIRST
+        if config.sync.artist_first
         else f'{track["title"]} - {track["artist"]}'
     )
-    filename = write_path / f"{filename}.{config.utils.AUDIO_FORMAT}"
+    filename = write_path / f"{filename}.{config.utils.audio_format}"
 
     # Warn users about malformed filenames that could break other features
     # of djtools.
@@ -409,8 +409,8 @@ def process_parallel(
     # data collected from the Spotify response.
     audio.export(
         filename,
-        format=config.utils.AUDIO_FORMAT,
-        bitrate=f"{config.utils.AUDIO_BITRATE}k",
+        format=config.utils.audio_format,
+        bitrate=f"{config.utils.audio_bitrate}k",
         tags={key: value for key, value in track.items() if key != "duration"},
     )
 

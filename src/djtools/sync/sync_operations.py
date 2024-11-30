@@ -1,8 +1,8 @@
-"""This module is responsible for syncing tracks between "USB_PATH" and the
+"""This module is responsible for syncing tracks between "usb_path" and the
 Beatcloud (upload and download). It also handles uploading the collection
-located at "COLLECTION_PATH" and downloading the collection uploaded to the
-Beatcloud by "IMPORT_USER" before modifying it to point to track locations at
-"USB_PATH".
+located at "collection_path" and downloading the collection uploaded to the
+Beatcloud by "import_user" before modifying it to point to track locations at
+"usb_path".
 """
 
 import logging
@@ -27,18 +27,18 @@ BaseConfig = Type["BaseConfig"]
 def download_music(
     config: BaseConfig, beatcloud_tracks: Optional[List[str]] = None
 ):
-    """This function syncs tracks from the Beatcloud to "USB_PATH".
+    """This function syncs tracks from the Beatcloud to "usb_path".
 
-    If "DOWNLOAD_SPOTIFY_PLAYLIST" is set to a playlist name that exists in
-    "spotify_playlists.yaml", then "DOWNLOAD_INCLUDE_DIRS" will be populated
+    If "download_spotify_playlist" is set to a playlist name that exists in
+    "spotify_playlists.yaml", then "download_include_dirs" will be populated
     with tracks in that playlist that match Beatcloud tracks.
 
     Args:
         config: Configuration object.
         beatcloud_tracks: List of track artist - titles from S3.
     """
-    if config.sync.DOWNLOAD_SPOTIFY_PLAYLIST:
-        playlist_name = config.sync.DOWNLOAD_SPOTIFY_PLAYLIST
+    if config.sync.download_spotify_playlist:
+        playlist_name = config.sync.download_spotify_playlist
         user = playlist_name.split("Uploads")[0].strip()
         beatcloud_tracks, beatcloud_matches = compare_tracks(
             config,
@@ -50,27 +50,27 @@ def download_music(
                 "the correct playlist name."
             )
             return beatcloud_tracks
-        config.sync.DOWNLOAD_INCLUDE_DIRS = [
+        config.sync.download_include_dirs = [
             (Path(user) / path.as_posix().split(f"{Path(user)}/")[-1])
             for path in beatcloud_matches
         ]
-        config.sync.DOWNLOAD_EXCLUDE_DIRS = []
+        config.sync.download_exclude_dirs = []
 
     logger.info("Downloading track collection...")
-    dest = Path(config.sync.USB_PATH) / "DJ Music"
+    dest = Path(config.sync.usb_path) / "DJ Music"
     glob_path = (Path("**") / "*.*").as_posix()
     old = {str(p) for p in dest.rglob(glob_path)}
-    logger.info(f"Found {len(old)} files at {config.sync.USB_PATH}")
+    logger.info(f"Found {len(old)} files at {config.sync.usb_path}")
 
     dest.mkdir(parents=True, exist_ok=True)
     cmd = [
         "aws",
         "s3",
         "sync",
-        f"{config.sync.BUCKET_URL}/dj/music/",
+        f"{config.sync.bucket_url}/dj/music/",
         dest.as_posix(),
     ]
-    run_sync(parse_sync_command(cmd, config), config.sync.BUCKET_URL)
+    run_sync(parse_sync_command(cmd, config), config.sync.bucket_url)
 
     new = {str(p) for p in dest.rglob(glob_path)}
     difference = sorted(list(new.difference(old)), key=getmtime)
@@ -83,40 +83,40 @@ def download_music(
 
 
 def download_collection(config: BaseConfig):
-    """This function downloads the collection of "IMPORT_USER".
+    """This function downloads the collection of "import_user".
 
-    After downloading "IMPORT_USER"'s collection, the location of all the
-    tracks are modified so that they point to USER's "USB_PATH".
+    After downloading "import_user"'s collection, the location of all the
+    tracks are modified so that they point to user's "usb_path".
 
     Args:
         config: Configuration object.
     """
     logger.info(
-        f"Downloading {config.sync.IMPORT_USER}'s {config.sync.PLATFORM} collection..."
+        f"Downloading {config.sync.import_user}'s {config.collection.platform} collection..."
     )
-    collection_dir = config.sync.COLLECTION_PATH.parent
+    collection_dir = config.collection.collection_path.parent
     src = (
-        f"{config.sync.BUCKET_URL}/dj/collections/{config.sync.IMPORT_USER}/"
-        f"{config.collection.PLATFORM}_collection"
+        f"{config.sync.bucket_url}/dj/collections/{config.sync.import_user}/"
+        f"{config.collection.platform}_collection"
     )
     dst = (
         Path(collection_dir)
-        / f"{config.sync.IMPORT_USER}_{config.collection.COLLECTION_PATH.name}"
+        / f"{config.sync.import_user}_{config.collection.collection_path.name}"
     )
     cmd = ["aws", "s3", "cp", src, dst.as_posix()]
-    if config.collection.COLLECTION_PATH.is_dir():
+    if config.collection.collection_path.is_dir():
         cmd.append("--recursive")
     logger.info(" ".join(cmd))
     with Popen(cmd) as proc:
         proc.wait()
-    if config.sync.USER != config.sync.IMPORT_USER:
+    if config.sync.user != config.sync.import_user:
         rewrite_track_paths(config, dst)
 
 
 def upload_music(config: BaseConfig):
-    """This function syncs tracks from "USB_PATH" to the Beatcloud.
+    """This function syncs tracks from "usb_path" to the Beatcloud.
 
-    "AWS_USE_DATE_MODIFIED" can be used in order to re-upload tracks that
+    "aws_use_date_modified" can be used in order to re-upload tracks that
     already exist in the Beatcloud but have been modified since the last time
     they were uploaded (i.e. ID3 tags have been altered).
 
@@ -124,7 +124,7 @@ def upload_music(config: BaseConfig):
         config: Configuration object.
     """
     hidden_files = set(
-        (Path(config.sync.USB_PATH) / "DJ Music").rglob(
+        (Path(config.sync.usb_path) / "DJ Music").rglob(
             (Path("**") / ".*.*").as_posix()
         )
     )
@@ -135,45 +135,45 @@ def upload_music(config: BaseConfig):
             _file.unlink()
 
     logger.info("Uploading track collection...")
-    src = (Path(config.sync.USB_PATH) / "DJ Music").as_posix()
-    cmd = ["aws", "s3", "sync", src, f"{config.sync.BUCKET_URL}/dj/music/"]
+    src = (Path(config.sync.usb_path) / "DJ Music").as_posix()
+    cmd = ["aws", "s3", "sync", src, f"{config.sync.bucket_url}/dj/music/"]
 
-    if config.sync.DISCORD_URL and not config.sync.DRYRUN:
+    if config.sync.discord_url and not config.sync.dryrun:
         webhook(
-            config.sync.DISCORD_URL,
+            config.sync.discord_url,
             content=run_sync(
                 parse_sync_command(cmd, config, upload=True),
-                config.sync.BUCKET_URL,
+                config.sync.bucket_url,
             ),
         )
     else:
         run_sync(
             parse_sync_command(cmd, config, upload=True),
-            config.sync.BUCKET_URL,
+            config.sync.bucket_url,
         )
 
 
 def upload_collection(config: BaseConfig):
-    """This function uploads "COLLECTION_PATH" to the cloud.
+    """This function uploads "collection_path" to the cloud.
 
     Args:
         config: Configuration object.
     """
     logger.info(
-        f"Uploading {config.sync.USER}'s {config.collection.PLATFORM} collection..."
+        f"Uploading {config.sync.user}'s {config.collection.platform} collection..."
     )
     dst = (
-        f"{config.sync.BUCKET_URL}/dj/collections/{config.sync.USER}/"
-        f"{config.collection.PLATFORM}_collection"
+        f"{config.sync.bucket_url}/dj/collections/{config.sync.user}/"
+        f"{config.collection.platform}_collection"
     )
     cmd = [
         "aws",
         "s3",
         "cp",
-        config.collection.COLLECTION_PATH.as_posix(),
+        config.collection.collection_path.as_posix(),
         dst,
     ]
-    if config.collection.COLLECTION_PATH.is_dir():
+    if config.collection.collection_path.is_dir():
         cmd.append("--recursive")
     logger.info(" ".join(cmd))
     with Popen(cmd) as proc:

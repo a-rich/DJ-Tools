@@ -17,11 +17,11 @@ from ..test_utils import mock_exists, MockOpen
 
 def test_collectionconfig_collection_is_unset_or_missing():
     """Test for the CollectionConfig class."""
-    cfg = {"COLLECTION_PLAYLISTS": True, "COLLECTION_PATH": "not/a/real/path"}
+    cfg = {"collection_playlists": True, "collection_path": "not/a/real/path"}
     with pytest.raises(
         RuntimeError,
         match="Using the collection package requires the config option "
-        "COLLECTION_PATH to be a valid collection path",
+        "collection_path to be a valid collection path",
     ):
         CollectionConfig(**cfg)
 
@@ -37,12 +37,12 @@ def test_collectionconfig_collection_is_unset_or_missing():
 )
 def test_collectionconfig_no_collection_playlists_config(rekordbox_xml):
     """Test for the CollectionConfig class."""
-    cfg = {"COLLECTION_PLAYLISTS": True, "COLLECTION_PATH": rekordbox_xml}
+    cfg = {"collection_playlists": True, "collection_path": rekordbox_xml}
     with pytest.raises(
         RuntimeError,
         match=(
             "collection_playlists.yaml must exist to use the "
-            "COLLECTION_PLAYLISTS feature"
+            "collection_playlists feature"
         ),
     ):
         CollectionConfig(**cfg)
@@ -66,11 +66,11 @@ def test_collectionconfig_no_collection_playlists_config(rekordbox_xml):
 )
 def test_collectionconfig_invalid_collection_playlists_config(rekordbox_xml):
     """Test for the CollectionConfig class."""
-    cfg = {"COLLECTION_PLAYLISTS": True, "COLLECTION_PATH": rekordbox_xml}
+    cfg = {"collection_playlists": True, "collection_path": rekordbox_xml}
     with pytest.raises(
         RuntimeError,
         match="collection_playlists.yaml must be a valid YAML to use the "
-        "COLLECTION_PLAYLISTS feature",
+        "collection_playlists feature",
     ):
         CollectionConfig(**cfg)
 
@@ -88,7 +88,7 @@ def test_collectionconfig_without_template(
     rekordbox_xml, playlist_config_content, playlist_config_obj
 ):
     """Test for the CollectionConfig class."""
-    cfg = {"COLLECTION_PLAYLISTS": True, "COLLECTION_PATH": rekordbox_xml}
+    cfg = {"collection_playlists": True, "collection_path": rekordbox_xml}
     with mock.patch(
         "builtins.open",
         MockOpen(
@@ -120,7 +120,7 @@ def test_collectionconfig_with_template(mock_get_template, rekordbox_xml):
     """Test for the CollectionConfig class."""
     new_content = ""
     mock_get_template.return_value = Template(new_content)
-    cfg = {"COLLECTION_PLAYLISTS": True, "COLLECTION_PATH": rekordbox_xml}
+    cfg = {"collection_playlists": True, "collection_path": rekordbox_xml}
     config = CollectionConfig(**cfg)
     assert config.playlist_config == PlaylistConfig()
 
@@ -134,7 +134,7 @@ def test_collectionconfig_with_invalid_template(
     mock_template.render.side_effect = Exception("Render failed")
     mock_get_template.return_value = mock_template
 
-    cfg = {"COLLECTION_PLAYLISTS": True, "COLLECTION_PATH": rekordbox_xml}
+    cfg = {"collection_playlists": True, "collection_path": rekordbox_xml}
     with pytest.raises(RuntimeError):
         CollectionConfig(**cfg)
 

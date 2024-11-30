@@ -6,22 +6,22 @@ config.yaml
 import logging
 import os
 from pathlib import Path
-from typing import Dict, List, Optional
-from typing_extensions import Literal, Union
+from typing import Dict, List, Literal, Optional, Union
 
 from pydantic import (
-    BaseModel,
     field_validator,
     NonNegativeFloat,
     NonNegativeInt,
     root_validator,
 )
 
+from djtools.configs.config_formatter import BaseConfigFormatter
+
 
 logger = logging.getLogger(__name__)
 
 
-class UtilsConfig(BaseModel):
+class UtilsConfig(BaseConfigFormatter):
     """Configuration object for the utils package."""
 
     audio_bitrate: str = "320"
@@ -50,7 +50,7 @@ class UtilsConfig(BaseModel):
 
         super().__init__(*args, **kwargs)
         if self.check_tracks:
-            if not os.environ.get("aws_profile"):
+            if not os.environ.get("AWS_PROFILE"):
                 raise RuntimeError(
                     "Without aws_profile set to a valid profile ('default' or "
                     "otherwise) you cannot use the check_tracks feature"

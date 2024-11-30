@@ -167,7 +167,10 @@ def test_build_config_reads_generated_config(
 
 @mock.patch("argparse.ArgumentParser.parse_args")
 def test_build_config_version(
-    mock_parse_args, namespace, capsys, config_file_teardown,
+    mock_parse_args,
+    namespace,
+    capsys,
+    config_file_teardown,
 ):
     """Test for the build_config function."""
     namespace.version = True

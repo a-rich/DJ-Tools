@@ -31,13 +31,13 @@ def shuffle_playlists(config: BaseConfig, path: Optional[Path] = None):
         path: Path to write the new collection to.
     """
     # Load collection.
-    collection = PLATFORM_REGISTRY[config.collection.PLATFORM]["collection"](
-        path=config.collection.COLLECTION_PATH
+    collection = PLATFORM_REGISTRY[config.collection.platform]["collection"](
+        path=config.collection.collection_path
     )
 
     # Build a dict of tracks to shuffle from the provided list of playlists.
     shuffled_tracks = {}
-    for playlist_name in config.collection.SHUFFLE_PLAYLISTS:
+    for playlist_name in config.collection.shuffle_playlists:
         playlists = collection.get_playlists(playlist_name)
         if not playlists:
             raise LookupError(f"{playlist_name} not found")
@@ -66,7 +66,7 @@ def shuffle_playlists(config: BaseConfig, path: Optional[Path] = None):
 
     # Insert a new playlist containing just the shuffled tracks.
     collection.add_playlist(
-        PLATFORM_REGISTRY[config.collection.PLATFORM]["playlist"].new_playlist(
+        PLATFORM_REGISTRY[config.collection.platform]["playlist"].new_playlist(
             name="SHUFFLE",
             tracks={track.get_id(): track for track in shuffled_tracks},
         )

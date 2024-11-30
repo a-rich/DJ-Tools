@@ -1,35 +1,35 @@
 """This is the entry point for the DJ Tools library.
 
 Collection operations:
-    * COLLECTION_PLAYLISTS (collection.playlist_builder.py): Automatically
+    * collection_playlists (collection.playlist_builder.py): Automatically
         create a playlist structure based on the tags present in a collection.
-    * COPY_PLAYLISTS (copy_playlists.py): Copy audio files from
+    * copy_playlists (copy_playlists.py): Copy audio files from
         playlists to a new location and generate a new collection with updated
         locations.
-    * SHUFFLE_PLAYLISTS (shuffle_playlists.py): Set ID3 tags of tracks in
+    * shuffle_playlists (shuffle_playlists.py): Set ID3 tags of tracks in
         playlists sequentially (after shuffling) to randomize.
 
 Spotify operations:
-    * SPOTIFY_PLAYLISTS (spotify.playlist_builder.py): Creating and updating
+    * spotify_playlists (spotify.playlist_builder.py): Creating and updating
         Spotify playlists using subreddit top posts.
-    * SPOTIFY_PLAYLISTS_FROM_UPLOAD (spotify.playlist_builder.py): Creating and
+    * spotify_playlists_from_upload (spotify.playlist_builder.py): Creating and
         updating Spotify playlists using the Discord webhook output from users
         uploading music.
 
 Utils operations:
-    * CHECK_TRACKS (check_tracks.py): Identify overlap between Spotify
+    * check_tracks (check_tracks.py): Identify overlap between Spotify
         playlists and / or local directories and and the Beatcloud.
-    * URL_DOWNLOAD (url_download.py): Download tracks from a URL (e.g.
+    * url_download (url_download.py): Download tracks from a URL (e.g.
         Soundcloud playlist).
 
 Sync operations:
-    * DOWNLOAD_MUSIC: Sync tracks from Beatcloud to USB_PATH.
-    * DOWNLOAD_COLLECTION: Sync IMPORT_USER's collection to COLLECTION_PATH's
+    * download_music: Sync tracks from Beatcloud to usb_path.
+    * download_collection: Sync import_user's collection to collection_path's
         parent folder.
-    * DOWNLOAD_SPOTIFY_PLAYLIST: Sync tracks in a Spotify playlist from
-        Beatcloud to USB_PATH.
-    * UPLOAD_MUSIC: Sync tracks from USB_PATH to Beatcloud.
-    * UPLOAD_COLLECTION: Sync COLLECTION_PATH to USER's collection folder.
+    * download_spotify_playlist: Sync tracks in a Spotify playlist from
+        Beatcloud to usb_path.
+    * upload_music: Sync tracks from usb_path to Beatcloud.
+    * upload_collection: Sync collection_path to user's collection folder.
 """
 
 import logging
