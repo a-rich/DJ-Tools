@@ -22,16 +22,16 @@ logger = logging.getLogger(__name__)
 
 
 class InvalidConfigYaml(Exception):
-    pass
+    """Exception for invalid config."""
 
 
 class ConfigLoadFailure(Exception):
-    pass
+    """Exception for failing to load config."""
 
 
 @make_path
 def build_config(
-    config_file: Path = Path(__file__).parent / "config.yaml"
+    config_file: Path = Path(__file__).parent / "config.yaml",
 ) -> BaseConfig:
     """This function loads configurations for the library.
 
@@ -68,22 +68,20 @@ def build_config(
 
     entry_frame_filename = inspect.stack()[-1][1]
     valid_filenames = (
-        str(Path("bin") / "djtools"),   # Unix djtools.
-        str(Path("bin") / "pytest"),    # Unix pytest.
+        str(Path("bin") / "djtools"),  # Unix djtools.
+        str(Path("bin") / "pytest"),  # Unix pytest.
         str(Path("lib") / "runpy.py"),  # Windows Python<=3.10.
-        "<frozen runpy>",               # Windows Python>=3.11.
+        "<frozen runpy>",  # Windows Python>=3.11.
     )
 
     # Only get CLI arguments if calling djtools as a CLI.
     if entry_frame_filename.endswith(valid_filenames):
         args = {
-            k.upper(): v
-            for k, v in _arg_parse().items()
-            if v or isinstance(v, list)
+            k: v for k, v in _arg_parse().items() if v or isinstance(v, list)
         }
         logger.info(f"Args: {args}")
         config = _update_config_with_cli_args(config, args)
-    
+
     return config
 
 
@@ -143,9 +141,11 @@ def _update_config_with_cli_args(
     updated_data = config.model_dump()
 
     for key, value in cli_args.items():
-        field_found = False
         for field_name, field_info in config.__fields__.items():
-            if issubclass(field_info.annotation, BaseModel):
+            if (
+                isinstance(field_info.annotation, type) and
+                issubclass(field_info.annotation, BaseModel)
+            ):
                 sub_model = getattr(config, field_name)
 
                 if key in sub_model.__fields__:
@@ -154,8 +154,8 @@ def _update_config_with_cli_args(
                     updated_data[field_name] = sub_model.__class__(
                         **sub_model_data
                     ).model_dump()
-                    field_found = True
                     break
+
             elif key in config.__fields__:
                 updated_data[key] = value
 

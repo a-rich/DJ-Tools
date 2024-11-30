@@ -83,7 +83,7 @@ def test_utilsconfig_validates_bitrate_success(bit_rate):
     """Test for the UtilsConfig class."""
     cfg = {"AUDIO_BITRATE": bit_rate}
     config = UtilsConfig(**cfg)
-    assert config.AUDIO_BITRATE == str(bit_rate)
+    assert config.audio_bitrate == str(bit_rate)
 
 
 def test_utilsconfig_validate_format_warning(caplog):

@@ -58,7 +58,9 @@ def normalize(config: BaseConfig):
                     f'"ffmpeg" is installed: {exc}'
                 )
                 tags = {}
-            audio = effects.normalize(audio, headroom=config.utils.AUDIO_HEADROOM)
+            audio = effects.normalize(
+                audio, headroom=config.utils.AUDIO_HEADROOM
+            )
             audio.export(
                 track.parent / f"{track.stem}.{config.utils.AUDIO_FORMAT}",
                 tags=tags,

@@ -9,6 +9,8 @@ from typing_extensions import Literal
 
 from pydantic import BaseModel, NonNegativeInt
 
+from djtools.configs.config_formatter import BaseConfigFormatter
+
 
 logger = logging.getLogger(__name__)
 
@@ -22,24 +24,24 @@ class SubredditConfig(BaseModel):
     type: Literal["controversial", "hot", "new", "rising", "top"] = "hot"
 
 
-class SpotifyConfig(BaseModel):
+class SpotifyConfig(BaseConfigFormatter):
     """Configuration object for the spotify package."""
 
-    SPOTIFY_PLAYLIST_DEFAULT_LIMIT: NonNegativeInt = 50
-    SPOTIFY_PLAYLIST_DEFAULT_PERIOD: str = "week"
-    SPOTIFY_PLAYLIST_DEFAULT_TYPE: str = "hot"
-    SPOTIFY_PLAYLIST_FROM_UPLOAD: bool = False
-    SPOTIFY_PLAYLIST_FUZZ_RATIO: NonNegativeInt = 70
-    SPOTIFY_PLAYLIST_POST_LIMIT: NonNegativeInt = 100
-    SPOTIFY_PLAYLIST_SUBREDDITS: List[SubredditConfig] = []
-    SPOTIFY_PLAYLISTS: bool = False
-    REDDIT_CLIENT_ID: str = ""
-    REDDIT_CLIENT_SECRET: str = ""
-    REDDIT_USER_AGENT: str = ""
-    SPOTIFY_CLIENT_ID: str = ""
-    SPOTIFY_CLIENT_SECRET: str = ""
-    SPOTIFY_REDIRECT_URI: str = ""
-    SPOTIFY_USERNAME: str = ""
+    spotify_playlist_default_limit: NonNegativeInt = 50
+    spotify_playlist_default_period: str = "week"
+    spotify_playlist_default_type: str = "hot"
+    spotify_playlist_from_upload: bool = False
+    spotify_playlist_fuzz_ratio: NonNegativeInt = 70
+    spotify_playlist_post_limit: NonNegativeInt = 100
+    spotify_playlist_subreddits: List[SubredditConfig] = []
+    spotify_playlists: bool = False
+    reddit_client_id: str = ""
+    reddit_client_secret: str = ""
+    reddit_user_agent: str = ""
+    spotify_client_id: str = ""
+    spotify_client_secret: str = ""
+    spotify_redirect_uri: str = ""
+    spotify_username: str = ""
 
     def __init__(self, *args, **kwargs):
         """Constructor.
@@ -52,13 +54,13 @@ class SpotifyConfig(BaseModel):
         super().__init__(*args, **kwargs)
 
         if (
-            self.SPOTIFY_PLAYLISTS or self.SPOTIFY_PLAYLIST_FROM_UPLOAD
+            self.spotify_playlists or self.spotify_playlist_from_upload
         ) and not all(
             [
-                self.SPOTIFY_CLIENT_ID,
-                self.SPOTIFY_CLIENT_SECRET,
-                self.SPOTIFY_REDIRECT_URI,
-                self.SPOTIFY_USERNAME,
+                self.spotify_client_id,
+                self.spotify_client_secret,
+                self.spotify_redirect_uri,
+                self.spotify_username,
             ]
         ):
             raise RuntimeError(
@@ -67,7 +69,7 @@ class SpotifyConfig(BaseModel):
                 "SPOTIFY_USERNAME set to valid values, you cannot use "
                 "SPOTIFY_PLAYLISTS or SPOTIFY_PLAYLIST_FROM_UPLOAD"
             )
-        if self.SPOTIFY_PLAYLISTS or self.SPOTIFY_PLAYLIST_FROM_UPLOAD:
+        if self.spotify_playlists or self.spotify_playlist_from_upload:
             from djtools.spotify.helpers import get_spotify_client
 
             spotify = get_spotify_client(self)
@@ -76,11 +78,11 @@ class SpotifyConfig(BaseModel):
             except Exception as exc:
                 raise RuntimeError("Spotify credentials are invalid!") from exc
 
-        if self.SPOTIFY_PLAYLISTS and not all(
+        if self.spotify_playlists and not all(
             [
-                self.REDDIT_CLIENT_ID,
-                self.REDDIT_CLIENT_SECRET,
-                self.REDDIT_USER_AGENT,
+                self.reddit_client_id,
+                self.reddit_client_secret,
+                self.reddit_user_agent,
             ]
         ):
             raise RuntimeError(

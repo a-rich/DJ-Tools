@@ -45,10 +45,10 @@ if __name__ == "__main__":
 
     # Load config and collection and get a dict of tracks keyed by location.
     config = build_config(args.config)
-    collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
-        path=args.collection or config.COLLECTION_PATH
+    collection = PLATFORM_REGISTRY[config.platform]["collection"](
+        path=args.collection or config.collection_path
     )
-    playlist_class = PLATFORM_REGISTRY[config.PLATFORM]["playlist"]
+    playlist_class = PLATFORM_REGISTRY[config.platform]["playlist"]
 
     tracks = collection.get_tracks()
     tag_sets = [set(tags) for tags in TAG_ORDERINGS]

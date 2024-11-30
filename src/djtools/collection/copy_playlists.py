@@ -45,7 +45,9 @@ def copy_playlists(config: BaseConfig, path: Optional[Path] = None):
     )
 
     # Create destination directory.
-    config.collection.COPY_PLAYLISTS_DESTINATION.mkdir(parents=True, exist_ok=True)
+    config.collection.COPY_PLAYLISTS_DESTINATION.mkdir(
+        parents=True, exist_ok=True
+    )
 
     playlist_tracks = {}
     lineage = defaultdict(set)

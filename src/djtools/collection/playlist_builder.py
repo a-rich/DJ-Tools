@@ -76,10 +76,15 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
         config: Configuration object.
         path: Path to write the new collection to.
     """
-    config.collection.playlist_config = PlaylistConfig(**config.collection.playlist_config or {})
+    config.collection.playlist_config = PlaylistConfig(
+        **config.collection.playlist_config or {}
+    )
 
     # Check if the playlist config is populated before continuing.
-    if not (config.collection.playlist_config.tags or config.collection.playlist_config.combiner):
+    if not (
+        config.collection.playlist_config.tags
+        or config.collection.playlist_config.combiner
+    ):
         logger.warning(
             "Not building playlists because the playlist config is empty."
         )
@@ -95,7 +100,9 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
 
     # Required number of tracks to make tag and combiner playlists.
     minimum_tag_tracks = config.collection.MINIMUM_TAG_PLAYLIST_TRACKS
-    minimum_combiner_tracks = config.collection.MINIMUM_COMBINER_PLAYLIST_TRACKS
+    minimum_combiner_tracks = (
+        config.collection.MINIMUM_COMBINER_PLAYLIST_TRACKS
+    )
 
     # Create a dict of tracks keyed by their individual tags.
     tags_tracks = defaultdict(dict)
@@ -213,7 +220,7 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
         auto_playlists.extend(combiner_playlists)
 
         # Print tag statistics for each combiner playlist.
-        if config.VERBOSITY and combiner_playlists:
+        if config.verbosity and combiner_playlists:
             print_playlists_tag_statistics(combiner_playlists)
 
     # Remove any previous playlist builder playlists.

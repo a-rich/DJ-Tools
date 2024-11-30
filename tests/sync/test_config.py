@@ -144,7 +144,7 @@ def test_syncconfig_set_user(input_user, output_user):
     cfg = {"USER": input_user}
     assert not SyncConfig.model_fields["USER"].default
     sync_config = SyncConfig(**cfg)
-    assert sync_config.USER == output_user
+    assert sync_config.user == output_user
 
 
 @mock.patch("djtools.spotify.helpers.get_spotify_client", mock.MagicMock())
@@ -176,4 +176,4 @@ def test_syncconfig_usb_path_is_path(path):
     """Test for the SyncConfig class."""
     cfg = {"USB_PATH": path}
     sync_config = SyncConfig(**cfg)
-    assert isinstance(sync_config.USB_PATH, Path)
+    assert isinstance(sync_config.usb_path, Path)

@@ -46,8 +46,8 @@ def test_parse_sync_command(
     setattr(
         config, f"{'UP' if upload else 'DOWN'}LOAD_EXCLUDE_DIRS", exclude_dirs
     )
-    config.AWS_USE_DATE_MODIFIED = not use_date_modified
-    config.DRYRUN = dryrun
+    config.aws_use_date_modified = not use_date_modified
+    config.dryrun = dryrun
     partial_cmd = [
         "aws",
         "s3",
@@ -84,7 +84,7 @@ def test_rewrite_track_paths(config, rekordbox_xml):
     user_b_xml.write_text(
         Path(rekordbox_xml).read_text(encoding="utf-8"), encoding="utf-8"
     )
-    config.USB_PATH = user_a_path
+    config.usb_path = user_a_path
 
     # Write the second user's USB_PATH into each track.
     collection = RekordboxCollection(user_b_xml)
@@ -210,7 +210,7 @@ def test_run_sync_handles_return_code(mock_popen, tmpdir, caplog):
 @mock.patch("djtools.sync.helpers.Popen")
 def test_upload_log(mock_popen, tmpdir, config):
     """Test for the upload_log function."""
-    config.AWS_PROFILE = "DJ"
+    config.aws_profile = "DJ"
     now = datetime.now()
     # Windows st_mtime includes fractional seconds which can cause a test
     # failure due to a rounding error.
@@ -237,7 +237,7 @@ def test_upload_log(mock_popen, tmpdir, config):
 def test_upload_log_no_aws_profile(config, caplog):
     """Test for the upload_log function."""
     caplog.set_level("WARNING")
-    config.AWS_PROFILE = ""
+    config.aws_profile = ""
     upload_log(config, "some_file.txt")
     assert (
         caplog.records[0].message == "Logs cannot be backed up without "

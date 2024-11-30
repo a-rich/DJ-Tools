@@ -26,11 +26,11 @@ from djtools.collection.helpers import (
     parse_numerical_selectors,
     parse_string_selectors,
     parse_timedelta,
-    PLATFORM_REGISTRY,
     print_data,
     print_playlists_tag_statistics,
     scale_data,
 )
+from djtools.collection.platform_registry import PLATFORM_REGISTRY
 from djtools.collection.rekordbox_collection import RekordboxCollection
 from djtools.collection.rekordbox_playlist import RekordboxPlaylist
 

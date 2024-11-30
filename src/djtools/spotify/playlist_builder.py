@@ -74,7 +74,7 @@ async def async_spotify_playlists(config: BaseConfig):
                 praw_cache,
             )
         )
-        for subreddit in config.SPOTIFY_PLAYLIST_SUBREDDITS
+        for subreddit in config.spotify_playlist_subreddits
     ]
 
     for task in asyncio.as_completed(tasks):
@@ -82,11 +82,11 @@ async def async_spotify_playlists(config: BaseConfig):
         playlist_ids = populate_playlist(
             playlist_name=subreddit["name"],
             playlist_ids=playlist_ids,
-            spotify_username=config.SPOTIFY_USERNAME,
+            spotify_username=config.spotify_username,
             spotify=spotify,
             tracks=tracks,
             playlist_limit=subreddit["limit"],
-            verbosity=config.VERBOSITY,
+            verbosity=config.verbosity,
         )
 
     await reddit.close()
@@ -144,7 +144,7 @@ def spotify_playlist_from_upload(config: BaseConfig):
     files = list(filter(lambda x: len(x) == 2, files))
 
     # Query Spotify for files in upload output.
-    threshold = config.SPOTIFY_PLAYLIST_FUZZ_RATIO
+    threshold = config.spotify_playlist_fuzz_ratio
     tracks = []
     for title, artist in files:
         query = f"track:{title} artist:{artist}"
@@ -168,10 +168,10 @@ def spotify_playlist_from_upload(config: BaseConfig):
     playlist_ids = populate_playlist(
         playlist_name=f"{user} Uploads",
         playlist_ids=playlist_ids,
-        spotify_username=config.SPOTIFY_USERNAME,
+        spotify_username=config.spotify_username,
         spotify=spotify,
         tracks=tracks,
-        verbosity=config.VERBOSITY,
+        verbosity=config.verbosity,
     )
 
     write_playlist_ids(playlist_ids)

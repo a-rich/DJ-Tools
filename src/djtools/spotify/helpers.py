@@ -6,7 +6,15 @@ from operator import itemgetter
 from pathlib import Path
 import sys
 from typing import (
-    Any, AsyncGenerator, Dict, List, Optional, Set, Tuple, Type, Union
+    Any,
+    AsyncGenerator,
+    Dict,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
 )
 
 import asyncpraw as praw

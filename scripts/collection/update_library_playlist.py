@@ -103,7 +103,7 @@ def filter_tracks(
 def find_track(track: Track, config: BaseConfig, spotify: Spotify):
     title = track._Name
     artist = track.get_artists()
-    threshold = config.SPOTIFY_PLAYLIST_FUZZ_RATIO
+    threshold = config.spotify_playlist_fuzz_ratio
     query = f"track:{title} artist:{artist}"
     try:
         results = spotify.search(q=query, type="track", limit=50)
@@ -129,7 +129,7 @@ def main(config_path: Path, date_filter: datetime, playlist_name: str):
     spotify = get_spotify_client(config)
     playlist_ids = get_playlist_ids()
 
-    collection = RekordboxCollection(config.COLLECTION_PATH)
+    collection = RekordboxCollection(config.collection_path)
     tracks = filter_tracks(collection.get_tracks(), date_filter)
     tracks = sorted(tracks.values(), key=lambda x: x.get_date_added())
 
@@ -152,10 +152,10 @@ def main(config_path: Path, date_filter: datetime, playlist_name: str):
         playlist_ids = populate_playlist(
             playlist_name=playlist_name,
             playlist_ids=playlist_ids,
-            spotify_username=config.SPOTIFY_USERNAME,
+            spotify_username=config.spotify_username,
             spotify=spotify,
             tracks=chunk,
-            verbosity=config.VERBOSITY,
+            verbosity=config.verbosity,
         )
 
         write_playlist_ids(playlist_ids)

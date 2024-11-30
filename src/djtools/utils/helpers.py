@@ -16,7 +16,15 @@ from pathlib import Path
 from subprocess import check_output
 import typing
 from typing import (
-    Callable, Dict, List, Literal, Optional, Set, Tuple, Type, Union
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
 )
 
 from fuzzywuzzy import fuzz
@@ -217,7 +225,7 @@ def get_spotify_tracks(
         )
         _sum += length
 
-        if config.VERBOSITY > 0:
+        if config.verbosity > 0:
             for track in playlist_tracks[playlist]:
                 logger.info(f"\t{track}")
     logger.info(

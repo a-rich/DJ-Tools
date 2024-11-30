@@ -63,10 +63,10 @@ async def test_async_spotify_playlists(
     """Test for the async_spotify_playlists function."""
     if not got_tracks:
         mock_get_subreddit_posts.return_value[0] = []
-    config.SPOTIFY_CLIENT_ID = "test_client_id"
-    config.SPOTIFY_CLIENT_SECRET = "test_client_secret"
-    config.SPOTIFY_REDIRECT_URI = "test_redirect_uri"
-    config.SPOTIFY_PLAYLIST_SUBREDDITS = playlist_subreddits
+    config.spotify_client_id = "test_client_id"
+    config.spotify_client_secret = "test_client_secret"
+    config.spotify_redirect_uri = "test_redirect_uri"
+    config.spotify_playlist_subreddits = playlist_subreddits
     with mock.patch(
         "builtins.open",
         MockOpen(
@@ -115,10 +115,10 @@ aweeeezy/House/2022-09-03: 2
 def test_spotify_playlist_from_upload(config, caplog):
     """Test for the spotify_playlist_from_upload function."""
     caplog.set_level("INFO")
-    config.SPOTIFY_CLIENT_ID = "test_client_id"
-    config.SPOTIFY_CLIENT_SECRET = "test_client_secret"
-    config.SPOTIFY_REDIRECT_URI = "test_redirect_uri"
-    config.SPOTIFY_PLAYLIST_FROM_UPLOAD = True
+    config.spotify_client_id = "test_client_id"
+    config.spotify_client_secret = "test_client_secret"
+    config.spotify_redirect_uri = "test_redirect_uri"
+    config.spotify_playlist_from_upload = True
     with mock.patch(
         "builtins.open",
         MockOpen(files=["spotify_playlists.yaml"], content="{}").open,
@@ -142,10 +142,10 @@ def test_spotify_playlist_from_upload_handles_file_with_multiple_dashes(
 ):
     """Test for the spotify_playlist_from_upload function."""
     caplog.set_level("WARNING")
-    config.SPOTIFY_CLIENT_ID = "test_client_id"
-    config.SPOTIFY_CLIENT_SECRET = "test_client_secret"
-    config.SPOTIFY_REDIRECT_URI = "test_redirect_uri"
-    config.SPOTIFY_PLAYLIST_FROM_UPLOAD = True
+    config.spotify_client_id = "test_client_id"
+    config.spotify_client_secret = "test_client_secret"
+    config.spotify_redirect_uri = "test_redirect_uri"
+    config.spotify_playlist_from_upload = True
     with mock.patch(
         "builtins.open",
         MockOpen(files=["spotify_playlists.yaml"], content="{}").open,
@@ -172,7 +172,7 @@ def test_spotify_playlist_from_upload_handles_non_match(config, caplog):
     caplog.set_level("WARNING")
     title = "Under Pressure"
     artist = "Alix Perez, T-Man"
-    config.SPOTIFY_PLAYLIST_FROM_UPLOAD = True
+    config.spotify_playlist_from_upload = True
     with (
         mock.patch(
             "builtins.open",
@@ -204,10 +204,10 @@ def test_spotify_playlist_from_upload_handles_spotify_exception(
     )
     title = "Under Pressure"
     artist = "Alix Perez, T-Man"
-    config.SPOTIFY_PLAYLIST_FROM_UPLOAD = True
-    config.SPOTIFY_CLIENT_ID = "test_client_id"
-    config.SPOTIFY_CLIENT_SECRET = "test_client_secret"
-    config.SPOTIFY_REDIRECT_URI = "test_redirect_uri"
+    config.spotify_playlist_from_upload = True
+    config.spotify_client_id = "test_client_id"
+    config.spotify_client_secret = "test_client_secret"
+    config.spotify_redirect_uri = "test_redirect_uri"
     with (
         mock.patch(
             "builtins.open",
@@ -228,7 +228,7 @@ def test_spotify_playlist_from_upload_handles_spotify_exception(
 @mock.patch("pyperclip.paste", return_value="")
 def test_spotify_playlist_from_upload_raises_runtimeerror(config):
     """Test for the spotify_playlist_from_upload function."""
-    config.SPOTIFY_PLAYLIST_FROM_UPLOAD = True
+    config.spotify_playlist_from_upload = True
     with pytest.raises(
         RuntimeError,
         match="Generating a Spotify playlist from an upload requires output "

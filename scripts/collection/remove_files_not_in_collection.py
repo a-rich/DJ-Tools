@@ -31,8 +31,8 @@ def main():
     usb_path = Path(args.usb)
 
     config = build_config(config_path)
-    collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
-        path=config.COLLECTION_PATH
+    collection = PLATFORM_REGISTRY[config.platform]["collection"](
+        path=config.collection_path
     )
 
     tracks = {

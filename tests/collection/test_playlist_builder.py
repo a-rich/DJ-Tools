@@ -21,8 +21,8 @@ def test_collection_playlists_makes_unused_tags_playlists(
     playlist_config,
 ):
     """Test for the collection_playlists function."""
-    config.COLLECTION_PATH = rekordbox_xml
-    config.COLLECTION_PLAYLISTS_REMAINDER = remainder_type
+    config.collection_path = rekordbox_xml
+    config.collection_playlists_remainder = remainder_type
     new_path = rekordbox_xml.parent / "test_collection"
 
     tags = {
@@ -98,8 +98,8 @@ def test_collection_playlists_prints_playlist_tag_statistics(
     playlist_config,
 ):
     """Test for the collection_playlists function."""
-    config.COLLECTION_PATH = rekordbox_xml
-    config.VERBOSITY = 1
+    config.collection_path = rekordbox_xml
+    config.verbosity = 1
     config.playlist_config = playlist_config
 
     collection_playlists(config, path=rekordbox_xml.parent / "test_collection")
@@ -122,7 +122,7 @@ def test_collection_playlists_handles_error_parsing_expression(
 ):
     """Test for the collection_playlists function."""
     caplog.set_level("WARNING")
-    config.COLLECTION_PATH = rekordbox_xml
+    config.collection_path = rekordbox_xml
     del playlist_config["tags"]
     playlist_config["combiner"]["playlists"] = [
         {"name": "test", "playlists": [invalid_expression]}
@@ -156,7 +156,7 @@ def test_collection_playlists_removes_existing_playlist(
     # Serialize the collection containing a playlist_builder playlist.
     new_path = rekordbox_xml.parent / "test_collection"
     collection.serialize(path=new_path)
-    config.COLLECTION_PATH = new_path
+    config.collection_path = new_path
     config.playlist_config = playlist_config
 
     # Run the playlist_builder on this collection to test removing the existing
@@ -175,7 +175,7 @@ def test_collection_playlists_with_empty_playlistconfig_returns_early(
 ):
     """Test for the collection_playlists function."""
     caplog.set_level("WARNING")
-    config.COLLECTION_PATH = rekordbox_xml
+    config.collection_path = rekordbox_xml
     config.playlist_config = {}
     collection_playlists(config, path=rekordbox_xml.parent / "test_collection")
     assert caplog.records[0].message == (

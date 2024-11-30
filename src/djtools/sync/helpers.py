@@ -184,7 +184,9 @@ def upload_log(config: BaseConfig, log_file: Path):
         )
         return
 
-    dst = f"{config.sync.BUCKET_URL}/dj/logs/{config.sync.USER}/{log_file.name}"
+    dst = (
+        f"{config.sync.BUCKET_URL}/dj/logs/{config.sync.USER}/{log_file.name}"
+    )
     cmd = ["aws", "s3", "cp", log_file.as_posix(), dst]
     logger.info(" ".join(cmd))
     with Popen(cmd) as proc:

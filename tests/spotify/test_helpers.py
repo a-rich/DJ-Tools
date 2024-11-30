@@ -350,18 +350,18 @@ def test_get_playlist_ids(config_exists, expected):
 @mock.patch("djtools.spotify.helpers.praw.Reddit")
 def test_get_reddit_client(config):
     """Test for the get_reddit_client function."""
-    config.REDDIT_CLIENT_ID = "test_client_id"
-    config.REDDIT_CLIENT_SECRET = "test_client_secret"
-    config.REDDIT_USER_AGENT = "test_user_agent"
+    config.reddit_client_id = "test_client_id"
+    config.reddit_client_secret = "test_client_secret"
+    config.reddit_user_agent = "test_user_agent"
     get_reddit_client(config)
 
 
 @mock.patch("djtools.spotify.helpers.spotipy.Spotify")
 def test_get_spotify_client(config):
     """Test for the get_spotify_client function."""
-    config.SPOTIFY_CLIENT_ID = "test_client_id"
-    config.SPOTIFY_CLIENT_SECRET = "test_client_secret"
-    config.SPOTIFY_REDIRECT_URI = "test_redirect_uri"
+    config.spotify_client_id = "test_client_id"
+    config.spotify_client_secret = "test_client_secret"
+    config.spotify_redirect_uri = "test_redirect_uri"
     get_spotify_client(config)
 
 

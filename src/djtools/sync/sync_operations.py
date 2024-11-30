@@ -38,7 +38,8 @@ def download_music(
         beatcloud_tracks: List of track artist - titles from S3.
     """
     if config.sync.DOWNLOAD_SPOTIFY_PLAYLIST:
-        user = config.sync.DOWNLOAD_SPOTIFY_PLAYLIST.split("Uploads")[0].strip()
+        playlist_name = config.sync.DOWNLOAD_SPOTIFY_PLAYLIST
+        user = playlist_name.split("Uploads")[0].strip()
         beatcloud_tracks, beatcloud_matches = compare_tracks(
             config,
             beatcloud_tracks=beatcloud_tracks,
@@ -141,12 +142,14 @@ def upload_music(config: BaseConfig):
         webhook(
             config.sync.DISCORD_URL,
             content=run_sync(
-                parse_sync_command(cmd, config, upload=True), config.sync.BUCKET_URL
+                parse_sync_command(cmd, config, upload=True),
+                config.sync.BUCKET_URL,
             ),
         )
     else:
         run_sync(
-            parse_sync_command(cmd, config, upload=True), config.sync.BUCKET_URL
+            parse_sync_command(cmd, config, upload=True),
+            config.sync.BUCKET_URL,
         )
 
 
@@ -156,12 +159,20 @@ def upload_collection(config: BaseConfig):
     Args:
         config: Configuration object.
     """
-    logger.info(f"Uploading {config.sync.USER}'s {config.collection.PLATFORM} collection...")
+    logger.info(
+        f"Uploading {config.sync.USER}'s {config.collection.PLATFORM} collection..."
+    )
     dst = (
         f"{config.sync.BUCKET_URL}/dj/collections/{config.sync.USER}/"
         f"{config.collection.PLATFORM}_collection"
     )
-    cmd = ["aws", "s3", "cp", config.collection.COLLECTION_PATH.as_posix(), dst]
+    cmd = [
+        "aws",
+        "s3",
+        "cp",
+        config.collection.COLLECTION_PATH.as_posix(),
+        dst,
+    ]
     if config.collection.COLLECTION_PATH.is_dir():
         cmd.append("--recursive")
     logger.info(" ".join(cmd))
