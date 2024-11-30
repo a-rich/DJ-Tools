@@ -45,6 +45,7 @@ from ..test_utils import MockOpen
 )
 @mock.patch(
     "djtools.spotify.playlist_builder.get_subreddit_posts",
+    new_callable=mock.AsyncMock,
     return_value=[
         [("track-id", "track name")],
         SubredditConfig(name="jungle").model_dump(),

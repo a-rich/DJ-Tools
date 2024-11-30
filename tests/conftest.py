@@ -1,7 +1,7 @@
 """This module contains fixtures for DJ Tools."""
 
-from argparse import Namespace
 import os
+from argparse import Namespace
 from pathlib import Path
 
 # import time
