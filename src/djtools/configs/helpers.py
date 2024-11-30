@@ -72,11 +72,11 @@ def build_config(
 
     # Only get CLI arguments if calling djtools as a CLI.
     if entry_frame_filename.endswith(valid_filenames):
-        args = {
+        cli_args = {
             k: v for k, v in _arg_parse().items() if v or isinstance(v, list)
         }
-        logger.info(f"Args: {args}")
-        config = _update_config_with_cli_args(config, args)
+        logger.info(f"Args: {cli_args}")
+        config = _update_config_with_cli_args(config, cli_args)
 
     return config
 
@@ -91,34 +91,34 @@ def _arg_parse() -> Dict:
         Dictionary of command-line arguments.
     """
     arg_parser = get_arg_parser()
-    args = arg_parser.parse_args()
+    cli_args = arg_parser.parse_args()
 
-    if args.log_level:
-        logger.setLevel(args.log_level)
+    if cli_args.log_level:
+        logger.setLevel(cli_args.log_level)
 
-    if args.version:
+    if cli_args.version:
         print(get_version())
         sys.exit()
 
     logger.info(get_version())
 
-    if args.link_configs:
-        args.link_configs = Path(args.link_configs)
-        if args.link_configs.exists():
+    if cli_args.link_configs:
+        cli_args.link_configs = Path(cli_args.link_configs)
+        if cli_args.link_configs.exists():
             msg = (
-                f"{args.link_configs} must be a directory that does not "
+                f"{cli_args.link_configs} must be a directory that does not "
                 "already exist"
             )
             logger.error(msg)
             raise ValueError(msg)
-        parent_dir = args.link_configs.parent
+        parent_dir = cli_args.link_configs.parent
         if not parent_dir.exists():
             parent_dir.mkdir(parents=True, exist_ok=True)
-        args.link_configs.symlink_to(
+        cli_args.link_configs.symlink_to(
             Path(__file__).parent, target_is_directory=True
         )
 
-    return vars(args)
+    return vars(cli_args)
 
 
 def _update_config_with_cli_args(
@@ -137,21 +137,26 @@ def _update_config_with_cli_args(
     updated_data = config.model_dump()
 
     for key, value in cli_args.items():
-        for field_name, field_info in config.__fields__.items():
+        for field_name, field_info in config.model_fields.items():
+            if key == field_name:
+                updated_data[key] = value
+                break
+
             if isinstance(field_info.annotation, type) and issubclass(
                 field_info.annotation, BaseModel
             ):
                 sub_model = getattr(config, field_name)
 
-                if key in sub_model.__fields__:
-                    sub_model_data = sub_model.model_dump()
+                if key in sub_model.model_fields:
+                    sub_model_data = updated_data.get(
+                        field_name, sub_model.model_dump()
+                    )
                     sub_model_data[key] = value
                     updated_data[field_name] = sub_model.__class__(
                         **sub_model_data
                     ).model_dump()
                     break
 
-            elif key in config.__fields__:
-                updated_data[key] = value
+    updated_config = config.__class__(**updated_data)
 
-    return config.__class__(**updated_data)
+    return updated_config

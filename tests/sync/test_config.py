@@ -142,7 +142,7 @@ def test_syncconfig_sets_aws_profile_env_var():
 def test_syncconfig_set_user(input_user, output_user):
     """Test for the SyncConfig class."""
     cfg = {"user": input_user}
-    assert not SyncConfig.model_fields["user"].default
+    assert not SyncConfig.model_fields.get("user").default
     sync_config = SyncConfig(**cfg)
     assert sync_config.user == output_user
 

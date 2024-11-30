@@ -173,6 +173,7 @@ def test_build_config_version(
     config_file_teardown,
 ):
     """Test for the build_config function."""
+    # pylint: disable=unused-argument
     namespace.version = True
     mock_parse_args.return_value = namespace
     with pytest.raises(SystemExit):

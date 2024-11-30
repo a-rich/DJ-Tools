@@ -1,3 +1,7 @@
+"""This module contains the BaseConfigFormatter. This class is a Pydantic
+BaseModel that defines a __repr__ method to be used by all the config objects
+used in this library."""
+
 import logging
 
 from pydantic import BaseModel
@@ -7,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseConfigFormatter(BaseModel, extra="allow"):
-    """stuff"""
+    """Pydantic BaseModel with a __repr__ method for pretty printing."""
 
     def __init__(self, *args, **kwargs):
         """Constructor."""
