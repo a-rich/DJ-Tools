@@ -35,7 +35,7 @@ def config():
 def config_file_teardown():
     """Teardown config.yaml."""
     yield
-    config_dir = Path(__file__).parent / "src" / "djtools" / "configs"
+    config_dir = Path(__file__).parent.parent / "src" / "djtools" / "configs"
     config_file = config_dir / "config.yaml"
     if config_file.exists():
         config_file.unlink()
