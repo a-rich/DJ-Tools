@@ -1,6 +1,7 @@
 site_name: DJ Tools
 repo_url: https://github.com/a-rich/DJ-Tools/
 edit_uri: tree/main/docs
+docs_dir: .
 nav:
   - Home: index.md
   - Tutorials:
