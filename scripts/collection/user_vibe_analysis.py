@@ -199,8 +199,8 @@ if __name__ == "__main__":
     config = build_config(config_path)
 
     # Load collection and get a dict of tracks keyed by location.
-    collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
-        path=args.collection or config.COLLECTION_PATH
+    collection = PLATFORM_REGISTRY[config.platform]["collection"](
+        path=args.collection or config.collection_path
     )
     args.collection = collection
 

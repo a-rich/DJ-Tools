@@ -2,20 +2,14 @@
 
 import inspect
 import logging
-from pathlib import Path
 import re
+from pathlib import Path
 from unittest import mock
 
-from pip._vendor import tomli
 import pytest
+from pip._vendor import tomli
 
-from djtools.configs.helpers import (
-    _arg_parse,
-    BaseConfig,
-    build_config,
-    _filter_dict,
-    PKG_CFG,
-)
+from djtools.configs.helpers import _arg_parse, build_config, ConfigLoadFailure
 from djtools.version import get_version
 
 from ..test_utils import mock_exists, MockOpen
@@ -98,10 +92,10 @@ def test_build_config_invalid_config_yaml(caplog):
     caplog.set_level("CRITICAL")
     with (
         mock.patch.object(Path, "exists", return_value=True),
-        pytest.raises(RuntimeError),
+        pytest.raises(ConfigLoadFailure),
     ):
         build_config()
-    assert 'Error reading "config.yaml"' in caplog.records[0].message
+    assert "Error reading" in caplog.records[0].message
 
 
 @mock.patch("djtools.spotify.helpers.get_spotify_client", mock.Mock())
@@ -125,7 +119,7 @@ def test_build_config_no_config_yaml(
     "builtins.open",
     MockOpen(
         files=["config.yaml"],
-        content="configs:\n  ARTIST_FIRST: false",
+        content="configs:\n  log_level: INFO",
     ).open,
 )
 @mock.patch(
@@ -140,10 +134,10 @@ def test_build_config_no_config_yaml(
 @mock.patch("argparse.ArgumentParser.parse_args")
 def test_build_config_overrides_using_args(mock_parse_args, namespace):
     """Test for the build_config function."""
-    namespace.artist_first = True
+    namespace.log_level = "CRITICAL"
     mock_parse_args.return_value = namespace
     config = build_config()
-    assert config.ARTIST_FIRST is True
+    assert config.log_level == "CRITICAL"
 
 
 @mock.patch("argparse.ArgumentParser.parse_args")
@@ -171,37 +165,20 @@ def test_build_config_reads_generated_config(
     assert first_config == second_config
 
 
-@mock.patch(
-    "builtins.open",
-    MockOpen(
-        files=["config.yaml"],
-        write_only=True,
-    ).open,
-)
 @mock.patch("argparse.ArgumentParser.parse_args")
-def test_build_config_version(mock_parse_args, namespace, capsys):
+def test_build_config_version(
+    mock_parse_args,
+    namespace,
+    capsys,
+    config_file_teardown,
+):
     """Test for the build_config function."""
+    # pylint: disable=unused-argument
     namespace.version = True
     mock_parse_args.return_value = namespace
     with pytest.raises(SystemExit):
         build_config()
     assert capsys.readouterr().out == f"{get_version()}\n"
-
-
-@pytest.mark.parametrize("config", PKG_CFG.values())
-@mock.patch("djtools.spotify.helpers.get_spotify_client", mock.Mock())
-def test_filter_dict(config):
-    """Test for the filter_dict function."""
-    super_config = BaseConfig()
-    sub_config = config(**dict(super_config))
-    result = _filter_dict(sub_config)
-    super_keys = set(super_config.model_dump())
-    sub_keys = set(sub_config.model_dump())
-    result_keys = set(result)
-    assert len(result_keys) + len(super_keys) == len(sub_keys)
-    assert result_keys.union(super_keys) == sub_keys
-    assert sub_keys.difference(result_keys) == super_keys
-    assert sub_keys.difference(super_keys) == result_keys
 
 
 def test_stack_inspection_for_cli_arg_parsing():

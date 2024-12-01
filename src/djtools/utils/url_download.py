@@ -1,20 +1,21 @@
-"""This module is used to download tracks from "URL_DOWNLOAD". For example, a
+"""This module is used to download tracks from "url_download". For example, a
 Soundcloud playlist can be made and the URL of that playlist can be provided to
 download all those tracks and rename them to cleanup the digits appended to the
 files by the youtube-dl package.
 """
 
 import logging
-from pathlib import Path
 import re
+from pathlib import Path
+from typing import Type
 
 import youtube_dl as ytdl
 
-from djtools.configs.config import BaseConfig
 from djtools.utils.helpers import make_path
 
 
 logger = logging.getLogger(__name__)
+BaseConfig = Type["BaseConfig"]
 
 
 @make_path
@@ -41,23 +42,23 @@ def url_download(config: BaseConfig):
     Args:
         config: Configuration object.
     """
-    dl_loc = config.AUDIO_DESTINATION or Path(".")
+    dl_loc = config.utils.audio_destination or Path(".")
     dl_loc.mkdir(parents=True, exist_ok=True)
 
     ydl_opts = {
         "postprocessors": [
             {
                 "key": "FFmpegExtractAudio",
-                "preferredcodec": config.AUDIO_FORMAT,
-                "preferredquality": config.AUDIO_BITRATE,
+                "preferredcodec": config.utils.audio_format,
+                "preferredquality": config.utils.audio_bitrate,
             }
         ],
         "outtmpl": (dl_loc / "%(title)s.tmp").as_posix(),
     }
 
     with ytdl.YoutubeDL(ydl_opts) as ydl:
-        logger.info(f"Downloading {config.URL_DOWNLOAD} to {dl_loc}")
-        ydl.download([config.URL_DOWNLOAD])
+        logger.info(f"Downloading {config.utils.url_download} to {dl_loc}")
+        ydl.download([config.utils.url_download])
 
     for _file in dl_loc.iterdir():
         (dl_loc / _file).rename(dl_loc / fix_up(_file))

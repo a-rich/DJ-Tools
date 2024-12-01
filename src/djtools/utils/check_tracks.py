@@ -2,13 +2,12 @@
 directories to see if there is any overlap with the contents of the Beatcloud.
 """
 
+import logging
 from collections import defaultdict
 from itertools import groupby
-import logging
 from operator import itemgetter
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Type
 
-from djtools.configs.config import BaseConfig
 from djtools.utils.helpers import (
     find_matches,
     get_spotify_tracks,
@@ -19,6 +18,7 @@ from djtools.utils.helpers import (
 
 
 logger = logging.getLogger(__name__)
+BaseConfig = Type["BaseConfig"]
 
 
 def compare_tracks(
@@ -40,23 +40,23 @@ def compare_tracks(
         Tuple with a list of all Beatcloud tracks and list of full paths to
             matching Beatcloud tracks.
     """
-    if config.DOWNLOAD_SPOTIFY_PLAYLIST:
-        cached_local_dirs = config.LOCAL_DIRS
-        config.LOCAL_DIRS = []
-        spotify_playlists = [config.DOWNLOAD_SPOTIFY_PLAYLIST]
+    if config.sync.download_spotify_playlist:
+        cached_local_dirs = config.utils.local_dirs
+        config.utils.local_dirs = []
+        spotify_playlists = [config.sync.download_spotify_playlist]
     else:
-        spotify_playlists = config.CHECK_TRACKS_SPOTIFY_PLAYLISTS
+        spotify_playlists = config.utils.check_tracks_spotify_playlists
 
     track_sets = []
     beatcloud_matches = []
     if spotify_playlists:
         spotify_tracks = get_spotify_tracks(config, spotify_playlists)
         if not spotify_tracks:
-            if config.DOWNLOAD_SPOTIFY_PLAYLIST:
-                substring = "DOWNLOAD_SPOTIFY_PLAYLIST is a key"
+            if config.sync.download_spotify_playlist:
+                substring = "download_spotify_playlist is a key"
             else:
                 substring = (
-                    "CHECK_TRACKS_SPOTIFY_PLAYLISTS has one or more keys"
+                    "check_tracks_spotify_playlists has one or more keys"
                 )
             logger.warning(
                 f"There are no Spotify tracks; make sure {substring} in "
@@ -72,15 +72,15 @@ def compare_tracks(
                     )
                     track_results[playlist_name].append(
                         f"{artists} - {title}"
-                        if config.ARTIST_FIRST
+                        if config.sync.artist_first
                         else f"{title} - {artists}"
                     )
             track_sets.append((track_results, "Spotify Playlist Tracks"))
-    if config.LOCAL_DIRS:
+    if config.utils.local_dirs:
         local_tracks = get_local_tracks(config)
         if not local_tracks:
             logger.warning(
-                "There are no local tracks; make sure LOCAL_DIRS has one or "
+                "There are no local tracks; make sure local_dirs has one or "
                 "more directories containing one or more tracks"
             )
         else:
@@ -90,19 +90,19 @@ def compare_tracks(
             }
             track_sets.append((track_results, "Local Directory Tracks"))
 
-    if config.DOWNLOAD_SPOTIFY_PLAYLIST:
-        config.LOCAL_DIRS = cached_local_dirs
+    if config.sync.download_spotify_playlist:
+        config.utils.local_dirs = cached_local_dirs
 
     if not track_sets:
         return beatcloud_tracks, beatcloud_matches
 
     if not beatcloud_tracks:
-        beatcloud_tracks = get_beatcloud_tracks(config.BUCKET_URL)
+        beatcloud_tracks = get_beatcloud_tracks(config.sync.bucket_url)
 
     path_lookup = {x.stem: x for x in beatcloud_tracks}
 
     for tracks, track_type in track_sets:
-        if config.ARTIST_FIRST and track_type == "Local Directory Tracks":
+        if config.sync.artist_first and track_type == "Local Directory Tracks":
             path_lookup = reverse_title_and_artist(path_lookup)
         matches = find_matches(
             tracks,

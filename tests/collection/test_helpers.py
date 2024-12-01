@@ -1,9 +1,9 @@
 """Testing for the helpers module."""
 
+import re
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
-import re
 from unittest import mock
 
 import pytest
@@ -26,11 +26,11 @@ from djtools.collection.helpers import (
     parse_numerical_selectors,
     parse_string_selectors,
     parse_timedelta,
-    PLATFORM_REGISTRY,
     print_data,
     print_playlists_tag_statistics,
     scale_data,
 )
+from djtools.collection.platform_registry import PLATFORM_REGISTRY
 from djtools.collection.rekordbox_collection import RekordboxCollection
 from djtools.collection.rekordbox_playlist import RekordboxPlaylist
 
@@ -88,7 +88,7 @@ def test_build_tag_playlists_minimum_tracks_config():
 
 
 @mock.patch(
-    "djtools.collection.helpers.RekordboxTrack.get_genre_tags",
+    "djtools.collection.rekordbox_track.RekordboxTrack.get_genre_tags",
     mock.Mock(return_value=["Tag"]),
 )
 def test_build_tag_playlists_pure_playlist_minimum_tracks_config(
@@ -425,7 +425,8 @@ def test_filter_tag_playlists(rekordbox_track):
 
 
 @mock.patch(
-    "djtools.collection.helpers.RekordboxPlaylist.aggregate", return_value=True
+    "djtools.collection.rekordbox_playlist.RekordboxPlaylist.aggregate",
+    return_value=True,
 )
 def test_aggregate_playlists(rekordbox_collection):
     """Test for the aggregate_playlists function."""

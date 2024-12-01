@@ -12,11 +12,11 @@ def test_baseconfig_invalid_spotify_credentials(mock_spotify):
     """Test for the SpotifyConfig class."""
     mock_spotify.return_value.current_user.side_effect = Exception()
     cfg = {
-        "SPOTIFY_CLIENT_ID": "not a real ID",
-        "SPOTIFY_CLIENT_SECRET": "not a real secret",
-        "SPOTIFY_PLAYLIST_FROM_UPLOAD": True,
-        "SPOTIFY_REDIRECT_URI": "not a real URI",
-        "SPOTIFY_USERNAME": "not a real username",
+        "spotify_client_id": "not a real ID",
+        "spotify_client_secret": "not a real secret",
+        "spotify_playlist_from_upload": True,
+        "spotify_redirect_uri": "not a real URI",
+        "spotify_username": "not a real username",
     }
     with pytest.raises(RuntimeError, match="Spotify credentials are invalid!"):
         SpotifyConfig(**cfg)
@@ -24,14 +24,14 @@ def test_baseconfig_invalid_spotify_credentials(mock_spotify):
 
 def test_spotifyconfig_no_spotify_credentials():
     """Test for the SpotifyConfig class."""
-    cfg = {"SPOTIFY_PLAYLIST_FROM_UPLOAD": True, "SPOTIFY_CLIENT_ID": ""}
+    cfg = {"spotify_playlist_from_upload": True, "spotify_client_id": ""}
     with pytest.raises(
         RuntimeError,
         match=(
-            "Without all the configuration options SPOTIFY_CLIENT_ID, "
-            "SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI, and "
-            "SPOTIFY_USERNAME set to valid values, you cannot use "
-            "SPOTIFY_PLAYLISTS or SPOTIFY_PLAYLIST_FROM_UPLOAD"
+            "Without all the configuration options spotify_client_id, "
+            "spotify_client_secret, spotify_redirect_uri, and "
+            "spotify_username set to valid values, you cannot use "
+            "spotify_playlists or spotify_playlist_from_upload"
         ),
     ):
         SpotifyConfig(**cfg)
@@ -41,19 +41,19 @@ def test_spotifyconfig_no_spotify_credentials():
 def test_spotifyconfig_no_reddit_credentials():
     """Test for the SpotifyConfig class."""
     cfg = {
-        "REDDIT_CLIENT_ID": "",
-        "SPOTIFY_CLIENT_ID": "id",
-        "SPOTIFY_CLIENT_SECRET": "secret",
-        "SPOTIFY_PLAYLISTS": True,
-        "SPOTIFY_REDIRECT_URI": "uri",
-        "SPOTIFY_USERNAME": "name",
+        "reddit_client_id": "",
+        "spotify_client_id": "id",
+        "spotify_client_secret": "secret",
+        "spotify_playlists": True,
+        "spotify_redirect_uri": "uri",
+        "spotify_username": "name",
     }
     with pytest.raises(
         RuntimeError,
         match=(
-            "Without all the configuration options REDDIT_CLIENT_ID, "
-            "REDDIT_CLIENT_SECRET, and REDDIT_USER_AGENT, set to valid "
-            "values, you cannot use SPOTIFY_PLAYLISTS"
+            "Without all the configuration options reddit_client_id, "
+            "reddit_client_secret, and reddit_user_agent, set to valid "
+            "values, you cannot use spotify_playlists"
         ),
     ):
         SpotifyConfig(**cfg)

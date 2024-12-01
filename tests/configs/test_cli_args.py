@@ -4,13 +4,14 @@ from pathlib import Path
 from typing import List
 
 import pytest
+from pydantic import BaseModel
 
 from djtools.configs.cli_args import (
     _convert_to_paths,
-    get_arg_parser,
-    NonEmptyListElementAction,
     _parse_json,
     _parse_trim_initial_silence,
+    get_arg_parser,
+    NonEmptyListElementAction,
 )
 
 
@@ -39,7 +40,16 @@ def test_get_arg_parser_arg_for_every_field(config):
         ]
         for arg in parser.parse_args(args).__dict__.keys()
     }
-    config_set = {key.lower() for key in dict(config).keys()}
+    config_set = set()
+    for field_name, field_info in config.model_fields.items():
+        if isinstance(field_info.annotation, type) and issubclass(
+            field_info.annotation, BaseModel
+        ):
+            sub_model = getattr(config, field_name)
+            config_set.update(list(sub_model.model_fields))
+            continue
+
+        config_set.add(field_name)
 
     # Test that the only CLI exclusive args are linking configs and displaying
     # the version.

@@ -67,8 +67,8 @@ if __name__ == "__main__":
     # Build config, instantiate collection, and get tracks.
     config_path = Path(args.config)
     config = build_config(config_path)
-    collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
-        path=config.COLLECTION_PATH
+    collection = PLATFORM_REGISTRY[config.platform]["collection"](
+        path=config.collection_path
     )
     tracks = collection.get_tracks().values()
 
@@ -93,7 +93,7 @@ if __name__ == "__main__":
             future.result()
             pbar.update(1)
 
-    playlist_class = PLATFORM_REGISTRY[config.PLATFORM]["playlist"]
+    playlist_class = PLATFORM_REGISTRY[config.platform]["playlist"]
     playlist = playlist_class.new_playlist(
         name=args.playlist_name, tracks=tracks
     )

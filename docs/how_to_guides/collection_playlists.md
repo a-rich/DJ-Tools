@@ -47,7 +47,7 @@ For example, my `Techno` folder will have a playlist called `All Techno` which c
 
 You may only have one tag for each playlist. If you're interested in creating playlists that combine multiple tags, check out the [Combiner](combiner_playlists.md) how-to guide.
 
-Any tags in your Collection that are not included in the `collection_playlists.yaml` configuration file will automatically be added to either a `Unused Tags` playlist or an `Unused Tags` folder with a playlist for each tag (you can [configure this behavior](../tutorials/getting_started/configuration.md#collection-config) using `COLLECTION_PLAYLISTS_REMAINDER`).
+Any tags in your Collection that are not included in the `collection_playlists.yaml` configuration file will automatically be added to either a `Unused Tags` playlist or an `Unused Tags` folder with a playlist for each tag (you can [configure this behavior](../tutorials/getting_started/configuration.md#collection-config) using `collection_playlists_remainder`).
 
 If there are tags for which you're not interested in creating an `Unused Tags` playlist(s) for, simply add a new folder to the tree call `_ignore` and list the tags underneath of it.
 
@@ -55,9 +55,9 @@ During operation of the `playlist_builder`, after the `tag` playlists are constr
 In general, each `PlaylistFilter` calls a `is_filter_playlist` method which returns `True` if the playlist should have filtering logic applied to it.
 For each track in the playlist, the `PlaylistFilter` method `filter_track` is called with the track and returns `True` if the track should remain in the playlist.
 
-You may configure which, if any, `PlaylistFilters` you want applied using the `COLLECTION_PLAYLIST_FILTERS` option. Check the [references](../reference/collection/index.md) for the current set of implemented `PlaylistFilters`.
+You may configure which, if any, `PlaylistFilters` you want applied using the `collection_playlist_filters` option. Check the [references](../reference/collection/index.md) for the current set of implemented `PlaylistFilters`.
 
-Finally, you may configure the option `MINIMUM_TAG_PLAYLIST_TRACKS` to any positive integer in order to place a lower bound on the number of tracks that must exist in a tag playlist in order for the playlist to be created.
+Finally, you may configure the option `minimum_tag_playlist_tracks` to any positive integer in order to place a lower bound on the number of tracks that must exist in a tag playlist in order for the playlist to be created.
 
 Once you've finalized your playlist configuration, run the following command to build the playlists:
 

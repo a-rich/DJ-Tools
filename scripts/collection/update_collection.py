@@ -58,10 +58,10 @@ if __name__ == "__main__":
     if args.collection:
         collection_path = Path(args.collection)
     else:
-        collection_path = config.COLLECTION_PATH
+        collection_path = config.collection_path
 
     # Load collection and get a dict of tracks keyed by location.
-    collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
+    collection = PLATFORM_REGISTRY[config.platform]["collection"](
         path=collection_path
     )
     tracks = {
@@ -76,8 +76,8 @@ if __name__ == "__main__":
         remote_master_collection = args.master_collection
     else:
         remote_master_collection = (
-            f"{config.BUCKET_URL}/dj/collections/"
-            f"{args.master_collection_user}/{config.PLATFORM}_collection"
+            f"{config.bucket_url}/dj/collections/"
+            f"{args.master_collection_user}/{config.platform}_collection"
         )
 
     # Download the master collection and get a dict of its tracks too.
@@ -87,7 +87,7 @@ if __name__ == "__main__":
         cmd.append("--recursive")
     with Popen(cmd) as proc:
         proc.wait()
-    master_collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
+    master_collection = PLATFORM_REGISTRY[config.platform]["collection"](
         path=master_collection_path
     )
     master_tracks = master_collection.get_tracks()

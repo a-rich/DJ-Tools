@@ -21,7 +21,7 @@ These `PlaylistFilters` inject custom behavior into the `playlist_builder`. In g
 - `is_filter_playlist`: returns `True` if a given `Playlist` should have the filter applied to its tracks
 - `filter_track`: returns `True` if a track should remain in the playlist after applying the filter.
 
-Once a `PlaylistFilter` is implemented, it must be added to the list of supported `COLLECTION_PLAYLIST_FILTERS`:
+Once a `PlaylistFilter` is implemented, it must be added to the list of supported `collection_playlist_filters`:
 
 ::: djtools.collection.config.CollectionConfig
     options:

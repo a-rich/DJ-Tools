@@ -1,19 +1,16 @@
 """This module contains fixtures for DJ Tools."""
 
-from argparse import Namespace
 import os
+from argparse import Namespace
 from pathlib import Path
-
-# import time
 from unittest import mock
 
-from bs4 import BeautifulSoup
-from pydub import AudioSegment, generators
 import pytest
 import yaml
+from bs4 import BeautifulSoup
+from pydub import AudioSegment, generators
 
 from djtools.configs.config import BaseConfig
-from djtools.configs.helpers import _filter_dict, PKG_CFG
 from djtools.collection.config import PlaylistConfig
 from djtools.collection.rekordbox_collection import RekordboxCollection
 from djtools.collection.rekordbox_track import RekordboxTrack
@@ -29,23 +26,14 @@ def namespace():
 @mock.patch("djtools.spotify.helpers.get_spotify_client", mock.MagicMock())
 def config():
     """Test config fixture."""
-    configs = {pkg: cfg() for pkg, cfg in PKG_CFG.items() if pkg != "configs"}
-    joined_config = BaseConfig(
-        **{
-            k: v
-            for cfg in configs.values()
-            for k, v in _filter_dict(cfg).items()
-        }
-    )
-
-    return joined_config
+    return BaseConfig()
 
 
 @pytest.fixture
 def config_file_teardown():
     """Teardown config.yaml."""
     yield
-    config_dir = Path(__file__).parent / "src" / "djtools" / "configs"
+    config_dir = Path(__file__).parent.parent / "src" / "djtools" / "configs"
     config_file = config_dir / "config.yaml"
     if config_file.exists():
         config_file.unlink()
@@ -196,6 +184,8 @@ def rekordbox_playlist(
 # Pytest hooks for producing timing information for fixtures and test cases.
 ###############################################################################
 
+
+# import time
 
 # @pytest.hookimpl(hookwrapper=True)
 # def pytest_fixture_setup(request):

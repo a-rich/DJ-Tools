@@ -43,10 +43,10 @@ def get_collection_and_playlist_class(
         Tuple of Collection object and Playlist class.
     """
     config = build_config(config_path)
-    collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
-        path=collection_path or config.COLLECTION_PATH
+    collection = PLATFORM_REGISTRY[config.platform]["collection"](
+        path=collection_path or config.collection_path
     )
-    playlist_class = PLATFORM_REGISTRY[config.PLATFORM]["playlist"]
+    playlist_class = PLATFORM_REGISTRY[config.platform]["playlist"]
 
     return collection, playlist_class
 

@@ -108,7 +108,7 @@ disable = [
     "too-many-return-statements"
 ]
 good-names = [
-    "USER"
+    "user"
 ]
 max-args = 10
 max-attributes = 15
@@ -149,6 +149,9 @@ spelling-ignore-words = [
     "xml", "xml's",
     "yaml", "youtube",
 ]
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

@@ -1,13 +1,12 @@
 """This module contains helpers for the collection package."""
 
-from __future__ import annotations
-from collections import defaultdict
-from datetime import datetime
 import logging
-from operator import itemgetter
-from pathlib import Path
 import re
 import shutil
+from collections import defaultdict
+from datetime import datetime
+from operator import itemgetter
+from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple, Union
 
 from dateutil.relativedelta import relativedelta
@@ -21,9 +20,6 @@ from djtools.collection.config import (
     PlaylistName,
 )
 from djtools.collection.playlist_filters import PlaylistFilter
-from djtools.collection.rekordbox_collection import RekordboxCollection
-from djtools.collection.rekordbox_playlist import RekordboxPlaylist
-from djtools.collection.rekordbox_track import RekordboxTrack
 from djtools.utils.helpers import make_path
 
 
@@ -69,8 +65,6 @@ def copy_file(track: Track, destination: Path):
 
 # #############################################################################
 # This section includes helpers for the playlist_builder module.
-#   - PLATFORM_REGISTRY: used to determine which abstraction implementations to
-#       use e.g. "rekordbox"
 #   - build_tag_playlists: builds collection playlists using "tags" component
 #       of the PlaylistConfig
 #   - filter_tag_playlists: applies PlaylistFilter implementations to built tag
@@ -91,18 +85,6 @@ def copy_file(track: Track, destination: Path):
 #   - scale_data: scales tag frequencies to normalize histogram height
 #   - print_data: formats the string representing ASCII histograms
 # #############################################################################
-
-
-# As support for various platforms (Serato, Denon, Traktor, etc.) is added, the
-# platform name must be registered with references to their Collection,
-# Playlist, and Track implementations.
-PLATFORM_REGISTRY = {
-    "rekordbox": {
-        "collection": RekordboxCollection,
-        "playlist": RekordboxPlaylist,
-        "track": RekordboxTrack,
-    },
-}
 
 
 def build_tag_playlists(
@@ -569,7 +551,7 @@ def parse_numerical_selectors(
 def parse_string_selectors(
     string_matches: List[str],
     string_value_lookup: Dict[Union[str, Tuple], str],
-    string_selector_type_map: Dict[str],
+    string_selector_type_map: Dict[str, str],
     playlists: Set[str],
 ):
     """Parses a string match of one or more string selectors.
@@ -729,7 +711,7 @@ class BooleanNode:
     def __init__(
         self,
         tags_tracks: Dict[str, Dict[str, Track]],
-        parent: Optional[BooleanNode] = None,
+        parent: Optional["BooleanNode"] = None,
     ):
         """Constructor.
 
@@ -840,7 +822,7 @@ class BooleanNode:
 
         return next(iter(self._operands), set())
 
-    def get_parent(self) -> BooleanNode:
+    def get_parent(self) -> "BooleanNode":
         """Gets the parent of the BooleanNode.
 
         Returns:

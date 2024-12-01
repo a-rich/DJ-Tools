@@ -20,10 +20,10 @@ from djtools.utils.url_download import url_download
 
 
 UTILS_OPERATIONS = {
-    "CHECK_TRACKS": compare_tracks,
-    "NORMALIZE_AUDIO": normalize,
-    "PROCESS_RECORDING": process,
-    "URL_DOWNLOAD": url_download,
+    "check_tracks": compare_tracks,
+    "normalize_audio": normalize,
+    "process_recording": process,
+    "url_download": url_download,
 }
 
 __all__ = (

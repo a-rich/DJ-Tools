@@ -5,35 +5,34 @@ overrides the corresponding configuration options with these arguments.
 
 import inspect
 import logging
-from pathlib import Path
 import sys
-from typing import Any, Dict, Optional, Union
+from pathlib import Path
+from typing import Any, Dict
 
 import yaml
+from pydantic import BaseModel
 
-from djtools.collection.config import CollectionConfig
 from djtools.configs.cli_args import get_arg_parser
 from djtools.configs.config import BaseConfig
-from djtools.spotify.config import SpotifyConfig
-from djtools.sync.config import SyncConfig
-from djtools.utils.config import UtilsConfig
 from djtools.utils.helpers import make_path
 from djtools.version import get_version
 
 
 logger = logging.getLogger(__name__)
 
-PKG_CFG = {
-    "collection": CollectionConfig,
-    "configs": BaseConfig,
-    "spotify": SpotifyConfig,
-    "sync": SyncConfig,
-    "utils": UtilsConfig,
-}
+
+class InvalidConfigYaml(Exception):
+    """Exception for invalid config."""
+
+
+class ConfigLoadFailure(Exception):
+    """Exception for failing to load config."""
 
 
 @make_path
-def build_config(config_file: Optional[Path] = None) -> BaseConfig:
+def build_config(
+    config_file: Path = Path(__file__).parent / "config.yaml",
+) -> BaseConfig:
     """This function loads configurations for the library.
 
     Configurations are loaded from config.yaml. If command-line arguments are
@@ -48,81 +47,38 @@ def build_config(config_file: Optional[Path] = None) -> BaseConfig:
     Returns:
         Global configuration object.
     """
-    # Load "config.yaml".
-    if not config_file:
-        config_file = Path(__file__).parent / "config.yaml"
-    if config_file.exists():
-        try:
-            with open(config_file, mode="r", encoding="utf-8") as _file:
-                config = yaml.load(_file, Loader=yaml.FullLoader) or {}
-        except Exception as exc:
-            msg = f'Error reading "config.yaml": {exc}'
-            logger.critical(msg)
-            raise RuntimeError(msg) from Exception
-    else:
-        config = {}
-        initial_config = {
-            pkg: {
-                k: v.default
-                for k, v in cfg.model_fields.items()
-                if pkg == "configs" or k not in BaseConfig.model_fields
-            }
-            for pkg, cfg in PKG_CFG.items()
-        }
+    # Create a default config if one doesn't already exist.
+    if not config_file.exists():
         with open(config_file, mode="w", encoding="utf-8") as _file:
-            yaml.dump(initial_config, _file)
+            yaml.dump(BaseConfig().model_dump(), _file)
 
-    # Only get CLI arguments if calling djtools as a CLI.
-    args = {}
-    stack = inspect.stack()
-    entry_frame = stack[-1]
-    cli_loc = str(Path("bin") / "djtools")  # Unix djtools.
-    test_loc = str(Path("bin") / "pytest")  # Unix pytest.
-    windows_loc = str(Path("lib") / "runpy.py")  # Windows Python<=3.10.
-    windows_frozen = "<frozen runpy>"  # Windows Python>=3.11.
-    if entry_frame[1].endswith(
-        (cli_loc, test_loc, windows_loc, windows_frozen)
-    ):
-        args = {
-            k.upper(): v
-            for k, v in _arg_parse().items()
-            if v or isinstance(v, list)
-        }
+    # Load the config.
+    try:
+        with open(config_file, mode="r", encoding="utf-8") as _file:
+            config_data = yaml.load(_file, Loader=yaml.FullLoader) or {}
+        config = BaseConfig(**config_data)
+    except Exception as exc:
+        msg = f"Error reading config file {config_file}: {exc}"
+        logger.critical(msg)
+        raise ConfigLoadFailure(msg) from exc
 
-    # Update config using command-line arguments.
-    if args:
-        logger.info(f"Args: {args}")
-        args_set = set(args)
-        for pkg, cfg_class in PKG_CFG.items():
-            args_intersection = set(cfg_class.model_fields).intersection(
-                args_set
-            )
-            if args_intersection:
-                args_subset = {
-                    k: v for k, v in args.items() if k in args_intersection
-                }
-                if pkg in config:
-                    config[pkg].update(args_subset)
-                else:
-                    config[pkg] = args_subset
-
-    # Instantiate Pydantic models.
-    base_cfg_options = config["configs"] if config else {}
-    configs = {
-        pkg: cfg(**{**base_cfg_options, **config.get(pkg, {})})
-        for pkg, cfg in PKG_CFG.items()
-        if pkg != "configs"
-    }
-    joined_config = BaseConfig(
-        **base_cfg_options,
-        **{
-            k: v
-            for cfg in configs.values()
-            for k, v in _filter_dict(cfg).items()
-        },
+    entry_frame_filename = inspect.stack()[-1][1]
+    valid_filenames = (
+        str(Path("bin") / "djtools"),  # Unix djtools.
+        str(Path("bin") / "pytest"),  # Unix pytest.
+        str(Path("lib") / "runpy.py"),  # Windows Python<=3.10.
+        "<frozen runpy>",  # Windows Python>=3.11.
     )
 
-    return joined_config
+    # Only get CLI arguments if calling djtools as a CLI.
+    if entry_frame_filename.endswith(valid_filenames):
+        cli_args = {
+            k: v for k, v in _arg_parse().items() if v or isinstance(v, list)
+        }
+        logger.info(f"Args: {cli_args}")
+        config = _update_config_with_cli_args(config, cli_args)
+
+    return config
 
 
 def _arg_parse() -> Dict:
@@ -135,51 +91,72 @@ def _arg_parse() -> Dict:
         Dictionary of command-line arguments.
     """
     arg_parser = get_arg_parser()
-    args = arg_parser.parse_args()
+    cli_args = arg_parser.parse_args()
 
-    if args.log_level:
-        logger.setLevel(args.log_level)
+    if cli_args.log_level:
+        logger.setLevel(cli_args.log_level)
 
-    if args.version:
+    if cli_args.version:
         print(get_version())
         sys.exit()
 
     logger.info(get_version())
 
-    if args.link_configs:
-        args.link_configs = Path(args.link_configs)
-        if args.link_configs.exists():
+    if cli_args.link_configs:
+        cli_args.link_configs = Path(cli_args.link_configs)
+        if cli_args.link_configs.exists():
             msg = (
-                f"{args.link_configs} must be a directory that does not "
+                f"{cli_args.link_configs} must be a directory that does not "
                 "already exist"
             )
             logger.error(msg)
             raise ValueError(msg)
-        parent_dir = args.link_configs.parent
+        parent_dir = cli_args.link_configs.parent
         if not parent_dir.exists():
             parent_dir.mkdir(parents=True, exist_ok=True)
-        args.link_configs.symlink_to(
+        cli_args.link_configs.symlink_to(
             Path(__file__).parent, target_is_directory=True
         )
 
-    return vars(args)
+    return vars(cli_args)
 
 
-def _filter_dict(
-    sub_config: Union[
-        CollectionConfig, SpotifyConfig, SyncConfig, UtilsConfig
-    ],
-) -> Dict[Any, Any]:
-    """Filters out the superclass key: value pairs of a subclass.
+def _update_config_with_cli_args(
+    config: BaseConfig, cli_args: Dict[str, Any]
+) -> BaseConfig:
+    """
+    Update the BaseConfig object with CLI arguments.
 
     Args:
-        sub_config: Instance of any subclass of BaseConfig.
+        config: The BaseConfig object.
+        cli_args: CLI arguments.
 
     Returns:
-        Dictionary containing just the keys unique to "sub_config".
+        The updated BaseConfig object.
     """
-    return {
-        k: v
-        for k, v in sub_config.model_dump().items()
-        if k not in BaseConfig.model_fields
-    }
+    updated_data = config.model_dump()
+
+    for key, value in cli_args.items():
+        for field_name, field_info in config.model_fields.items():
+            if key == field_name:
+                updated_data[key] = value
+                break
+
+            if isinstance(field_info.annotation, type) and issubclass(
+                field_info.annotation, BaseModel
+            ):
+                sub_model = getattr(config, field_name)
+
+                if key in sub_model.model_fields:
+                    sub_model_data = updated_data.get(
+                        field_name, sub_model.model_dump()
+                    )
+                    sub_model_data[key] = value
+                    updated_data[field_name] = sub_model.__class__(
+                        **sub_model_data
+                    ).model_dump()
+                    break
+
+    updated_config = config.__class__(**updated_data)
+
+    return updated_config

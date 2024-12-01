@@ -1,7 +1,7 @@
 """This module contains testing utilities."""
 
-from pathlib import Path
 import tempfile
+from pathlib import Path
 from typing import IO, List, Optional, Tuple
 from unittest import mock
 

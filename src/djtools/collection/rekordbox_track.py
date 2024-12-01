@@ -4,11 +4,10 @@ RekordboxTrack is an implementation of Track which operates on the XML format
 that Rekordbox exports.
 """
 
-from __future__ import annotations
-from datetime import datetime
 import os
-from pathlib import Path
 import re
+from datetime import datetime
+from pathlib import Path
 from typing import Any, List
 from urllib.parse import quote, unquote
 

@@ -2,22 +2,23 @@
 """
 
 import logging
+from typing import Type
 
 from pydub import AudioSegment, effects, utils
 
-from djtools.configs.config import BaseConfig
 from djtools.utils.helpers import get_local_tracks
 
 
 logger = logging.getLogger(__name__)
 pydub_logger = logging.getLogger("pydub.converter")
 pydub_logger.setLevel(logging.CRITICAL)
+BaseConfig = Type["BaseConfig"]
 
 
 def normalize(config: BaseConfig):
     """Gets local tracks and normalizes them.
 
-    Tracks will be overwritten and have a headroom equal to AUDIO_HEADROOM.
+    Tracks will be overwritten and have a headroom equal to audio_headroom.
 
     Args:
         config: Configuration object.
@@ -28,7 +29,7 @@ def normalize(config: BaseConfig):
     folder_tracks = get_local_tracks(config)
     if not folder_tracks:
         raise RuntimeError(
-            "There are no local tracks; make sure LOCAL_DIRS has one or "
+            "There are no local tracks; make sure local_dirs has one or "
             "more directories containing one or more tracks"
         )
 
@@ -44,10 +45,10 @@ def normalize(config: BaseConfig):
             logger.error(f"Couldn't decode {track}: {exc}")
             continue
 
-        if abs(audio.max_dBFS + config.AUDIO_HEADROOM) > 0.001:
+        if abs(audio.max_dBFS + config.utils.audio_headroom) > 0.001:
             logger.info(
                 f"{track} has a max dB of {audio.max_dBFS}, normalizing to "
-                f"have a headroom of {config.AUDIO_HEADROOM}..."
+                f"have a headroom of {config.utils.audio_headroom}..."
             )
             try:
                 tags = utils.mediainfo(track).get("TAG", {})
@@ -57,11 +58,13 @@ def normalize(config: BaseConfig):
                     f'"ffmpeg" is installed: {exc}'
                 )
                 tags = {}
-            audio = effects.normalize(audio, headroom=config.AUDIO_HEADROOM)
+            audio = effects.normalize(
+                audio, headroom=config.utils.audio_headroom
+            )
             audio.export(
-                track.parent / f"{track.stem}.{config.AUDIO_FORMAT}",
+                track.parent / f"{track.stem}.{config.utils.audio_format}",
                 tags=tags,
-                bitrate=f"{config.AUDIO_BITRATE}k",
-                format=config.AUDIO_FORMAT,
+                bitrate=f"{config.utils.audio_bitrate}k",
+                format=config.utils.audio_format,
             )
             continue

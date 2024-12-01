@@ -3,28 +3,25 @@ The attributes of this configuration object correspond with the "collection"
 key of config.yaml
 """
 
-from __future__ import annotations
-
 import logging
 from pathlib import Path
-from typing import List, Optional, Union
-from typing_extensions import Literal
+from typing import List, Literal, Optional, Union
 
 import yaml
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 from pydantic import BaseModel, PositiveInt, ValidationError
 
-from djtools.configs.config import BaseConfig
+from djtools.configs.config_formatter import BaseConfigFormatter
 
 
 logger = logging.getLogger(__name__)
 
 
-class CollectionConfig(BaseConfig):
+class CollectionConfig(BaseConfigFormatter):
     """Configuration object for the collection package."""
 
-    COLLECTION_PATH: Optional[Path] = None
-    COLLECTION_PLAYLIST_FILTERS: List[
+    collection_path: Optional[Path] = None
+    collection_playlist_filters: List[
         Literal[
             "HipHopFilter",
             "MinimalDeepTechFilter",
@@ -32,42 +29,42 @@ class CollectionConfig(BaseConfig):
             "TransitionTrackFilter",
         ]
     ] = []
-    COLLECTION_PLAYLISTS: bool = False
-    COLLECTION_PLAYLISTS_REMAINDER: Literal["folder", "playlist"] = "folder"
-    COPY_PLAYLISTS: List[str] = []
-    COPY_PLAYLISTS_DESTINATION: Optional[Path] = None
-    MINIMUM_COMBINER_PLAYLIST_TRACKS: Optional[PositiveInt] = None
-    MINIMUM_TAG_PLAYLIST_TRACKS: Optional[PositiveInt] = None
-    PLATFORM: Literal["rekordbox"] = "rekordbox"
-    SHUFFLE_PLAYLISTS: List[str] = []
-    playlist_config: Optional[PlaylistConfig] = None
+    collection_playlists: bool = False
+    collection_playlists_remainder: Literal["folder", "playlist"] = "folder"
+    copy_playlists: List[str] = []
+    copy_playlists_destination: Optional[Path] = None
+    minimum_combiner_playlist_tracks: Optional[PositiveInt] = None
+    minimum_tag_playlist_tracks: Optional[PositiveInt] = None
+    platform: Literal["rekordbox"] = "rekordbox"
+    shuffle_playlists: List[str] = []
+    playlist_config: Optional["PlaylistConfig"] = None
 
     def __init__(self, *args, **kwargs):
         """Constructor.
 
         Raises:
             RuntimeError: Using the collection package requires a valid
-                COLLECTION_PATH.
+                collection_path.
             RuntimeError: Failed to render collection_playlist.yaml from
                 template.
-            RuntimeError: COLLECTION_PATH must be a valid collection path.
+            RuntimeError: collection_path must be a valid collection path.
             RuntimeError: collection_playlists.yaml must be a valid YAML file.
         """
         super().__init__(*args, **kwargs)
 
         if any(
             [
-                self.COLLECTION_PLAYLISTS,
-                self.COPY_PLAYLISTS,
-                self.SHUFFLE_PLAYLISTS,
+                self.collection_playlists,
+                self.copy_playlists,
+                self.shuffle_playlists,
             ]
-        ) and (not self.COLLECTION_PATH or not self.COLLECTION_PATH.exists()):
+        ) and (not self.collection_path or not self.collection_path.exists()):
             raise RuntimeError(
                 "Using the collection package requires the config option "
-                "COLLECTION_PATH to be a valid collection path"
+                "collection_path to be a valid collection path"
             )
 
-        if self.COLLECTION_PLAYLISTS:
+        if self.collection_playlists:
             config_path = Path(__file__).parent.parent / "configs"
             env = Environment(
                 loader=FileSystemLoader(config_path / "playlist_templates")
@@ -105,7 +102,7 @@ class CollectionConfig(BaseConfig):
             if not playlist_config_path.exists():
                 raise RuntimeError(
                     "collection_playlists.yaml must exist to use the "
-                    "COLLECTION_PLAYLISTS feature"
+                    "collection_playlists feature"
                 )
 
             try:
@@ -118,7 +115,7 @@ class CollectionConfig(BaseConfig):
             except ValidationError as exc:
                 raise RuntimeError(
                     "collection_playlists.yaml must be a valid YAML to use "
-                    "the COLLECTION_PLAYLISTS feature"
+                    "the collection_playlists feature"
                 ) from exc
 
 
@@ -131,7 +128,7 @@ class PlaylistName(BaseModel, extra="forbid"):
 class PlaylistConfigContent(BaseModel, extra="forbid"):
     "A class for type checking the content of the playlist config YAML."
     name: str
-    playlists: List[Union[PlaylistConfigContent, PlaylistName, str]]
+    playlists: List[Union["PlaylistConfigContent", PlaylistName, str]]
     enable_aggregation: Optional[bool] = None
 
 

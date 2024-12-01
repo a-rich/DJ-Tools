@@ -12,8 +12,8 @@ Manually splitting a recorded audio file into individual tracks is both time con
 
 ## How it's done
 
-1. Configure `RECORDING_FILE` to point to your recorded audio file
-1. Configure `RECORDING_PLAYLIST` to a valid Spotify playlist name present in your `spotify_playlists.yaml`
-1. Configure `AUDIO_BITRATE`, `AUDIO_FORMAT`, and `AUDIO_HEADROOM` to the desired values (defaults are `320k`, `mp3`, and `0.0` respectively)
-1. Configure `AUDIO_DESTINATION` to point to where you want the files to export to
+1. Configure `recording_file` to point to your recorded audio file
+1. Configure `recording_playlist` to a valid Spotify playlist name present in your `spotify_playlists.yaml`
+1. Configure `audio_bitrate`, `audio_format`, and `audio_headroom` to the desired values (defaults are `320k`, `mp3`, and `0.0` respectively)
+1. Configure `audio_destination` to point to where you want the files to export to
 1. Run the command `--process-recording`

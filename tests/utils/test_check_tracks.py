@@ -24,18 +24,18 @@ def test_compare_tracks_ignores_local_dirs_with_download_spotify_playlist(
 ):
     """Test the compare_tracks function."""
     if download_from_spotify:
-        config.DOWNLOAD_SPOTIFY_PLAYLIST = "test-playlist"
+        config.sync.download_spotify_playlist = "test-playlist"
     else:
-        config.DOWNLOAD_SPOTIFY_PLAYLIST = ""
+        config.sync.download_spotify_playlist = ""
     local_dirs = [Path("some/dir")]
-    config.LOCAL_DIRS = local_dirs
+    config.utils.local_dirs = local_dirs
     mock_get_local_tracks.return_value = []
     compare_tracks(config)
     if download_from_spotify:
         mock_get_local_tracks.assert_not_called()
     else:
         mock_get_local_tracks.assert_called_once()
-    assert config.LOCAL_DIRS == local_dirs
+    assert config.utils.local_dirs == local_dirs
 
 
 @mock.patch(
@@ -57,17 +57,17 @@ def test_compare_tracks_get_spotify_tracks_no_tracks(
     """Test the compare_tracks function."""
     caplog.set_level("WARNING")
     if downloading_instead_of_checking:
-        config.DOWNLOAD_SPOTIFY_PLAYLIST = "test-playlist"
+        config.sync.download_spotify_playlist = "test-playlist"
     else:
-        config.CHECK_TRACKS_SPOTIFY_PLAYLISTS = ["test-playlist"]
+        config.utils.check_tracks_spotify_playlists = ["test-playlist"]
     beatcloud_tracks, beatcloud_matches = compare_tracks(config)
     if downloading_instead_of_checking:
         assert (
-            "DOWNLOAD_SPOTIFY_PLAYLIST is a key" in caplog.records[0].message
+            "download_spotify_playlist is a key" in caplog.records[0].message
         )
     else:
         assert (
-            "CHECK_TRACKS_SPOTIFY_PLAYLISTS has one or more keys"
+            "check_tracks_spotify_playlists has one or more keys"
             in caplog.records[0].message
         )
     assert not beatcloud_tracks
@@ -88,8 +88,8 @@ def test_compare_tracks_get_spotify_tracks_yields_tracks(
 ):
     """Test the compare_tracks function."""
     caplog.set_level("INFO")
-    config.CHECK_TRACKS_SPOTIFY_PLAYLISTS = ["test-playlist"]
-    config.ARTIST_FIRST = artist_first
+    config.utils.check_tracks_spotify_playlists = ["test-playlist"]
+    config.sync.artist_first = artist_first
     title = "title"
     artist = "artist"
     get_spotify_tracks_result = {
@@ -136,10 +136,10 @@ def test_compare_tracks_get_spotify_tracks_yields_tracks(
 def test_compare_tracks_get_local_tracks_no_tracks(config, caplog):
     """Test the compare_tracks function."""
     caplog.set_level("WARNING")
-    config.LOCAL_DIRS = [Path("some/dir")]
+    config.utils.local_dirs = [Path("some/dir")]
     beatcloud_tracks, beatcloud_matches = compare_tracks(config)
     assert caplog.records[0].message == (
-        "There are no local tracks; make sure LOCAL_DIRS has one or "
+        "There are no local tracks; make sure local_dirs has one or "
         "more directories containing one or more tracks"
     )
     assert not beatcloud_tracks
@@ -161,8 +161,8 @@ def test_compare_tracks_get_local_tracks_yields_tracks(
 ):
     """Test the compare_tracks function."""
     local_dir = Path("some/dir")
-    config.LOCAL_DIRS = [local_dir]
-    config.ARTIST_FIRST = artist_first
+    config.utils.local_dirs = [local_dir]
+    config.sync.artist_first = artist_first
     file_stem = "artist - title" if artist_first else "title - artist"
     mock_get_local_tracks.return_value = {
         local_dir: [Path(f"{file_stem}.mp3")]
@@ -199,7 +199,7 @@ def test_compare_tracks_cached_get_beatcloud_tracks(
     mock_get_beatcloud_tracks, beatcloud_tracks, config
 ):
     """Test the compare_tracks function."""
-    config.CHECK_TRACKS_SPOTIFY_PLAYLISTS = ["test-playlist"]
+    config.utils.check_tracks_spotify_playlists = ["test-playlist"]
     compare_tracks(config, beatcloud_tracks)
     if beatcloud_tracks:
         mock_get_beatcloud_tracks.assert_not_called()

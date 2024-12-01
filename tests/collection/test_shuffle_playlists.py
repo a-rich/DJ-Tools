@@ -10,8 +10,8 @@ from djtools.collection.shuffle_playlists import shuffle_playlists
 def test_shuffle_playlists_handles_missing_playlist(config, rekordbox_xml):
     """Test shuffle_playlists function."""
     playlist = "nonexistent playlist"
-    config.COLLECTION_PATH = rekordbox_xml
-    config.SHUFFLE_PLAYLISTS = [playlist]
+    config.collection.collection_path = rekordbox_xml
+    config.collection.shuffle_playlists = [playlist]
     with pytest.raises(
         LookupError,
         match=f"{playlist} not found",
@@ -24,8 +24,8 @@ def test_shuffle_playlists_shuffles_track_numbers(
 ):
     """Test shuffle_playlists function."""
     playlist = "Hip Hop"
-    config.COLLECTION_PATH = rekordbox_xml
-    config.SHUFFLE_PLAYLISTS = [playlist]
+    config.collection.collection_path = rekordbox_xml
+    config.collection.shuffle_playlists = [playlist]
     hip_hop_playlist = rekordbox_collection.get_playlists(playlist)[0]
     old_track_id_number_map = {
         track_id: track._TrackNumber  # pylint: disable=protected-access
@@ -49,8 +49,8 @@ def test_shuffle_playlists_creates_new_playlist(
     """Test shuffle_playlists function."""
     target_playlist = "Hip Hop"
     output_playlist = "SHUFFLE"
-    config.COLLECTION_PATH = rekordbox_xml
-    config.SHUFFLE_PLAYLISTS = [target_playlist]
+    config.collection.collection_path = rekordbox_xml
+    config.collection.shuffle_playlists = [target_playlist]
     shuffle_playlist = rekordbox_collection.get_playlists(output_playlist)
     assert not shuffle_playlist
     new_collection = tmpdir / "test_collection"
@@ -65,8 +65,8 @@ def test_shuffle_playlists_creates_new_collection(
 ):
     """Test shuffle_playlists function."""
     playlist = "Hip Hop"
-    config.COLLECTION_PATH = rekordbox_xml
-    config.SHUFFLE_PLAYLISTS = [playlist]
+    config.collection.collection_path = rekordbox_xml
+    config.collection.shuffle_playlists = [playlist]
     new_collection = tmpdir / "test_collection"
     assert not new_collection.exists()
     shuffle_playlists(config, path=new_collection)

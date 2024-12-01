@@ -5,10 +5,9 @@ XML format that Rekordbox exports. The CustomSubstitution and
 UnsortedAttributes classes are helpers for serializing a RekordboxCollection.
 """
 
-from __future__ import annotations
+import re
 from copy import copy
 from pathlib import Path
-import re
 from typing import Iterator, Optional, Tuple
 
 import bs4

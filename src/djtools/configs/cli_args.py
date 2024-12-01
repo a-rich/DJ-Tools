@@ -2,8 +2,8 @@
 the CLI args.
 """
 
-from argparse import Action, ArgumentParser, Namespace, RawTextHelpFormatter
 import json
+from argparse import Action, ArgumentParser, Namespace, RawTextHelpFormatter
 from pathlib import Path
 from typing import Dict, List, Literal, Optional, Union
 
@@ -32,19 +32,6 @@ def get_arg_parser() -> ArgumentParser:
             "symbolically link them to a more accessible location for easier "
             "editing.\nNote, the directory you're linking to must not already "
             "exist."
-        ),
-    )
-    parser.add_argument(
-        "--artist-first",
-        action="store_true",
-        help=(
-            "Indicate that Beatcloud tracks are in the format "
-            '"Artist - Track Title" instead of "Track Title - Artist".\nThe '
-            "ordering is important for any operation that compares your "
-            "tracks' filenames with Spotify tracks or other files...\n"
-            'This includes "--spotify-playlist-from-upload", '
-            '"--download-spotify-playlist", "--spotify-playlists", and '
-            '"--check-tracks".'
         ),
     )
     parser.add_argument(
@@ -265,6 +252,19 @@ def get_arg_parser() -> ArgumentParser:
             "and the Beatcloud."
         ),
         formatter_class=RawTextHelpFormatter,
+    )
+    sync_parser.add_argument(
+        "--artist-first",
+        action="store_true",
+        help=(
+            "Indicate that Beatcloud tracks are in the format "
+            '"Artist - Track Title" instead of "Track Title - Artist".\nThe '
+            "ordering is important for any operation that compares your "
+            "tracks' filenames with Spotify tracks or other files...\n"
+            'This includes "--spotify-playlist-from-upload", '
+            '"--download-spotify-playlist", "--spotify-playlists", and '
+            '"--check-tracks".'
+        ),
     )
     sync_parser.add_argument(
         "--aws-profile",
@@ -503,7 +503,7 @@ def get_arg_parser() -> ArgumentParser:
 class NonEmptyListElementAction(Action):
     """This Action implementation permits overriding list defaults.
 
-    Some configuration options, like UPLOAD_EXCLUDE_DIRS, may be set to some
+    Some configuration options, like upload_exclude_dirs, may be set to some
     sensible default in config.yaml. Because of this users will be unable to
     run "--upload-music" in conjunction with "--download-include-dirs" without
     having to first make an edit to their config.yaml (because the

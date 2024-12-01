@@ -51,7 +51,7 @@ If you are using any of the following features, you are required to have a Disco
         1. It's really useful to automatically notify other users when and what tracks are uploaded
 
 ## FFmpeg
-If you're using any of the features which leverage the `pydub` package (`NORMALIZE_AUDIO`, `PROCESS_RECORDING`, etc.), and you're exporting in any format other than `wav` or `raw`, you'll need to install [FFmpeg](https://www.ffmpeg.org/) to support those codecs. For more info about installing FFmpeg, you can look at the note about it on the `pydub` [README](https://github.com/jiaaro/pydub#getting-ffmpeg-set-up).
+If you're using any of the features which leverage the `pydub` package (`normalize_audio`, `process_recording`, etc.), and you're exporting in any format other than `wav` or `raw`, you'll need to install [FFmpeg](https://www.ffmpeg.org/) to support those codecs. For more info about installing FFmpeg, you can look at the note about it on the `pydub` [README](https://github.com/jiaaro/pydub#getting-ffmpeg-set-up).
 
 ## Rekordbox settings
 

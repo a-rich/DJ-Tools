@@ -23,4 +23,4 @@ There are two primary reasons to sync your files to the cloud:
     &nbsp;&nbsp;&nbsp;`aws configure --profile DJ`
 
 1. Enter the `access_key` and `secret_key` (default values for the rest of the configuration is fine)
-1. Set the configuration option `AWS_PROFILE` in `config.yaml` to match this profile name
+1. Set the configuration option `aws_profile` in `config.yaml` to match this profile name

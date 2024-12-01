@@ -4,26 +4,26 @@ sequential order after collecting the set of Tracks from the provided
 playlist(s).
 """
 
-from concurrent.futures import as_completed, ThreadPoolExecutor
 import logging
 import os
-from pathlib import Path
 import random
-from typing import Optional
+from concurrent.futures import as_completed, ThreadPoolExecutor
+from pathlib import Path
+from typing import Optional, Type
 
 from tqdm import tqdm
 
-from djtools.configs.config import BaseConfig
-from djtools.collection.helpers import PLATFORM_REGISTRY
+from djtools.collection.platform_registry import PLATFORM_REGISTRY
 from djtools.utils.helpers import make_path
 
 
 logger = logging.getLogger(__name__)
+BaseConfig = Type["BaseConfig"]
 
 
 @make_path
 def shuffle_playlists(config: BaseConfig, path: Optional[Path] = None):
-    """For each playlist in "SHUFFLE_PLAYLISTS", randomize the tracks and
+    """For each playlist in "shuffle_playlists", randomize the tracks and
     sequentially set the track number to emulate shuffling.
 
     Args:
@@ -31,13 +31,13 @@ def shuffle_playlists(config: BaseConfig, path: Optional[Path] = None):
         path: Path to write the new collection to.
     """
     # Load collection.
-    collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
-        path=config.COLLECTION_PATH
+    collection = PLATFORM_REGISTRY[config.collection.platform]["collection"](
+        path=config.collection.collection_path
     )
 
     # Build a dict of tracks to shuffle from the provided list of playlists.
     shuffled_tracks = {}
-    for playlist_name in config.SHUFFLE_PLAYLISTS:
+    for playlist_name in config.collection.shuffle_playlists:
         playlists = collection.get_playlists(playlist_name)
         if not playlists:
             raise LookupError(f"{playlist_name} not found")
@@ -66,7 +66,7 @@ def shuffle_playlists(config: BaseConfig, path: Optional[Path] = None):
 
     # Insert a new playlist containing just the shuffled tracks.
     collection.add_playlist(
-        PLATFORM_REGISTRY[config.PLATFORM]["playlist"].new_playlist(
+        PLATFORM_REGISTRY[config.collection.platform]["playlist"].new_playlist(
             name="SHUFFLE",
             tracks={track.get_id(): track for track in shuffled_tracks},
         )

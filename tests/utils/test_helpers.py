@@ -1,8 +1,8 @@
 """Testing for the helpers module."""
 
+import logging
 from datetime import datetime
 from pathlib import Path
-import logging
 from typing import Optional
 from unittest import mock
 
@@ -46,7 +46,7 @@ def test_compute_distance(track_a, track_b):
 
 def test_find_matches(config):
     """Test for the find_matches function."""
-    config.CHECK_TRACKS_FUZZ_RATIO = 100
+    config.utils.check_tracks_fuzz_ratio = 100
     expected_matches = [
         "track 1 - someone unique",
         "track 2 - seen them before",
@@ -66,7 +66,7 @@ def test_find_matches(config):
         config=config,
     )
     assert all(
-        match[-1] == config.CHECK_TRACKS_FUZZ_RATIO for match in matches
+        match[-1] == config.utils.check_tracks_fuzz_ratio for match in matches
     )
     assert len(matches) == 2
     assert {x[1] for x in matches} == set(expected_matches)
@@ -101,7 +101,7 @@ def test_get_local_tracks_dir_does_not_exist(config, caplog):
     """Test for the get_local_tracks function."""
     caplog.set_level("INFO")
     local_dir = Path("not-a-real-dir")
-    config.LOCAL_DIRS = [local_dir]
+    config.utils.local_dirs = [local_dir]
     local_dir_tracks = get_local_tracks(config)
     assert caplog.records[0].message == (
         f"{local_dir.as_posix()} does not exist; will not be able to check "
@@ -120,7 +120,7 @@ def test_get_local_tracks_dir_does_exist(tmpdir, config, caplog):
         path = tmpdir / _dir
         path.mkdir(parents=True, exist_ok=True)
         check_dirs.append(path)
-    config.LOCAL_DIRS = check_dirs
+    config.utils.local_dirs = check_dirs
     beatcloud_tracks = ["test_file1.mp3", "test_file2.mp3"]
     for index, track in enumerate(beatcloud_tracks):
         with open(
@@ -244,7 +244,7 @@ def test_get_spotify_tracks(
 ):
     """Test for the get_spotify_tracks function."""
     caplog.set_level("INFO")
-    config.VERBOSITY = verbosity
+    config.verbosity = verbosity
     tracks = get_spotify_tracks(config, ["r/techno | Top weekly Posts"])
     assert isinstance(tracks, dict)
     assert caplog.records[0].message == (
