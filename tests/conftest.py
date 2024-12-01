@@ -3,14 +3,12 @@
 import os
 from argparse import Namespace
 from pathlib import Path
-
-# import time
 from unittest import mock
 
-from bs4 import BeautifulSoup
-from pydub import AudioSegment, generators
 import pytest
 import yaml
+from bs4 import BeautifulSoup
+from pydub import AudioSegment, generators
 
 from djtools.configs.config import BaseConfig
 from djtools.collection.config import PlaylistConfig
@@ -186,6 +184,8 @@ def rekordbox_playlist(
 # Pytest hooks for producing timing information for fixtures and test cases.
 ###############################################################################
 
+
+# import time
 
 # @pytest.hookimpl(hookwrapper=True)
 # def pytest_fixture_setup(request):

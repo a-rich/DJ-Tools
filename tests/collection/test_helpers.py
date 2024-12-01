@@ -1,9 +1,9 @@
 """Testing for the helpers module."""
 
+import re
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
-import re
 from unittest import mock
 
 import pytest

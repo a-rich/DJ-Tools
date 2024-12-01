@@ -1,8 +1,8 @@
 """Testing for the config module."""
 
 import os
-from pathlib import Path
 import re
+from pathlib import Path
 from unittest import mock
 
 import getpass

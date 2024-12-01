@@ -8,10 +8,10 @@ from pydantic import BaseModel
 
 from djtools.configs.cli_args import (
     _convert_to_paths,
-    get_arg_parser,
-    NonEmptyListElementAction,
     _parse_json,
     _parse_trim_initial_silence,
+    get_arg_parser,
+    NonEmptyListElementAction,
 )
 
 

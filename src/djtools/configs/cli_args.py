@@ -2,8 +2,8 @@
 the CLI args.
 """
 
-from argparse import Action, ArgumentParser, Namespace, RawTextHelpFormatter
 import json
+from argparse import Action, ArgumentParser, Namespace, RawTextHelpFormatter
 from pathlib import Path
 from typing import Dict, List, Literal, Optional, Union
 

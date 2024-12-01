@@ -6,10 +6,9 @@ collection; namely methods for (de)serialization to/from the representation
 recognized by the DJ software for which Collection is being sub-classed.
 """
 
-from __future__ import annotations
+import re
 from abc import ABC, abstractmethod
 from pathlib import Path
-import re
 from typing import Dict, List, Optional, Union
 
 from djtools.collection.base_playlist import Playlist

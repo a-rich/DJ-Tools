@@ -6,9 +6,8 @@ playlist; namely methods for (de)serialization to/from the representation
 recognized by the DJ software for which Playlist is being sub-classed.
 """
 
-from __future__ import annotations
-from abc import ABC, abstractmethod
 import re
+from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 
 from djtools.collection.base_track import Track
@@ -26,7 +25,7 @@ class Playlist(ABC):
         if kwargs.get("enable_aggregation"):
             self._aggregate = True
 
-    def __getitem__(self, index: int) -> Playlist:
+    def __getitem__(self, index: int) -> "Playlist":
         """Gets a Playlist from this Playlist's playlists.
 
         This method is used to iterate this object during serialization. If
@@ -55,7 +54,7 @@ class Playlist(ABC):
             return len(self._playlists)
         return len(self._tracks)
 
-    def add_playlist(self, playlist: Playlist, index: Optional[int] = None):
+    def add_playlist(self, playlist: "Playlist", index: Optional[int] = None):
         """Adds a playlist to this folder-type playlist.
 
         Args:
@@ -102,7 +101,7 @@ class Playlist(ABC):
 
         return sum(playlist.get_number_of_playlists() for playlist in self)
 
-    def get_parent(self) -> Optional[Playlist]:
+    def get_parent(self) -> Optional["Playlist"]:
         """Returns the folder this playlist is in.
 
         Returns:
@@ -112,7 +111,7 @@ class Playlist(ABC):
 
     def get_playlists(
         self, name: Optional[str] = None, glob: Optional[bool] = False
-    ) -> List[Playlist]:
+    ) -> List["Playlist"]:
         """Returns Playlists with a matching name.
 
         Args:
@@ -163,10 +162,10 @@ class Playlist(ABC):
     def new_playlist(
         cls,
         name: str,
-        playlists: Optional[List[Playlist]] = None,
+        playlists: Optional[List["Playlist"]] = None,
         tracks: Optional[Dict[str, Track]] = None,
         enable_aggregation: Optional[bool] = None,
-    ) -> Playlist:
+    ) -> "Playlist":
         """Creates a new Playlist.
 
         Args:
@@ -186,7 +185,7 @@ class Playlist(ABC):
             A new Playlist.
         """
 
-    def remove_playlist(self, playlist: Playlist):
+    def remove_playlist(self, playlist: "Playlist"):
         """Removes playlist from list of playlists.
 
         Args:
@@ -214,7 +213,7 @@ class Playlist(ABC):
                 Playlist.
         """
 
-    def set_parent(self, parent: Optional[Playlist] = None):
+    def set_parent(self, parent: Optional["Playlist"] = None):
         """Recursively sets the parent of all playlists within.
 
         Args:

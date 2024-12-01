@@ -3,8 +3,6 @@ The attributes of this configuration object correspond with the "collection"
 key of config.yaml
 """
 
-from __future__ import annotations
-
 import logging
 from pathlib import Path
 from typing import List, Literal, Optional, Union
@@ -39,7 +37,7 @@ class CollectionConfig(BaseConfigFormatter):
     minimum_tag_playlist_tracks: Optional[PositiveInt] = None
     platform: Literal["rekordbox"] = "rekordbox"
     shuffle_playlists: List[str] = []
-    playlist_config: Optional[PlaylistConfig] = None
+    playlist_config: Optional["PlaylistConfig"] = None
 
     def __init__(self, *args, **kwargs):
         """Constructor.
@@ -130,7 +128,7 @@ class PlaylistName(BaseModel, extra="forbid"):
 class PlaylistConfigContent(BaseModel, extra="forbid"):
     "A class for type checking the content of the playlist config YAML."
     name: str
-    playlists: List[Union[PlaylistConfigContent, PlaylistName, str]]
+    playlists: List[Union["PlaylistConfigContent", PlaylistName, str]]
     enable_aggregation: Optional[bool] = None
 
 

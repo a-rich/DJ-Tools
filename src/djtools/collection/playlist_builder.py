@@ -4,6 +4,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Optional, Type
 
+from djtools.collection import playlist_filters
 from djtools.collection.config import PlaylistConfig, PlaylistConfigContent
 from djtools.collection.helpers import (
     add_selectors_to_tags,
@@ -14,7 +15,6 @@ from djtools.collection.helpers import (
     print_playlists_tag_statistics,
 )
 from djtools.collection.platform_registry import PLATFORM_REGISTRY
-from djtools.collection import playlist_filters
 from djtools.utils.helpers import make_path
 
 

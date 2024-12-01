@@ -1,13 +1,12 @@
 """This module contains helpers for the collection package."""
 
-from __future__ import annotations
-from collections import defaultdict
-from datetime import datetime
 import logging
-from operator import itemgetter
-from pathlib import Path
 import re
 import shutil
+from collections import defaultdict
+from datetime import datetime
+from operator import itemgetter
+from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple, Union
 
 from dateutil.relativedelta import relativedelta
@@ -552,7 +551,7 @@ def parse_numerical_selectors(
 def parse_string_selectors(
     string_matches: List[str],
     string_value_lookup: Dict[Union[str, Tuple], str],
-    string_selector_type_map: Dict[str],
+    string_selector_type_map: Dict[str, str],
     playlists: Set[str],
 ):
     """Parses a string match of one or more string selectors.
@@ -712,7 +711,7 @@ class BooleanNode:
     def __init__(
         self,
         tags_tracks: Dict[str, Dict[str, Track]],
-        parent: Optional[BooleanNode] = None,
+        parent: Optional["BooleanNode"] = None,
     ):
         """Constructor.
 
@@ -823,7 +822,7 @@ class BooleanNode:
 
         return next(iter(self._operands), set())
 
-    def get_parent(self) -> BooleanNode:
+    def get_parent(self) -> "BooleanNode":
         """Gets the parent of the BooleanNode.
 
         Returns:

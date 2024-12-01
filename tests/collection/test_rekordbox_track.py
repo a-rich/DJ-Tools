@@ -1,7 +1,7 @@
 """Testing for the tracks module."""
 
-from datetime import datetime
 import os
+from datetime import datetime
 from pathlib import Path
 
 import pytest

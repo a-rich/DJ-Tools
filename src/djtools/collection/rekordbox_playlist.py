@@ -4,7 +4,6 @@ RekordboxPlaylist is an implementation of Playlist which operates on the XML
 format that Rekordbox exports.
 """
 
-from __future__ import annotations
 import inspect
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -27,7 +26,7 @@ class RekordboxPlaylist(Playlist):
         *args,
         tracks: Dict[str, RekordboxTrack] = None,
         playlist_tracks: Optional[Dict[str, RekordboxTrack]] = None,
-        parent: Optional[RekordboxPlaylist] = None,
+        parent: Optional["RekordboxPlaylist"] = None,
         **kwargs,
     ):
         """Deserialize a Playlist from a BeautifulSoup NODE Tag.
@@ -182,10 +181,10 @@ class RekordboxPlaylist(Playlist):
     def new_playlist(
         cls,
         name: str,
-        playlists: Optional[List[RekordboxPlaylist]] = None,
+        playlists: Optional[List["RekordboxPlaylist"]] = None,
         tracks: Optional[Dict[str, RekordboxTrack]] = None,
         enable_aggregation: Optional[bool] = None,
-    ) -> RekordboxPlaylist:
+    ) -> "RekordboxPlaylist":
         """Creates a new playlist.
 
         Args:

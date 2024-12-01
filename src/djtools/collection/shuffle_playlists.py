@@ -7,8 +7,8 @@ playlist(s).
 import logging
 import os
 import random
-from pathlib import Path
 from concurrent.futures import as_completed, ThreadPoolExecutor
+from pathlib import Path
 from typing import Optional, Type
 
 from tqdm import tqdm
