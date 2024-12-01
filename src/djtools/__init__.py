@@ -86,9 +86,12 @@ def main():
     ]:
         for operation, func in package_ops.items():
             sub_config = getattr(config, package)
+
             if not getattr(sub_config, operation):
                 continue
+
             logger.info(f"{operation}")
+
             if operation in ["check_tracks", "download_music"]:
                 beatcloud_cache = func(  # pylint: disable=assignment-from-none,unexpected-keyword-arg
                     config, beatcloud_tracks=beatcloud_cache
