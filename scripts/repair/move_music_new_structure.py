@@ -48,9 +48,9 @@ def get_spotify_tracks(_config, spotify_playlists):
 
     spotify = spotipy.Spotify(
         auth_manager=SpotifyOAuth(
-            client_id=_config["SPOTIFY_CLIENT_ID"],
-            client_secret=_config["SPOTIFY_CLIENT_SECRET"],
-            redirect_uri=_config["SPOTIFY_REDIRECT_URI"],
+            client_id=_config["spotify_client_id"],
+            client_secret=_config["spotify_client_secret"],
+            redirect_uri=_config["spotify_redirect_uri"],
             scope="playlist-modify-public",
         )
     )
@@ -183,7 +183,7 @@ def exists_process(path, _file):
     that exists in the `beatcloud`.
 
     Args:
-        path (str): USB_PATH
+        path (str): usb_path
         _file (str): sub-path to beatcloud track (relative to "/dj/music/")
 
     Returns:
@@ -642,12 +642,12 @@ if __name__ == "__main__":
     # while fuzzy searching
     _matches = {}
 
-    # standard djtools 'config.json' file (for USB_PATH, AWS_PROFILE, etc.)
+    # standard djtools 'config.json' file (for usb_path, aws_profile, etc.)
     with open(args.config_path, encoding="utf-8") as _file:
         config = json.load(_file)
 
     if args.move_remote_files:
-        os.environ["AWS_PROFILE"] = config.get("AWS_PROFILE")
+        os.environ["AWS_PROFILE"] = config.get("aws_profile")
 
     # cached Spotify API results and `aws s3 ls --recursive` on 'dj/music/'
     cache_path = os.path.join(
@@ -672,8 +672,8 @@ if __name__ == "__main__":
     # display data['users'] contributions to data['spotify_playlists']
     analyze_tracks(tracks, data["users"])
 
-    # filter `aws s3 ls` result for those that exist at config['USB_PATH']
-    local_files = find_local_files(config["USB_PATH"], files)
+    # filter `aws s3 ls` result for those that exist at config['usb_path']
+    local_files = find_local_files(config["usb_path"], files)
 
     # optionally display the beatcloud files that aren't present locally
     if args.verbosity > 0:
@@ -704,7 +704,7 @@ if __name__ == "__main__":
         data["bad_files"],
         local_files,
         args.move_local_files,
-        config["USB_PATH"],
+        config["usb_path"],
         args.verbosity,
     )
 
@@ -732,7 +732,7 @@ if __name__ == "__main__":
         _not_matched,
         data["users"],
         data["playlist_genres"],
-        config["USB_PATH"],
+        config["usb_path"],
         args.move_local_files,
         data["not_matched_genre_lookup"],
         args.move_remote_files,

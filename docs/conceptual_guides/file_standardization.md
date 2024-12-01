@@ -29,7 +29,7 @@ Out[4]: "Track_Title (Artist2 Remix) ['Things' & Stuff!] - Artist1, Artist2.mp3"
 In general:
 
 * Keep the filenames as close as possible to the `Title (Artist2 Remix) - Artist1, Artist2` format
-    * If you use the format `Artist1, Artist2 - Title (Artist2 Remix)` instead, make sure you configure `ARTIST_FIRST` to be `true` (see [Configuration](../tutorials/getting_started/configuration.md#base-config) for more detail)
+    * If you use the format `Artist1, Artist2 - Title (Artist2 Remix)` instead, make sure you configure `artist_first` to be `true` (see [Configuration](../tutorials/getting_started/configuration.md#base-config) for more detail)
 * Ensure there is only one instance of a hyphen with spaces on each side; title / artist splitting, which is needed for multiple features, will not work properly without this
 * If the track is available on Spotify, try to match the fields as close as possible to how it appears there; e.g. if the title includes `(Radio Edit)` then you should name the track accordingly
     - All of the Spotify-based features of DJ Tools work by computing the Levenshtein distance between filenames and Spotify API query results, so deviating from these names can reduce the accuracy of those features
@@ -41,7 +41,7 @@ To ensure Collection consistency and successful operation of `DJ Tools`, the fol
 1. MP3 file format
 1. Minimum 256 kbps bitrate
 1. Files named using convention: `Title (Artist2 Remix) - Artist1, Artist2`
-    * If you use the format `Artist1, Artist2 - Title (Artist2 Remix)` instead, make sure you configure `ARTIST_FIRST` to be `true` (see [Configuration](../tutorials/getting_started/configuration.md#base-config) for more detail)
+    * If you use the format `Artist1, Artist2 - Title (Artist2 Remix)` instead, make sure you configure `artist_first` to be `true` (see [Configuration](../tutorials/getting_started/configuration.md#base-config) for more detail)
     * All tracks in the Beatcloud must follow the same naming convention (my instance uses track title first)
 1. `Title` and `Artist` tags populated (e.g. software: [Mp3tag](https://www.mp3tag.de/en/) or [Picard](https://picard.musicbrainz.org/))
 1. `Key` tags populated (ideally using [Mixed In Key](https://mixedinkey.com/))

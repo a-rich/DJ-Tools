@@ -90,7 +90,7 @@ def test_rewrite_track_paths(config, rekordbox_xml):
     )
     config.sync.usb_path = user_a_path
 
-    # Write the second user's USB_PATH into each track.
+    # Write the second user's usb_path into each track.
     collection = RekordboxCollection(user_b_xml)
     for track in collection.get_tracks().values():
         loc = track.get_location()

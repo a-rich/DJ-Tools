@@ -383,7 +383,7 @@ def process_parallel(
         Path that the file was written to.
     """
     # Normalize the audio such that the headroom is
-    # AUDIO_HEADROOM dB.
+    # audio_headroom dB.
     if abs(audio.max_dBFS + config.utils.audio_headroom) > 0.001:
         audio = effects.normalize(audio, headroom=config.utils.audio_headroom)
 

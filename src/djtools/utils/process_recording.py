@@ -6,8 +6,8 @@ information from the Spotify API to:
 - split the recording into individual files
 - name these files with the title and artist(s)
 - populate the title, artist, and album tags
-- normalize the audio so the headroom is AUDIO_HEADROOM decibels
-- export the files with the configured AUDIO_BITRATE and AUDIO_FORMAT
+- normalize the audio so the headroom is audio_headroom decibels
+- export the files with the configured audio_bitrate and audio_format
 """
 
 import logging

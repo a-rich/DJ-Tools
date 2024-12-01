@@ -1,4 +1,4 @@
-"""This module is used to download tracks from "URL_DOWNLOAD". For example, a
+"""This module is used to download tracks from "url_download". For example, a
 Soundcloud playlist can be made and the URL of that playlist can be provided to
 download all those tracks and rename them to cleanup the digits appended to the
 files by the youtube-dl package.

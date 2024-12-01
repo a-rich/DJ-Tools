@@ -108,7 +108,7 @@ disable = [
     "too-many-return-statements"
 ]
 good-names = [
-    "USER"
+    "user"
 ]
 max-args = 10
 max-attributes = 15

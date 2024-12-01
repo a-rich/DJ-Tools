@@ -23,7 +23,7 @@ BaseConfig = Type["BaseConfig"]
 
 @make_path
 def shuffle_playlists(config: BaseConfig, path: Optional[Path] = None):
-    """For each playlist in "SHUFFLE_PLAYLISTS", randomize the tracks and
+    """For each playlist in "shuffle_playlists", randomize the tracks and
     sequentially set the track number to emulate shuffling.
 
     Args:

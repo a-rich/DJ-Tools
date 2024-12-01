@@ -11,7 +11,7 @@ In this guide you will learn how to limit the tracks you sync to your USB by pro
 ## Why sync tracks from a Spotify playlist?
 You're probably using DJ Tools to manage a shared track collection with friends who have a similar taste in music. Despite this, we all have our own style and don't necessarily want to indiscriminately sync every track that every other user syncs to the Beatcloud.
 
-The purpose of this feature is to allow you to limit the tracks you sync to your `USB_PATH` by providing a Spotify playlists with only the desired tracks in it. It's intended that this playlist was created using the sister feature [create Spotify playlist from other users' uploads](spotify_playlist_from_upload.md), though there's nothing strictly preventing you from using any playlist that's registered in `spotify_playlists.yaml`.
+The purpose of this feature is to allow you to limit the tracks you sync to your `usb_path` by providing a Spotify playlists with only the desired tracks in it. It's intended that this playlist was created using the sister feature [create Spotify playlist from other users' uploads](spotify_playlist_from_upload.md), though there's nothing strictly preventing you from using any playlist that's registered in `spotify_playlists.yaml`.
 
 ## How it's done
 

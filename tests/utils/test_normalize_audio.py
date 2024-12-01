@@ -14,7 +14,7 @@ def test_normalize_handles_no_local_tracks(config):
     with pytest.raises(
         RuntimeError,
         match=(
-            "There are no local tracks; make sure LOCAL_DIRS has one or "
+            "There are no local tracks; make sure local_dirs has one or "
             "more directories containing one or more tracks"
         ),
     ):

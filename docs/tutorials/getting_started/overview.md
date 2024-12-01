@@ -28,12 +28,12 @@ The core of the `sync` package is the music uploading and downloading features t
 
 If you're downloading another user's database, this package will doctor it so the track locations point to where they exist for you (assuming you're all syncing with the same Beatcloud instance). This allows you to import tracks from another user's collection inheriting all their tags, hot cues, etc.
 
-As mentioned under the [Spotify](#spotify) section above, the `sync` package offers a sister feature for syncing just the tracks that appear in a playlist generated from another user's upload. This allows you to (a) preview and filter the tracks another user uploads in Spotify and (b) automatically format the `DOWNLOAD_EXCLUDE_DIRS` configuration option on-the-fly based on the remaining tracks of the playlist.
+As mentioned under the [Spotify](#spotify) section above, the `sync` package offers a sister feature for syncing just the tracks that appear in a playlist generated from another user's upload. This allows you to (a) preview and filter the tracks another user uploads in Spotify and (b) automatically format the `download_exclude_dirs` configuration option on-the-fly based on the remaining tracks of the playlist.
 
 ## Utils
 The `utils` package has the following miscellaneous features:
 
--  `CHECK_TRACKS` which will compare the filenames of tracks in the Beatcloud with both / either tracks in `CHECK_TRACKS_SPOTIFY_PLAYLISTS` and / or filenames globbed from `LOCAL_DIRS`. This is very useful for predetermining if you're about to sync duplicate tracks to the Beatcloud.
-- `NORMALIZE_AUDIO` which will transform the files globbed from `LOCAL_DIRS` such that their peak amplitude leaves `AUDIO_HEADROOM` and exports them in `AUDIO_FORMAT` at `AUDIO_BITRATE`. This is very useful for ensuring all the tracks you add to the Beatcloud are standardized; say `320k` `mp3` files with a peak amplitude of `0.0` decibels.
-- `PROCESS_RECORDING`: given a recording file and Spotify playlist, chunk the recording into individual tracks, name the files, and export with tags using data from the Spotify API. Tracks are normalized with `AUDIO_HEADROOM` and exported in `AUDIO_FORMAT` at `AUDIO_BITRATE`.
-- `URL_DOWNLOAD` which is a simple wrapper around the [youtube-dl](https://github.com/ytdl-org/youtube-dl) package for extracting audio files from URLs.
+-  `check_tracks` which will compare the filenames of tracks in the Beatcloud with both / either tracks in `check_tracks_spotify_playlists` and / or filenames globbed from `local_dirs`. This is very useful for predetermining if you're about to sync duplicate tracks to the Beatcloud.
+- `normalize_audio` which will transform the files globbed from `local_dirs` such that their peak amplitude leaves `audio_headroom` and exports them in `audio_format` at `audio_bitrate`. This is very useful for ensuring all the tracks you add to the Beatcloud are standardized; say `320k` `mp3` files with a peak amplitude of `0.0` decibels.
+- `process_recording`: given a recording file and Spotify playlist, chunk the recording into individual tracks, name the files, and export with tags using data from the Spotify API. Tracks are normalized with `audio_headroom` and exported in `audio_format` at `audio_bitrate`.
+- `url_download` which is a simple wrapper around the [youtube-dl](https://github.com/ytdl-org/youtube-dl) package for extracting audio files from URLs.

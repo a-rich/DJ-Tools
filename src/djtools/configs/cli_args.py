@@ -503,7 +503,7 @@ def get_arg_parser() -> ArgumentParser:
 class NonEmptyListElementAction(Action):
     """This Action implementation permits overriding list defaults.
 
-    Some configuration options, like UPLOAD_EXCLUDE_DIRS, may be set to some
+    Some configuration options, like upload_exclude_dirs, may be set to some
     sensible default in config.yaml. Because of this users will be unable to
     run "--upload-music" in conjunction with "--download-include-dirs" without
     having to first make an edit to their config.yaml (because the

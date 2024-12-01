@@ -18,7 +18,7 @@ BaseConfig = Type["BaseConfig"]
 def normalize(config: BaseConfig):
     """Gets local tracks and normalizes them.
 
-    Tracks will be overwritten and have a headroom equal to AUDIO_HEADROOM.
+    Tracks will be overwritten and have a headroom equal to audio_headroom.
 
     Args:
         config: Configuration object.
@@ -29,7 +29,7 @@ def normalize(config: BaseConfig):
     folder_tracks = get_local_tracks(config)
     if not folder_tracks:
         raise RuntimeError(
-            "There are no local tracks; make sure LOCAL_DIRS has one or "
+            "There are no local tracks; make sure local_dirs has one or "
             "more directories containing one or more tracks"
         )
 

@@ -13,6 +13,6 @@ Users may also want to normalize their audio files' peak amplitude to some targe
 
 ## How it's done
 
-1. Configure the directory or directories containing your audio files with `LOCAL_DIRS`
-1. Configure `AUDIO_BITRATE`, `AUDIO_FORMAT`, and `AUDIO_HEADROOM` to the desired values (defaults are `320k`, `mp3`, and `0.0` respectively)
+1. Configure the directory or directories containing your audio files with `local_dirs`
+1. Configure `audio_bitrate`, `audio_format`, and `audio_headroom` to the desired values (defaults are `320k`, `mp3`, and `0.0` respectively)
 1. Run the command `--normalize-audio`
