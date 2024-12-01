@@ -5,8 +5,7 @@ on:
       - main
     paths:
       - 'src/**.py'
-      - 'docs/**.md'
-      - 'docs/mkdocs.yml'
+      - 'docs/**'
 
 jobs:
   build:
