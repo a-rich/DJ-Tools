@@ -49,7 +49,7 @@ jobs:
         run: |
           cd dev-docs-repo/
           rm -rf docs && rm -rf src
-          cp -r ../main-repo/docs docs && cp -r ../main-repo/src src
+          cp -r ../main-repo/docs . && cp -r ../main-repo/src .
           mkdocs gh-deploy --force --config-file docs/mkdocs.yml
 
       - name: Commit changes
