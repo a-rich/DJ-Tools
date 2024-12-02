@@ -80,12 +80,12 @@ async def async_spotify_playlists(config: BaseConfig):
     for task in asyncio.as_completed(tasks):
         tracks, subreddit = await task
         playlist_ids = populate_playlist(
-            playlist_name=subreddit["name"],
+            playlist_name=subreddit.name,
             playlist_ids=playlist_ids,
             spotify_username=config.spotify.spotify_username,
             spotify=spotify,
             tracks=tracks,
-            playlist_limit=subreddit["limit"],
+            playlist_limit=subreddit.limit,
             verbosity=config.verbosity,
         )
 

@@ -27,6 +27,8 @@ from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 BaseConfig = Type["BaseConfig"]
+SpotifyConfig = Type["SpotifyConfig"]
+SubredditConfig = Type["SubredditConfig"]
 
 
 def filter_results(
@@ -109,7 +111,9 @@ def get_reddit_client(config: BaseConfig) -> praw.Reddit:
     return reddit
 
 
-def get_spotify_client(config: BaseConfig) -> spotipy.Spotify:
+def get_spotify_client(
+    config: Union[BaseConfig, SpotifyConfig],
+) -> spotipy.Spotify:
     """Instantiate a Spotify API client.
 
     Args:
@@ -118,11 +122,16 @@ def get_spotify_client(config: BaseConfig) -> spotipy.Spotify:
     Returns:
         Spotify API client.
     """
+    try:
+        spotify_config = getattr(config, "spotify")
+    except AttributeError:
+        spotify_config = config
+
     spotify = spotipy.Spotify(
         auth_manager=SpotifyOAuth(
-            client_id=config.spotify.spotify_client_id,
-            client_secret=config.spotify.spotify_client_secret,
-            redirect_uri=config.spotify.spotify_redirect_uri,
+            client_id=spotify_config.spotify_client_id,
+            client_secret=spotify_config.spotify_client_secret,
+            redirect_uri=spotify_config.spotify_redirect_uri,
             scope="playlist-modify-public",
             requests_timeout=30,
             cache_handler=spotipy.CacheFileHandler(
@@ -137,7 +146,7 @@ def get_spotify_client(config: BaseConfig) -> spotipy.Spotify:
 async def get_subreddit_posts(
     spotify: spotipy.Spotify,
     reddit: praw.Reddit,
-    subreddit: Dict[str, Union[str, int]],
+    subreddit: SubredditConfig,
     config: BaseConfig,
     praw_cache: Dict[str, bool],
 ) -> Tuple[List[Tuple[str]], Dict[str, Union[str, int]]]:
@@ -148,7 +157,7 @@ async def get_subreddit_posts(
     Args:
         spotify: Spotify client.
         reddit: Reddit client.
-        subreddit: SubredditConfig object as a dictionary.
+        subreddit: SubredditConfig object.
         config: Configuration object.
         praw_cache: Cached praw submissions.
 
@@ -156,18 +165,18 @@ async def get_subreddit_posts(
         List of Spotify track ("id", "name") tuples and SubredditConfig as a
             dictionary.
     """
-    sub = await reddit.subreddit(subreddit["name"])
-    func = getattr(sub, subreddit["type"])
+    sub = await reddit.subreddit(subreddit.name)
+    func = getattr(sub, subreddit.type)
     kwargs = {"limit": config.spotify.spotify_playlist_post_limit}
-    if subreddit["type"] == "top":
-        kwargs["time_filter"] = subreddit["period"]
+    if subreddit.type == "top":
+        kwargs["time_filter"] = subreddit.period
     subs = [
         x
         async for x in _catch(
             func(**kwargs), message="Failed to retrieve Reddit submission"
         )
     ]
-    msg = f'Filtering {len(subs)} "r/{subreddit["name"]}" {subreddit["type"]} posts'
+    msg = f'Filtering {len(subs)} "r/{subreddit.name}" {subreddit.type} posts'
     logger.info(msg)
     submissions = []
     for submission in tqdm(subs, desc=msg):
@@ -179,7 +188,7 @@ async def get_subreddit_posts(
     if submissions:
         msg = (
             f"Searching Spotify for {len(submissions)} new submission(s) from "
-            f'"r/{subreddit["name"]}"'
+            f'"r/{subreddit.name}"'
         )
         logger.info(msg)
         payload = zip(
@@ -200,10 +209,10 @@ async def get_subreddit_posts(
         new_tracks = [track for track in new_tracks if track]
         logger.info(
             f"Got {len(new_tracks)} Spotify track(s) from new "
-            f'"r/{subreddit["name"]}" posts'
+            f'"r/{subreddit.name}" posts'
         )
     else:
-        logger.info(f'No new submissions from "r/{subreddit["name"]}"')
+        logger.info(f'No new submissions from "r/{subreddit.name}"')
 
     return new_tracks, subreddit
 
