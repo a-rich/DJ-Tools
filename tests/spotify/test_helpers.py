@@ -356,13 +356,17 @@ def test_get_reddit_client(config):
     get_reddit_client(config)
 
 
-@mock.patch("djtools.spotify.helpers.spotipy.Spotify")
 def test_get_spotify_client(config):
     """Test for the get_spotify_client function."""
     config.spotify_client_id = "test_client_id"
     config.spotify_client_secret = "test_client_secret"
     config.spotify_redirect_uri = "test_redirect_uri"
-    get_spotify_client(config)
+
+    with (
+        mock.patch("djtools.spotify.helpers.spotipy.Spotify"),
+        mock.patch("djtools.spotify.helpers.SpotifyOAuth"),
+    ):
+        get_spotify_client(config)
 
 
 @pytest.mark.asyncio
