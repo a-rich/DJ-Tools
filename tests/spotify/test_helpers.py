@@ -356,8 +356,12 @@ def test_get_reddit_client(config):
     get_reddit_client(config)
 
 
-def test_get_spotify_client(config):
+@pytest.mark.parametrize("is_spotify_config", [True, False])
+def test_get_spotify_client(is_spotify_config, config):
     """Test for the get_spotify_client function."""
+    if is_spotify_config:
+        config = config.spotify
+
     config.spotify_client_id = "test_client_id"
     config.spotify_client_secret = "test_client_secret"
     config.spotify_redirect_uri = "test_redirect_uri"
@@ -389,9 +393,7 @@ async def test_get_subreddit_posts(
 ):
     """Test for the get_subreddit_posts function."""
     caplog.set_level("INFO")
-    subreddit = SubredditConfig(
-        name="techno", type=subreddit_type
-    ).model_dump()
+    subreddit = SubredditConfig(name="techno", type=subreddit_type)
     praw_cache = {}
     mock_praw_submission.id = "test_id"
     mock_process.return_value = "track - artist"
