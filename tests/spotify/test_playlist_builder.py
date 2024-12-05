@@ -18,7 +18,7 @@ from ..test_utils import MockOpen
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "playlist_subreddits",
-    [[], [SubredditConfig(name="jungle").model_dump()]],
+    [[], [SubredditConfig(name="jungle")]],
 )
 @pytest.mark.parametrize("got_playlist_ids", [True, False])
 @pytest.mark.parametrize("got_tracks", [True, False])
@@ -48,7 +48,7 @@ from ..test_utils import MockOpen
     new_callable=mock.AsyncMock,
     return_value=[
         [("track-id", "track name")],
-        SubredditConfig(name="jungle").model_dump(),
+        SubredditConfig(name="jungle"),
     ],
 )
 @mock.patch(

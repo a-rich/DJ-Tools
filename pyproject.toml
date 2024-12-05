@@ -75,6 +75,7 @@ dev = [
     "mkdocs",
     "mkdocs-material",
     "mkdocstrings-python",
+    "pre-commit",
     "pylint",
     "pytest",
     "pytest-asyncio",

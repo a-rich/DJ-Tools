@@ -1,0 +1,47 @@
+repos:
+  - repo: local
+    hooks:
+      - id: pytest-passing-check
+        name: Run pytest and check if tests pass
+        entry: |
+          bash -c '
+          pytest --cov --cov-report term-missing --show-capture=no | tee pytest_output.txt
+          pytest_exit_code=${PIPESTATUS[0]}
+          if [ $pytest_exit_code -ne 0 ]; then
+            echo "Tests failed." >&2
+            exit $pytest_exit_code
+          fi
+          '
+        language: system
+        pass_filenames: false
+
+      - id: pytest-coverage-check
+        name: Check if coverage is 100%
+        entry: |
+          bash -c '
+          if ! grep -qE "^TOTAL\s+.*\s+100%" pytest_output.txt; then
+            echo "Coverage is below 100%." >&2
+            exit 1
+          fi
+          '
+        language: system
+        pass_filenames: false
+
+      - id: pylint
+        name: Run pylint
+        entry:  |
+          bash -c '
+          pylint $(git ls-files "*.py") | tee pylint_output.txt
+          if ! grep -q "Your code has been rated at 10.00/10" pylint_output.txt; then
+            echo "Lint score is below 10/10." >&2
+            exit 1
+          fi
+          '
+        language: system
+        pass_filenames: false
+
+      - id: black
+        name: Check black formatting
+        entry: bash -c "black --check ."
+        language: system
+        pass_filenames: false
