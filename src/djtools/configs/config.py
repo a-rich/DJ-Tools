@@ -4,7 +4,7 @@ apply to multiple packages. The attributes of this configuration object
 correspond with the "configs" key of config.yaml."""
 
 import logging
-from typing import Literal
+from enum import Enum
 
 from pydantic import Field, NonNegativeInt
 
@@ -18,13 +18,21 @@ from djtools.utils.config import UtilsConfig
 logger = logging.getLogger(__name__)
 
 
+class LogLevel(Enum):
+    """Log level Enum."""
+
+    debug = "DEBUG"
+    info = "INFO"
+    warning = "WARNING"
+    error = "ERROR"
+    critical = "CRITICAL"
+
+
 class BaseConfig(BaseConfigFormatter):
     """Base configuration object used across the whole library."""
 
     collection: CollectionConfig = Field(default_factory=CollectionConfig)
-    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = (
-        "INFO"
-    )
+    log_level: LogLevel = LogLevel.info
     spotify: SpotifyConfig = Field(default_factory=SpotifyConfig)
     sync: SyncConfig = Field(default_factory=SyncConfig)
     utils: UtilsConfig = Field(default_factory=UtilsConfig)
