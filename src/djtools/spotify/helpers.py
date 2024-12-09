@@ -24,6 +24,8 @@ from fuzzywuzzy import fuzz
 from spotipy.oauth2 import SpotifyOAuth
 from tqdm import tqdm
 
+from djtools.spotify.config import SubredditType
+
 
 logger = logging.getLogger(__name__)
 BaseConfig = Type["BaseConfig"]
@@ -166,9 +168,9 @@ async def get_subreddit_posts(
             dictionary.
     """
     sub = await reddit.subreddit(subreddit.name)
-    func = getattr(sub, subreddit.type)
+    func = getattr(sub, subreddit.type.value)
     kwargs = {"limit": config.spotify.spotify_playlist_post_limit}
-    if subreddit.type == "top":
+    if subreddit.type == SubredditType.TOP:
         kwargs["time_filter"] = subreddit.period
     subs = [
         x
@@ -176,7 +178,7 @@ async def get_subreddit_posts(
             func(**kwargs), message="Failed to retrieve Reddit submission"
         )
     ]
-    msg = f'Filtering {len(subs)} "r/{subreddit.name}" {subreddit.type} posts'
+    msg = f'Filtering {len(subs)} "r/{subreddit.name}" {subreddit.type.value} posts'
     logger.info(msg)
     submissions = []
     for submission in tqdm(subs, desc=msg):

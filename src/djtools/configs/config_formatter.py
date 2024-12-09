@@ -25,8 +25,10 @@ class BaseConfigFormatter(BaseModel, extra="forbid"):
         spaces = "\t" * indent_level
 
         if isinstance(value, BaseConfigFormatter):
+            # pylint: disable=unnecessary-dunder-call
             return value.__repr__(indent=indent_level + 1).lstrip("\t")
-        elif (
+
+        if (
             isinstance(value, list)
             and len(value)
             and all(isinstance(v, dict) for v in value)
@@ -37,7 +39,8 @@ class BaseConfigFormatter(BaseModel, extra="forbid"):
                 + f"\n{spaces}]"
             )
             return formatted_list
-        elif isinstance(value, list) and len(value):
+
+        if isinstance(value, list) and len(value):
             formatted_list = (
                 "[\n"
                 + ",\n".join(spaces + "\t" + repr(v) for v in value)

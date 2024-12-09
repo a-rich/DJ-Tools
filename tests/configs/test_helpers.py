@@ -9,6 +9,7 @@ from unittest import mock
 import pytest
 from pip._vendor import tomli
 
+from djtools.configs.config import LogLevel
 from djtools.configs.helpers import _arg_parse, build_config, ConfigLoadFailure
 from djtools.version import get_version
 
@@ -134,10 +135,10 @@ def test_build_config_no_config_yaml(
 @mock.patch("argparse.ArgumentParser.parse_args")
 def test_build_config_overrides_using_args(mock_parse_args, namespace):
     """Test for the build_config function."""
-    namespace.log_level = "CRITICAL"
+    namespace.log_level = LogLevel.CRITICAL.value
     mock_parse_args.return_value = namespace
     config = build_config()
-    assert config.log_level == "CRITICAL"
+    assert config.log_level == LogLevel.CRITICAL
 
 
 @mock.patch("argparse.ArgumentParser.parse_args")

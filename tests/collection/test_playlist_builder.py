@@ -4,6 +4,7 @@ from unittest import mock
 
 import pytest
 
+from djtools.collection.config import PlaylistRemainder
 from djtools.collection.playlist_builder import (
     collection_playlists,
     PLAYLIST_NAME,
@@ -12,7 +13,10 @@ from djtools.collection.rekordbox_collection import RekordboxCollection
 from djtools.collection.rekordbox_playlist import RekordboxPlaylist
 
 
-@pytest.mark.parametrize("remainder_type", ["folder", "playlist"])
+@pytest.mark.parametrize(
+    "remainder_type",
+    [PlaylistRemainder.FOLDER, PlaylistRemainder.PLAYLIST],
+)
 def test_collection_playlists_makes_unused_tags_playlists(
     remainder_type,
     config,
@@ -45,7 +49,7 @@ def test_collection_playlists_makes_unused_tags_playlists(
     assert collection.get_playlists("Unused Tags")
     unused_tags_playlists = collection.get_playlists("Unused Tags")[0]
 
-    if remainder_type == "folder":
+    if remainder_type == PlaylistRemainder.FOLDER:
         # If collection_playlists_remainder is set to "folder", then
         # "Unused Tags" will be a folder containing one playlist for each
         # unused tag.

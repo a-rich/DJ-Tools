@@ -4,9 +4,11 @@ of config.yaml
 """
 
 import logging
-from typing import List, Literal
+from enum import Enum
+from typing import List
 
 from pydantic import BaseModel, NonNegativeInt
+import yaml
 
 from djtools.configs.config_formatter import BaseConfigFormatter
 
@@ -14,21 +16,68 @@ from djtools.configs.config_formatter import BaseConfigFormatter
 logger = logging.getLogger(__name__)
 
 
+class SubredditPeriod(Enum):
+    # pylint: disable=missing-class-docstring
+    ALL = "all"
+    DAY = "day"
+    HOUR = "hour"
+    MONTH = "month"
+    WEEK = "week"
+    YEAR = "year"
+
+
+def subreddit_period_representer(dumper, data):
+    # pylint: disable=missing-function-docstring
+    return dumper.represent_scalar("!SubredditPeriod", data.value)
+
+
+def subreddit_period_constructor(loader, node):
+    # pylint: disable=missing-function-docstring
+    return SubredditPeriod(loader.construct_scalar(node))
+
+
+yaml.add_representer(SubredditPeriod, subreddit_period_representer)
+yaml.add_constructor("!SubredditPeriod", subreddit_period_constructor)
+
+
+class SubredditType(Enum):
+    # pylint: disable=missing-class-docstring
+    CONTROVERSIAL = "controversial"
+    HOT = "hot"
+    NEW = "new"
+    RISING = "rising"
+    TOP = "top"
+
+
+def subreddit_type_representer(dumper, data):
+    # pylint: disable=missing-function-docstring
+    return dumper.represent_scalar("!SubredditType", data.value)
+
+
+def subreddit_type_constructor(loader, node):
+    # pylint: disable=missing-function-docstring
+    return SubredditType(loader.construct_scalar(node))
+
+
+yaml.add_representer(SubredditType, subreddit_type_representer)
+yaml.add_constructor("!SubredditType", subreddit_type_constructor)
+
+
 class SubredditConfig(BaseModel):
     """Configuration object for spotify_playlists."""
 
     name: str
     limit: NonNegativeInt = 50
-    period: Literal["all", "day", "hour", "month", "week", "year"] = "week"
-    type: Literal["controversial", "hot", "new", "rising", "top"] = "hot"
+    period: SubredditPeriod = SubredditPeriod.WEEK
+    type: SubredditType = SubredditType.HOT
 
 
 class SpotifyConfig(BaseConfigFormatter):
     """Configuration object for the spotify package."""
 
     spotify_playlist_default_limit: NonNegativeInt = 50
-    spotify_playlist_default_period: str = "week"
-    spotify_playlist_default_type: str = "hot"
+    spotify_playlist_default_period: SubredditPeriod = SubredditPeriod.WEEK
+    spotify_playlist_default_type: SubredditType = SubredditType.HOT
     spotify_playlist_from_upload: bool = False
     spotify_playlist_fuzz_ratio: NonNegativeInt = 70
     spotify_playlist_post_limit: NonNegativeInt = 100
@@ -69,6 +118,7 @@ class SpotifyConfig(BaseConfigFormatter):
                 "spotify_playlists or spotify_playlist_from_upload"
             )
         if self.spotify_playlists or self.spotify_playlist_from_upload:
+            # pylint: disable=cyclic-import
             from djtools.spotify.helpers import get_spotify_client
 
             spotify = get_spotify_client(self)

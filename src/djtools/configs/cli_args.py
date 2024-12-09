@@ -5,7 +5,9 @@ the CLI args.
 import json
 from argparse import Action, ArgumentParser, Namespace, RawTextHelpFormatter
 from pathlib import Path
-from typing import Dict, List, Literal, Optional, Union
+from typing import Dict, List, Optional, Union
+
+from djtools.utils.config import TrimInitialSilenceMode
 
 
 def get_arg_parser() -> ArgumentParser:
@@ -568,8 +570,8 @@ def _parse_json(_json: str) -> Dict:
 
 def _parse_trim_initial_silence(
     arg: str,
-) -> Union[int, Literal["auto", "smart"]]:
-    if arg in {"auto", "smart"}:
+) -> Union[int, TrimInitialSilenceMode]:
+    if isinstance(arg, TrimInitialSilenceMode):
         return arg
 
     try:

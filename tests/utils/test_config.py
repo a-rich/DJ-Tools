@@ -28,7 +28,6 @@ def test_utilsconfig_spotify_creds_warning(caplog):
     cfg = {
         "check_tracks": True,
         "check_tracks_spotify_playlists": ["playlist"],
-        "aws_profile": "default",
     }
     os.environ["AWS_PROFILE"] = "default"  # pylint: disable=no-member
     UtilsConfig(**cfg)

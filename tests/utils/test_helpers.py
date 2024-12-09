@@ -9,6 +9,7 @@ from unittest import mock
 import pytest
 from pydub import AudioSegment, generators
 
+from djtools.utils.config import TrimInitialSilenceMode
 from djtools.utils.helpers import (
     compute_distance,
     find_matches,
@@ -336,7 +337,16 @@ def test_reverse_title_and_artist():
     assert new_path_lookup == expected
 
 
-@pytest.mark.parametrize("trim_amount", [-1000, 0, 1000, "auto", "smart"])
+@pytest.mark.parametrize(
+    "trim_amount",
+    [
+        -1000,
+        0,
+        1000,
+        TrimInitialSilenceMode.AUTO,
+        TrimInitialSilenceMode.SMART,
+    ],
+)
 def test_trim_initial_silence(trim_amount):
     """Test for the trim_initial_silence function."""
     leading_silence = 4567
@@ -368,7 +378,7 @@ def test_trim_initial_silence(trim_amount):
     diff = init_len - len(audio)
     if isinstance(trim_amount, int):
         assert abs(diff - trim_amount) <= 1
-    elif trim_amount == "auto":
+    elif trim_amount == TrimInitialSilenceMode.AUTO:
         assert abs(diff - leading_silence) <= 1
     else:
         assert abs(leading_silence - silence_len - diff) <= step_size * 2
