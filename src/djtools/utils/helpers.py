@@ -19,7 +19,6 @@ from typing import (
     Callable,
     Dict,
     List,
-    Literal,
     Optional,
     Set,
     Tuple,
@@ -33,6 +32,7 @@ from pydub import AudioSegment, effects, silence
 from tqdm import tqdm
 
 from djtools.spotify.helpers import get_playlist_ids, get_spotify_client
+from djtools.utils.config import TrimInitialSilenceMode
 
 
 logger = logging.getLogger(__name__)
@@ -393,7 +393,7 @@ def process_parallel(
         if config.sync.artist_first
         else f'{track["title"]} - {track["artist"]}'
     )
-    filename = write_path / f"{filename}.{config.utils.audio_format}"
+    filename = write_path / f"{filename}.{config.utils.audio_format.value}"
 
     # Warn users about malformed filenames that could break other features
     # of djtools.
@@ -409,7 +409,7 @@ def process_parallel(
     # data collected from the Spotify response.
     audio.export(
         filename,
-        format=config.utils.audio_format,
+        format=config.utils.audio_format.value,
         bitrate=f"{config.utils.audio_bitrate}k",
         tags={key: value for key, value in track.items() if key != "duration"},
     )
@@ -439,7 +439,7 @@ def reverse_title_and_artist(path_lookup: Dict[str, str]) -> Dict[str, str]:
 def trim_initial_silence(
     audio: AudioSegment,
     track_durations: List[int],
-    trim_amount: Union[int, Literal["auto", "smart"]],
+    trim_amount: Union[int, TrimInitialSilenceMode],
     silence_thresh: Optional[float] = -50,
     min_silence_ms: Optional[int] = 5,
     step_size: Optional[int] = 100,
@@ -474,7 +474,7 @@ def trim_initial_silence(
     )
 
     # If trim_amount is "auto", simply trim off the detected leading silence.
-    if trim_amount == "auto":
+    if trim_amount == TrimInitialSilenceMode.AUTO:
         return audio[leading_silence:]
 
     # Use the track durations to infer the points in the recording where each

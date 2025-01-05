@@ -5,7 +5,10 @@ from pathlib import Path
 from typing import Optional, Type
 
 from djtools.collection import playlist_filters
-from djtools.collection.config import PlaylistConfig, PlaylistConfigContent
+from djtools.collection.config import (
+    PlaylistConfigContent,
+    PlaylistRemainder,
+)
 from djtools.collection.helpers import (
     add_selectors_to_tags,
     aggregate_playlists,
@@ -76,10 +79,6 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
         config: Configuration object.
         path: Path to write the new collection to.
     """
-    config.collection.playlist_config = PlaylistConfig(
-        **config.collection.playlist_config or {}
-    )
-
     # Check if the playlist config is populated before continuing.
     if not (
         config.collection.playlist_config.tags
@@ -115,7 +114,7 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
 
     # List of PlaylistFilter implementations to run against built playlists.
     filters = [
-        getattr(playlist_filters, playlist_filter)()
+        getattr(playlist_filters, playlist_filter.value)()
         for playlist_filter in config.collection.collection_playlist_filters
     ]
 
@@ -154,7 +153,10 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
         # and create either an "Other" folder of playlists or simply an "Other"
         # playlist.
         other_tags = sorted(set(tags_tracks).difference(seen_tags))
-        if config.collection.collection_playlists_remainder == "folder":
+        if (
+            config.collection.collection_playlists_remainder
+            == PlaylistRemainder.FOLDER
+        ):
             auto_playlists.append(
                 build_tag_playlists(
                     PlaylistConfigContent(

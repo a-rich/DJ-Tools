@@ -148,19 +148,14 @@ def test_syncconfig_set_user(input_user, output_user):
 
 
 @mock.patch("djtools.spotify.helpers.get_spotify_client", mock.MagicMock())
-def test_syncconfig_upload_without_discord_url(rekordbox_xml, caplog):
+def test_syncconfig_upload_without_discord_url(caplog):
     """Test for the SyncConfig class."""
     caplog.set_level("WARNING")
     cfg = {
-        "usb_path": ".",
-        "upload_music": True,
         "bucket_url": "s3://some-bucket.com",
         "discord_url": "",
-        "collection_path": rekordbox_xml,
-        "spotify_client_id": "id",
-        "spotify_client_secret": "secret",
-        "spotify_redirect_uri": "uri",
-        "spotify_username": "name",
+        "upload_music": True,
+        "usb_path": ".",
     }
     SyncConfig(**cfg)
     assert caplog.records[0].message == (

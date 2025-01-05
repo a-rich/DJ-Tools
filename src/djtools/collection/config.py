@@ -4,8 +4,9 @@ key of config.yaml
 """
 
 import logging
+from enum import Enum
 from pathlib import Path
-from typing import List, Literal, Optional, Union
+from typing import List, Optional, Union
 
 import yaml
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
@@ -17,25 +18,86 @@ from djtools.configs.config_formatter import BaseConfigFormatter
 logger = logging.getLogger(__name__)
 
 
+class PlaylistFilters(Enum):
+    """PlaylistFilters enum."""
+
+    COMPLEX_TRACK_FILTER = "ComplexTrackFilter"
+    HIPHOP_FILTER = "HipHopFilter"
+    MINIMAL_DEEP_TECH_FILTER = "MinimalDeepTechFilter"
+    TRANSITION_TRACK_FILTER = "TransitionTrackFilter"
+
+
+def playlist_filter_representer(dumper, data):
+    # pylint: disable=missing-function-docstring
+    return dumper.represent_scalar(  # pragma: no cover
+        "!PlaylistFilters", data.value
+    )
+
+
+def playlist_filter_constructor(loader, node):
+    # pylint: disable=missing-function-docstring
+    return PlaylistFilters(loader.construct_scalar(node))  # pragma: no cover
+
+
+yaml.add_representer(PlaylistFilters, playlist_filter_representer)
+yaml.add_constructor("!PlaylistFilters", playlist_filter_constructor)
+
+
+class PlaylistRemainder(Enum):
+    """PlaylistRemainder enum."""
+
+    FOLDER = "folder"
+    PLAYLIST = "playlist"
+
+
+def playlist_remainder_representer(dumper, data):
+    # pylint: disable=missing-function-docstring
+    return dumper.represent_scalar("!PlaylistRemainder", data.value)
+
+
+def playlist_remainder_constructor(loader, node):
+    # pylint: disable=missing-function-docstring
+    return PlaylistRemainder(loader.construct_scalar(node))
+
+
+yaml.add_representer(PlaylistRemainder, playlist_remainder_representer)
+yaml.add_constructor("!PlaylistRemainder", playlist_remainder_constructor)
+
+
+class RegisteredPlatforms(Enum):
+    """RegisteredPlatforms enum."""
+
+    REKORDBOX = "rekordbox"
+
+
+def registered_platforms_representer(dumper, data):
+    # pylint: disable=missing-function-docstring
+    return dumper.represent_scalar("!RegisteredPlatforms", data.value)
+
+
+def registered_platforms_constructor(loader, node):
+    # pylint: disable=missing-function-docstring
+    return RegisteredPlatforms(loader.construct_scalar(node))
+
+
+yaml.add_representer(RegisteredPlatforms, registered_platforms_representer)
+yaml.add_constructor("!RegisteredPlatforms", registered_platforms_constructor)
+
+
 class CollectionConfig(BaseConfigFormatter):
     """Configuration object for the collection package."""
 
     collection_path: Optional[Path] = None
-    collection_playlist_filters: List[
-        Literal[
-            "HipHopFilter",
-            "MinimalDeepTechFilter",
-            "ComplexTrackFilter",
-            "TransitionTrackFilter",
-        ]
-    ] = []
+    collection_playlist_filters: List[PlaylistFilters] = []
     collection_playlists: bool = False
-    collection_playlists_remainder: Literal["folder", "playlist"] = "folder"
+    collection_playlists_remainder: PlaylistRemainder = (
+        PlaylistRemainder.FOLDER
+    )
     copy_playlists: List[str] = []
     copy_playlists_destination: Optional[Path] = None
     minimum_combiner_playlist_tracks: Optional[PositiveInt] = None
     minimum_tag_playlist_tracks: Optional[PositiveInt] = None
-    platform: Literal["rekordbox"] = "rekordbox"
+    platform: RegisteredPlatforms = RegisteredPlatforms.REKORDBOX
     shuffle_playlists: List[str] = []
     playlist_config: Optional["PlaylistConfig"] = None
 

@@ -12,8 +12,8 @@ from tqdm import tqdm
 
 from djtools.collection.base_collection import Collection
 from djtools.collection.base_playlist import Playlist
-from djtools.collection.helpers import PLATFORM_REGISTRY
 from djtools.collection.base_track import Track
+from djtools.collection.platform_registry import PLATFORM_REGISTRY
 from djtools.configs import build_config
 
 

@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 from djtools.configs.helpers import build_config
 from djtools.collection.base_track import Track
-from djtools.collection.helpers import PLATFORM_REGISTRY
+from djtools.collection.platform_registry import PLATFORM_REGISTRY
 from djtools.spotify.helpers import filter_results, get_spotify_client
 
 
@@ -140,12 +140,12 @@ if __name__ == "__main__":
 
     # Build config, instantiate collection, and get tracks.
     config = build_config(args.config)
-    collection = PLATFORM_REGISTRY[config.platform]["collection"](
-        path=args.collection or config.collection_path
+    collection = PLATFORM_REGISTRY[config.collection.platform]["collection"](
+        path=args.collection or config.collection.collection_path
     )
     tracks = filter_tracks(collection.get_tracks(), args.date_filter)
     spotify = get_spotify_client(config)
-    playlist_class = PLATFORM_REGISTRY[config.platform]["playlist"]
+    playlist_class = PLATFORM_REGISTRY[config.collection.platform]["playlist"]
 
     # Add tags from Spotify.
     if args.mode == "bulk":
@@ -233,7 +233,9 @@ if __name__ == "__main__":
                         "Response must contain either 'n' or 'y' -- try again!"
                     )
 
-        playlist_class = PLATFORM_REGISTRY[config.platform]["playlist"]
+        playlist_class = PLATFORM_REGISTRY[config.collection.platform][
+            "playlist"
+        ]
         for name, set_tracks in [
             ("No matches", no_matches),
             ("Same", same_tracks),
@@ -244,4 +246,4 @@ if __name__ == "__main__":
             )
             collection.add_playlist(playlist)
 
-    collection.serialize(path=args.output or config.collection_path)
+    collection.serialize(path=args.output or config.collection.collection_path)

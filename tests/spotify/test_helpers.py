@@ -7,7 +7,7 @@ from unittest import mock
 import pytest
 import yaml
 
-from djtools.spotify.config import SubredditConfig
+from djtools.spotify.config import SubredditConfig, SubredditType
 from djtools.spotify.helpers import (
     _build_new_playlist,
     _catch,
@@ -374,7 +374,9 @@ def test_get_spotify_client(is_spotify_config, config):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("subreddit_type", ["hot", "top"])
+@pytest.mark.parametrize(
+    "subreddit_type", [SubredditType.HOT, SubredditType.TOP]
+)
 @pytest.mark.parametrize("num_subs", [5, 0])
 @mock.patch("djtools.spotify.helpers.praw.Reddit.close", mock.Mock())
 @mock.patch("djtools.spotify.helpers._process")
@@ -411,7 +413,7 @@ async def test_get_subreddit_posts(
             mock_spotify, mock_praw, subreddit, config, praw_cache
         )
     assert caplog.records[0].message == (
-        f'Filtering {num_subs} "r/techno" {subreddit_type} posts'
+        f'Filtering {num_subs} "r/techno" {subreddit_type.value} posts'
     )
     if not num_subs:
         assert caplog.records[1].message == (

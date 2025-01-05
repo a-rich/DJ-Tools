@@ -72,7 +72,7 @@ def main():
     # Test ci
     logger, log_file = initialize_logger()
     config = build_config()
-    logger.setLevel(config.log_level)
+    logger.setLevel(config.log_level.value)
 
     # Run "collection", "spotify", "sync", and "utils" package operations if
     # any of the flags to do so are present in the config.

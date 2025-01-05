@@ -98,6 +98,11 @@ line-length = 79
 source = ["src"]
 omit = ["src/djtools/__main__.py"]
 
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover"
+]
+
 [tool.pylint.DESIGN]
 disable = [
     "abstract-class-instantiated",

@@ -13,6 +13,7 @@ from djtools.configs.cli_args import (
     get_arg_parser,
     NonEmptyListElementAction,
 )
+from djtools.utils.config import TrimInitialSilenceMode
 
 
 @pytest.mark.parametrize("paths", ["path", ["path1", "path2"]])
@@ -106,11 +107,11 @@ def test_parse_trim_initial_silence_int():
 
 def test_parse_trim_initial_silence_str():
     """Test for the _parse_trim_initial_silence function."""
-    arg = "auto"
-    assert isinstance(arg, str)
+    arg = TrimInitialSilenceMode.AUTO
+    assert isinstance(arg, TrimInitialSilenceMode)
     result = _parse_trim_initial_silence(arg)
-    assert isinstance(result, str)
-    assert result == "auto"
+    assert isinstance(result, TrimInitialSilenceMode)
+    assert result == TrimInitialSilenceMode.AUTO
 
 
 def test_parse_trim_initial_silence_invalid_str():

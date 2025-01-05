@@ -11,7 +11,11 @@ import pytest
 from djtools.collection.base_collection import Collection
 from djtools.collection.base_playlist import Playlist
 from djtools.collection.base_track import Track
-from djtools.collection.config import PlaylistConfigContent, PlaylistName
+from djtools.collection.config import (
+    PlaylistConfigContent,
+    PlaylistName,
+    RegisteredPlatforms,
+)
 from djtools.collection.helpers import (
     add_selectors_to_tags,
     aggregate_playlists,
@@ -59,7 +63,7 @@ def test_platform_registry_structure():
     required_class_impl_keys = {"collection", "playlist", "track"}
     required_base_class_impls = {Collection, Playlist, Track}
     for registered_software, impls in PLATFORM_REGISTRY.items():
-        assert isinstance(registered_software, str)
+        assert isinstance(registered_software, RegisteredPlatforms)
         assert isinstance(impls, dict)
         assert set(impls.keys()) == required_class_impl_keys
         assert (

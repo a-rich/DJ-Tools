@@ -5,8 +5,9 @@ config.yaml
 
 import logging
 import os
+from enum import Enum
 from pathlib import Path
-from typing import List, Literal, Optional, Union
+from typing import List, Optional, Union
 
 from pydantic import (
     field_validator,
@@ -14,6 +15,7 @@ from pydantic import (
     NonNegativeFloat,
     NonNegativeInt,
 )
+import yaml
 
 from djtools.configs.config_formatter import BaseConfigFormatter
 
@@ -21,14 +23,67 @@ from djtools.configs.config_formatter import BaseConfigFormatter
 logger = logging.getLogger(__name__)
 
 
+class AudioFormats(Enum):
+    # pylint: disable=missing-class-docstring
+    AAC = "aac"
+    AIFF = "aiff"
+    ALAC = "alac"
+    FLAC = "flac"
+    MP3 = "mp3"
+    OGG = "ogg"
+    PCM = "pcm"
+    WAV = "wav"
+    WMA = "wma"
+
+
+def audio_formats_representer(dumper, data):
+    # pylint: disable=missing-function-docstring
+    return dumper.represent_scalar("!AudioFormats", data.value)
+
+
+def audio_formats_constructor(loader, node):
+    # pylint: disable=missing-function-docstring
+    return AudioFormats(loader.construct_scalar(node))
+
+
+yaml.add_representer(AudioFormats, audio_formats_representer)
+yaml.add_constructor("!AudioFormats", audio_formats_constructor)
+
+
+class TrimInitialSilenceMode(Enum):
+    # pylint: disable=missing-class-docstring
+    AUTO = "auto"
+    SMART = "smart"
+
+
+def trim_initial_silence_mode_representer(dumper, data):
+    # pylint: disable=missing-function-docstring
+    return dumper.represent_scalar(  # pragma: no cover
+        "!TrimInitialSilenceMode", data.value
+    )
+
+
+def trim_initial_silence_mode_constructor(loader, node):
+    # pylint: disable=missing-function-docstring
+    return TrimInitialSilenceMode(  # pragma: no cover
+        loader.construct_scalar(node)
+    )
+
+
+yaml.add_representer(
+    TrimInitialSilenceMode, trim_initial_silence_mode_representer
+)
+yaml.add_constructor(
+    "!TrimInitialSilenceMode", trim_initial_silence_mode_constructor
+)
+
+
 class UtilsConfig(BaseConfigFormatter):
     """Configuration object for the utils package."""
 
     audio_bitrate: str = "320"
     audio_destination: Optional[Path] = None
-    audio_format: Literal[
-        "aac", "aiff", "alac", "flac", "mp3", "ogg", "pcm", "wav", "wma"
-    ] = "mp3"
+    audio_format: AudioFormats = AudioFormats.MP3
     audio_headroom: NonNegativeFloat = 0.0
     check_tracks: bool = False
     check_tracks_fuzz_ratio: NonNegativeInt = 80
@@ -38,7 +93,7 @@ class UtilsConfig(BaseConfigFormatter):
     process_recording: bool = False
     recording_file: Optional[Path] = None
     recording_playlist: str = ""
-    trim_initial_silence: Union[int, Literal["auto", "smart"]] = 0
+    trim_initial_silence: Union[int, TrimInitialSilenceMode] = 0
     url_download: str = ""
 
     def __init__(self, *args, **kwargs):

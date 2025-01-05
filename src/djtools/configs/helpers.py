@@ -136,26 +136,26 @@ def _update_config_with_cli_args(
     """
     updated_data = config.model_dump()
 
-    for key, value in cli_args.items():
-        for field_name, field_info in config.model_fields.items():
-            if key == field_name:
-                updated_data[key] = value
-                break
+    for field_name, field_info in config.model_fields.items():
+        if field_name in cli_args:
+            updated_data[field_name] = cli_args[field_name]
+        elif isinstance(field_info.annotation, type) and issubclass(
+            field_info.annotation, BaseModel
+        ):
+            sub_model = getattr(config, field_name)
+            sub_model_data = sub_model.model_dump()
 
-            if isinstance(field_info.annotation, type) and issubclass(
-                field_info.annotation, BaseModel
-            ):
-                sub_model = getattr(config, field_name)
+            sub_model_args = {
+                key: value
+                for key, value in cli_args.items()
+                if key in sub_model.model_fields
+            }
 
-                if key in sub_model.model_fields:
-                    sub_model_data = updated_data.get(
-                        field_name, sub_model.model_dump()
-                    )
-                    sub_model_data[key] = value
-                    updated_data[field_name] = sub_model.__class__(
-                        **sub_model_data
-                    ).model_dump()
-                    break
+            if sub_model_args:
+                sub_model_data.update(sub_model_args)
+                updated_data[field_name] = sub_model.__class__(
+                    **sub_model_data
+                ).model_dump()
 
     updated_config = config.__class__(**updated_data)
 
