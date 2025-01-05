@@ -4,7 +4,11 @@ from unittest import mock
 
 import pytest
 
-from djtools.collection.config import PlaylistRemainder
+from djtools.collection.config import (
+    PlaylistConfig,
+    PlaylistConfigContent,
+    PlaylistRemainder,
+)
 from djtools.collection.playlist_builder import (
     collection_playlists,
     PLAYLIST_NAME,
@@ -22,7 +26,7 @@ def test_collection_playlists_makes_unused_tags_playlists(
     config,
     rekordbox_collection,
     rekordbox_xml,
-    playlist_config,
+    playlist_config_obj,
 ):
     """Test for the collection_playlists function."""
     config.collection.collection_path = rekordbox_xml
@@ -37,9 +41,9 @@ def test_collection_playlists_makes_unused_tags_playlists(
     some_tag = next(iter(tags))
     tags.remove(some_tag)
 
-    del playlist_config["combiner"]
-    playlist_config["tags"]["playlists"] = [some_tag]
-    config.collection.playlist_config = playlist_config
+    playlist_config_obj.combiner = None
+    playlist_config_obj.tags.playlists = [some_tag]
+    config.collection.playlist_config = playlist_config_obj
 
     collection_playlists(config, path=new_path)
 
@@ -99,12 +103,12 @@ def test_collection_playlists_prints_playlist_tag_statistics(
     mock_print_playlists_tag_statistics,
     config,
     rekordbox_xml,
-    playlist_config,
+    playlist_config_obj,
 ):
     """Test for the collection_playlists function."""
     config.collection.collection_path = rekordbox_xml
     config.verbosity = 1
-    config.collection.playlist_config = playlist_config
+    config.collection.playlist_config = playlist_config_obj
 
     collection_playlists(config, path=rekordbox_xml.parent / "test_collection")
 
@@ -122,16 +126,19 @@ def test_collection_playlists_prints_playlist_tag_statistics(
     ],
 )
 def test_collection_playlists_handles_error_parsing_expression(
-    invalid_expression, config, rekordbox_xml, playlist_config, caplog
+    invalid_expression, config, rekordbox_xml, playlist_config_obj, caplog
 ):
     """Test for the collection_playlists function."""
     caplog.set_level("WARNING")
     config.collection.collection_path = rekordbox_xml
-    del playlist_config["tags"]
-    playlist_config["combiner"]["playlists"] = [
-        {"name": "test", "playlists": [invalid_expression]}
+    playlist_config_obj.tags = None
+    playlist_config_obj.combiner.playlists = [
+        PlaylistConfigContent(
+            name="test",
+            playlists=[invalid_expression],
+        )
     ]
-    config.collection.playlist_config = playlist_config
+    config.collection.playlist_config = playlist_config_obj
 
     collection_playlists(config, path=rekordbox_xml.parent / "test_collection")
 
@@ -141,7 +148,7 @@ def test_collection_playlists_handles_error_parsing_expression(
 
 
 def test_collection_playlists_removes_existing_playlist(
-    config, playlist_config, rekordbox_xml
+    config, playlist_config_obj, rekordbox_xml
 ):
     """Test for the collection_playlists function."""
     collection = RekordboxCollection(rekordbox_xml)
@@ -161,7 +168,7 @@ def test_collection_playlists_removes_existing_playlist(
     new_path = rekordbox_xml.parent / "test_collection"
     collection.serialize(path=new_path)
     config.collection.collection_path = new_path
-    config.collection.playlist_config = playlist_config
+    config.collection.playlist_config = playlist_config_obj
 
     # Run the playlist_builder on this collection to test removing the existing
     # playlist_builder playlist.
@@ -180,7 +187,7 @@ def test_collection_playlists_with_empty_playlistconfig_returns_early(
     """Test for the collection_playlists function."""
     caplog.set_level("WARNING")
     config.collection.collection_path = rekordbox_xml
-    config.collection.playlist_config = {}
+    config.collection.playlist_config = PlaylistConfig()
     collection_playlists(config, path=rekordbox_xml.parent / "test_collection")
     assert caplog.records[0].message == (
         "Not building playlists because the playlist config is empty."

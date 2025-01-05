@@ -29,12 +29,14 @@ class PlaylistFilters(Enum):
 
 def playlist_filter_representer(dumper, data):
     # pylint: disable=missing-function-docstring
-    return dumper.represent_scalar("!PlaylistFilters", data.value)
+    return dumper.represent_scalar(  # pragma: no cover
+        "!PlaylistFilters", data.value
+    )
 
 
 def playlist_filter_constructor(loader, node):
     # pylint: disable=missing-function-docstring
-    return PlaylistFilters(loader.construct_scalar(node))
+    return PlaylistFilters(loader.construct_scalar(node))  # pragma: no cover
 
 
 yaml.add_representer(PlaylistFilters, playlist_filter_representer)

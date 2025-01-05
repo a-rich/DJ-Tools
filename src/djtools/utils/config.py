@@ -58,12 +58,16 @@ class TrimInitialSilenceMode(Enum):
 
 def trim_initial_silence_mode_representer(dumper, data):
     # pylint: disable=missing-function-docstring
-    return dumper.represent_scalar("!TrimInitialSilenceMode", data.value)
+    return dumper.represent_scalar(  # pragma: no cover
+        "!TrimInitialSilenceMode", data.value
+    )
 
 
 def trim_initial_silence_mode_constructor(loader, node):
     # pylint: disable=missing-function-docstring
-    return TrimInitialSilenceMode(loader.construct_scalar(node))
+    return TrimInitialSilenceMode(  # pragma: no cover
+        loader.construct_scalar(node)
+    )
 
 
 yaml.add_representer(

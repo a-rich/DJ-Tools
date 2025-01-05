@@ -6,7 +6,6 @@ from typing import Optional, Type
 
 from djtools.collection import playlist_filters
 from djtools.collection.config import (
-    PlaylistConfig,
     PlaylistConfigContent,
     PlaylistRemainder,
 )
@@ -80,10 +79,6 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
         config: Configuration object.
         path: Path to write the new collection to.
     """
-    config.collection.playlist_config = PlaylistConfig(
-        **config.collection.playlist_config or {}
-    )
-
     # Check if the playlist config is populated before continuing.
     if not (
         config.collection.playlist_config.tags
@@ -119,7 +114,7 @@ def collection_playlists(config: BaseConfig, path: Optional[Path] = None):
 
     # List of PlaylistFilter implementations to run against built playlists.
     filters = [
-        getattr(playlist_filters, playlist_filter)()
+        getattr(playlist_filters, playlist_filter.value)()
         for playlist_filter in config.collection.collection_playlist_filters
     ]
 
