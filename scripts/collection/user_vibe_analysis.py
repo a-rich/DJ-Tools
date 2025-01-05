@@ -12,7 +12,7 @@ from matplotlib.ticker import MaxNLocator
 
 from djtools.configs import build_config
 from djtools.collection.base_collection import Collection
-from djtools.collection.helpers import PLATFORM_REGISTRY
+from djtools.collection.platform_registry import PLATFORM_REGISTRY
 
 
 def analyze_collection_vibes(

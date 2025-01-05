@@ -17,7 +17,7 @@ import sys
 from tqdm import tqdm
 
 from djtools.configs.helpers import build_config
-from djtools.collection.helpers import PLATFORM_REGISTRY
+from djtools.collection.platform_registry import PLATFORM_REGISTRY
 
 
 def remove_tags_thread(track, tag_regex, remove_tags):

@@ -5,7 +5,7 @@ from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
 from djtools.configs import build_config
-from djtools.collection.helpers import PLATFORM_REGISTRY
+from djtools.collection.platform_registry import PLATFORM_REGISTRY
 
 
 # pylint: disable=missing-function-docstring
