@@ -92,12 +92,12 @@ def download_collection(config: BaseConfig):
         config: Configuration object.
     """
     logger.info(
-        f"Downloading {config.sync.import_user}'s {config.collection.platform} collection..."
+        f"Downloading {config.sync.import_user}'s {config.collection.platform.value} collection..."
     )
     collection_dir = config.collection.collection_path.parent
     src = (
         f"{config.sync.bucket_url}/dj/collections/{config.sync.import_user}/"
-        f"{config.collection.platform}_collection"
+        f"{config.collection.platform.value}_collection"
     )
     dst = (
         Path(collection_dir)
@@ -160,11 +160,11 @@ def upload_collection(config: BaseConfig):
         config: Configuration object.
     """
     logger.info(
-        f"Uploading {config.sync.user}'s {config.collection.platform} collection..."
+        f"Uploading {config.sync.user}'s {config.collection.platform.value} collection..."
     )
     dst = (
         f"{config.sync.bucket_url}/dj/collections/{config.sync.user}/"
-        f"{config.collection.platform}_collection"
+        f"{config.collection.platform.value}_collection"
     )
     cmd = [
         "aws",

@@ -62,9 +62,10 @@ def normalize(config: BaseConfig):
                 audio, headroom=config.utils.audio_headroom
             )
             audio.export(
-                track.parent / f"{track.stem}.{config.utils.audio_format}",
+                track.parent
+                / f"{track.stem}.{config.utils.audio_format.value}",
                 tags=tags,
                 bitrate=f"{config.utils.audio_bitrate}k",
-                format=config.utils.audio_format,
+                format=config.utils.audio_format.value,
             )
             continue
