@@ -49,7 +49,7 @@ def url_download(config: BaseConfig):
         "postprocessors": [
             {
                 "key": "FFmpegExtractAudio",
-                "preferredcodec": config.utils.audio_format,
+                "preferredcodec": config.utils.audio_format.value,
                 "preferredquality": config.utils.audio_bitrate,
             }
         ],

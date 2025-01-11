@@ -5,6 +5,7 @@ from unittest import mock
 
 import pytest
 
+from djtools.collection.config import RegisteredPlatforms
 from djtools.sync.sync_operations import (
     download_collection,
     download_music,
@@ -106,7 +107,7 @@ def test_download_collection(
     config.sync.user = test_user
     config.sync.import_user = import_user
     config.collection.collection_path = rekordbox_xml
-    config.collection.platform = "rekordbox"
+    config.collection.platform = RegisteredPlatforms.REKORDBOX
     new_xml = rekordbox_xml.parent / f"{import_user}_rekordbox.xml"
     new_xml.write_text(
         rekordbox_xml.read_text(encoding="utf-8"), encoding="utf-8"
@@ -118,7 +119,7 @@ def test_download_collection(
         "s3",
         "cp",
         f"{TEST_BUCKET}/dj/collections/{import_user}/"
-        f"{config.collection.platform}_collection",
+        f"{config.collection.platform.value}_collection",
         # NOTE(a-rich): since we could be passing a `rekordbox_xml` formatted
         # as a WindowsPath, the comparison needs to be made with `str(new_xml)`
         # (rather than `new_xml.as_posix()`).
@@ -133,7 +134,7 @@ def test_download_collection(
         download_collection(config)
     mock_popen.assert_called_with(cmd)
     assert caplog.records[0].message == (
-        f"Downloading {config.sync.import_user}'s {config.collection.platform} collection..."
+        f"Downloading {config.sync.import_user}'s {config.collection.platform.value} collection..."
     )
     assert caplog.records[1].message == " ".join(cmd)
     if not user_is_import_user:
@@ -190,13 +191,13 @@ def test_upload_collection(
     config.sync.bucket_url = TEST_BUCKET
     config.sync.user = user
     config.collection.collection_path = rekordbox_xml
-    config.collection.platform = "rekordbox"
+    config.collection.platform = RegisteredPlatforms.REKORDBOX
     cmd = [
         "aws",
         "s3",
         "cp",
         config.collection.collection_path.as_posix(),
-        f"{TEST_BUCKET}/dj/collections/{user}/{config.collection.platform}_collection",
+        f"{TEST_BUCKET}/dj/collections/{user}/{config.collection.platform.value}_collection",
     ]
     if collection_is_dir:
         cmd.append("--recursive")
@@ -208,7 +209,7 @@ def test_upload_collection(
     ):
         upload_collection(config)
     assert caplog.records[0].message == (
-        f"Uploading {user}'s {config.collection.platform} collection..."
+        f"Uploading {user}'s {config.collection.platform.value} collection..."
     )
     assert caplog.records[1].message == " ".join(cmd)
     mock_popen.assert_called_with(cmd)
