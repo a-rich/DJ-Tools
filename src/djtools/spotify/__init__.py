@@ -1,8 +1,8 @@
 """The `spotify` package contains modules:
-    * `config`: the configuration object for the `spotify` package
-    * `helpers`: helper functions for `playlist_builder`
-    * `playlist_builder`: constructs or updates Spotify playlists using either
-        Subreddit posts or the Discord webhook output from `upload_music`
+* `config`: the configuration object for the `spotify` package
+* `helpers`: helper functions for `playlist_builder`
+* `playlist_builder`: constructs or updates Spotify playlists using either
+    Subreddit posts or the Discord webhook output from `upload_music`
 """
 
 from djtools.spotify.playlist_builder import (

@@ -1,4 +1,5 @@
 "This module is used to automatically generate a playlist structure."
+
 import logging
 from collections import defaultdict
 from pathlib import Path

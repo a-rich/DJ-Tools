@@ -1,5 +1,4 @@
-"""This module is used to normalize audio files in one or more directories.
-"""
+"""This module is used to normalize audio files in one or more directories."""
 
 import logging
 from typing import Type

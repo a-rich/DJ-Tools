@@ -1,8 +1,8 @@
 """The `sync` package contains modules:
-    * `config`: the configuration object for the `sync` package
-    * `helpers`: helper functions for the `sync_operations` module
-    * `sync_operations`: for syncing audio and collection files to the
-        Beatcloud
+* `config`: the configuration object for the `sync` package
+* `helpers`: helper functions for the `sync_operations` module
+* `sync_operations`: for syncing audio and collection files to the
+    Beatcloud
 """
 
 from djtools.sync.sync_operations import (

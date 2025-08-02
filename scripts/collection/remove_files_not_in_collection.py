@@ -1,5 +1,4 @@
-"""Script that removes files from a USB if they're not present in a collection.
-"""
+"""Script that removes files from a USB if they're not present in a collection."""
 
 from argparse import ArgumentParser, Namespace
 from pathlib import Path

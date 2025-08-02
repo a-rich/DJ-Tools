@@ -183,12 +183,14 @@ class CollectionConfig(BaseConfigFormatter):
 
 class PlaylistName(BaseModel, extra="forbid"):
     "A class for configuring the names of playlists."
+
     tag_content: str
     name: Optional[str] = None
 
 
 class PlaylistConfigContent(BaseModel, extra="forbid"):
     "A class for type checking the content of the playlist config YAML."
+
     name: str
     playlists: List[Union["PlaylistConfigContent", PlaylistName, str]]
     enable_aggregation: Optional[bool] = None
@@ -196,5 +198,6 @@ class PlaylistConfigContent(BaseModel, extra="forbid"):
 
 class PlaylistConfig(BaseModel, extra="forbid"):
     "A class for type checking the playlist config YAML."
+
     combiner: Optional[PlaylistConfigContent] = None
     tags: Optional[PlaylistConfigContent] = None
