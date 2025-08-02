@@ -1,8 +1,8 @@
 """The `sync` package contains modules:
-    * `config`: the configuration object for the `sync` package
-    * `helpers`: helper functions for the `sync_operations` module
-    * `sync_operations`: for syncing audio and collection files to the
-        Beatcloud
+* `config`: the configuration object for the `sync` package
+* `helpers`: helper functions for the `sync_operations` module
+* `sync_operations`: for syncing audio and collection files to the
+    Beatcloud
 """
 
 from djtools.sync.sync_operations import (
@@ -14,11 +14,11 @@ from djtools.sync.sync_operations import (
 
 
 SYNC_OPERATIONS = {
-    "DOWNLOAD_COLLECTION": download_collection,
-    "DOWNLOAD_MUSIC": download_music,
-    "DOWNLOAD_SPOTIFY_PLAYLIST": download_music,
-    "UPLOAD_COLLECTION": upload_collection,
-    "UPLOAD_MUSIC": upload_music,
+    "download_collection": download_collection,
+    "download_music": download_music,
+    "download_spotify_playlist": download_music,
+    "upload_collection": upload_collection,
+    "upload_music": upload_music,
 }
 
 __all__ = (

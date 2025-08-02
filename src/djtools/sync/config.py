@@ -9,32 +9,33 @@ import os
 from pathlib import Path
 from typing import List, Optional
 
-from djtools.configs.config import BaseConfig
+from djtools.configs.config_formatter import BaseConfigFormatter
 
 
 logger = logging.getLogger(__name__)
 
 
-class SyncConfig(BaseConfig):
+class SyncConfig(BaseConfigFormatter):
     """Configuration object for the sync package."""
 
-    AWS_PROFILE: str = "default"
-    AWS_USE_DATE_MODIFIED: bool = False
-    BUCKET_URL: str = ""
-    DISCORD_URL: str = ""
-    DOWNLOAD_COLLECTION: bool = False
-    DOWNLOAD_EXCLUDE_DIRS: List[Path] = []
-    DOWNLOAD_INCLUDE_DIRS: List[Path] = []
-    DOWNLOAD_MUSIC: bool = False
-    DOWNLOAD_SPOTIFY_PLAYLIST: str = ""
-    DRYRUN: bool = False
-    IMPORT_USER: str = ""
-    UPLOAD_COLLECTION: bool = False
-    UPLOAD_EXCLUDE_DIRS: List[Path] = []
-    UPLOAD_INCLUDE_DIRS: List[Path] = []
-    UPLOAD_MUSIC: bool = False
-    USB_PATH: Optional[Path] = None
-    USER: str = ""
+    artist_first: bool = False
+    aws_profile: str = "default"
+    aws_use_date_modified: bool = False
+    bucket_url: str = ""
+    discord_url: str = ""
+    download_collection: bool = False
+    download_exclude_dirs: List[Path] = []
+    download_include_dirs: List[Path] = []
+    download_music: bool = False
+    download_spotify_playlist: str = ""
+    dryrun: bool = False
+    import_user: str = ""
+    upload_collection: bool = False
+    upload_exclude_dirs: List[Path] = []
+    upload_include_dirs: List[Path] = []
+    upload_music: bool = False
+    usb_path: Optional[Path] = None
+    user: str = ""
 
     def __init__(self, *args, **kwargs):
         """Constructor.
@@ -42,68 +43,68 @@ class SyncConfig(BaseConfig):
         Raises:
             ValueError: Both include and exclude dirs can't be provided at the
                 same time.
-            RuntimeError: AWS_PROFILE must be set.
+            RuntimeError: aws_profile must be set.
         """
         super().__init__(*args, **kwargs)
-        if not self.USER:
-            self.USER = getpass.getuser()
+        if not self.user:
+            self.user = getpass.getuser()
 
-        if (self.UPLOAD_INCLUDE_DIRS and self.UPLOAD_EXCLUDE_DIRS) or (
-            self.DOWNLOAD_INCLUDE_DIRS and self.DOWNLOAD_EXCLUDE_DIRS
+        if (self.upload_include_dirs and self.upload_exclude_dirs) or (
+            self.download_include_dirs and self.download_exclude_dirs
         ):
             msg = (
-                "Config must neither contain both UPLOAD_INCLUDE_DIRS and "
-                "UPLOAD_EXCLUDE_DIRS or both DOWNLOAD_INCLUDE_DIRS and "
-                "DOWNLOAD_EXCLUDE_DIRS"
+                "Config must neither contain both upload_include_dirs and "
+                "upload_exclude_dirs or both download_include_dirs and "
+                "download_exclude_dirs"
             )
             logger.critical(msg)
             raise ValueError(msg)
 
         if any(
             [
-                self.DOWNLOAD_COLLECTION,
-                self.DOWNLOAD_MUSIC,
-                self.UPLOAD_COLLECTION,
-                self.UPLOAD_MUSIC,
+                self.download_collection,
+                self.download_music,
+                self.upload_collection,
+                self.upload_music,
             ]
         ):
-            if not self.AWS_PROFILE:
-                msg = "Config must include AWS_PROFILE for sync operations"
+            if not self.aws_profile:
+                msg = "Config must include aws_profile for sync operations"
                 logger.critical(msg)
                 raise RuntimeError(msg)
 
-            if not self.BUCKET_URL:
-                msg = "Config must include BUCKET_URL for sync operations"
+            if not self.bucket_url:
+                msg = "Config must include bucket_url for sync operations"
                 logger.critical(msg)
                 raise RuntimeError(msg)
 
         os.environ["AWS_PROFILE"] = (
-            self.AWS_PROFILE
+            self.aws_profile
         )  # pylint: disable=no-member
 
-        if any([self.DOWNLOAD_MUSIC, self.UPLOAD_MUSIC]) and not self.USB_PATH:
+        if any([self.download_music, self.upload_music]) and not self.usb_path:
             msg = (
-                "Config must include USB_PATH for both DOWNLOAD_MUSIC and "
-                "UPLOAD_MUSIC sync operations"
+                "Config must include usb_path for both download_music and "
+                "upload_music sync operations"
             )
             logger.critical(msg)
             raise RuntimeError(msg)
 
         if (
-            any([self.DOWNLOAD_MUSIC, self.UPLOAD_MUSIC])
-            and not self.USB_PATH.exists()
+            any([self.download_music, self.upload_music])
+            and not self.usb_path.exists()
         ):
-            msg = f'Configured USB_PATH "{self.USB_PATH}" was not found!'
+            msg = f'Configured usb_path "{self.usb_path}" was not found!'
             logger.critical(msg)
             raise RuntimeError(msg)
 
-        if self.UPLOAD_MUSIC and not self.DISCORD_URL:
+        if self.upload_music and not self.discord_url:
             logger.warning(
-                'DISCORD_URL is not configured...set this for "New Music" '
+                'discord_url is not configured...set this for "New Music" '
                 "discord messages!"
             )
 
-        if self.DOWNLOAD_COLLECTION and not self.IMPORT_USER:
+        if self.download_collection and not self.import_user:
             raise RuntimeError(
-                "IMPORT_USER must be set to download a collection"
+                "import_user must be set to download a collection"
             )

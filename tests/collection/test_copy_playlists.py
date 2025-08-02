@@ -14,13 +14,13 @@ def test_copy_playlists_makes_destination_folder(
     """Test for the copy_playlists function."""
     target_playlists = ["Hip Hop"]
     test_output_dir = Path(tmpdir) / "output"
-    config.COLLECTION_PATH = rekordbox_xml
-    config.COPY_PLAYLISTS = target_playlists
-    config.COPY_PLAYLISTS_DESTINATION = Path(test_output_dir)
+    config.collection.collection_path = rekordbox_xml
+    config.collection.copy_playlists = target_playlists
+    config.collection.copy_playlists_destination = Path(test_output_dir)
     new_collection = tmpdir / "test_collection"
-    assert not config.COPY_PLAYLISTS_DESTINATION.exists()
+    assert not config.collection.copy_playlists_destination.exists()
     copy_playlists(config, path=new_collection)
-    assert config.COPY_PLAYLISTS_DESTINATION.exists()
+    assert config.collection.copy_playlists_destination.exists()
 
 
 def test_copy_playlists_handles_invalid_playlist(
@@ -28,9 +28,9 @@ def test_copy_playlists_handles_invalid_playlist(
 ):
     """Test for the copy_playlists function."""
     playlist = "invalid_playlist"
-    config.COLLECTION_PATH = rekordbox_xml
-    config.COPY_PLAYLISTS = [playlist]
-    config.COPY_PLAYLISTS_DESTINATION = Path(tmpdir)
+    config.collection.collection_path = rekordbox_xml
+    config.collection.copy_playlists = [playlist]
+    config.collection.copy_playlists_destination = Path(tmpdir)
     with pytest.raises(LookupError, match=f"{playlist} not found"):
         copy_playlists(config)
 
@@ -40,9 +40,9 @@ def test_copy_playlists_find_multiple_playlists_with_the_same_name(
 ):
     """Test for the copy_playlists function."""
     target_playlist = "Dark"
-    config.COLLECTION_PATH = rekordbox_xml
-    config.COPY_PLAYLISTS = [target_playlist]
-    config.COPY_PLAYLISTS_DESTINATION = Path(tmpdir)
+    config.collection.collection_path = rekordbox_xml
+    config.collection.copy_playlists = [target_playlist]
+    config.collection.copy_playlists_destination = Path(tmpdir)
     new_collection = tmpdir / "test_collection"
     old_playlist_count = len(
         rekordbox_collection.get_playlists(target_playlist)
@@ -59,9 +59,9 @@ def test_copy_playlists_copies_files(
     """Test for the copy_playlists function."""
     target_playlists = ["Hip Hop", "Dark"]
     test_output_dir = Path(tmpdir) / "output"
-    config.COLLECTION_PATH = rekordbox_xml
-    config.COPY_PLAYLISTS = target_playlists
-    config.COPY_PLAYLISTS_DESTINATION = test_output_dir
+    config.collection.collection_path = rekordbox_xml
+    config.collection.copy_playlists = target_playlists
+    config.collection.copy_playlists_destination = test_output_dir
     new_collection = Path(tmpdir) / "test_collection"
     old_tracks = {
         track_id: track
@@ -90,9 +90,9 @@ def test_copy_playlists_copies_files(
 def test_copy_playlists_creates_new_collection(config, rekordbox_xml, tmpdir):
     """Test for the copy_playlists function."""
     playlist = "Hip Hop"
-    config.COLLECTION_PATH = rekordbox_xml
-    config.COPY_PLAYLISTS = [playlist]
-    config.COPY_PLAYLISTS_DESTINATION = Path(tmpdir)
+    config.collection.collection_path = rekordbox_xml
+    config.collection.copy_playlists = [playlist]
+    config.collection.copy_playlists_destination = Path(tmpdir)
     new_collection = tmpdir / "test_collection"
     assert not new_collection.exists()
     copy_playlists(config, path=new_collection)
@@ -104,11 +104,11 @@ def test_copy_playlists_creates_new_collection_with_default_path(
 ):
     """Test for the copy_playlists function."""
     playlist = "Hip Hop"
-    config.COLLECTION_PATH = rekordbox_xml
-    config.COPY_PLAYLISTS = [playlist]
-    config.COPY_PLAYLISTS_DESTINATION = Path(tmpdir)
+    config.collection.collection_path = rekordbox_xml
+    config.collection.copy_playlists = [playlist]
+    config.collection.copy_playlists_destination = Path(tmpdir)
     new_collection = (
-        config.COPY_PLAYLISTS_DESTINATION
+        config.collection.copy_playlists_destination
         / f"copied_playlists_collection{rekordbox_xml.suffix}"
     )
     assert not new_collection.exists()

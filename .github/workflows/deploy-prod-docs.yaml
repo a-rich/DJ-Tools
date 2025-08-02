@@ -5,8 +5,7 @@ on:
       - main
     paths:
       - 'src/**.py'
-      - 'docs/**.md'
-      - 'mkdocs.yml'
+      - 'docs/**'
 
 jobs:
   build:
@@ -21,7 +20,7 @@ jobs:
           python-version: 3.9
           cache: 'pip'
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v4
         with:
           path: ${{ env.pythonLocation }}
           key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
@@ -33,4 +32,4 @@ jobs:
 
       - name: Deploy docs
         run: |
-          mkdocs gh-deploy --force
+          mkdocs gh-deploy --force --config-file docs/mkdocs.yml

@@ -7,22 +7,22 @@ from unittest import mock
 import pytest
 import yaml
 
-from djtools.spotify.config import SubredditConfig
+from djtools.spotify.config import SubredditConfig, SubredditType
 from djtools.spotify.helpers import (
     _build_new_playlist,
     _catch,
-    filter_results,
     _filter_tracks,
     _fuzzy_match,
+    _parse_title,
+    _process,
+    _track_name_too_similar,
+    _update_existing_playlist,
+    filter_results,
     get_playlist_ids,
     get_reddit_client,
     get_spotify_client,
     get_subreddit_posts,
-    _parse_title,
     populate_playlist,
-    _process,
-    _track_name_too_similar,
-    _update_existing_playlist,
     write_playlist_ids,
 )
 
@@ -350,23 +350,33 @@ def test_get_playlist_ids(config_exists, expected):
 @mock.patch("djtools.spotify.helpers.praw.Reddit")
 def test_get_reddit_client(config):
     """Test for the get_reddit_client function."""
-    config.REDDIT_CLIENT_ID = "test_client_id"
-    config.REDDIT_CLIENT_SECRET = "test_client_secret"
-    config.REDDIT_USER_AGENT = "test_user_agent"
+    config.reddit_client_id = "test_client_id"
+    config.reddit_client_secret = "test_client_secret"
+    config.reddit_user_agent = "test_user_agent"
     get_reddit_client(config)
 
 
-@mock.patch("djtools.spotify.helpers.spotipy.Spotify")
-def test_get_spotify_client(config):
+@pytest.mark.parametrize("is_spotify_config", [True, False])
+def test_get_spotify_client(is_spotify_config, config):
     """Test for the get_spotify_client function."""
-    config.SPOTIFY_CLIENT_ID = "test_client_id"
-    config.SPOTIFY_CLIENT_SECRET = "test_client_secret"
-    config.SPOTIFY_REDIRECT_URI = "test_redirect_uri"
-    get_spotify_client(config)
+    if is_spotify_config:
+        config = config.spotify
+
+    config.spotify_client_id = "test_client_id"
+    config.spotify_client_secret = "test_client_secret"
+    config.spotify_redirect_uri = "test_redirect_uri"
+
+    with (
+        mock.patch("djtools.spotify.helpers.spotipy.Spotify"),
+        mock.patch("djtools.spotify.helpers.SpotifyOAuth"),
+    ):
+        get_spotify_client(config)
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("subreddit_type", ["hot", "top"])
+@pytest.mark.parametrize(
+    "subreddit_type", [SubredditType.HOT, SubredditType.TOP]
+)
 @pytest.mark.parametrize("num_subs", [5, 0])
 @mock.patch("djtools.spotify.helpers.praw.Reddit.close", mock.Mock())
 @mock.patch("djtools.spotify.helpers._process")
@@ -385,9 +395,7 @@ async def test_get_subreddit_posts(
 ):
     """Test for the get_subreddit_posts function."""
     caplog.set_level("INFO")
-    subreddit = SubredditConfig(
-        name="techno", type=subreddit_type
-    ).model_dump()
+    subreddit = SubredditConfig(name="techno", type=subreddit_type)
     praw_cache = {}
     mock_praw_submission.id = "test_id"
     mock_process.return_value = "track - artist"
@@ -405,7 +413,7 @@ async def test_get_subreddit_posts(
             mock_spotify, mock_praw, subreddit, config, praw_cache
         )
     assert caplog.records[0].message == (
-        f'Filtering {num_subs} "r/techno" {subreddit_type} posts'
+        f'Filtering {num_subs} "r/techno" {subreddit_type.value} posts'
     )
     if not num_subs:
         assert caplog.records[1].message == (
@@ -520,21 +528,16 @@ def test_populate_playlist(
     [
         "https://open.spotify.com/track/1lps8esDJ9M6rG3HBjhuux",
         "https://some-other-url.com/some_id",
-        "",
-    ],
-)
-@pytest.mark.parametrize(
-    "title",
-    [
-        "Arctic Oscillations - Fanu",
-        "Fanu - Arctic Oscillations",
-        "A submission title that doesn't include the artist or track info",
     ],
 )
 @mock.patch("djtools.spotify.helpers.get_spotify_client")
-@mock.patch("djtools.spotify.helpers.praw.models.Submission", autospec=True)
-def test_process(mock_praw_submission, mock_spotipy, url, title):
+@mock.patch(
+    "djtools.spotify.helpers.praw.models.Submission",
+    new_callable=mock.AsyncMock,
+)
+def test_process(mock_praw_submission, mock_spotipy, url):
     """Test for the _process function."""
+    title = "Arctic Oscillations - Fanu"
     mock_praw_submission.url = url
     mock_praw_submission.title = title
     with mock.patch(

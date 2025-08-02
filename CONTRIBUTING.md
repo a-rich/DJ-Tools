@@ -25,21 +25,25 @@ On `push` events to `main`, for the same file change patterns, the [deploy-prod-
 ## Local testing (run from DJ-Tools repo)
 ### Setup dev environment:
 ```
-pyenv virtualenv $(pyenv global) djtools-dev && \
+pyenv virtualenv $(pyenv local) djtools-dev && \
 pyenv activate djtools-dev && \
-pip install -e ".[dev]"
+pip install -e ".[dev]" && \
+pre-commit install
 ```
-### Test suite & coverage reporting:
+
+### pre-commit hooks:
+Installing `pre-commit` enables testing, linting, and formatting checks defined in [.pre-commit-config.yaml](./.pre-commit-config.yaml).
+You can run these same checks at any time with the following commands:
+
+#### Test with pytest
 ```
 pytest --cov --cov-report term-missing
 ```
-
-### Linting check:
+#### Lint with pylint
 ```
 pylint $(git ls-files '*.py')
 ```
-
-### Format code:
+#### Format code with black
 ```
 black .
 ```

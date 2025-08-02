@@ -17,7 +17,7 @@ You're probably using DJ Tools to manage a shared track collection with friends 
 The purpose of this feature is to allow you to build a Spotify playlist from the tracks a user uploads so that they can be previewed and filtered for compatibility with your mixing style. Once this playlist has been filtered down a bit, you can then run the `--download-spotify-playlist` option to sync just the tracks that remain in the playlist.
 
 ## How it's done
-1. Ensure that other users of your Beatcloud instance have the `DISCORD_URL` option set to this webhook URL; otherwise you won't
+1. Ensure that other users of your Beatcloud instance have the `discord_url` option set to this webhook URL; otherwise you won't
     - be alerted when they upload music
     - have the fancy formatted text output that's required to use this feature
 1. Once another user runs the [upload music](sync_beatcloud.md#uploading-music) command, a message containing a file tree of their upload results will be posted to your server

@@ -11,8 +11,8 @@ The 'filter_track' method, when given a 'Track', returns true if that 'Track'
 should remain in the playlist.
 """
 
-from abc import ABC, abstractmethod
 import re
+from abc import ABC, abstractmethod
 from typing import List, Optional
 
 from djtools.collection.base_playlist import Playlist

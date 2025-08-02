@@ -4,10 +4,10 @@
 Please see the [docs](https://a-rich.github.io/DJ-Tools/) for tutorials, how-to guides, conceptual guides, and references!
 
 # Release Plan
-* 2.8.2
+* 2.9.1
     - [ ] [Stability issues with requests to the search endpoint of the Spotify API](https://github.com/a-rich/DJ-Tools/issues/58)
     - [ ] [Make Spotify API calls asynchronous](https://github.com/a-rich/DJ-Tools/issues/38)
-* 2.9.0
+* 2.10.0
     - [ ] [Create graphic user interface for djtools](https://github.com/a-rich/DJ-Tools/issues/118)
     - [ ] [Derive boolean algebra expressions that generate a given playlist](https://github.com/a-rich/DJ-Tools/issues/106)
     - [ ] [Improve Reddit submission title parsing in order to improve precision and recall of Spotify API search results](https://github.com/a-rich/DJ-Tools/issues/59)

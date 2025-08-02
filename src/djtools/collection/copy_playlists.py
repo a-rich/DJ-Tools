@@ -9,17 +9,20 @@ The purpose of this utility is to:
 """
 
 # pylint: disable=duplicate-code
+import os
 from collections import defaultdict
 from concurrent.futures import as_completed, ThreadPoolExecutor
-import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Type
 
 from tqdm import tqdm
 
-from djtools.collection.helpers import copy_file, PLATFORM_REGISTRY
-from djtools.configs.config import BaseConfig
+from djtools.collection.helpers import copy_file
+from djtools.collection.platform_registry import PLATFORM_REGISTRY
 from djtools.utils.helpers import make_path
+
+
+BaseConfig = Type["BaseConfig"]
 
 
 @make_path
@@ -33,23 +36,25 @@ def copy_playlists(config: BaseConfig, path: Optional[Path] = None):
         path: Path to write the new collection to.
 
     Raises:
-        LookupError: Playlist names in COPY_PLAYLISTS must exist in
-            "COLLECTION_PATH".
+        LookupError: Playlist names in copy_playlists must exist in
+            "collection_path".
     """
     # Load collection.
-    collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
-        path=config.COLLECTION_PATH
+    collection = PLATFORM_REGISTRY[config.collection.platform]["collection"](
+        path=config.collection.collection_path
     )
 
     # Create destination directory.
-    config.COPY_PLAYLISTS_DESTINATION.mkdir(parents=True, exist_ok=True)
+    config.collection.copy_playlists_destination.mkdir(
+        parents=True, exist_ok=True
+    )
 
     playlist_tracks = {}
     lineage = defaultdict(set)
     playlists = []
 
     # Get the playlists from the collection.
-    for playlist_name in config.COPY_PLAYLISTS:
+    for playlist_name in config.collection.copy_playlists:
         found_playlists = collection.get_playlists(playlist_name)
         if not found_playlists:
             raise LookupError(f"{playlist_name} not found")
@@ -83,7 +88,7 @@ def copy_playlists(config: BaseConfig, path: Optional[Path] = None):
     # Copy tracks to the destination and update their location.
     payload = zip(
         playlist_tracks.values(),
-        [config.COPY_PLAYLISTS_DESTINATION] * len(playlist_tracks),
+        [config.collection.copy_playlists_destination] * len(playlist_tracks),
     )
 
     with ThreadPoolExecutor(
@@ -100,8 +105,8 @@ def copy_playlists(config: BaseConfig, path: Optional[Path] = None):
     # the files are being copied to.
     if not path:
         path = (
-            config.COPY_PLAYLISTS_DESTINATION
-            / f"copied_playlists_collection{config.COLLECTION_PATH.suffix}"
+            config.collection.copy_playlists_destination
+            / f"copied_playlists_collection{config.collection.collection_path.suffix}"
         )
 
     # Serialize the new collection.

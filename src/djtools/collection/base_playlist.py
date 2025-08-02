@@ -6,9 +6,8 @@ playlist; namely methods for (de)serialization to/from the representation
 recognized by the DJ software for which Playlist is being sub-classed.
 """
 
-from __future__ import annotations
-from abc import ABC, abstractmethod
 import re
+from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 
 from djtools.collection.base_track import Track
@@ -20,11 +19,13 @@ from djtools.collection.base_track import Track
 class Playlist(ABC):
     "Abstract base class for a playlist."
 
-    @abstractmethod
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         "Deserializes a playlist from the native format of a DJ software."
+        self._aggregate = False
+        if kwargs.get("enable_aggregation"):
+            self._aggregate = True
 
-    def __getitem__(self, index: int) -> Playlist:
+    def __getitem__(self, index: int) -> "Playlist":
         """Gets a Playlist from this Playlist's playlists.
 
         This method is used to iterate this object during serialization. If
@@ -53,7 +54,7 @@ class Playlist(ABC):
             return len(self._playlists)
         return len(self._tracks)
 
-    def add_playlist(self, playlist: Playlist, index: Optional[int] = None):
+    def add_playlist(self, playlist: "Playlist", index: Optional[int] = None):
         """Adds a playlist to this folder-type playlist.
 
         Args:
@@ -70,6 +71,17 @@ class Playlist(ABC):
         else:
             self._playlists.append(playlist)
 
+    def aggregate(self) -> bool:
+        """whether to aggregate or not.
+
+        Returns:
+            bool: Whether or not this playlist has an aggregation playlist.
+        """
+        if not self.is_folder():
+            return True
+
+        return self._aggregate and len(self) > 1
+
     @abstractmethod
     def get_name(self) -> str:
         """Returns the name of this playlist.
@@ -78,7 +90,18 @@ class Playlist(ABC):
             The name of this playlist.
         """
 
-    def get_parent(self) -> Optional[Playlist]:
+    def get_number_of_playlists(self) -> int:
+        """Returns the number of playlists within this playlist recursively.
+
+        Returns:
+            Number of playlists within this playlist.
+        """
+        if not self.is_folder():
+            return 1
+
+        return sum(playlist.get_number_of_playlists() for playlist in self)
+
+    def get_parent(self) -> Optional["Playlist"]:
         """Returns the folder this playlist is in.
 
         Returns:
@@ -88,7 +111,7 @@ class Playlist(ABC):
 
     def get_playlists(
         self, name: Optional[str] = None, glob: Optional[bool] = False
-    ) -> List[Playlist]:
+    ) -> List["Playlist"]:
         """Returns Playlists with a matching name.
 
         Args:
@@ -139,15 +162,18 @@ class Playlist(ABC):
     def new_playlist(
         cls,
         name: str,
-        playlists: Optional[List[Playlist]] = None,
+        playlists: Optional[List["Playlist"]] = None,
         tracks: Optional[Dict[str, Track]] = None,
-    ) -> Playlist:
+        enable_aggregation: Optional[bool] = None,
+    ) -> "Playlist":
         """Creates a new Playlist.
 
         Args:
             name: The name of the Playlist to be created.
             playlists: A list of Playlists to add to this Playlist.
             tracks: A dict of Tracks to add to this Playlist.
+            enable_aggregation: Whether or not this playlist has an aggregation
+                playlist.
 
         Raises:
             RuntimeError: You must provide either a list of Playlists or a list
@@ -159,7 +185,7 @@ class Playlist(ABC):
             A new Playlist.
         """
 
-    def remove_playlist(self, playlist: Playlist):
+    def remove_playlist(self, playlist: "Playlist"):
         """Removes playlist from list of playlists.
 
         Args:
@@ -187,7 +213,7 @@ class Playlist(ABC):
                 Playlist.
         """
 
-    def set_parent(self, parent: Optional[Playlist] = None):
+    def set_parent(self, parent: Optional["Playlist"] = None):
         """Recursively sets the parent of all playlists within.
 
         Args:

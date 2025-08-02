@@ -2,31 +2,41 @@
 particular sub-package of this library.
 """
 
+import inspect
+import logging
+import logging.config
+import os
+import pathlib
+import typing
 from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import datetime
 from functools import wraps
-import inspect
 from itertools import product
-import logging
-import logging.config
 from operator import itemgetter
-import os
-import pathlib
 from pathlib import Path
 from subprocess import check_output
-import typing
-from typing import Callable, Dict, List, Literal, Optional, Set, Tuple, Union
+from typing import (
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
 
+import spotipy
 from fuzzywuzzy import fuzz
 from pydub import AudioSegment, effects, silence
-import spotipy
 from tqdm import tqdm
 
-from djtools.configs.config import BaseConfig
 from djtools.spotify.helpers import get_playlist_ids, get_spotify_client
+from djtools.utils.config import TrimInitialSilenceMode
 
 
 logger = logging.getLogger(__name__)
+BaseConfig = Type["BaseConfig"]
 
 
 def compute_distance(
@@ -85,7 +95,7 @@ def find_matches(
         locations,
         tracks,
         beatcloud_tracks,
-        [config.CHECK_TRACKS_FUZZ_RATIO] * len(_product),
+        [config.utils.check_tracks_fuzz_ratio] * len(_product),
     )
 
     with ThreadPoolExecutor(
@@ -137,7 +147,7 @@ def get_local_tracks(config: BaseConfig) -> Dict[str, List[str]]:
         Local file names keyed by parent directory.
     """
     local_dir_tracks = {}
-    for _dir in config.LOCAL_DIRS:
+    for _dir in config.utils.local_dirs:
         if not _dir.exists():
             logger.warning(
                 f"{_dir} does not exist; will not be able to check its "
@@ -215,7 +225,7 @@ def get_spotify_tracks(
         )
         _sum += length
 
-        if config.VERBOSITY > 0:
+        if config.verbosity > 0:
             for track in playlist_tracks[playlist]:
                 logger.info(f"\t{track}")
     logger.info(
@@ -373,17 +383,17 @@ def process_parallel(
         Path that the file was written to.
     """
     # Normalize the audio such that the headroom is
-    # AUDIO_HEADROOM dB.
-    if abs(audio.max_dBFS + config.AUDIO_HEADROOM) > 0.001:
-        audio = effects.normalize(audio, headroom=config.AUDIO_HEADROOM)
+    # audio_headroom dB.
+    if abs(audio.max_dBFS + config.utils.audio_headroom) > 0.001:
+        audio = effects.normalize(audio, headroom=config.utils.audio_headroom)
 
     # Build the filename using the title, artist(s) and configured format.
     filename = (
         f'{track["artist"]} - {track["title"]}'
-        if config.ARTIST_FIRST
+        if config.sync.artist_first
         else f'{track["title"]} - {track["artist"]}'
     )
-    filename = write_path / f"{filename}.{config.AUDIO_FORMAT}"
+    filename = write_path / f"{filename}.{config.utils.audio_format.value}"
 
     # Warn users about malformed filenames that could break other features
     # of djtools.
@@ -399,8 +409,8 @@ def process_parallel(
     # data collected from the Spotify response.
     audio.export(
         filename,
-        format=config.AUDIO_FORMAT,
-        bitrate=f"{config.AUDIO_BITRATE}k",
+        format=config.utils.audio_format.value,
+        bitrate=f"{config.utils.audio_bitrate}k",
         tags={key: value for key, value in track.items() if key != "duration"},
     )
 
@@ -429,7 +439,7 @@ def reverse_title_and_artist(path_lookup: Dict[str, str]) -> Dict[str, str]:
 def trim_initial_silence(
     audio: AudioSegment,
     track_durations: List[int],
-    trim_amount: Union[int, Literal["auto", "smart"]],
+    trim_amount: Union[int, TrimInitialSilenceMode],
     silence_thresh: Optional[float] = -50,
     min_silence_ms: Optional[int] = 5,
     step_size: Optional[int] = 100,
@@ -464,7 +474,7 @@ def trim_initial_silence(
     )
 
     # If trim_amount is "auto", simply trim off the detected leading silence.
-    if trim_amount == "auto":
+    if trim_amount == TrimInitialSilenceMode.AUTO:
         return audio[leading_silence:]
 
     # Use the track durations to infer the points in the recording where each

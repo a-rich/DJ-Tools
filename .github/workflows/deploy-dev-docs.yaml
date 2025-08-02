@@ -5,8 +5,7 @@ on:
       - 'release/**'
     paths:
       - 'src/**.py'
-      - 'docs/**.md'
-      - 'mkdocs.yml'
+      - 'docs/**'
 
 jobs:
   build:
@@ -28,7 +27,7 @@ jobs:
           python-version: 3.9
           cache: 'pip'
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v4
         with:
           path: ${{ env.pythonLocation }}
           key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
@@ -50,9 +49,8 @@ jobs:
         run: |
           cd dev-docs-repo/
           rm -rf docs && rm -rf src
-          cp -r ../main-repo/docs docs && cp -r ../main-repo/src src
-          cp ../main-repo/mkdocs.yml mkdocs.yml
-          mkdocs gh-deploy --force
+          cp -r ../main-repo/docs . && cp -r ../main-repo/src .
+          mkdocs gh-deploy --force --config-file docs/mkdocs.yml
 
       - name: Commit changes
         run: |

@@ -1,24 +1,24 @@
 """This module contains helper functions used by the "sync_operations" module.
 Helper functions include formatting "aws s3 sync" commands, formatting the
 output of "aws s3 sync" commands, posting uploaded tracks to Discord, and
-modifying IMPORT_USER's collection to point to tracks located at "USB_PATH".
+modifying import_user's collection to point to tracks located at "usb_path".
 """
 
+import logging
 from datetime import datetime, timedelta
 from itertools import groupby
-import logging
 from pathlib import Path
 from subprocess import Popen, PIPE, CalledProcessError
-from typing import Optional
+from typing import Optional, Type
 
 import requests
 
-from djtools.collection.helpers import PLATFORM_REGISTRY
-from djtools.configs.config import BaseConfig
+from djtools.collection.platform_registry import PLATFORM_REGISTRY
 from djtools.utils.helpers import make_path
 
 
 logger = logging.getLogger(__name__)
+BaseConfig = Type["BaseConfig"]
 
 
 def parse_sync_command(
@@ -26,11 +26,11 @@ def parse_sync_command(
     config: BaseConfig,
     upload: Optional[bool] = False,
 ) -> str:
-    """Appends flags to "aws s3 sync" command. If "*_INCLUDE_DIRS" is
+    """Appends flags to "aws s3 sync" command. If "*_include_dirs" is
         specified, all directories are ignored except those specified. If
-        "*_EXCLUDE_DIRS" is specified, all directories are included except
+        "*_exclude_dirs" is specified, all directories are included except
         those specified. Only one of these can be specified at once. If
-        "AWS_USE_DATE_MODIFIED", then tracks will be
+        "aws_use_date_modified", then tracks will be
         re-downloaded / re-uploaded if their date modified at the source is
         after that of the destination.
 
@@ -42,13 +42,15 @@ def parse_sync_command(
     Returns:
         Fully constructed "aws s3 sync" command.
     """
-    if (upload and config.UPLOAD_INCLUDE_DIRS) or (
-        not upload and config.DOWNLOAD_INCLUDE_DIRS
+    if (upload and config.sync.upload_include_dirs) or (
+        not upload and config.sync.download_include_dirs
     ):
         _cmd.extend(["--exclude", "*"])
         directories = map(
             Path,
-            getattr(config, f'{"UP" if upload else "DOWN"}LOAD_INCLUDE_DIRS'),
+            getattr(
+                config.sync, f'{"up" if upload else "down"}load_include_dirs'
+            ),
         )
         for _dir in directories:
             path = Path(_dir.stem)
@@ -58,13 +60,15 @@ def parse_sync_command(
             else:
                 path = _dir.parent / path.with_suffix(ext)
             _cmd.extend(["--include", path.as_posix()])
-    if (upload and config.UPLOAD_EXCLUDE_DIRS) or (
-        not upload and config.DOWNLOAD_EXCLUDE_DIRS
+    if (upload and config.sync.upload_exclude_dirs) or (
+        not upload and config.sync.download_exclude_dirs
     ):
         _cmd.extend(["--include", "*"])
         directories = map(
             Path,
-            getattr(config, f'{"UP" if upload else "DOWN"}LOAD_EXCLUDE_DIRS'),
+            getattr(
+                config.sync, f'{"up" if upload else "down"}load_exclude_dirs'
+            ),
         )
         for _dir in directories:
             path = Path(_dir.stem)
@@ -74,9 +78,9 @@ def parse_sync_command(
             else:
                 path = _dir.parent / path.with_suffix(ext)
             _cmd.extend(["--exclude", path.as_posix()])
-    if not config.AWS_USE_DATE_MODIFIED:
+    if not config.sync.aws_use_date_modified:
         _cmd.append("--size-only")
-    if config.DRYRUN:
+    if config.sync.dryrun:
         _cmd.append("--dryrun")
     logger.info(" ".join(_cmd))
 
@@ -87,15 +91,15 @@ def parse_sync_command(
 def rewrite_track_paths(config: BaseConfig, other_user_collection: Path):
     """This function modifies the location of tracks in a collection.
 
-    This is done by replacing the "USB_PATH" written by "IMPORT_USER" with the
-    "USB_PATH" in "config.yaml".
+    This is done by replacing the "usb_path" written by "import_user" with the
+    "usb_path" in "config.yaml".
 
     Args:
         config: Configuration object.
         other_user_collection: Path to another user's collection.
     """
     music_path = Path("DJ Music")
-    collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
+    collection = PLATFORM_REGISTRY[config.collection.platform]["collection"](
         path=other_user_collection
     )
     for track in collection.get_tracks().values():
@@ -103,7 +107,7 @@ def rewrite_track_paths(config: BaseConfig, other_user_collection: Path):
         common_path = (
             music_path / loc.split(str(music_path) + "/", maxsplit=-1)[-1]
         )
-        track.set_location(config.USB_PATH / common_path)
+        track.set_location(config.sync.usb_path / common_path)
     collection.serialize(path=other_user_collection)
 
 
@@ -170,21 +174,23 @@ def run_sync(_cmd: str, bucket_url: str) -> str:
 
 @make_path
 def upload_log(config: BaseConfig, log_file: Path):
-    """This function uploads "log_file" to the "USER" logs folder in S3. It
+    """This function uploads "log_file" to the "user" logs folder in S3. It
         then deletes all files created more than one day ago.
 
     Args:
         config: Configuration object.
         log_file: Path to log file.
     """
-    if not config.AWS_PROFILE:
+    if not config.sync.aws_profile:
         logger.warning(
             "Logs cannot be backed up without specifying the config option "
-            "AWS_PROFILE"
+            "aws_profile"
         )
         return
 
-    dst = f"{config.BUCKET_URL}/dj/logs/{config.USER}/{log_file.name}"
+    dst = (
+        f"{config.sync.bucket_url}/dj/logs/{config.sync.user}/{log_file.name}"
+    )
     cmd = ["aws", "s3", "cp", log_file.as_posix(), dst]
     logger.info(" ".join(cmd))
     with Popen(cmd) as proc:

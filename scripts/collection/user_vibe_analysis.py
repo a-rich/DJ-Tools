@@ -12,7 +12,7 @@ from matplotlib.ticker import MaxNLocator
 
 from djtools.configs import build_config
 from djtools.collection.base_collection import Collection
-from djtools.collection.helpers import PLATFORM_REGISTRY
+from djtools.collection.platform_registry import PLATFORM_REGISTRY
 
 
 def analyze_collection_vibes(
@@ -199,8 +199,8 @@ if __name__ == "__main__":
     config = build_config(config_path)
 
     # Load collection and get a dict of tracks keyed by location.
-    collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
-        path=args.collection or config.COLLECTION_PATH
+    collection = PLATFORM_REGISTRY[config.platform]["collection"](
+        path=args.collection or config.collection_path
     )
     args.collection = collection
 

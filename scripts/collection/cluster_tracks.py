@@ -12,8 +12,8 @@ from tqdm import tqdm
 
 from djtools.collection.base_collection import Collection
 from djtools.collection.base_playlist import Playlist
-from djtools.collection.helpers import PLATFORM_REGISTRY
 from djtools.collection.base_track import Track
+from djtools.collection.platform_registry import PLATFORM_REGISTRY
 from djtools.configs import build_config
 
 
@@ -43,10 +43,10 @@ def get_collection_and_playlist_class(
         Tuple of Collection object and Playlist class.
     """
     config = build_config(config_path)
-    collection = PLATFORM_REGISTRY[config.PLATFORM]["collection"](
-        path=collection_path or config.COLLECTION_PATH
+    collection = PLATFORM_REGISTRY[config.platform]["collection"](
+        path=collection_path or config.collection_path
     )
-    playlist_class = PLATFORM_REGISTRY[config.PLATFORM]["playlist"]
+    playlist_class = PLATFORM_REGISTRY[config.platform]["playlist"]
 
     return collection, playlist_class
 

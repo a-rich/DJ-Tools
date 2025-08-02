@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "djtools"
-version = "2.8.1"
+version = "2.9.0-rc7"
 authors = [
     {name = "Alex Richards", email = "alex.richards006@gmail.com"},
 ]
@@ -75,6 +75,7 @@ dev = [
     "mkdocs",
     "mkdocs-material",
     "mkdocstrings-python",
+    "pre-commit",
     "pylint",
     "pytest",
     "pytest-asyncio",
@@ -97,6 +98,11 @@ line-length = 79
 source = ["src"]
 omit = ["src/djtools/__main__.py"]
 
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover"
+]
+
 [tool.pylint.DESIGN]
 disable = [
     "abstract-class-instantiated",
@@ -104,10 +110,11 @@ disable = [
     "import-outside-toplevel",
     "logging-not-lazy",
     "no-name-in-module",
-    "too-many-positional-arguments"
+    "too-many-positional-arguments",
+    "too-many-return-statements"
 ]
 good-names = [
-    "USER"
+    "user"
 ]
 max-args = 10
 max-attributes = 15
@@ -148,6 +155,9 @@ spelling-ignore-words = [
     "xml", "xml's",
     "yaml", "youtube",
 ]
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
