@@ -36,12 +36,12 @@ jobs:
       - name: Run pylint on Ubuntu
         if: matrix.os == 'ubuntu-latest'
         run: |
-          PYLINT=`uv run pylint --verbose $(git ls-files '*.py')`
-          PASS=`echo $PYLINT | grep "Your code has been rated at ${{ env.PYLINT_PASS_SCORE}}/10"`
+          PYLINT=$(uv run pylint --verbose $(git ls-files '*.py') 2>&1) || true
+          echo "$PYLINT"
+          PASS=$(echo "$PYLINT" | grep "Your code has been rated at ${{ env.PYLINT_PASS_SCORE}}/10") || true
 
-          if [ -z $PASS ]; then
-            echo $PYLINT
-            exit 1;
+          if [ -z "$PASS" ]; then
+            exit 1
           fi
 
       - name: Run pylint on Windows
@@ -60,11 +60,11 @@ jobs:
       - name: Run pytest with coverage on Ubuntu
         if: matrix.os == 'ubuntu-latest'
         run: |
-          PYTEST=`uv run pytest --cov --cov-report term-missing --show-capture=no`
-          PASS=`echo $PYTEST | grep -E "TOTAL\s+[0-9]+\s+0+\s+${{ env.COVERAGE_TOTAL }}%"`
+          PYTEST=$(uv run pytest --cov --cov-report term-missing --show-capture=no 2>&1) || true
+          echo "$PYTEST"
+          PASS=$(echo "$PYTEST" | grep -E "TOTAL\s+[0-9]+\s+0+\s+${{ env.COVERAGE_TOTAL }}%") || true
 
-          if [ -z $PASS ]; then
-            echo $PYTEST
+          if [ -z "$PASS" ]; then
             exit 1
           fi
 
