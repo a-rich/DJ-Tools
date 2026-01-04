@@ -45,7 +45,7 @@ def get_spotify_tags_thread(track, spotify, threshold, query_limit):
             except ValueError:
                 continue
         for attribute_name, attribute in [
-            ("album", album["name"]),
+            # ("album", album["name"]),
             ("label", album["label"]),
             ("year", str(date.year)),
         ]:
