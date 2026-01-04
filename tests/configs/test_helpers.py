@@ -7,7 +7,11 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
-from pip._vendor import tomli
+
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
 
 from djtools.configs.config import LogLevel
 from djtools.configs.helpers import _arg_parse, build_config, ConfigLoadFailure
@@ -41,7 +45,7 @@ def test_arg_parse_gets_version(mock_parse_args, namespace, capsys):
     with open(
         Path(__file__).parent.parent.parent / "pyproject.toml", mode="rb"
     ) as _file:
-        toml_dict = tomli.load(_file)
+        toml_dict = tomllib.load(_file)
     assert (
         capsys.readouterr().out.replace(".", "").strip()
         == toml_dict["project"]["version"].replace(".", "").strip()

@@ -50,8 +50,7 @@ jobs:
         #   File "C:\hostedtoolcache\windows\Python\3.12.1\x64\Lib\site-packages\pylint\lint\pylinter.py", line 888, in get_ast
         if: matrix.os == 'windows-latest' && matrix.python-version != '3.12'
         run: |
-          $pyFiles = Get-ChildItem -Recurse -Filter *.py | ForEach-Object { $_.FullName }
-          $PYLINT = & uv run pylint --verbose @pyFiles 2>&1 | Out-String
+          $PYLINT = & uv run pylint --verbose --recursive=y src tests scripts 2>&1 | Out-String
           Write-Output $PYLINT
           if ($PYLINT -notmatch "Your code has been rated at $env:PYLINT_PASS_SCORE/10") {
             exit 1

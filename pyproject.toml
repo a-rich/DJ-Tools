@@ -79,6 +79,7 @@ dev = [
     "pytest-asyncio",
     "pytest-cov",
     "semver",
+    "tomli; python_version < '3.11'",
     "twine",
 ]
 
