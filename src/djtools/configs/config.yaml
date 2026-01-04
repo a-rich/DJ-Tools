@@ -1,0 +1,64 @@
+collection:
+  collection_path: null
+  collection_playlist_filters: []
+  collection_playlists: false
+  collection_playlists_remainder: !PlaylistRemainder 'folder'
+  copy_playlists: []
+  copy_playlists_destination: null
+  minimum_combiner_playlist_tracks: null
+  minimum_tag_playlist_tracks: null
+  platform: !RegisteredPlatforms 'rekordbox'
+  playlist_config: null
+  shuffle_playlists: []
+log_level: !LogLevel 'INFO'
+spotify:
+  reddit_client_id: ''
+  reddit_client_secret: ''
+  reddit_user_agent: ''
+  spotify_client_id: ''
+  spotify_client_secret: ''
+  spotify_playlist_default_limit: 50
+  spotify_playlist_default_period: !SubredditPeriod 'week'
+  spotify_playlist_default_type: !SubredditType 'hot'
+  spotify_playlist_from_upload: false
+  spotify_playlist_fuzz_ratio: 70
+  spotify_playlist_post_limit: 100
+  spotify_playlist_subreddits: []
+  spotify_playlists: false
+  spotify_redirect_uri: ''
+  spotify_username: ''
+sync:
+  artist_first: false
+  aws_profile: default
+  aws_use_date_modified: false
+  bucket_url: ''
+  discord_url: ''
+  download_collection: false
+  download_exclude_dirs: []
+  download_include_dirs: []
+  download_music: false
+  download_spotify_playlist: ''
+  dryrun: false
+  import_user: ''
+  upload_collection: false
+  upload_exclude_dirs: []
+  upload_include_dirs: []
+  upload_music: false
+  usb_path: null
+  user: local-alrichards
+utils:
+  audio_bitrate: '320'
+  audio_destination: null
+  audio_format: !AudioFormats 'mp3'
+  audio_headroom: 0.0
+  check_tracks: false
+  check_tracks_fuzz_ratio: 80
+  check_tracks_spotify_playlists: []
+  local_dirs: []
+  normalize_audio: false
+  process_recording: false
+  recording_file: null
+  recording_playlist: ''
+  trim_initial_silence: 0
+  url_download: ''
+verbosity: 0

@@ -25,10 +25,7 @@ On `push` events to `main`, for the same file change patterns, the [deploy-prod-
 ## Local testing (run from DJ-Tools repo)
 ### Setup dev environment:
 ```
-pyenv virtualenv $(pyenv local) djtools-dev && \
-pyenv activate djtools-dev && \
-pip install -e ".[dev]" && \
-pre-commit install
+uv sync && uv run pre-commit install
 ```
 
 ### pre-commit hooks:
@@ -37,13 +34,13 @@ You can run these same checks at any time with the following commands:
 
 #### Test with pytest
 ```
-pytest --cov --cov-report term-missing
+uv run pytest --cov --cov-report term-missing
 ```
 #### Lint with pylint
 ```
-pylint $(git ls-files '*.py')
+uv run pylint $(git ls-files '*.py')
 ```
 #### Format code with black
 ```
-black .
+uv run black .
 ```

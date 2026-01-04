@@ -72,7 +72,7 @@ try:
 except ImportError:
     logger.warning(
         "NOTE: Track similarity can be made faster by running "
-        '`pip install "djtools[levenshtein]"`'
+        '`uv pip install "djtools[levenshtein]"`'
     )
 
 
