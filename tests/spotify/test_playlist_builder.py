@@ -1,4 +1,8 @@
-"""Testing for the playlist_builder module."""
+"""Testing for the playlist_builder module.
+
+Note: Core Spotify functionality is tested in the spotify-tools library.
+These tests focus on DJ-Tools specific playlist building logic.
+"""
 
 from pathlib import Path
 from unittest import mock
@@ -24,26 +28,6 @@ from ..test_utils import MockOpen
 @pytest.mark.parametrize("got_tracks", [True, False])
 @mock.patch.object(Path, "exists", mock.Mock(return_value=True))
 @mock.patch(
-    "djtools.spotify.helpers._update_existing_playlist",
-    mock.Mock(
-        return_value={
-            "name": "test_playlist",
-            "external_urls": {"spotify": "https://test-url.com"},
-            "id": "test-id",
-        },
-    ),
-)
-@mock.patch(
-    "djtools.spotify.helpers._build_new_playlist",
-    mock.Mock(
-        return_value={
-            "name": "test_playlist",
-            "external_urls": {"spotify": "https://test-url.com"},
-            "id": "test-id",
-        },
-    ),
-)
-@mock.patch(
     "djtools.spotify.playlist_builder.get_subreddit_posts",
     new_callable=mock.AsyncMock,
     return_value=[
@@ -51,10 +35,11 @@ from ..test_utils import MockOpen
         SubredditConfig(name="jungle"),
     ],
 )
-@mock.patch(
-    "djtools.spotify.playlist_builder.get_spotify_client", mock.MagicMock()
-)
+@mock.patch("djtools.spotify.playlist_builder.get_spotify_client")
+@mock.patch("djtools.spotify.playlist_builder.get_reddit_client")
 async def test_async_spotify_playlists(
+    mock_reddit_client,
+    mock_spotify_client,
     mock_get_subreddit_posts,
     got_tracks,
     got_playlist_ids,
@@ -64,44 +49,33 @@ async def test_async_spotify_playlists(
     """Test for the async_spotify_playlists function."""
     if not got_tracks:
         mock_get_subreddit_posts.return_value[0] = []
+
     config.spotify.spotify_client_id = "test_client_id"
     config.spotify.spotify_client_secret = "test_client_secret"
     config.spotify.spotify_redirect_uri = "test_redirect_uri"
     config.spotify.spotify_playlist_subreddits = playlist_subreddits
-    with mock.patch(
-        "builtins.open",
-        MockOpen(
-            files=["spotify_playlists.yaml", ".praw.cache"],
-            content='{"jungle": "some-id"}' if got_playlist_ids else "{}",
-        ).open,
+
+    mock_reddit_client.return_value.close = mock.AsyncMock()
+
+    with (
+        mock.patch(
+            "builtins.open",
+            MockOpen(
+                files=["spotify_playlists.yaml", ".praw.cache"],
+                content='{"jungle": "some-id"}' if got_playlist_ids else "{}",
+            ).open,
+        ),
+        mock.patch(
+            "djtools.spotify.playlist_builder.populate_playlist",
+            return_value={"jungle": "some-id"},
+        ),
     ):
         await async_spotify_playlists(config)
 
 
-@mock.patch(
-    "djtools.spotify.playlist_builder.filter_results",
-    mock.Mock(
-        return_value=(
-            {
-                "id": "some_id",
-                "name": "some_name",
-                "artists": [
-                    {"name": "some_artist"},
-                ],
-            },
-            100,
-        )
-    ),
-)
-@mock.patch(
-    "djtools.spotify.playlist_builder.populate_playlist",
-    mock.Mock(
-        return_value={"some-playlist": "some-id"},
-    ),
-)
-@mock.patch(
-    "djtools.spotify.playlist_builder.get_spotify_client", mock.MagicMock()
-)
+@mock.patch("djtools.spotify.playlist_builder.filter_results")
+@mock.patch("djtools.spotify.playlist_builder.populate_playlist")
+@mock.patch("djtools.spotify.playlist_builder.get_spotify_client")
 @mock.patch(
     "pyperclip.paste",
     return_value="""aweeeezy/Bass/2022-09-03: 5
@@ -113,13 +87,32 @@ async def test_async_spotify_playlists(
 aweeeezy/House/2022-09-03: 2
  Shirt - Cour T..mp3""",
 )
-def test_spotify_playlist_from_upload(config, caplog):
+def test_spotify_playlist_from_upload(
+    mock_paste,
+    mock_spotify_client,
+    mock_populate,
+    mock_filter,
+    config,
+    caplog,
+):
     """Test for the spotify_playlist_from_upload function."""
     caplog.set_level("INFO")
+
+    mock_filter.return_value = (
+        {
+            "id": "some_id",
+            "name": "some_name",
+            "artists": [{"name": "some_artist"}],
+        },
+        100,
+    )
+    mock_populate.return_value = {"some-playlist": "some-id"}
+
     config.spotify.spotify_client_id = "test_client_id"
     config.spotify.spotify_client_secret = "test_client_secret"
     config.spotify.spotify_redirect_uri = "test_redirect_uri"
     config.spotify.spotify_playlist_from_upload = True
+
     with mock.patch(
         "builtins.open",
         MockOpen(files=["spotify_playlists.yaml"], content="{}").open,
@@ -130,23 +123,26 @@ def test_spotify_playlist_from_upload(config, caplog):
         assert rec.message.startswith("Matched")
 
 
-@mock.patch(
-    "djtools.spotify.playlist_builder.get_spotify_client", mock.MagicMock()
-)
+@mock.patch("djtools.spotify.playlist_builder.get_spotify_client")
 @mock.patch(
     "pyperclip.paste",
     return_value="""aweeeezy/House/2022-09-03: 2
  UNKNOWN - 1 - Unknown Artist.mp3""",
 )
 def test_spotify_playlist_from_upload_handles_file_with_multiple_dashes(
-    config, caplog
+    mock_paste,
+    mock_spotify_client,
+    config,
+    caplog,
 ):
     """Test for the spotify_playlist_from_upload function."""
     caplog.set_level("WARNING")
+
     config.spotify.spotify_client_id = "test_client_id"
     config.spotify.spotify_client_secret = "test_client_secret"
     config.spotify.spotify_redirect_uri = "test_redirect_uri"
     config.spotify.spotify_playlist_from_upload = True
+
     with mock.patch(
         "builtins.open",
         MockOpen(files=["spotify_playlists.yaml"], content="{}").open,
@@ -159,21 +155,22 @@ def test_spotify_playlist_from_upload_handles_file_with_multiple_dashes(
     )
 
 
-@mock.patch(
-    "djtools.spotify.playlist_builder.filter_results",
-    mock.Mock(
-        return_value=({}, 100),
-    ),
-)
-@mock.patch(
-    "djtools.spotify.playlist_builder.get_spotify_client", mock.MagicMock()
-)
-def test_spotify_playlist_from_upload_handles_non_match(config, caplog):
+@mock.patch("djtools.spotify.playlist_builder.filter_results")
+@mock.patch("djtools.spotify.playlist_builder.get_spotify_client")
+def test_spotify_playlist_from_upload_handles_non_match(
+    mock_spotify_client,
+    mock_filter,
+    config,
+    caplog,
+):
     """Test for the spotify_playlist_from_upload function."""
     caplog.set_level("WARNING")
     title = "Under Pressure"
     artist = "Alix Perez, T-Man"
+
+    mock_filter.return_value = ({}, 100)
     config.spotify.spotify_playlist_from_upload = True
+
     with (
         mock.patch(
             "builtins.open",
@@ -182,33 +179,33 @@ def test_spotify_playlist_from_upload_handles_non_match(config, caplog):
         mock.patch(
             "pyperclip.paste",
             return_value=f"""aweeeezy/Bass/2022-09-03: 5
-            {title} - {artist}.mp3""",
+ {title} - {artist}.mp3""",
         ),
     ):
         spotify_playlist_from_upload(config)
+
     assert caplog.records[0].message == (
         f"Could not find a match for {title} - {artist}"
     )
 
 
-@mock.patch("djtools.spotify.helpers.get_spotify_client")
-@mock.patch(
-    "djtools.spotify.helpers.spotipy.Spotify.search", side_effect=Exception()
-)
+@mock.patch("djtools.spotify.playlist_builder.get_spotify_client")
 def test_spotify_playlist_from_upload_handles_spotify_exception(
-    mock_spotify_search, mock_spotify, config, caplog
+    mock_spotify_client,
+    config,
+    caplog,
 ):
     """Test for the spotify_playlist_from_upload function."""
     caplog.set_level("ERROR")
-    mock_spotify.return_value.search.side_effect = (
-        mock_spotify_search.side_effect
-    )
     title = "Under Pressure"
     artist = "Alix Perez, T-Man"
+
+    mock_spotify_client.return_value.search.side_effect = Exception("API Error")
     config.spotify.spotify_playlist_from_upload = True
     config.spotify.spotify_client_id = "test_client_id"
     config.spotify.spotify_client_secret = "test_client_secret"
     config.spotify.spotify_redirect_uri = "test_redirect_uri"
+
     with (
         mock.patch(
             "builtins.open",
@@ -217,17 +214,18 @@ def test_spotify_playlist_from_upload_handles_spotify_exception(
         mock.patch(
             "pyperclip.paste",
             return_value=f"""aweeeezy/Bass/2022-09-03: 5
-            {title} - {artist}.mp3""",
+ {title} - {artist}.mp3""",
         ),
     ):
         spotify_playlist_from_upload(config)
+
     assert caplog.records[0].message.startswith(
         f'Error searching for "{title} - {artist}"'
     )
 
 
 @mock.patch("pyperclip.paste", return_value="")
-def test_spotify_playlist_from_upload_raises_runtimeerror(config):
+def test_spotify_playlist_from_upload_raises_runtimeerror(mock_paste, config):
     """Test for the spotify_playlist_from_upload function."""
     config.spotify.spotify_playlist_from_upload = True
     with pytest.raises(
