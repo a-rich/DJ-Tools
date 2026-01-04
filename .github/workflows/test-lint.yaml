@@ -50,9 +50,12 @@ jobs:
         #   File "C:\hostedtoolcache\windows\Python\3.12.1\x64\Lib\site-packages\pylint\lint\pylinter.py", line 888, in get_ast
         if: matrix.os == 'windows-latest' && matrix.python-version != '3.12'
         run: |
-          $PYLINT=uv run pylint --verbose (Get-ChildItem -Recurse -Filter *.py | ForEach-Object { $_.FullName })
-          $PASS=$PYLINT -match "Your code has been rated at $env:PYLINT_PASS_SCORE/10"
+          $pyFiles = Get-ChildItem -Recurse -Filter *.py | ForEach-Object { $_.FullName }
+          $PYLINT = & uv run pylint --verbose @pyFiles 2>&1 | Out-String
           Write-Output $PYLINT
+          if ($PYLINT -notmatch "Your code has been rated at $env:PYLINT_PASS_SCORE/10") {
+            exit 1
+          }
 
       - name: Run pytest with coverage on Ubuntu
         if: matrix.os == 'ubuntu-latest'
@@ -68,10 +71,8 @@ jobs:
       - name: Run pytest with coverage on Windows
         if: matrix.os == 'windows-latest'
         run: |
-          $PYTEST=uv run pytest --cov --cov-report term-missing --show-capture=no
-          $PASS=$PYTEST -match "TOTAL\s+\d+\s+0+\s+$env:COVERAGE_TOTAL%"
-
-          if (-not $PASS) {
-              Write-Output $PYTEST
-              exit 1
+          $PYTEST = & uv run pytest --cov --cov-report term-missing --show-capture=no 2>&1 | Out-String
+          Write-Output $PYTEST
+          if ($PYTEST -notmatch "TOTAL\s+\d+\s+0+\s+$env:COVERAGE_TOTAL%") {
+            exit 1
           }
