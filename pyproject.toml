@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "djtools"
-version = "2.9.1-rc4"
+version = "2.9.1-rc5"
 authors = [
     {name = "Alex Richards", email = "alex.richards006@gmail.com"},
 ]
