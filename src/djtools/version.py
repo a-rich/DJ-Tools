@@ -13,8 +13,8 @@ def get_version() -> str:
         Version string.
     """
     version = importlib.metadata.version(__package__)
-    major_minor_patch_regex = re.compile(r"([0-9]+)\.([0-9]+)\.([0-9]+)")
-    match = re.match(major_minor_patch_regex, version).group()
+    version_regex = re.compile(r"([0-9]+)\.([0-9]+)\.([0-9]+)")
+    match = re.match(version_regex, version).group()
 
     if match:
         suffix = version.split(match)[-1]
