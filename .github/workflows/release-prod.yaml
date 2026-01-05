@@ -33,7 +33,12 @@ jobs:
 
       - name: Bump version
         run: |
-          NEXT_VERSION=`uv run python -c "import semver; from djtools.version import get_version; ver = semver.Version.parse(get_version()).finalize_version(); print(ver)"`
+          CURRENT_VERSION=$(grep -oP 'version = "\K[^"]+' pyproject.toml | head -1)
+          echo "Version from pyproject.toml: $CURRENT_VERSION"
+          CURRENT_VERSION=$(echo "$CURRENT_VERSION" | sed 's/rc/-rc/')
+          echo "Semver-formatted version: $CURRENT_VERSION"
+          NEXT_VERSION=$(uv run python -c "import semver; ver = semver.Version.parse('$CURRENT_VERSION').finalize_version(); print(ver)")
+          echo "Next version: $NEXT_VERSION"
           SEMVER_REGEX="version = \"([0-9]+)\.([0-9]+)\.([0-9]+)([-]{0,1})(((b{0,1})|(rc{0,1}))[\.]{0,1}[0-9]+){0,1}\""
           sed -i -E "s/$SEMVER_REGEX/version = \"$NEXT_VERSION\"/g" pyproject.toml
 
