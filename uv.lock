@@ -737,7 +737,7 @@ wheels = [
 
 [[package]]
 name = "djtools"
-version = "2.9.1rc1"
+version = "2.9.1rc2"
 source = { editable = "." }
 dependencies = [
     { name = "asyncpraw" },
@@ -795,7 +795,7 @@ requires-dist = [
     { name = "python-levenshtein", marker = "extra == 'accelerated'" },
     { name = "pyyaml" },
     { name = "requests" },
-    { name = "spotify-tools", path = "vendor/spotify_tools-0.0.1-py3-none-any.whl" },
+    { name = "spotify-tools", url = "https://raw.githubusercontent.com/a-rich/DJ-Tools/release/2.9.1/vendor/spotify_tools-0.0.1-py3-none-any.whl" },
     { name = "tqdm" },
     { name = "youtube-dl" },
 ]
@@ -2637,7 +2637,7 @@ wheels = [
 [[package]]
 name = "spotify-tools"
 version = "0.0.1"
-source = { path = "vendor/spotify_tools-0.0.1-py3-none-any.whl" }
+source = { url = "https://raw.githubusercontent.com/a-rich/DJ-Tools/release/2.9.1/vendor/spotify_tools-0.0.1-py3-none-any.whl" }
 dependencies = [
     { name = "fuzzywuzzy", extra = ["speedup"] },
     { name = "pydantic" },
@@ -2646,7 +2646,7 @@ dependencies = [
     { name = "typer" },
 ]
 wheels = [
-    { filename = "spotify_tools-0.0.1-py3-none-any.whl", hash = "sha256:4b18331a81d5275bc7080c17a11d3ec2207545cb0493428bf0dcfdb8944049f6" },
+    { url = "https://raw.githubusercontent.com/a-rich/DJ-Tools/release/2.9.1/vendor/spotify_tools-0.0.1-py3-none-any.whl", hash = "sha256:4b18331a81d5275bc7080c17a11d3ec2207545cb0493428bf0dcfdb8944049f6" },
 ]
 
 [package.metadata]
