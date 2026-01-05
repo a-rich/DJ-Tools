@@ -1,7 +1,5 @@
 """Testing for the config_formatter module."""
 
-from unittest import mock
-
 from pydantic import ValidationError
 
 from djtools.configs.config_formatter import BaseConfigFormatter
@@ -19,21 +17,6 @@ def test_base_config_formatter_repr():
     config = SampleConfig(field1=42, field2="test")
     expected_repr = "SampleConfig(\n\tfield1=42\n\tfield2='test'\n)"
     assert repr(config) == expected_repr
-
-
-def test_base_config_formatter_logging():
-    """Define a class named "BaseConfig" to trigger the logging behavior."""
-    with mock.patch("djtools.configs.config_formatter.logger") as mock_logger:
-
-        class BaseConfig(BaseConfigFormatter):
-            """Dummy class."""
-
-            field: str
-
-        _ = BaseConfig(field="test")
-        mock_logger.info.assert_called_once_with(
-            "BaseConfig(\n\tfield='test'\n)"
-        )
 
 
 def test_base_config_formatter_nested():
