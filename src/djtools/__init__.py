@@ -9,6 +9,12 @@ appropriate configuration object. Finally, the log file generated from this run
 is uploaded to the Beatcloud.
 """
 
+import warnings
+
+warnings.filterwarnings("ignore", message="Couldn't find ffmpeg or avconv")
+warnings.filterwarnings("ignore", message="Couldn't find ffprobe or avprobe")
+
+# pylint: disable=wrong-import-position
 from .configs import build_config
 from .collection import (
     COLLECTION_OPERATIONS,
@@ -73,6 +79,7 @@ def main():
     logger, log_file = initialize_logger()
     config = build_config()
     logger.setLevel(config.log_level.value)
+    logger.info(repr(config))
 
     # Run "collection", "spotify", "sync", and "utils" package operations if
     # any of the flags to do so are present in the config.
