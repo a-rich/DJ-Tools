@@ -42,16 +42,16 @@ jobs:
           SEMVER_REGEX="version = \"([0-9]+)\.([0-9]+)\.([0-9]+)([-]{0,1})(((b{0,1})|(rc{0,1}))[\.]{0,1}[0-9]+){0,1}\""
           sed -i -E "s/$SEMVER_REGEX/version = \"$NEXT_VERSION\"/g" pyproject.toml
 
+      - name: Commit version bump
+        run: |
+          git add pyproject.toml
+          git commit -m "Release: $GITHUB_SHA"
+          git push --force
+
       - name: Build and publish wheel
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.DJTOOLS_PYPI_TOKEN }}
         run: |
           uv build
-          uv run twine upload dist/*
-
-      - name: Commit changes
-        run: |
-          git add pyproject.toml
-          git commit -m "Release: $GITHUB_SHA"
-          git push --force
+          uv run twine upload --skip-existing dist/*
