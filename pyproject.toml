@@ -1,10 +1,6 @@
 [build-system]
-requires = [
-    "setuptools",
-    "wheel"
-]
-build-backend = "setuptools.build_meta"
-
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "djtools"
@@ -14,7 +10,6 @@ authors = [
 ]
 description = "DJ Tools is a library for managing a collection of music."
 readme = {file = "README.md", content-type = "text/markdown"}
-# long_description = file: "README.md"
 keywords = [
     "DJ",
     "Collections",
@@ -60,14 +55,17 @@ dependencies = [
     "youtube-dl"
 ]
 
-
 [project.urls]
 "Repository" = "https://github.com/a-rich/DJ-tools"
 "Documentation" = "https://a-rich.github.io/DJ-Tools"
 "Documentation (dev)" = "https://a-rich.github.io/DJ-Tools-dev-docs"
 
-
 [project.optional-dependencies]
+accelerated = [
+    "python-Levenshtein" 
+]
+
+[dependency-groups]
 dev = [
     "aiohttp",
     "black",
@@ -81,15 +79,18 @@ dev = [
     "pytest-asyncio",
     "pytest-cov",
     "semver",
-    "setuptools",
+    "tomli; python_version < '3.11'",
     "twine",
-]
-accelerated = [
-    "python-Levenshtein" 
 ]
 
 [project.scripts]
 djtools = "djtools:main"
+
+[tool.uv]
+default-groups = ["dev"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/djtools"]
 
 [tool.black]
 line-length = 79
@@ -158,15 +159,3 @@ spelling-ignore-words = [
 
 [tool.pytest.ini_options]
 asyncio_default_fixture_loop_scope = "function"
-
-[tool.setuptools]
-package-dir = {"" = "src"}
-packages = [
-    "djtools",
-    "djtools.configs",
-    "djtools.collection",
-    "djtools.logs",
-    "djtools.spotify",
-    "djtools.sync",
-    "djtools.utils",
-]

@@ -20,33 +20,28 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
 
       - name: Set up Python
-        uses: actions/setup-python@main
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-
-      - uses: actions/cache@v4
-        with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install --editable ".[dev]"
+        run: uv sync
 
       - name: Run pylint on Ubuntu
         if: matrix.os == 'ubuntu-latest'
         run: |
-          PYLINT=`pylint --verbose $(git ls-files '*.py')`
-          PASS=`echo $PYLINT | grep "Your code has been rated at ${{ env.PYLINT_PASS_SCORE}}/10"`
+          PYLINT=$(uv run pylint --verbose $(git ls-files '*.py') 2>&1) || true
+          echo "$PYLINT"
+          PASS=$(echo "$PYLINT" | grep "Your code has been rated at ${{ env.PYLINT_PASS_SCORE}}/10") || true
 
-          if [ -z $PASS ]; then
-            echo $PYLINT
-            exit 1;
+          if [ -z "$PASS" ]; then
+            exit 1
           fi
 
       - name: Run pylint on Windows
@@ -55,28 +50,28 @@ jobs:
         #   File "C:\hostedtoolcache\windows\Python\3.12.1\x64\Lib\site-packages\pylint\lint\pylinter.py", line 888, in get_ast
         if: matrix.os == 'windows-latest' && matrix.python-version != '3.12'
         run: |
-          $PYLINT=pylint --verbose (Get-ChildItem -Recurse -Filter *.py | ForEach-Object { $_.FullName })
-          $PASS=$PYLINT -match "Your code has been rated at $env:PYLINT_PASS_SCORE/10"
+          $PYLINT = & uv run pylint --verbose --recursive=y src tests scripts 2>&1 | Out-String
           Write-Output $PYLINT
+          if ($PYLINT -notmatch "Your code has been rated at $env:PYLINT_PASS_SCORE/10") {
+            exit 1
+          }
 
       - name: Run pytest with coverage on Ubuntu
         if: matrix.os == 'ubuntu-latest'
         run: |
-          PYTEST=`pytest --cov --cov-report term-missing --show-capture=no`
-          PASS=`echo $PYTEST | grep -E "TOTAL\s+[0-9]+\s+0+\s+${{ env.COVERAGE_TOTAL }}%"`
+          PYTEST=$(uv run pytest --cov --cov-report term-missing --show-capture=no 2>&1) || true
+          echo "$PYTEST"
+          PASS=$(echo "$PYTEST" | grep -E "TOTAL\s+[0-9]+\s+0+\s+${{ env.COVERAGE_TOTAL }}%") || true
 
-          if [ -z $PASS ]; then
-            echo $PYTEST
+          if [ -z "$PASS" ]; then
             exit 1
           fi
 
       - name: Run pytest with coverage on Windows
         if: matrix.os == 'windows-latest'
         run: |
-          $PYTEST=pytest --cov --cov-report term-missing --show-capture=no
-          $PASS=$PYTEST -match "TOTAL\s+\d+\s+0+\s+$env:COVERAGE_TOTAL%"
-
-          if (-not $PASS) {
-              Write-Output $PYTEST
-              exit 1
+          $PYTEST = & uv run pytest --cov --cov-report term-missing --show-capture=no 2>&1 | Out-String
+          Write-Output $PYTEST
+          if ($PYTEST -notmatch "TOTAL\s+\d+\s+0+\s+$env:COVERAGE_TOTAL%") {
+            exit 1
           }

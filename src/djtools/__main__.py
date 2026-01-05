@@ -42,7 +42,7 @@ except ImportError:
     logger = logging.getLogger(__name__)
     logger.warning(
         "NOTE: Track similarity can be made faster by running "
-        "`pip install python-Levenshtein"
+        "`uv pip install python-Levenshtein`"
     )
 
 
