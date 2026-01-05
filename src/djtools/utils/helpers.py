@@ -26,7 +26,6 @@ from typing import (
     Union,
 )
 
-import spotipy
 from fuzzywuzzy import fuzz
 from pydub import AudioSegment, effects, silence
 from tqdm import tqdm
@@ -163,9 +162,7 @@ def get_local_tracks(config: BaseConfig) -> Dict[str, List[str]]:
     return local_dir_tracks
 
 
-def get_playlist_tracks(
-    spotify: spotipy.Spotify, playlist_id: str
-) -> List[Dict]:
+def get_playlist_tracks(spotify, playlist_id: str) -> List[Dict]:
     """Queries Spotify API for a playlist and pulls tracks from it.
 
     Args:

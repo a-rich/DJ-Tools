@@ -138,34 +138,16 @@ def test_get_local_tracks_dir_does_exist(tmpdir, config, caplog):
     )
 
 
-@mock.patch("djtools.spotify.helpers.spotipy.Spotify")
-@mock.patch(
-    "djtools.spotify.helpers.spotipy.Spotify.next",
-    return_value={
-        "items": [
-            {
-                "track": {
-                    "name": "last track title",
-                    "artists": [
-                        {"name": "final artist name"},
-                    ],
-                },
-            },
-        ],
-        "next": False,
-    },
-)
-@mock.patch(
-    "djtools.spotify.helpers.spotipy.Spotify.playlist",
-    return_value={
+def test_get_playlist_tracks():
+    """Test for the get_playlist_tracks function."""
+    mock_client = mock.MagicMock()
+    mock_client.playlist.return_value = {
         "tracks": {
             "items": [
                 {
                     "track": {
                         "name": "track title",
-                        "artists": [
-                            {"name": "artist name"},
-                        ],
+                        "artists": [{"name": "artist name"}],
                     },
                 },
                 {
@@ -180,34 +162,37 @@ def test_get_local_tracks_dir_does_exist(tmpdir, config, caplog):
             ],
             "next": True,
         },
-    },
-)
-def test_get_playlist_tracks(
-    mock_spotipy_playlist, mock_spotipy_next, mock_spotipy
-):
-    """Test for the get_playlist_tracks function."""
-    mock_spotipy.playlist.return_value = mock_spotipy_playlist.return_value
-    mock_spotipy.next.return_value = mock_spotipy_next.return_value
-    expected = list(mock_spotipy_playlist.return_value["tracks"]["items"])
-    expected.extend(list(mock_spotipy_next.return_value["items"]))
-    tracks = get_playlist_tracks(mock_spotipy, "some ID")
+    }
+    mock_client.next.return_value = {
+        "items": [
+            {
+                "track": {
+                    "name": "last track title",
+                    "artists": [{"name": "final artist name"}],
+                },
+            },
+        ],
+        "next": False,
+    }
+
+    tracks = get_playlist_tracks(mock_client, "some ID")
+
+    expected = list(mock_client.playlist.return_value["tracks"]["items"])
+    expected.extend(list(mock_client.next.return_value["items"]))
     assert tracks == expected
 
 
-@mock.patch("djtools.spotify.helpers.spotipy.Spotify")
-@mock.patch(
-    "djtools.spotify.helpers.spotipy.Spotify.playlist", side_effect=Exception()
-)
-def test_get_playlist_tracks_handles_spotipy_exception(
-    mock_spotipy_playlist, mock_spotipy
-):
+def test_get_playlist_tracks_handles_exception():
     """Test for the get_playlist_tracks function."""
+    mock_client = mock.MagicMock()
+    mock_client.playlist.side_effect = Exception("API Error")
     test_playlist_id = "some ID"
-    mock_spotipy.playlist.side_effect = mock_spotipy_playlist.side_effect
+
     with pytest.raises(
-        Exception, match=f"Failed to get playlist with ID {test_playlist_id}"
+        RuntimeError,
+        match=f"Failed to get playlist with ID {test_playlist_id}",
     ):
-        get_playlist_tracks(mock_spotipy, test_playlist_id)
+        get_playlist_tracks(mock_client, test_playlist_id)
 
 
 @mock.patch("djtools.utils.helpers.get_spotify_client", new=mock.Mock())

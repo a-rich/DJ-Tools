@@ -23,7 +23,7 @@ def namespace():
 
 
 @pytest.fixture
-@mock.patch("djtools.spotify.helpers.get_spotify_client", mock.MagicMock())
+@mock.patch("djtools.spotify.helpers.Client", mock.MagicMock())
 def config():
     """Test config fixture."""
     return BaseConfig()

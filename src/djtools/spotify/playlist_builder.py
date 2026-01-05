@@ -1,18 +1,8 @@
-"""This module is responsible for creating or updating Spotify playlists. This
-can be done in a couple of ways.
+"""This module creates or updates Spotify playlists.
 
-The first way is by using the posted output from
-`djtools.sync.sync_operations.upload_music`. When another user uploads music to
-the Beatcloud, you may want to generate a Spotify playlist from those tracks so
-they may be previewed before you decide whether or not to download them.
-
-The second way is by querying subreddit posts. Posts are first checked to see
-if they are direct links to a Spotify track. If this is not the case, then the
-post title is parsed in an attempt to interpret it as either
-'ARTIST NAME - TRACK TITLE' or 'TRACK TITLE - ARTIST NAME'. These components
-are then used to search the Spotify API for tracks. The resulting tracks have
-their title and artist fields compared with the reddit post title and are added
-to the respective playlist if the Levenshtein similarity passes a threshold.
+Playlists can be created from:
+1. Discord webhook output from `djtools.sync.sync_operations.upload_music`
+2. Subreddit posts (directly linked Spotify tracks or fuzzy-matched titles)
 """
 
 import asyncio
@@ -36,20 +26,16 @@ from djtools.spotify.helpers import (
 
 BaseConfig = Type["BaseConfig"]
 
-
-# Silence PRAW, Spotify, and urllib3 loggers.
-for logger in ["asyncprawcore", "spotipy", "urllib3"]:
-    logger = logging.getLogger(logger)
-    logger.setLevel(logging.CRITICAL)
-
+# Silence PRAW, Spotify, and urllib3 loggers
+for logger_name in ["asyncprawcore", "spotipy", "urllib3"]:
+    logging.getLogger(logger_name).setLevel(logging.CRITICAL)
 logging.getLogger("asyncio").setLevel(logging.WARNING)
+
 logger = logging.getLogger(__name__)
 
 
 async def async_spotify_playlists(config: BaseConfig):
-    """This function updates the contents of one or more Spotify playlists with
-        the posts of one or more subreddits (currently only supports one
-        subreddit per playlist).
+    """Updates Spotify playlists from subreddit posts.
 
     Args:
         config: Configuration object.
@@ -58,25 +44,22 @@ async def async_spotify_playlists(config: BaseConfig):
     reddit = get_reddit_client(config)
     playlist_ids = get_playlist_ids()
 
+    # Load praw cache
     praw_cache = {}
     cache_file = Path(__file__).parent / ".praw.cache"
     if cache_file.exists():
         with open(cache_file, mode="r", encoding="utf-8") as _file:
             praw_cache = yaml.load(_file, Loader=yaml.FullLoader) or {}
 
+    # Create async tasks for each subreddit
     tasks = [
         asyncio.create_task(
-            get_subreddit_posts(
-                spotify,
-                reddit,
-                subreddit,
-                config,
-                praw_cache,
-            )
+            get_subreddit_posts(spotify, reddit, subreddit, config, praw_cache)
         )
         for subreddit in config.spotify.spotify_playlist_subreddits
     ]
 
+    # Process results as they complete
     for task in asyncio.as_completed(tasks):
         tracks, subreddit = await task
         playlist_ids = populate_playlist(
@@ -91,28 +74,24 @@ async def async_spotify_playlists(config: BaseConfig):
 
     await reddit.close()
 
+    # Save state
     write_playlist_ids(playlist_ids)
-
     with open(cache_file, mode="w", encoding="utf-8") as _file:
         yaml.dump(praw_cache, _file)
 
 
 def spotify_playlist_from_upload(config: BaseConfig):
-    """Generates a Spotify playlist using a Discord webhook output.
+    """Generates a Spotify playlist from Discord webhook output.
 
-    If "upload_output", a path to a text file containing the pasted output of
-    the upload_music Discord webhook output, is provided, this is used to
-    generate a Spotify playlist of those uploaded tracks. If this is not
-    provided, then the clipboard contents are used instead.
+    Uses clipboard contents containing upload_music webhook output to
+    create a Spotify playlist of those tracks.
 
     Args:
         config: Configuration object.
 
     Raises:
-        RuntimeError: Output from an upload_music Discord webhook must be
-            copied to the system's clipboard
+        RuntimeError: If clipboard is empty.
     """
-    # Load upload output from the system's clipboard.
     data = pyperclip.paste()
     if not data:
         raise RuntimeError(
@@ -124,7 +103,7 @@ def spotify_playlist_from_upload(config: BaseConfig):
     spotify = get_spotify_client(config)
     playlist_ids = get_playlist_ids()
 
-    # Get (track title, artist name) tuples from file uploads.
+    # Parse (track title, artist name) tuples from upload output
     user = ""
     files = []
     for line in data.split("\n"):
@@ -141,9 +120,10 @@ def spotify_playlist_from_upload(config: BaseConfig):
         if config.sync.artist_first:
             track, artist = artist, track
         files.append((track, artist))
+
     files = list(filter(lambda x: len(x) == 2, files))
 
-    # Query Spotify for files in upload output.
+    # Search Spotify for each file
     threshold = config.spotify.spotify_playlist_fuzz_ratio
     tracks = []
     for title, artist in files:
@@ -165,6 +145,7 @@ def spotify_playlist_from_upload(config: BaseConfig):
             continue
         tracks.append((match["id"], f'{match["name"]} - {artists}'))
 
+    # Populate playlist
     playlist_ids = populate_playlist(
         playlist_name=f"{user} Uploads",
         playlist_ids=playlist_ids,
@@ -178,7 +159,7 @@ def spotify_playlist_from_upload(config: BaseConfig):
 
 
 def spotify_playlists(config: BaseConfig):
-    """This function asynchronously updates Spotify playlists.
+    """Entry point for async Spotify playlist updates.
 
     Args:
         config: Configuration object.

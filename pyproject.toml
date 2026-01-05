@@ -19,7 +19,7 @@ keywords = [
     "Reddit",
     "Audio", 
 ]
-requires-python=">=3.9"
+requires-python=">=3.10"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -30,7 +30,6 @@ classifiers = [
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -50,7 +49,7 @@ dependencies = [
     "python-dateutil",
     "PyYAML",
     "requests",
-    "spotipy",
+    "spotify-tools",
     "tqdm",
     "youtube-dl"
 ]
@@ -88,6 +87,12 @@ djtools = "djtools:main"
 
 [tool.uv]
 default-groups = ["dev"]
+
+[tool.uv.sources]
+spotify-tools = { path = "vendor/spotify_tools-0.0.1-py3-none-any.whl" }
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/djtools"]
