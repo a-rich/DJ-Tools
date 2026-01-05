@@ -5,65 +5,15 @@ of config.yaml.
 """
 
 import logging
-from enum import Enum
 from typing import List
 
 from pydantic import BaseModel, NonNegativeInt
-import yaml
 
 from djtools.configs.config_formatter import BaseConfigFormatter
+from djtools.spotify.enums import SubredditPeriod, SubredditType
 
 
 logger = logging.getLogger(__name__)
-
-
-class SubredditPeriod(Enum):
-    """Time period for subreddit queries."""
-
-    ALL = "all"
-    DAY = "day"
-    HOUR = "hour"
-    MONTH = "month"
-    WEEK = "week"
-    YEAR = "year"
-
-
-def subreddit_period_representer(dumper, data):
-    """YAML representer for SubredditPeriod."""
-    return dumper.represent_scalar("!SubredditPeriod", data.value)
-
-
-def subreddit_period_constructor(loader, node):
-    """YAML constructor for SubredditPeriod."""
-    return SubredditPeriod(loader.construct_scalar(node))
-
-
-yaml.add_representer(SubredditPeriod, subreddit_period_representer)
-yaml.add_constructor("!SubredditPeriod", subreddit_period_constructor)
-
-
-class SubredditType(Enum):
-    """Type of subreddit sort."""
-
-    CONTROVERSIAL = "controversial"
-    HOT = "hot"
-    NEW = "new"
-    RISING = "rising"
-    TOP = "top"
-
-
-def subreddit_type_representer(dumper, data):
-    """YAML representer for SubredditType."""
-    return dumper.represent_scalar("!SubredditType", data.value)
-
-
-def subreddit_type_constructor(loader, node):
-    """YAML constructor for SubredditType."""
-    return SubredditType(loader.construct_scalar(node))
-
-
-yaml.add_representer(SubredditType, subreddit_type_representer)
-yaml.add_constructor("!SubredditType", subreddit_type_constructor)
 
 
 class SubredditConfig(BaseModel):

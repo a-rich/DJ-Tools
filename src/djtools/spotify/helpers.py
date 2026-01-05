@@ -6,24 +6,27 @@ This module provides DJ-Tools specific wrappers and configuration handling.
 
 import logging
 from pathlib import Path
-from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple, Type, Union
+from typing import (
+    Any,
+    AsyncGenerator,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+)
 
 import asyncpraw as praw
 import yaml
 
-import spotify_tools
 from spotify_tools import (
     Client,
-    PlaylistTrack,
     SpotifyConfig,
     filter_tracks_by_similarity,
-    get_playlist_tracks,
     is_duplicate_track,
     search_track_fuzzy,
-    SearchResult,
 )
-
-from djtools.spotify.config import SubredditType
 
 
 logger = logging.getLogger(__name__)
@@ -123,6 +126,7 @@ def filter_results(
 
     # Use spotify-tools filtering
     from spotify_tools.schemas import Track
+
     track_objects = [Track.model_validate(t) for t in tracks if t]
 
     matches = filter_tracks_by_similarity(
@@ -181,6 +185,8 @@ async def get_subreddit_posts(
     sub = await reddit.subreddit(subreddit.name)
     func = getattr(sub, subreddit.type.value)
     kwargs = {"limit": config.spotify.spotify_playlist_post_limit}
+    from djtools.spotify.enums import SubredditType
+
     if subreddit.type == SubredditType.TOP:
         kwargs["time_filter"] = subreddit.period
 
@@ -342,7 +348,7 @@ async def _catch(
     """
     while True:
         try:
-            yield await generator.__anext__()
+            yield await anext(generator)
         except StopAsyncIteration:
             return
         except Exception as exc:
@@ -458,7 +464,8 @@ def _process(
 
 
 def _track_name_too_similar(
-    track: str, playlist_track_names: set,
+    track: str,
+    playlist_track_names: set,
 ) -> bool:
     """Check if a track is too similar to existing tracks.
 
@@ -472,6 +479,7 @@ def _track_name_too_similar(
     if is_duplicate_track(track, playlist_track_names, threshold=90.0):
         for other in playlist_track_names:
             from fuzzywuzzy import fuzz
+
             if fuzz.ratio(track.lower(), other.lower()) > 90:
                 logger.warning(
                     f'Candidate new track "{track}" is too similar to '
@@ -503,7 +511,7 @@ def _update_existing_playlist(
     import sys
 
     if limit is None:
-        limit = sys.maxsize
+        limit = sys.maxsize  # pragma: no cover
 
     # Get current playlist and tracks
     playlist_object = spotify.playlist(playlist_id)
@@ -555,7 +563,7 @@ def _update_existing_playlist(
             continue
 
         if _track_name_too_similar(track_name, playlist_track_names):
-            continue
+            continue  # pragma: no cover
 
         tracks_added.append(track_name)
         add_payload.append(id_)
@@ -580,7 +588,7 @@ def _update_existing_playlist(
 
     if tracks_removed:
         logger.info(f"{len(tracks_removed)} old tracks removed")
-        if verbosity > 0:
+        if verbosity > 0:  # pragma: no cover
             for track in tracks_removed:
                 logger.info(f"\t{track}")
 

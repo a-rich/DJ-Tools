@@ -189,7 +189,8 @@ def test_get_playlist_tracks_handles_exception():
     test_playlist_id = "some ID"
 
     with pytest.raises(
-        RuntimeError, match=f"Failed to get playlist with ID {test_playlist_id}"
+        RuntimeError,
+        match=f"Failed to get playlist with ID {test_playlist_id}",
     ):
         get_playlist_tracks(mock_client, test_playlist_id)
 

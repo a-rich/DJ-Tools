@@ -38,7 +38,7 @@ def test_spotifyconfig_no_spotify_credentials():
 
 
 @mock.patch("djtools.spotify.helpers.Client")
-def test_spotifyconfig_no_reddit_credentials(mock_client):
+def test_spotifyconfig_no_reddit_credentials(_mock_client):
     """Test for the SpotifyConfig class without Reddit credentials."""
     cfg = {
         "reddit_client_id": "",

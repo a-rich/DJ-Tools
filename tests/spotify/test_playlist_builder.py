@@ -39,7 +39,7 @@ from ..test_utils import MockOpen
 @mock.patch("djtools.spotify.playlist_builder.get_reddit_client")
 async def test_async_spotify_playlists(
     mock_reddit_client,
-    mock_spotify_client,
+    _mock_spotify_client,
     mock_get_subreddit_posts,
     got_tracks,
     got_playlist_ids,
@@ -88,8 +88,8 @@ aweeeezy/House/2022-09-03: 2
  Shirt - Cour T..mp3""",
 )
 def test_spotify_playlist_from_upload(
-    mock_paste,
-    mock_spotify_client,
+    _mock_paste,
+    _mock_spotify_client,
     mock_populate,
     mock_filter,
     config,
@@ -130,8 +130,8 @@ def test_spotify_playlist_from_upload(
  UNKNOWN - 1 - Unknown Artist.mp3""",
 )
 def test_spotify_playlist_from_upload_handles_file_with_multiple_dashes(
-    mock_paste,
-    mock_spotify_client,
+    _mock_paste,
+    _mock_spotify_client,
     config,
     caplog,
 ):
@@ -158,7 +158,7 @@ def test_spotify_playlist_from_upload_handles_file_with_multiple_dashes(
 @mock.patch("djtools.spotify.playlist_builder.filter_results")
 @mock.patch("djtools.spotify.playlist_builder.get_spotify_client")
 def test_spotify_playlist_from_upload_handles_non_match(
-    mock_spotify_client,
+    _mock_spotify_client,
     mock_filter,
     config,
     caplog,
@@ -200,7 +200,9 @@ def test_spotify_playlist_from_upload_handles_spotify_exception(
     title = "Under Pressure"
     artist = "Alix Perez, T-Man"
 
-    mock_spotify_client.return_value.search.side_effect = Exception("API Error")
+    mock_spotify_client.return_value.search.side_effect = Exception(
+        "API Error"
+    )
     config.spotify.spotify_playlist_from_upload = True
     config.spotify.spotify_client_id = "test_client_id"
     config.spotify.spotify_client_secret = "test_client_secret"
@@ -225,7 +227,7 @@ def test_spotify_playlist_from_upload_handles_spotify_exception(
 
 
 @mock.patch("pyperclip.paste", return_value="")
-def test_spotify_playlist_from_upload_raises_runtimeerror(mock_paste, config):
+def test_spotify_playlist_from_upload_raises_runtimeerror(_mock_paste, config):
     """Test for the spotify_playlist_from_upload function."""
     config.spotify.spotify_playlist_from_upload = True
     with pytest.raises(
@@ -245,3 +247,53 @@ def test_spotify_playlists(config):
         mock_async_spotify_playlists.return_value = lambda x: None
         spotify_playlists(config)
         assert mock_async_spotify_playlists.called
+
+
+@mock.patch("djtools.spotify.playlist_builder.filter_results")
+@mock.patch("djtools.spotify.playlist_builder.populate_playlist")
+@mock.patch("djtools.spotify.playlist_builder.get_spotify_client")
+@mock.patch(
+    "pyperclip.paste",
+    return_value="""aweeeezy/Bass/2022-09-03: 1
+ A.M.C - Brazil.mp3""",
+)
+def test_spotify_playlist_from_upload_artist_first(
+    _mock_paste,
+    _mock_spotify_client,
+    mock_populate,
+    mock_filter,
+    config,
+    caplog,
+):
+    """Test for spotify_playlist_from_upload with artist_first=True."""
+    caplog.set_level("INFO")
+
+    mock_filter.return_value = (
+        {
+            "id": "some_id",
+            "name": "Brazil",
+            "artists": [{"name": "A.M.C"}],
+        },
+        100,
+    )
+    mock_populate.return_value = {"some-playlist": "some-id"}
+
+    config.spotify.spotify_client_id = "test_client_id"
+    config.spotify.spotify_client_secret = "test_client_secret"
+    config.spotify.spotify_redirect_uri = "test_redirect_uri"
+    config.spotify.spotify_playlist_from_upload = True
+    config.sync.artist_first = True
+
+    with mock.patch(
+        "builtins.open",
+        MockOpen(files=["spotify_playlists.yaml"], content="{}").open,
+    ):
+        spotify_playlist_from_upload(config)
+
+    # Verify filter_results was called with track and artist swapped
+    # (artist_first means the file is "Artist - Track" so we swap to "Track - Artist")
+    mock_filter.assert_called()
+    call_args = mock_filter.call_args
+    # The third and fourth args should be track and artist (after swapping)
+    assert call_args[0][3] == "Brazil"  # track (was artist position)
+    assert call_args[0][4] == "A.M.C"  # artist (was track position)

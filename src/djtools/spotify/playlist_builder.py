@@ -54,9 +54,7 @@ async def async_spotify_playlists(config: BaseConfig):
     # Create async tasks for each subreddit
     tasks = [
         asyncio.create_task(
-            get_subreddit_posts(
-                spotify, reddit, subreddit, config, praw_cache
-            )
+            get_subreddit_posts(spotify, reddit, subreddit, config, praw_cache)
         )
         for subreddit in config.spotify.spotify_playlist_subreddits
     ]
