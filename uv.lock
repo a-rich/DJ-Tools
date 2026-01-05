@@ -1077,7 +1077,7 @@ requires-dist = [
     { name = "python-levenshtein", marker = "extra == 'accelerated'" },
     { name = "pyyaml" },
     { name = "requests" },
-    { name = "spotify-tools", directory = "../spotify-tools" },
+    { name = "spotify-tools", path = "vendor/spotify_tools-0.0.1-py3-none-any.whl" },
     { name = "tqdm" },
     { name = "youtube-dl" },
 ]
@@ -1379,7 +1379,7 @@ name = "importlib-metadata"
 version = "8.7.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "zipp", marker = "python_full_version < '3.12'" },
+    { name = "zipp" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f3/49/3b30cad09e7771a4982d9975a8cbf64f00d4a1ececb53297f1d9a7be1b10/importlib_metadata-8.7.1.tar.gz", hash = "sha256:49fef1ae6440c182052f407c8d34a68f72efc36db9ca90dc0113398f2fdde8bb", size = 57107, upload-time = "2025-12-21T10:00:19.278Z" }
 wheels = [
@@ -3615,7 +3615,7 @@ wheels = [
 [[package]]
 name = "spotify-tools"
 version = "0.0.1"
-source = { directory = "../spotify-tools" }
+source = { path = "vendor/spotify_tools-0.0.1-py3-none-any.whl" }
 dependencies = [
     { name = "fuzzywuzzy", extra = ["speedup"] },
     { name = "pydantic" },
@@ -3623,6 +3623,9 @@ dependencies = [
     { name = "pydantic-settings", version = "2.12.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "spotipy" },
     { name = "typer" },
+]
+wheels = [
+    { filename = "spotify_tools-0.0.1-py3-none-any.whl", hash = "sha256:4b18331a81d5275bc7080c17a11d3ec2207545cb0493428bf0dcfdb8944049f6" },
 ]
 
 [package.metadata]
@@ -3632,13 +3635,6 @@ requires-dist = [
     { name = "pydantic-settings" },
     { name = "spotipy" },
     { name = "typer" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "coverage" },
-    { name = "pytest" },
-    { name = "ruff" },
 ]
 
 [[package]]
