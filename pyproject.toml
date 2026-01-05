@@ -49,7 +49,7 @@ dependencies = [
     "python-dateutil",
     "PyYAML",
     "requests",
-    "spotify-tools",
+    "spotify-tools @ https://raw.githubusercontent.com/a-rich/DJ-Tools/release/2.9.1/vendor/spotify_tools-0.0.1-py3-none-any.whl",
     "tqdm",
     "youtube-dl"
 ]
@@ -87,9 +87,6 @@ djtools = "djtools:main"
 
 [tool.uv]
 default-groups = ["dev"]
-
-[tool.uv.sources]
-spotify-tools = { path = "vendor/spotify_tools-0.0.1-py3-none-any.whl" }
 
 [tool.hatch.metadata]
 allow-direct-references = true
