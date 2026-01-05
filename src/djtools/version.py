@@ -18,7 +18,6 @@ def get_version() -> str:
 
     if match:
         suffix = version.split(match)[-1]
-
         if suffix and not suffix.startswith("-"):
             version = f"{match}-{suffix}"
 
