@@ -19,7 +19,7 @@ try:
 except ModuleNotFoundError as exc:
     msg = (
         'The "BeautifulSoup" library is required; install with '
-        "'uv pip install bs4'"
+        "'pip install bs4'"
     )
     logger.critical(msg)
     raise RuntimeError(msg) from exc
@@ -165,7 +165,7 @@ def get_tracks_from_collection(xml_path: str) -> List[Track]:
     except FeatureNotFound as exc:
         msg = (
             'Could not open %s; please install "lxml" by running '
-            "'uv pip install lxml'" % str(path)
+            "'pip install lxml'" % str(path)
         )
         logger.critical(msg)
         raise RuntimeError(msg) from exc
