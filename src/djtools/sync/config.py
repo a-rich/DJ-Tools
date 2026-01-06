@@ -9,6 +9,8 @@ import os
 from pathlib import Path
 from typing import List, Optional
 
+from pydantic import Field
+
 from djtools.configs.config_formatter import BaseConfigFormatter
 
 logger = logging.getLogger(__name__)
@@ -23,15 +25,15 @@ class SyncConfig(BaseConfigFormatter):
     bucket_url: str = ""
     discord_url: str = ""
     download_collection: bool = False
-    download_exclude_dirs: List[Path] = []
-    download_include_dirs: List[Path] = []
+    download_exclude_dirs: List[Path] = Field(default_factory=list)
+    download_include_dirs: List[Path] = Field(default_factory=list)
     download_music: bool = False
     download_spotify_playlist: str = ""
     dryrun: bool = False
     import_user: str = ""
     upload_collection: bool = False
-    upload_exclude_dirs: List[Path] = []
-    upload_include_dirs: List[Path] = []
+    upload_exclude_dirs: List[Path] = Field(default_factory=list)
+    upload_include_dirs: List[Path] = Field(default_factory=list)
     upload_music: bool = False
     usb_path: Optional[Path] = None
     user: str = ""

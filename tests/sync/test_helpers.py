@@ -136,9 +136,9 @@ def test_run_sync(mock_popen, tmpdir):
         tmp_file.write(bytes(sync_output.encode("utf-8")))
         tmp_file.seek(0)
         tmp_file.close()
-        with open(tmp_file.name, mode="rb") as tmp_file:
+        with open(tmp_file.name, mode="rb") as tmp_file_reader:
             process = mock_popen.return_value.__enter__.return_value
-            process.stdout = tmp_file
+            process.stdout = tmp_file_reader
             process.wait.return_value = 0
             ret = run_sync(cmd, TEST_BUCKET)
     expected = (
@@ -173,9 +173,9 @@ def test_run_sync_handles_decode_error(
         tmp_file.write(byte_sequence)
         tmp_file.seek(0)
         tmp_file.close()
-        with open(tmp_file.name, mode="rb") as tmp_file:
+        with open(tmp_file.name, mode="rb") as tmp_file_reader:
             process = mock_popen.return_value.__enter__.return_value
-            process.stdout = tmp_file
+            process.stdout = tmp_file_reader
             process.wait.return_value = 0
             ret = run_sync(cmd, TEST_BUCKET)
     assert ret == expected
@@ -198,9 +198,9 @@ def test_run_sync_handles_return_code(mock_popen, tmpdir, caplog):
         tmp_file.write(bytes("".encode("utf-8")))
         tmp_file.seek(0)
         tmp_file.close()
-        with open(tmp_file.name, mode="rb") as tmp_file:
+        with open(tmp_file.name, mode="rb") as tmp_file_reader:
             process = mock_popen.return_value.__enter__.return_value
-            process.stdout = tmp_file
+            process.stdout = tmp_file_reader
             process.wait.return_value = 1
             msg = (
                 f"Failure while syncing: Command '{' '.join(cmd)}' returned "

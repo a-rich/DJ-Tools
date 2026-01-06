@@ -59,8 +59,8 @@ def test_utilsconfig_recording_playlist_not_set():
     with pytest.raises(
         RuntimeError,
         match=(
-            "You must provide a playlist name as recording_playlist "
-            "and this name must exists in spotify_playlists.yaml."
+            r"You must provide a playlist name as recording_playlist "
+            r"and this name must exists in spotify_playlists\.yaml\."
         ),
     ):
         UtilsConfig(**cfg)

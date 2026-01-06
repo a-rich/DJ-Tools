@@ -159,9 +159,9 @@ def run_sync(_cmd: str, bucket_url: str) -> str:
         sorted(tracks, key=lambda x: x.parent.as_posix()),
         key=lambda x: x.parent.as_posix(),
     ):
-        group = sorted(group)
-        new_music += f"{group_id}: {len(group)}\n"
-        for track in group:
+        sorted_group = sorted(group)
+        new_music += f"{group_id}: {len(sorted_group)}\n"
+        for track in sorted_group:
             new_music += f"\t{track.name}\n"
     if new_music:
         logger.info(

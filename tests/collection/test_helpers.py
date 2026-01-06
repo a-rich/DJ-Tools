@@ -8,6 +8,10 @@ from unittest import mock
 
 import pytest
 
+# Expected counts for build_tag_playlists and build_combiner_playlists tests
+EXPECTED_TAG_PLAYLISTS = 3
+EXPECTED_TECHNO_TRACKS = 2
+
 from djtools.collection.base_collection import Collection
 from djtools.collection.base_playlist import Playlist
 from djtools.collection.base_track import Track
@@ -143,7 +147,7 @@ def test_build_tag_playlists_evaluates_correctly():
     playlists = build_tag_playlists(
         playlist_content, {"Tag": {1: None}}, RekordboxPlaylist
     )
-    assert len(playlists.get_playlists("Tag")) == 3
+    assert len(playlists.get_playlists("Tag")) == EXPECTED_TAG_PLAYLISTS
     assert len(playlists.get_playlists("Inner playlist")) == 1
     assert len(playlists.get_playlists("sub-playlists")) == 1
     assert len(playlists.get_playlists("playlists")) == 1
@@ -219,7 +223,7 @@ def test_build_tag_playlists_pure_playlists(
 
     # The "Techno" playlist will contain tracks that have a "Techno" genre tag.
     techno_playlist = playlist.get_playlists("Techno")[0]
-    assert len(techno_playlist) == 2
+    assert len(techno_playlist) == EXPECTED_TECHNO_TRACKS
     for track in techno_playlist.get_tracks().values():
         assert "Techno" in track.get_genre_tags()
 
@@ -328,7 +332,7 @@ def test_build_combiner_playlists_evaluates_correctly(
         playlist_content, {"Tag": {1: None}}, RekordboxPlaylist
     )
     assert mock_parse_expression.call_count == expected_num_playlists
-    assert len(playlists.get_playlists("Tag | Tag")) == 3
+    assert len(playlists.get_playlists("Tag | Tag")) == EXPECTED_TAG_PLAYLISTS
     assert len(playlists.get_playlists("Inner playlist")) == 1
     assert len(playlists.get_playlists("sub-playlists")) == 1
     assert len(playlists.get_playlists("playlists")) == 1
@@ -532,7 +536,7 @@ def test_aggregate_playlists(rekordbox_collection):
         (
             "{playlist:Hip Hop} & [0]",
             ["{playlist:Hip Hop}", "[0]"],
-            [{"2"}],
+            [{"2"}, {"2", "3"}],
         ),
         # Test that timedelta evaluate properly.
         (
@@ -554,7 +558,7 @@ def test_add_selectors_to_tags(
             playlist_content, tags_tracks, rekordbox_collection, []
         )
     assert set(expected_tags) == set(tags_tracks)
-    for tag, tracks in zip(expected_tags, expected_tracks):
+    for tag, tracks in zip(expected_tags, expected_tracks, strict=True):
         assert set(tags_tracks[tag]) == tracks
 
 

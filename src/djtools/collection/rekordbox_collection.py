@@ -82,11 +82,12 @@ class RekordboxCollection(Collection):
                 continue
 
             # Represent string values with surrounding double quotes.
-            if isinstance(value, (Path, str)):
-                value = f'"{value}"'
+            display_value = (
+                f'"{value}"' if isinstance(value, (Path, str)) else value
+            )
 
             # Append the attribute's name and value to the representation.
-            body += f"\n{' ' * 4}{key}={value},"
+            body += f"\n{' ' * 4}{key}={display_value},"
 
         # Represent the tracks attribute as the number of tracks.
         body += f"\n{' ' * 4}tracks={len(repr_attrs['tracks'])},"

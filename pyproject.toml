@@ -117,20 +117,11 @@ select = [
     "RUF",    # Ruff-specific rules
 ]
 ignore = [
-    "B905",     # zip-without-explicit-strict
-    "E402",     # module-import-not-at-top-of-file
-    "E501",     # line-too-long (let formatter handle it)
-    "G002",     # logging-percent-format
-    "G003",     # logging-string-concat
-    "G004",     # logging-fstring-interpolation
-    "N818",     # error-suffix-on-exception-name
-    "PLC0415",  # import-outside-top-level
-    "PLR0911",  # too-many-return-statements
-    "PLR0917",  # too-many-positional-arguments
-    "PLR2004",  # magic-value-comparison
-    "PLW0603",  # global-statement
-    "PLW2901",  # redefined-loop-name
-    "RUF012",   # mutable-class-default
+    "E402",     # module-import-not-at-top-of-file (intentional)
+    "E501",     # line-too-long (formatter handles this)
+    "G004",     # logging-fstring-interpolation (style choice)
+    "PLC0415",  # import-outside-top-level (intentional lazy imports)
+    "PLR0911",  # too-many-return-statements (1 violation - complex function)
 ]
 
 [tool.ruff.lint.pylint]
@@ -141,15 +132,34 @@ max-statements = 100
 max-public-methods = 100
 
 [tool.ruff.lint.per-file-ignores]
-"scripts/*" = [
-    "B007",     # unused-loop-control-variable
-    "B018",     # useless-expression
-    "B020",     # loop-variable-overrides-iterator
-    "PLR0913",  # too-many-arguments
+# Scripts have intentional patterns that would require significant refactoring
+"scripts/collection/get_hot_cue_timings.py" = [
+    "B018",   # useless-expression (intentional property access for side effects)
+    "G002",   # logging-percent-format (legacy script)
 ]
-"tests/*" = [
-    "B011",     # assert-false
-    "RUF043",   # pytest-raises-ambiguous-pattern
+"scripts/collection/move_tags.py" = [
+    "PLW2901",  # redefined-loop-name (intentional transformations)
+]
+"scripts/collection/update_collection.py" = [
+    "PLW2901",  # redefined-loop-name (intentional groupby pattern)
+]
+"scripts/collection/user_vibe_analysis.py" = [
+    "B020",     # loop-variable-overrides-iterator (intentional groupby pattern)
+    "PLW2901",  # redefined-loop-name (intentional groupby pattern)
+]
+"scripts/repair/move_music_new_structure.py" = [
+    "G003",     # logging-string-concat (complex string building)
+    "PLR0913",  # too-many-arguments (would require refactor)
+    "PLW2901",  # redefined-loop-name (intentional transformations)
+]
+"scripts/repair/rename_files.py" = [
+    "PLR2004",  # magic-value-comparison (sample rate constant)
+]
+"scripts/repair/swap_title_artist.py" = [
+    "G003",   # logging-string-concat (complex string building)
+]
+"scripts/testing/parse_pytest_output.py" = [
+    "PLW2901",  # redefined-loop-name (intentional transformations)
 ]
 
 [tool.pytest.ini_options]

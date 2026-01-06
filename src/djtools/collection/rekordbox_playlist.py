@@ -116,11 +116,10 @@ class RekordboxPlaylist(Playlist):
                 continue
 
             # Represent string values with surrounding double quotes.
-            if isinstance(value, str):
-                value = f'"{value}"'
+            display_value = f'"{value}"' if isinstance(value, str) else value
 
             # Append the attribute's name and value to the representation.
-            body += f"{key}={value}, "
+            body += f"{key}={display_value}, "
 
         # Truncate the final attributes trailing ", ".
         if not repr_attrs["playlists"]:

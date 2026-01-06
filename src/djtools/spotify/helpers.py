@@ -28,6 +28,9 @@ from spotify_tools import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Threshold for fuzzy string matching (0-100 scale)
+FUZZY_MATCH_THRESHOLD = 90
 BaseConfig = Type["BaseConfig"]
 DJToolsSpotifyConfig = Type["SpotifyConfig"]
 SubredditConfig = Type["SubredditConfig"]
@@ -217,6 +220,7 @@ async def get_subreddit_posts(
             submissions,
             [spotify] * len(submissions),
             [config.spotify.spotify_playlist_fuzz_ratio] * len(submissions),
+            strict=True,
         )
 
         with ThreadPoolExecutor(max_workers=8) as executor:
@@ -478,7 +482,10 @@ def _track_name_too_similar(
         for other in playlist_track_names:
             from fuzzywuzzy import fuzz
 
-            if fuzz.ratio(track.lower(), other.lower()) > 90:
+            if (
+                fuzz.ratio(track.lower(), other.lower())
+                > FUZZY_MATCH_THRESHOLD
+            ):
                 logger.warning(
                     f'Candidate new track "{track}" is too similar to '
                     f'existing track "{other}"'
@@ -548,23 +555,25 @@ def _update_existing_playlist(
     # Process new tracks
     for id_, track_name in new_tracks:
         # Resolve URL to track ID if needed
+        track_id = id_
+        display_name = track_name
         if "spotify.com/track/" in id_:
             resp = spotify.track(id_)
-            id_ = resp["id"]
+            track_id = resp["id"]
             artists = ", ".join([x["name"] for x in resp["artists"]])
-            track_name = f"{resp['name']} - {artists}"
+            display_name = f"{resp['name']} - {artists}"
 
-        if id_ in ids:
+        if track_id in ids:
             logger.warning(
-                f'Candidate new track "{track_name}" is already in the playlist'
+                f'Candidate new track "{display_name}" is already in the playlist'
             )
             continue
 
-        if _track_name_too_similar(track_name, playlist_track_names):
+        if _track_name_too_similar(display_name, playlist_track_names):
             continue  # pragma: no cover
 
-        tracks_added.append(track_name)
-        add_payload.append(id_)
+        tracks_added.append(display_name)
+        add_payload.append(track_id)
 
         # Remove oldest track if we'd exceed limit
         if track_count + len(tracks_added) > limit:

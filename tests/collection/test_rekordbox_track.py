@@ -31,7 +31,7 @@ def test_rekordboxtrack_get_methods(method, expected, rekordbox_track):
     try:
         _method = getattr(rekordbox_track, method)
     except AttributeError:
-        assert False, f"RekordboxTrack is missing required method '{method}'"
+        pytest.fail(f"RekordboxTrack is missing required method '{method}'")
 
     if method == "get_location":
         assert _method().name == expected

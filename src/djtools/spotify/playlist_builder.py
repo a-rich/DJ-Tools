@@ -28,6 +28,9 @@ BaseConfig = Type["BaseConfig"]
 # Silence PRAW, Spotify, and urllib3 loggers
 for logger_name in ["asyncprawcore", "spotipy", "urllib3"]:
     logging.getLogger(logger_name).setLevel(logging.CRITICAL)
+
+# Expected tuple length for (track, artist) pairs
+TRACK_ARTIST_TUPLE_LENGTH = 2
 logging.getLogger("asyncio").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
@@ -120,7 +123,7 @@ def spotify_playlist_from_upload(config: BaseConfig):
             track, artist = artist, track
         files.append((track, artist))
 
-    files = list(filter(lambda x: len(x) == 2, files))
+    files = list(filter(lambda x: len(x) == TRACK_ARTIST_TUPLE_LENGTH, files))
 
     # Search Spotify for each file
     threshold = config.spotify.spotify_playlist_fuzz_ratio

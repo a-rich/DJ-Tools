@@ -120,8 +120,8 @@ def test_parse_trim_initial_silence_invalid_str():
     with pytest.raises(
         ValueError,
         match=(
-            '--trim-initial-silence must be either "auto", "smart", or an '
-            "integer."
+            r'--trim-initial-silence must be either "auto", "smart", or an '
+            r"integer\."
         ),
     ):
         _parse_trim_initial_silence(arg)

@@ -20,9 +20,9 @@ def test_process_handles_missing_or_empty_playlist(config):
     with pytest.raises(
         RuntimeError,
         match=(
-            "There are no Spotify tracks; make sure "
-            "download_spotify_playlist is a key from "
-            "spotify_playlists.yaml"
+            r"There are no Spotify tracks; make sure "
+            r"download_spotify_playlist is a key from "
+            r"spotify_playlists\.yaml"
         ),
     ):
         process(config)

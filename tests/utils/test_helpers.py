@@ -9,6 +9,10 @@ from unittest import mock
 import pytest
 from pydub import AudioSegment, generators
 
+# Expected values for compute_distance tests
+PERFECT_FUZZ_RATIO = 100
+EXPECTED_MATCH_COUNT = 2
+
 from djtools.utils.config import TrimInitialSilenceMode
 from djtools.utils.helpers import (
     compute_distance,
@@ -40,7 +44,7 @@ def test_compute_distance(track_a, track_b):
         assert ret[0] == "playlist"
         assert ret[1] == track_a
         assert ret[2] == track_b
-        assert ret[3] == 100
+        assert ret[3] == PERFECT_FUZZ_RATIO
     else:
         assert not ret
 
@@ -69,7 +73,7 @@ def test_find_matches(config):
     assert all(
         match[-1] == config.utils.check_tracks_fuzz_ratio for match in matches
     )
-    assert len(matches) == 2
+    assert len(matches) == EXPECTED_MATCH_COUNT
     assert {x[1] for x in matches} == set(expected_matches)
 
 
@@ -94,7 +98,7 @@ def test_get_beatcloud_tracks(mock_os_popen, proc_dump):
     tracks = get_beatcloud_tracks(bucket_url)
     mock_os_popen.assert_called_once()
     assert len(tracks) == len(proc_dump)
-    for track, line in zip(tracks, proc_dump):
+    for track, line in zip(tracks, proc_dump, strict=True):
         assert track == line
 
 

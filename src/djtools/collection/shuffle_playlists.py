@@ -54,7 +54,7 @@ def shuffle_playlists(config: BaseConfig, path: Optional[Path] = None):
     ) as executor:
         futures = [
             executor.submit(track.set_track_number, number)
-            for track, number in zip(*payload)
+            for track, number in zip(*payload, strict=True)
         ]
         for future in tqdm(
             as_completed(futures),

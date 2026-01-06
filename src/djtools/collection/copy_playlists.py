@@ -88,6 +88,7 @@ def copy_playlists(config: BaseConfig, path: Optional[Path] = None):
     payload = zip(
         playlist_tracks.values(),
         [config.collection.copy_playlists_destination] * len(playlist_tracks),
+        strict=True,
     )
 
     with ThreadPoolExecutor(

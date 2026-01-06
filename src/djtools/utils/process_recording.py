@@ -117,6 +117,7 @@ def process(config: BaseConfig):
         audio_chunks,
         track_data,
         [write_path] * len(audio_chunks),
+        strict=True,
     )
     exported_files = []
 

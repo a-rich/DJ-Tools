@@ -23,6 +23,14 @@ from djtools.collection.playlist_filters import PlaylistFilter
 from djtools.utils.helpers import make_path
 
 logger = logging.getLogger(__name__)
+
+# Constants for numerical selector validation
+RANGE_SPLIT_PARTS = 2  # A range like "80-180" splits into exactly 2 parts
+MIN_RATING = 0
+MAX_RATING = 5
+MIN_BPM = 6
+MAX_BPM = 999
+MIN_YEAR = 1000  # Years are 4 digits (1000+)
 NUMERICAL_SELECTOR_REGEX = re.compile(r"(?<=\[)[^\[\]]*(?=\])")
 STRING_SELECTOR_REGEX = re.compile(r"(?<={)[^{}]+:[^{}]+(?=})")
 DATE_SELECTOR_REGEX = re.compile(r"(>=|>|<=|<)")
@@ -521,17 +529,15 @@ def parse_numerical_selectors(
         if match.isdigit():
             numerical_values.add(match)
         # If "match" is two digits separated by a "-", then it's a range.
-        elif len(match.split("-")) == 2 and all(
+        elif len(match.split("-")) == RANGE_SPLIT_PARTS and all(
             x.isdigit() for x in match.split("-")
         ):
             _range = list(map(int, match.split("-")))
             _range = range(min(_range), max(_range) + 1)
             if not (
-                all(0 <= x <= 5 for x in _range)
-                or all(6 <= x <= 999 for x in _range)  # range for ratings
-                or all(  # range for BPMs
-                    x >= 1000 for x in _range
-                )  # range for years
+                all(MIN_RATING <= x <= MAX_RATING for x in _range)
+                or all(MIN_BPM <= x <= MAX_BPM for x in _range)
+                or all(x >= MIN_YEAR for x in _range)
             ):
                 logger.error(f"Bad numerical range selector: {match}")
                 continue
