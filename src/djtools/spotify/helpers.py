@@ -1,6 +1,6 @@
 """This module contains helper functions used by the spotify module.
 
-Most of the heavy lifting is now delegated to the spotify-tools library.
+All Spotify API interactions are delegated to the spotify-tools library.
 This module provides DJ-Tools specific wrappers and configuration handling.
 """
 
@@ -21,16 +21,17 @@ import asyncpraw as praw
 import yaml
 from spotify_tools import (
     Client,
+    PlaylistTrack,
     SpotifyConfig,
-    filter_tracks_by_similarity,
-    is_duplicate_track,
+    create_playlist,
+    get_playlist,
+    resolve_track_from_url,
     search_track_fuzzy,
+    update_playlist,
 )
 
 logger = logging.getLogger(__name__)
 
-# Threshold for fuzzy string matching (0-100 scale)
-FUZZY_MATCH_THRESHOLD = 90
 BaseConfig = Type["BaseConfig"]
 DJToolsSpotifyConfig = Type["SpotifyConfig"]
 SubredditConfig = Type["SubredditConfig"]
@@ -103,71 +104,13 @@ def get_spotify_client(
     )
 
 
-def filter_results(
-    spotify: Client,
-    results: Dict,
-    threshold: float,
-    title: str,
-    artist: str,
-) -> Tuple[Dict[str, Any], float]:
-    """Filter Spotify search results to find best matching track.
-
-    Args:
-        spotify: Spotify client.
-        results: Spotify search results.
-        threshold: Minimum Levenshtein distance.
-        title: Potential title of a track.
-        artist: Potential artist of a track.
-
-    Returns:
-        Tuple of track object (as dict) and similarity score.
-    """
-    # Convert spotify-tools Track objects to dicts for backward compatibility
-    tracks = results.get("tracks", {}).get("items", [])
-
-    # Use spotify-tools filtering
-    from spotify_tools.schemas import Track
-
-    track_objects = [Track.model_validate(t) for t in tracks if t]
-
-    matches = filter_tracks_by_similarity(
-        track_objects, title, artist, threshold
-    )
-
-    # Paginate through remaining results
-    while results.get("tracks", {}).get("next"):
-        try:
-            results = spotify.next(results["tracks"])
-            if not results:
-                break
-            tracks = results.get("tracks", {}).get("items", [])
-            if not tracks:
-                tracks = results.get("items", [])
-            track_objects = [Track.model_validate(t) for t in tracks if t]
-            matches.extend(
-                filter_tracks_by_similarity(
-                    track_objects, title, artist, threshold
-                )
-            )
-        except Exception:
-            logger.warning(f"Failed to get next tracks for {title, artist}")
-            break
-
-    if not matches:
-        return {}, 0.0
-
-    best = max(matches, key=lambda m: m.score)
-    # Convert back to dict format for backward compatibility
-    return best.track.model_dump(), best.score
-
-
 async def get_subreddit_posts(
     spotify: Client,
     reddit: praw.Reddit,
     subreddit: SubredditConfig,
     config: BaseConfig,
     praw_cache: Dict[str, bool],
-) -> Tuple[List[Tuple[str]], Dict[str, Union[str, int]]]:
+) -> Tuple[List[Tuple[str, str]], Dict[str, Union[str, int]]]:
     """Filters subreddit submissions and resolves them to Spotify tracks.
 
     Args:
@@ -209,7 +152,7 @@ async def get_subreddit_posts(
         submissions.append(submission)
         praw_cache[submission.id] = True
 
-    new_tracks = []
+    new_tracks: List[Tuple[str, str]] = []
     if submissions:
         msg = (
             f"Searching Spotify for {len(submissions)} new submission(s) from "
@@ -229,10 +172,11 @@ async def get_subreddit_posts(
             with tqdm(total=len(futures), desc=msg) as pbar:
                 new_tracks = []
                 for future in as_completed(futures):
-                    new_tracks.append(future.result())
+                    result = future.result()
+                    if result:
+                        new_tracks.append(result)
                     pbar.update(1)
 
-        new_tracks = [track for track in new_tracks if track]
         logger.info(
             f"Got {len(new_tracks)} Spotify track(s) from new "
             f'"r/{subreddit.name}" posts'
@@ -248,9 +192,9 @@ def populate_playlist(
     playlist_ids: Dict[str, str],
     spotify_username: str,
     spotify: Client,
-    tracks: List[Tuple[str]],
+    tracks: List[Tuple[str, str]],
     playlist_limit: Optional[int] = None,
-    verbosity: Optional[int] = 0,
+    verbosity: int = 0,
 ) -> Dict[str, str]:
     """Inserts tracks into either a new playlist or an existing one.
 
@@ -267,31 +211,47 @@ def populate_playlist(
         Updated playlist IDs.
     """
     playlist_id = playlist_ids.get(playlist_name)
-    playlist = None
 
-    if playlist_id and tracks:
-        playlist = _update_existing_playlist(
+    # Convert track tuples to PlaylistTrack objects, resolving URLs if needed
+    playlist_tracks = _resolve_tracks(spotify, tracks)
+
+    if playlist_id and playlist_tracks:
+        # Update existing playlist using spotify-tools
+        result = update_playlist(
             spotify,
             playlist_id,
-            tracks,
-            playlist_limit,
-            verbosity,
+            playlist_tracks,
+            max_size=playlist_limit,
+            check_duplicates=True,
+            duplicate_threshold=90.0,
+            verbosity=verbosity,
         )
-    elif tracks:
+        _log_update_result(result, verbosity)
+        playlist = get_playlist(spotify, playlist_id)
+    elif playlist_tracks:
+        # Create new playlist using spotify-tools
         logger.warning(
             f"Unable to get ID for {playlist_name}...creating a new playlist"
         )
-        playlist = _build_new_playlist(
-            spotify, spotify_username, playlist_name, tracks
+        playlist = create_playlist(
+            spotify,
+            name=playlist_name.title(),
+            tracks=playlist_tracks,
+            public=True,
+            user_id=spotify_username,
         )
-        playlist_ids[playlist_name] = playlist["id"]
+        if playlist and playlist.id:
+            playlist_ids[playlist_name] = playlist.id
     elif playlist_id:
-        playlist = spotify.playlist(playlist_id)
+        playlist = get_playlist(spotify, playlist_id)
+    else:
+        playlist = None
 
     if playlist:
-        logger.info(
-            f'"{playlist["name"]}": {playlist["external_urls"].get("spotify")}'
-        )
+        url = ""
+        if playlist.external_urls:
+            url = playlist.external_urls.spotify or ""
+        logger.info(f'"{playlist.name}": {url}')
 
     return playlist_ids
 
@@ -310,30 +270,36 @@ def write_playlist_ids(playlist_ids: Dict[str, str]):
         yaml.dump(playlist_ids, _file)
 
 
-def _build_new_playlist(
+def filter_results(
     spotify: Client,
-    username: str,
-    playlist_name: str,
-    new_tracks: List[Tuple[str]],
-) -> Dict[str, Any]:
-    """Creates a new playlist from a list of track IDs / URLs.
+    results: Dict,
+    threshold: float,
+    title: str,
+    artist: str,
+) -> Tuple[Dict[str, Any], float]:
+    """Filter Spotify search results to find best matching track.
+
+    This function uses spotify-tools' search_track_fuzzy for matching.
 
     Args:
         spotify: Spotify client.
-        username: Spotify username.
-        playlist_name: Name for the new playlist.
-        new_tracks: List of (track_id, track_name) tuples.
+        results: Spotify search results (unused, kept for API compatibility).
+        threshold: Minimum Levenshtein distance.
+        title: Potential title of a track.
+        artist: Potential artist of a track.
 
     Returns:
-        Playlist object for the newly constructed playlist.
+        Tuple of track object (as dict) and similarity score.
     """
-    ids = [t[0] for t in new_tracks]
-    playlist = spotify.user_playlist_create(
-        username, name=playlist_name.title()
+    # Use spotify-tools search with pagination for thorough matching
+    result = search_track_fuzzy(
+        spotify, title, artist, threshold=threshold, limit=50
     )
-    spotify.playlist_add_items(playlist["id"], ids)
 
-    return playlist
+    if result and result.track:
+        return result.track.model_dump(), result.score
+
+    return {}, 0.0
 
 
 async def _catch(
@@ -358,66 +324,44 @@ async def _catch(
             continue
 
 
-def _filter_tracks(
-    tracks: List[Dict], threshold: float, title: str, artist: str
-) -> List[Tuple[Dict[str, Any], float]]:
-    """Filter tracks by Levenshtein distance on artist and name fields.
+def _log_update_result(result, verbosity: int):
+    """Log the result of a playlist update operation.
 
     Args:
-        tracks: Spotify search results.
-        threshold: Minimum Levenshtein distance.
-        title: Potential title of a track.
-        artist: Potential artist of a track.
-
-    Returns:
-        List of (track_dict, similarity_score) tuples.
+        result: UpdateResult from spotify-tools.
+        verbosity: Logging verbosity level.
     """
-    from spotify_tools.schemas import Track
+    if result.tracks_added:
+        logger.info(f"{len(result.tracks_added)} new tracks added")
+        if verbosity > 0:  # pragma: no cover
+            for track in result.tracks_added:
+                logger.info(f"\t{track.display_name}")
 
-    track_objects = [Track.model_validate(t) for t in tracks if t]
-    matches = filter_tracks_by_similarity(
-        track_objects, title, artist, threshold
-    )
-    return [(m.track.model_dump(), m.score) for m in matches]
+    if result.tracks_removed:
+        logger.info(f"{len(result.tracks_removed)} old tracks removed")
+        if verbosity > 0:  # pragma: no cover
+            for track in result.tracks_removed:
+                logger.info(f"\t{track.display_name}")
 
-
-def _fuzzy_match(
-    spotify: Client, title: str, threshold: float
-) -> Optional[Tuple[str, str]]:
-    """Attempts to find a Spotify track matching the title.
-
-    Args:
-        spotify: Spotify client.
-        title: Submission title.
-        threshold: Minimum Levenshtein distance.
-
-    Returns:
-        Tuple of (track_id, "track_name - artists") or None.
-    """
-    parts = _parse_title(title)
-    if not all(parts):
-        return None
-
-    # Try both orderings (title-artist and artist-title)
-    for track, artist in [parts, parts[::-1]]:
-        try:
-            result = search_track_fuzzy(
-                spotify, track, artist, threshold=threshold, limit=50
+    if result.skipped_existing:
+        for track in result.skipped_existing:
+            logger.warning(
+                f'Candidate new track "{track.display_name}" is already in '
+                "the playlist"
             )
-            if result and result.track:
-                track_obj = result.track
-                artists = ", ".join(
-                    a.name for a in (track_obj.artists or []) if a.name
-                )
-                return (track_obj.id, f"{track_obj.name} - {artists}")
-        except Exception as exc:
-            logger.error(f'Error searching for "{track} - {artist}": {exc}')
-            continue
 
-    return None
+    if result.skipped_duplicates:
+        for track in result.skipped_duplicates:
+            logger.warning(
+                f'Candidate new track "{track.display_name}" is too similar '
+                "to existing track"
+            )
+
+    if not (result.tracks_added or result.tracks_removed):
+        logger.info("No tracks added or removed")
 
 
-def _parse_title(title: str) -> List[str]:
+def _parse_title(title: str) -> List[Optional[str]]:
     """Attempts to split submission title into (track name, artist(s)).
 
     Args:
@@ -462,152 +406,60 @@ def _process(
     if "spotify.com/track/" in submission.url:
         return (submission.url, submission.title)
 
-    return _fuzzy_match(spotify, submission.title, threshold)
+    # Parse title into track/artist
+    parts = _parse_title(submission.title)
+    if not all(parts):
+        return None
 
-
-def _track_name_too_similar(
-    track: str,
-    playlist_track_names: set,
-) -> bool:
-    """Check if a track is too similar to existing tracks.
-
-    Args:
-        track: Track name to check.
-        playlist_track_names: Set of existing track names.
-
-    Returns:
-        True if the track is a duplicate.
-    """
-    if is_duplicate_track(track, playlist_track_names, threshold=90.0):
-        for other in playlist_track_names:
-            from fuzzywuzzy import fuzz
-
-            if (
-                fuzz.ratio(track.lower(), other.lower())
-                > FUZZY_MATCH_THRESHOLD
-            ):
-                logger.warning(
-                    f'Candidate new track "{track}" is too similar to '
-                    f'existing track "{other}"'
+    # Try both orderings (title-artist and artist-title)
+    for track, artist in [parts, parts[::-1]]:
+        try:
+            result = search_track_fuzzy(
+                spotify, track, artist, threshold=threshold, limit=50
+            )
+            if result and result.track:
+                track_obj = result.track
+                artists = ", ".join(
+                    a.name for a in (track_obj.artists or []) if a.name
                 )
-                return True
-    return False
+                return (track_obj.id, f"{track_obj.name} - {artists}")
+        except Exception as exc:
+            logger.error(f'Error searching for "{track} - {artist}": {exc}')
+            continue
+
+    return None
 
 
-def _update_existing_playlist(
+def _resolve_tracks(
     spotify: Client,
-    playlist_id: str,
-    new_tracks: List[Tuple[str, str]],
-    limit: Optional[int],
-    verbosity: int,
-) -> Dict[str, Any]:
-    """Updates an existing playlist with new tracks (LIFO queue behavior).
+    tracks: List[Tuple[str, str]],
+) -> List[PlaylistTrack]:
+    """Convert track tuples to PlaylistTrack objects.
+
+    Resolves Spotify URLs to track IDs as needed.
 
     Args:
         spotify: Spotify client.
-        playlist_id: Spotify playlist ID.
-        new_tracks: List of (track_id, track_name) tuples.
-        limit: Maximum number of tracks in playlist.
-        verbosity: Verbosity level.
+        tracks: List of (track_id_or_url, track_name) tuples.
 
     Returns:
-        Playlist object.
+        List of PlaylistTrack objects.
     """
-    import sys
-
-    if limit is None:
-        limit = sys.maxsize  # pragma: no cover
-
-    # Get current playlist and tracks
-    playlist_object = spotify.playlist(playlist_id)
-    _playlist = playlist_object
-    tracks = _playlist["tracks"]["items"]
-
-    # Paginate to get all tracks
-    try:
-        while _playlist["tracks"]["next"]:
-            _playlist = spotify.next(_playlist["tracks"])
-            try:
-                tracks.extend(_playlist["tracks"]["items"])
-            except KeyError:
-                tracks.extend(_playlist["items"])
-    except KeyError:
-        tracks.extend(_playlist.get("items", []))
-    except Exception as exc:
-        logger.error(f"Failed to get tracks from playlist: {exc}")
-
-    # Build sets of existing track IDs and names
-    track_count = len(tracks)
-    track_index = 0
-    add_payload = []
-    tracks_added = []
-    remove_payload = []
-    tracks_removed = []
-    ids = set()
-    playlist_track_names = set()
-
-    for track in tracks:
-        track_data = track["track"]
-        ids.add(track_data["id"])
-        artists = ", ".join([x["name"] for x in track_data["artists"]])
-        playlist_track_names.add(f"{track_data['name']} - {artists}")
-
-    # Process new tracks
-    for id_, track_name in new_tracks:
-        # Resolve URL to track ID if needed
-        track_id = id_
-        display_name = track_name
-        if "spotify.com/track/" in id_:
-            resp = spotify.track(id_)
-            track_id = resp["id"]
-            artists = ", ".join([x["name"] for x in resp["artists"]])
-            display_name = f"{resp['name']} - {artists}"
-
-        if track_id in ids:
-            logger.warning(
-                f'Candidate new track "{display_name}" is already in the playlist'
+    playlist_tracks = []
+    for id_or_url, name in tracks:
+        if "spotify.com/track/" in id_or_url:
+            # Resolve URL to PlaylistTrack
+            pt = resolve_track_from_url(spotify, id_or_url)
+            if pt:
+                playlist_tracks.append(pt)
+        else:
+            # Create PlaylistTrack from ID and name
+            playlist_tracks.append(
+                PlaylistTrack(
+                    id=id_or_url,
+                    uri=f"spotify:track:{id_or_url}",
+                    name=name.split(" - ")[0] if " - " in name else name,
+                    artists=name.split(" - ")[1] if " - " in name else "",
+                )
             )
-            continue
-
-        if _track_name_too_similar(display_name, playlist_track_names):
-            continue  # pragma: no cover
-
-        tracks_added.append(display_name)
-        add_payload.append(track_id)
-
-        # Remove oldest track if we'd exceed limit
-        if track_count + len(tracks_added) > limit:
-            _track = tracks.pop(0)["track"]
-            artists = ", ".join([x["name"] for x in _track["artists"]])
-            tracks_removed.append(f"{_track['name']} - {artists}")
-            remove_payload.append(
-                {"uri": _track["uri"], "positions": [track_index]}
-            )
-            track_index += 1
-            track_count -= 1
-
-    # Log what we're doing
-    if tracks_added:
-        logger.info(f"{len(tracks_added)} new tracks added")
-        if verbosity > 0:
-            for track in tracks_added:
-                logger.info(f"\t{track}")
-
-    if tracks_removed:
-        logger.info(f"{len(tracks_removed)} old tracks removed")
-        if verbosity > 0:  # pragma: no cover
-            for track in tracks_removed:
-                logger.info(f"\t{track}")
-
-    if not (tracks_added or tracks_removed):
-        logger.info("No tracks added or removed")
-
-    # Execute the changes
-    if remove_payload:
-        spotify.playlist_remove_specific_occurrences_of_items(
-            playlist_id, remove_payload
-        )
-    if add_payload:
-        spotify.playlist_add_items(playlist_id, add_payload)
-
-    return playlist_object
+    return playlist_tracks
