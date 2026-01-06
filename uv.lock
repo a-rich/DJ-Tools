@@ -737,7 +737,7 @@ wheels = [
 
 [[package]]
 name = "djtools"
-version = "2.9.1rc4"
+version = "2.9.1rc6"
 source = { editable = "." }
 dependencies = [
     { name = "asyncpraw" },
