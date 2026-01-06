@@ -49,7 +49,7 @@ dependencies = [
     "python-dateutil",
     "PyYAML",
     "requests",
-    "spotify-tools>=0.0.1",
+    "spotify-tools>=0.0.2",
     "tqdm",
     "youtube-dl"
 ]
