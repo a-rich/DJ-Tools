@@ -54,7 +54,7 @@ For example, whenever I install the newest version of DJ Tools, I remove my link
 
 install djtools:
 
-`uv pip install djtools`
+`pip install djtools`
 
 run the following command to link the installed configs directory:
 
