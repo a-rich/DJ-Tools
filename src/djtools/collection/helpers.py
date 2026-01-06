@@ -94,6 +94,64 @@ def copy_file(track: Track, destination: Path):
 # #############################################################################
 
 
+def _build_pure_tag_playlist(
+    tag: str,
+    name: str,
+    tags_tracks: Dict[str, Dict[str, Track]],
+    playlist_class: Playlist,
+    minimum_tracks: Optional[int],
+    enable_aggregation: Optional[bool],
+) -> Optional[Playlist]:
+    """Build a "pure" playlist containing only tracks where all genres match.
+
+    "Pure" playlists contain tracks with a set of genre tags that all contain
+    the sub-string indicated by the tag. For example, "Pure Techno" will
+    contain tracks that have genres {"Hard Techno", "Melodic Techno"} but will
+    not contain tracks that have {"Hard Techno", "Tech House"} because
+    "Tech House" does not contain "Techno" as a sub-string.
+
+    Args:
+        tag: The tag to create a pure playlist for (e.g., "Techno").
+        name: The name to give the playlist.
+        tags_tracks: Dict of tags to tracks.
+        playlist_class: Playlist implementation class.
+        minimum_tracks: Required number of tracks to make a playlist.
+        enable_aggregation: Whether to enable aggregation for this playlist.
+
+    Returns:
+        A Playlist or None if conditions aren't met.
+    """
+    tracks_with_tag = tags_tracks.get(tag)
+    if not tracks_with_tag:
+        logger.warning(
+            f'Can\'t make a "Pure {tag}" playlist because there are no '
+            "tracks with that tag."
+        )
+        return None
+
+    # Filter out tracks that aren't pure.
+    pure_tag_tracks = {
+        track_id: track
+        for track_id, track in tracks_with_tag.items()
+        if all(tag.lower() in _.lower() for _ in track.get_genre_tags())
+    }
+    if not pure_tag_tracks:
+        logger.warning(
+            f'Can\'t make a "Pure {tag}" playlist because there are no '
+            f"tracks that are pure {tag}."
+        )
+        return None
+
+    if minimum_tracks and len(pure_tag_tracks) < minimum_tracks:
+        return None
+
+    return playlist_class.new_playlist(
+        name=name,
+        tracks=pure_tag_tracks,
+        enable_aggregation=enable_aggregation,
+    )
+
+
 def build_tag_playlists(
     content: Union[PlaylistConfigContent, PlaylistName, str],
     tags_tracks: Dict[str, Dict[str, Track]],
@@ -174,43 +232,15 @@ def build_tag_playlists(
     else:
         tag_content = name = content
 
-    # Apply special logic for creating a "pure" playlist. "Pure" playlists are
-    # those that contain tracks with a set of genre tags that all contain the
-    # sub-string indicated by the suffix of the playlist name. For example,
-    # "Pure Techno" will contain tracks that have genres {"Hard Techno",
-    # "Melodic Techno"} but will not contain tracks that contain
-    # {"Hard Techno", "Tech House"} because "Tech House" does not contain
-    # "Techno" as a sub-string.
+    # Handle "Pure" playlists via helper function.
     if tag_content.startswith("Pure "):
-        # Isolate the tag to create a pure playlist for.
         tag = tag_content.split("Pure ")[-1]
-        tracks_with_tag = tags_tracks.get(tag)
-        if not tracks_with_tag:
-            logger.warning(
-                f'Can\'t make a "Pure {tag}" playlist because there are no '
-                "tracks with that tag."
-            )
-            return None
-
-        # Filter out tracks that aren't pure.
-        pure_tag_tracks = {
-            track_id: track
-            for track_id, track in tracks_with_tag.items()
-            if all(tag.lower() in _.lower() for _ in track.get_genre_tags())
-        }
-        if not pure_tag_tracks:
-            logger.warning(
-                f'Can\'t make a "Pure {tag}" playlist because there are no '
-                f"tracks that are pure {tag}."
-            )
-            return None
-
-        if minimum_tracks and len(pure_tag_tracks) < minimum_tracks:
-            return None
-
-        return playlist_class.new_playlist(
+        return _build_pure_tag_playlist(
+            tag=tag,
             name=name,
-            tracks=pure_tag_tracks,
+            tags_tracks=tags_tracks,
+            playlist_class=playlist_class,
+            minimum_tracks=minimum_tracks,
             enable_aggregation=enable_aggregation,
         )
 

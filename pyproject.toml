@@ -121,7 +121,6 @@ ignore = [
     "E501",     # line-too-long (formatter handles this)
     "G004",     # logging-fstring-interpolation (style choice)
     "PLC0415",  # import-outside-top-level (intentional lazy imports)
-    "PLR0911",  # too-many-return-statements (1 violation - complex function)
 ]
 
 [tool.ruff.lint.pylint]
