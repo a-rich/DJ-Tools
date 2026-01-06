@@ -3,12 +3,11 @@ alphabetical order.
 """
 
 # pylint: disable=protected-access
-from argparse import ArgumentParser
 import re
+from argparse import ArgumentParser
 
-from djtools.configs import build_config
 from djtools.collection.platform_registry import PLATFORM_REGISTRY
-
+from djtools.configs import build_config
 
 TAG_ORDERINGS = (
     (
@@ -60,7 +59,7 @@ if __name__ == "__main__":
         genre_tags = set(track.get_genre_tags())
         track_tag_set = set(all_tags).difference(genre_tags)
         new_tags = []
-        for tag_order, tag_set in zip(TAG_ORDERINGS, tag_sets):
+        for _tag_order, tag_set in zip(TAG_ORDERINGS, tag_sets, strict=True):
             new_tags.extend(sorted(track_tag_set.intersection(tag_set)))
 
         tags_before = [tag for tag in all_tags if tag not in genre_tags]

@@ -7,11 +7,10 @@ of config.yaml.
 import logging
 from typing import List
 
-from pydantic import BaseModel, NonNegativeInt
+from pydantic import BaseModel, Field, NonNegativeInt
 
 from djtools.configs.config_formatter import BaseConfigFormatter
 from djtools.spotify.enums import SubredditPeriod, SubredditType
-
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +33,9 @@ class SpotifyConfig(BaseConfigFormatter):
     spotify_playlist_from_upload: bool = False
     spotify_playlist_fuzz_ratio: NonNegativeInt = 70
     spotify_playlist_post_limit: NonNegativeInt = 100
-    spotify_playlist_subreddits: List[SubredditConfig] = []
+    spotify_playlist_subreddits: List[SubredditConfig] = Field(
+        default_factory=list
+    )
     spotify_playlists: bool = False
     reddit_client_id: str = ""
     reddit_client_secret: str = ""

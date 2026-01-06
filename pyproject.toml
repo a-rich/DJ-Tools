@@ -67,16 +67,15 @@ accelerated = [
 [dependency-groups]
 dev = [
     "aiohttp",
-    "black",
     "build",
     "mkdocs",
     "mkdocs-material",
     "mkdocstrings-python",
     "pre-commit",
-    "pylint",
     "pytest",
     "pytest-asyncio",
     "pytest-cov",
+    "ruff",
     "semver",
     "tomli; python_version < '3.11'",
     "twine",
@@ -91,9 +90,6 @@ default-groups = ["dev"]
 [tool.hatch.build.targets.wheel]
 packages = ["src/djtools"]
 
-[tool.black]
-line-length = 79
-
 [tool.coverage.run]
 source = ["src"]
 omit = ["src/djtools/__main__.py"]
@@ -103,57 +99,66 @@ exclude_lines = [
     "pragma: no cover"
 ]
 
-[tool.pylint.DESIGN]
-disable = [
-    "abstract-class-instantiated",
-    "broad-except",
-    "import-outside-toplevel",
-    "logging-not-lazy",
-    "no-name-in-module",
-    "too-many-positional-arguments",
-    "too-many-return-statements"
+[tool.ruff]
+line-length = 79
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes
+    "I",      # isort
+    "N",      # pep8-naming
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "G",      # flake8-logging-format
+    "PL",     # Pylint
+    "RUF",    # Ruff-specific rules
 ]
-good-names = [
-    "user"
+ignore = [
+    "E402",     # module-import-not-at-top-of-file (intentional)
+    "E501",     # line-too-long (formatter handles this)
+    "G004",     # logging-fstring-interpolation (style choice)
+    "PLC0415",  # import-outside-top-level (intentional lazy imports)
 ]
+
+[tool.ruff.lint.pylint]
 max-args = 10
-max-attributes = 15
 max-branches = 25
-max-locals = 35
-max-statements = 100
-min-public-methods = 0
 max-returns = 8
+max-statements = 100
+max-public-methods = 100
 
-[tool.pylint.LOGGING]
-disable = [
-    "logging-fstring-interpolation"
+[tool.ruff.lint.per-file-ignores]
+# Scripts have intentional patterns that would require significant refactoring
+"scripts/collection/get_hot_cue_timings.py" = [
+    "B018",   # useless-expression (intentional property access for side effects)
+    "G002",   # logging-percent-format (legacy script)
 ]
-
-[tool.pylint.SPELLING]
-spelling-ignore-words = [
-    "/dj/", "dj/",
-    "arg", "args", "argparse", "argparser", "args", "async", "async", "asyncpraw", "aws", "awscli",
-    "bandcamp", "beatcloud", "beatcloud", "beatgrid", "beatport", "bitrate", "bool", "boolean",
-    "cfg", "cli", "cmd", "config", "configs", "cp",
-    "datetime", "deduplicate", "de", "del", "denon", "deserialize", "deserializes", "dest", "dirs", "dj", "djtools", "dicts", "dl", "dnb", "dubstep", "dunder", "dunder",
-    "entrypoint", "exc",
-    "ffmpeg", "fixturename", "formatter", "fullloader", "func",
-    "hh", "hh:mm:ss", "hookimpl", "hookwrapper",
-    "init",
-    "json",
-    "kbps", "kwarg", "kwargs",
-    "levenshtein", "lookups",
-    "misformattings",
-    "namespace", "namespace",
-    "pathlib", "parsers", "picard", "popen", "pragma", "praw", "pre", "proc", "pydantic", "pytest",
-    "reddit", "reddit", "rekordbox", "rekordbox", "rekordbox's", "relocations", "repr",
-    "s3", "serato", "serializable", "spotipy", "soundcloud", "spotify", "spotify", "stderr", "stdout", "str", "subprocess", "subreddit", "subreddits", "substrings", "superclass", "symlink", "symlinks",
-    "teardown", "techstep", "tmpdir", "trackid", "traktor",
-    "unattributable", "unioned", "unioning", "unix", "url", "utils",
-    "validator",
-    "wav", "wb", "webhook", "whitespace",
-    "xml", "xml's",
-    "yaml", "youtube",
+"scripts/collection/move_tags.py" = [
+    "PLW2901",  # redefined-loop-name (intentional transformations)
+]
+"scripts/collection/update_collection.py" = [
+    "PLW2901",  # redefined-loop-name (intentional groupby pattern)
+]
+"scripts/collection/user_vibe_analysis.py" = [
+    "B020",     # loop-variable-overrides-iterator (intentional groupby pattern)
+    "PLW2901",  # redefined-loop-name (intentional groupby pattern)
+]
+"scripts/repair/move_music_new_structure.py" = [
+    "G003",     # logging-string-concat (complex string building)
+    "PLR0913",  # too-many-arguments (would require refactor)
+    "PLW2901",  # redefined-loop-name (intentional transformations)
+]
+"scripts/repair/rename_files.py" = [
+    "PLR2004",  # magic-value-comparison (sample rate constant)
+]
+"scripts/repair/swap_title_artist.py" = [
+    "G003",   # logging-string-concat (complex string building)
+]
+"scripts/testing/parse_pytest_output.py" = [
+    "PLW2901",  # redefined-loop-name (intentional transformations)
 ]
 
 [tool.pytest.ini_options]

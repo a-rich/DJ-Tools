@@ -5,8 +5,7 @@ from typing import Type
 
 from pydub import AudioSegment, effects, utils
 
-from djtools.utils.helpers import get_local_tracks
-
+from djtools.utils.helpers import HEADROOM_TOLERANCE, get_local_tracks
 
 logger = logging.getLogger(__name__)
 pydub_logger = logging.getLogger("pydub.converter")
@@ -44,7 +43,10 @@ def normalize(config: BaseConfig):
             logger.error(f"Couldn't decode {track}: {exc}")
             continue
 
-        if abs(audio.max_dBFS + config.utils.audio_headroom) > 0.001:
+        if (
+            abs(audio.max_dBFS + config.utils.audio_headroom)
+            > HEADROOM_TOLERANCE
+        ):
             logger.info(
                 f"{track} has a max dB of {audio.max_dBFS}, normalizing to "
                 f"have a headroom of {config.utils.audio_headroom}..."

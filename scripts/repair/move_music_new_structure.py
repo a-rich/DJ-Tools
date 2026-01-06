@@ -3,19 +3,19 @@ structure to the new username-top-level structure.
 """
 
 # pylint: disable=too-many-arguments,duplicate-code,no-member
-from argparse import ArgumentParser
-from concurrent.futures import ThreadPoolExecutor
-from itertools import groupby
 import json
 import logging
 import logging.config
-from operator import itemgetter
 import os
+from argparse import ArgumentParser
+from concurrent.futures import ThreadPoolExecutor
+from itertools import groupby
+from operator import itemgetter
 from urllib.parse import quote, unquote
 
+import spotipy
 from bs4 import BeautifulSoup
 from fuzzywuzzy import fuzz
-import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
 for logger in ["spotipy", "urllib3"]:

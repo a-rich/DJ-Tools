@@ -1,6 +1,7 @@
 """Testing for the collection module."""
 
 import bs4
+import pytest
 
 from djtools.collection.rekordbox_collection import (
     CustomSubstitution,
@@ -85,7 +86,9 @@ def test_rekordboxcollection_get_tracks(
     # to the deserialized collection.
     assert (
         a[0] == b[0] and str(a[1]) == str(b[1])
-        for a, b in zip(tracks.items(), collection.get_tracks().items())
+        for a, b in zip(
+            tracks.items(), collection.get_tracks().items(), strict=True
+        )
     )
 
 
@@ -117,7 +120,7 @@ def test_rekordboxcollection_serialization(rekordbox_xml):
     try:
         RekordboxCollection.validate(rekordbox_xml, serialized_collection)
     except AssertionError:
-        assert False, "RekordboxCollection validation failed!"
+        pytest.fail("RekordboxCollection validation failed!")
 
 
 def test_rekordboxcollection_set_tracks(rekordbox_xml):

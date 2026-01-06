@@ -20,9 +20,9 @@ def test_process_handles_missing_or_empty_playlist(config):
     with pytest.raises(
         RuntimeError,
         match=(
-            "There are no Spotify tracks; make sure "
-            "download_spotify_playlist is a key from "
-            "spotify_playlists.yaml"
+            r"There are no Spotify tracks; make sure "
+            r"download_spotify_playlist is a key from "
+            r"spotify_playlists\.yaml"
         ),
     ):
         process(config)
@@ -227,9 +227,7 @@ def test_process(
     mock_audio.return_value = AudioSegment.silent(duration=30000)
     mock_normalize.return_value = mock_audio.return_value
 
-    def mock_export_function(
-        filename, **kwargs
-    ):  # pylint: disable=unused-argument
+    def mock_export_function(filename, **kwargs):  # pylint: disable=unused-argument
         with open(filename, mode="wb") as _file:
             _file.write(b"")
 

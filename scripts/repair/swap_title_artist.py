@@ -48,27 +48,27 @@ while retaining the original beatgrid, hot cues, etc.
 """
 
 # pylint: disable=import-error,no-member
-from argparse import ArgumentParser
-from datetime import datetime
-from glob import glob
 import json
 import logging
 import os
+from argparse import ArgumentParser
+from datetime import datetime
+from glob import glob
 from urllib.parse import quote, unquote
 
-from fuzzywuzzy import fuzz
-from bs4 import BeautifulSoup
 import eyed3
+from bs4 import BeautifulSoup
+from fuzzywuzzy import fuzz
 
 eyed3.log.setLevel("ERROR")
 
 
 logger = logging.getLogger(__name__)
-IGNORE_TRACKS = set(["Scratch Sentence 5.mp3", "Scratch Sentence 1.mp3"])
+IGNORE_TRACKS = {"Scratch Sentence 5.mp3", "Scratch Sentence 1.mp3"}
 
 
 try:
-    import Levenshtein  # pylint: disable=unused-import
+    import Levenshtein  # noqa: F401
 except ImportError:
     logger.warning(
         "NOTE: Track similarity can be made faster by running "
@@ -102,7 +102,7 @@ def get_bad_tracks(_args):
             continue
 
         file_title = os.path.basename(_file).split(" - ")[0]
-        tag_title = getattr(eyed3.load(_file).tag, "title")
+        tag_title = eyed3.load(_file).tag.title
         fuzz_ratio = fuzz.ratio(
             file_title.lower().strip(), tag_title.lower().strip()
         )

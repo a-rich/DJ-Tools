@@ -11,7 +11,7 @@ The purpose of this utility is to:
 # pylint: disable=duplicate-code
 import os
 from collections import defaultdict
-from concurrent.futures import as_completed, ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Optional, Type
 
@@ -20,7 +20,6 @@ from tqdm import tqdm
 from djtools.collection.helpers import copy_file
 from djtools.collection.platform_registry import PLATFORM_REGISTRY
 from djtools.utils.helpers import make_path
-
 
 BaseConfig = Type["BaseConfig"]
 
@@ -89,6 +88,7 @@ def copy_playlists(config: BaseConfig, path: Optional[Path] = None):
     payload = zip(
         playlist_tracks.values(),
         [config.collection.copy_playlists_destination] * len(playlist_tracks),
+        strict=True,
     )
 
     with ThreadPoolExecutor(

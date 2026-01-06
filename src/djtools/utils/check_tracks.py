@@ -10,12 +10,11 @@ from typing import List, Optional, Tuple, Type
 
 from djtools.utils.helpers import (
     find_matches,
-    get_spotify_tracks,
     get_beatcloud_tracks,
     get_local_tracks,
+    get_spotify_tracks,
     reverse_title_and_artist,
 )
-
 
 logger = logging.getLogger(__name__)
 BaseConfig = Type["BaseConfig"]
@@ -110,11 +109,11 @@ def compare_tracks(
             config,
         )
         logger.info(f"\n{track_type} / Beatcloud Matches: {len(matches)}")
-        for loc, matches in groupby(
+        for loc, match_group in groupby(
             sorted(matches, key=itemgetter(0)), key=itemgetter(0)
         ):
             logger.info(f"{loc}:")
-            for _, track, beatcloud_track, fuzz_ratio in matches:
+            for _, track, beatcloud_track, fuzz_ratio in match_group:
                 beatcloud_matches.append(path_lookup[beatcloud_track])
                 logger.info(f"\t{fuzz_ratio}: {track} | {beatcloud_track}")
 

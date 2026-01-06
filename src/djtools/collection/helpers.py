@@ -22,8 +22,15 @@ from djtools.collection.config import (
 from djtools.collection.playlist_filters import PlaylistFilter
 from djtools.utils.helpers import make_path
 
-
 logger = logging.getLogger(__name__)
+
+# Constants for numerical selector validation
+RANGE_SPLIT_PARTS = 2  # A range like "80-180" splits into exactly 2 parts
+MIN_RATING = 0
+MAX_RATING = 5
+MIN_BPM = 6
+MAX_BPM = 999
+MIN_YEAR = 1000  # Years are 4 digits (1000+)
 NUMERICAL_SELECTOR_REGEX = re.compile(r"(?<=\[)[^\[\]]*(?=\])")
 STRING_SELECTOR_REGEX = re.compile(r"(?<={)[^{}]+:[^{}]+(?=})")
 DATE_SELECTOR_REGEX = re.compile(r"(>=|>|<=|<)")
@@ -85,6 +92,64 @@ def copy_file(track: Track, destination: Path):
 #   - scale_data: scales tag frequencies to normalize histogram height
 #   - print_data: formats the string representing ASCII histograms
 # #############################################################################
+
+
+def _build_pure_tag_playlist(
+    tag: str,
+    name: str,
+    tags_tracks: Dict[str, Dict[str, Track]],
+    playlist_class: Playlist,
+    minimum_tracks: Optional[int],
+    enable_aggregation: Optional[bool],
+) -> Optional[Playlist]:
+    """Build a "pure" playlist containing only tracks where all genres match.
+
+    "Pure" playlists contain tracks with a set of genre tags that all contain
+    the sub-string indicated by the tag. For example, "Pure Techno" will
+    contain tracks that have genres {"Hard Techno", "Melodic Techno"} but will
+    not contain tracks that have {"Hard Techno", "Tech House"} because
+    "Tech House" does not contain "Techno" as a sub-string.
+
+    Args:
+        tag: The tag to create a pure playlist for (e.g., "Techno").
+        name: The name to give the playlist.
+        tags_tracks: Dict of tags to tracks.
+        playlist_class: Playlist implementation class.
+        minimum_tracks: Required number of tracks to make a playlist.
+        enable_aggregation: Whether to enable aggregation for this playlist.
+
+    Returns:
+        A Playlist or None if conditions aren't met.
+    """
+    tracks_with_tag = tags_tracks.get(tag)
+    if not tracks_with_tag:
+        logger.warning(
+            f'Can\'t make a "Pure {tag}" playlist because there are no '
+            "tracks with that tag."
+        )
+        return None
+
+    # Filter out tracks that aren't pure.
+    pure_tag_tracks = {
+        track_id: track
+        for track_id, track in tracks_with_tag.items()
+        if all(tag.lower() in _.lower() for _ in track.get_genre_tags())
+    }
+    if not pure_tag_tracks:
+        logger.warning(
+            f'Can\'t make a "Pure {tag}" playlist because there are no '
+            f"tracks that are pure {tag}."
+        )
+        return None
+
+    if minimum_tracks and len(pure_tag_tracks) < minimum_tracks:
+        return None
+
+    return playlist_class.new_playlist(
+        name=name,
+        tracks=pure_tag_tracks,
+        enable_aggregation=enable_aggregation,
+    )
 
 
 def build_tag_playlists(
@@ -167,43 +232,15 @@ def build_tag_playlists(
     else:
         tag_content = name = content
 
-    # Apply special logic for creating a "pure" playlist. "Pure" playlists are
-    # those that contain tracks with a set of genre tags that all contain the
-    # sub-string indicated by the suffix of the playlist name. For example,
-    # "Pure Techno" will contain tracks that have genres {"Hard Techno",
-    # "Melodic Techno"} but will not contain tracks that contain
-    # {"Hard Techno", "Tech House"} because "Tech House" does not contain
-    # "Techno" as a sub-string.
+    # Handle "Pure" playlists via helper function.
     if tag_content.startswith("Pure "):
-        # Isolate the tag to create a pure playlist for.
         tag = tag_content.split("Pure ")[-1]
-        tracks_with_tag = tags_tracks.get(tag)
-        if not tracks_with_tag:
-            logger.warning(
-                f'Can\'t make a "Pure {tag}" playlist because there are no '
-                "tracks with that tag."
-            )
-            return None
-
-        # Filter out tracks that aren't pure.
-        pure_tag_tracks = {
-            track_id: track
-            for track_id, track in tracks_with_tag.items()
-            if all(tag.lower() in _.lower() for _ in track.get_genre_tags())
-        }
-        if not pure_tag_tracks:
-            logger.warning(
-                f'Can\'t make a "Pure {tag}" playlist because there are no '
-                f"tracks that are pure {tag}."
-            )
-            return None
-
-        if minimum_tracks and len(pure_tag_tracks) < minimum_tracks:
-            return None
-
-        return playlist_class.new_playlist(
+        return _build_pure_tag_playlist(
+            tag=tag,
             name=name,
-            tracks=pure_tag_tracks,
+            tags_tracks=tags_tracks,
+            playlist_class=playlist_class,
+            minimum_tracks=minimum_tracks,
             enable_aggregation=enable_aggregation,
         )
 
@@ -522,17 +559,15 @@ def parse_numerical_selectors(
         if match.isdigit():
             numerical_values.add(match)
         # If "match" is two digits separated by a "-", then it's a range.
-        elif len(match.split("-")) == 2 and all(
+        elif len(match.split("-")) == RANGE_SPLIT_PARTS and all(
             x.isdigit() for x in match.split("-")
         ):
             _range = list(map(int, match.split("-")))
             _range = range(min(_range), max(_range) + 1)
             if not (
-                all(0 <= x <= 5 for x in _range)
-                or all(6 <= x <= 999 for x in _range)  # range for ratings
-                or all(  # range for BPMs
-                    x >= 1000 for x in _range
-                )  # range for years
+                all(MIN_RATING <= x <= MAX_RATING for x in _range)
+                or all(MIN_BPM <= x <= MAX_BPM for x in _range)
+                or all(x >= MIN_YEAR for x in _range)
             ):
                 logger.error(f"Bad numerical range selector: {match}")
                 continue

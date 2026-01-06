@@ -8,7 +8,7 @@ import logging.config
 import os
 import pathlib
 import typing
-from concurrent.futures import as_completed, ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from functools import wraps
 from itertools import product
@@ -28,11 +28,13 @@ from typing import (
 
 from fuzzywuzzy import fuzz
 from pydub import AudioSegment, effects, silence
+
+# Tolerance for headroom comparison (in dB)
+HEADROOM_TOLERANCE = 0.001
 from tqdm import tqdm
 
 from djtools.spotify.helpers import get_playlist_ids, get_spotify_client
 from djtools.utils.config import TrimInitialSilenceMode
-
 
 logger = logging.getLogger(__name__)
 BaseConfig = Type["BaseConfig"]
@@ -88,13 +90,14 @@ def find_matches(
         for track in tracks
     ]
     _product = list(product(playlist_tracks, beatcloud_tracks))
-    _temp, beatcloud_tracks = zip(*_product)
-    locations, tracks = zip(*_temp)
+    _temp, beatcloud_tracks = zip(*_product, strict=True)
+    locations, tracks = zip(*_temp, strict=True)
     payload = zip(
         locations,
         tracks,
         beatcloud_tracks,
         [config.utils.check_tracks_fuzz_ratio] * len(_product),
+        strict=True,
     )
 
     with ThreadPoolExecutor(
@@ -217,7 +220,7 @@ def get_spotify_tracks(
         playlist_tracks[playlist] = get_playlist_tracks(spotify, playlist_id)
         length = len(playlist_tracks[playlist])
         logger.info(
-            f'Got {length} track{"" if length == 1 else "s"} from Spotify '
+            f"Got {length} track{'' if length == 1 else 's'} from Spotify "
             f'playlist "{playlist}"'
         )
         _sum += length
@@ -226,7 +229,7 @@ def get_spotify_tracks(
             for track in playlist_tracks[playlist]:
                 logger.info(f"\t{track}")
     logger.info(
-        f'Got {_sum} track{"" if _sum == 1 else "s"} from Spotify in total'
+        f"Got {_sum} track{'' if _sum == 1 else 's'} from Spotify in total"
     )
 
     return playlist_tracks
@@ -241,7 +244,7 @@ def initialize_logger() -> Tuple[logging.Logger, str]:
     log_file = (
         Path(__file__).parent.parent
         / "logs"
-        / f'{datetime.now().strftime("%Y-%m-%d")}.log'
+        / f"{datetime.now().strftime('%Y-%m-%d')}.log"
     )
     logging_config = {
         "version": 1,
@@ -323,8 +326,12 @@ def make_path(func: Callable) -> Callable:
         kwarg_type_hints = type_hints[:num_kwargs]
 
         # Convert each arg to a Path if the annotation type is pathlib.Path.
+        # Use strict=False because we process only the args actually passed,
+        # which may be fewer than the function signature's parameters.
         args = list(args)
-        for index, (arg, arg_type) in enumerate(zip(args, arg_type_hints)):
+        for index, (arg, arg_type) in enumerate(
+            zip(args, arg_type_hints, strict=False)
+        ):
             # Skip if the arg shouldn't be a path or it should be a Path but
             # already is.
             if arg_type not in path_types or (
@@ -343,7 +350,10 @@ def make_path(func: Callable) -> Callable:
         args = tuple(args)
 
         # Convert each kwarg to a Path if the annotation type is pathlib.Path.
-        for (key, value), arg_type in zip(kwargs.items(), kwarg_type_hints):
+        # Use strict=False because we process only the kwargs actually passed.
+        for (key, value), arg_type in zip(
+            kwargs.items(), kwarg_type_hints, strict=False
+        ):
             # Skip if the arg value shouldn't be a path or it should be a Path
             # but already is.
             if arg_type not in path_types or (
@@ -381,14 +391,14 @@ def process_parallel(
     """
     # Normalize the audio such that the headroom is
     # audio_headroom dB.
-    if abs(audio.max_dBFS + config.utils.audio_headroom) > 0.001:
+    if abs(audio.max_dBFS + config.utils.audio_headroom) > HEADROOM_TOLERANCE:
         audio = effects.normalize(audio, headroom=config.utils.audio_headroom)
 
     # Build the filename using the title, artist(s) and configured format.
     filename = (
-        f'{track["artist"]} - {track["title"]}'
+        f"{track['artist']} - {track['title']}"
         if config.sync.artist_first
-        else f'{track["title"]} - {track["artist"]}'
+        else f"{track['title']} - {track['artist']}"
     )
     filename = write_path / f"{filename}.{config.utils.audio_format.value}"
 
@@ -509,7 +519,7 @@ def trim_initial_silence(
         # Sort scores in decreasing order.
         scores = sorted(scores, key=itemgetter(0), reverse=True)
         # Get the offsets for the highest two scores.
-        _, offsets = zip(*sorted(scores[:2], key=itemgetter(1)))
+        _, offsets = zip(*sorted(scores[:2], key=itemgetter(1)), strict=True)
         step_size //= 2
 
     # Trim off the start of the recording using the best offset.

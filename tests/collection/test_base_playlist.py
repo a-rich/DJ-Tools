@@ -4,7 +4,6 @@ import pytest
 
 from djtools.collection.base_playlist import Playlist
 
-
 # pylint:disable=missing-class-docstring,no-method-argument,arguments-differ,protected-access
 
 

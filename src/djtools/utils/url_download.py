@@ -13,7 +13,6 @@ import youtube_dl as ytdl
 
 from djtools.utils.helpers import make_path
 
-
 logger = logging.getLogger(__name__)
 BaseConfig = Type["BaseConfig"]
 

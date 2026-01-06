@@ -10,10 +10,9 @@ from typing import List, Optional, Union
 
 import yaml
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
-from pydantic import BaseModel, PositiveInt, ValidationError
+from pydantic import BaseModel, Field, PositiveInt, ValidationError
 
 from djtools.configs.config_formatter import BaseConfigFormatter
-
 
 logger = logging.getLogger(__name__)
 
@@ -88,17 +87,19 @@ class CollectionConfig(BaseConfigFormatter):
     """Configuration object for the collection package."""
 
     collection_path: Optional[Path] = None
-    collection_playlist_filters: List[PlaylistFilters] = []
+    collection_playlist_filters: List[PlaylistFilters] = Field(
+        default_factory=list
+    )
     collection_playlists: bool = False
     collection_playlists_remainder: PlaylistRemainder = (
         PlaylistRemainder.FOLDER
     )
-    copy_playlists: List[str] = []
+    copy_playlists: List[str] = Field(default_factory=list)
     copy_playlists_destination: Optional[Path] = None
     minimum_combiner_playlist_tracks: Optional[PositiveInt] = None
     minimum_tag_playlist_tracks: Optional[PositiveInt] = None
     platform: RegisteredPlatforms = RegisteredPlatforms.REKORDBOX
-    shuffle_playlists: List[str] = []
+    shuffle_playlists: List[str] = Field(default_factory=list)
     playlist_config: Optional["PlaylistConfig"] = None
 
     def __init__(self, *args, **kwargs):

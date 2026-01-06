@@ -2,8 +2,8 @@
 
 from unittest import mock
 
-import semver
 import pytest
+import semver
 
 from djtools.version import get_version
 

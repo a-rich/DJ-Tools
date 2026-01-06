@@ -5,6 +5,7 @@ from unittest import mock
 
 import pytest
 
+from djtools.utils.helpers import HEADROOM_TOLERANCE
 from djtools.utils.normalize_audio import normalize
 
 
@@ -53,7 +54,7 @@ def test_normalize(
     ):
         mock_audio_segment.return_value = audio
         normalize(config)
-        if abs(audio.max_dBFS + target_headroom) > 0.001:
+        if abs(audio.max_dBFS + target_headroom) > HEADROOM_TOLERANCE:
             mock_normalize.assert_called_once()
     # TODO(a-rich): Getting unexpected headroom readings after exporting.
     # See this issue:

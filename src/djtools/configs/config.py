@@ -6,15 +6,14 @@ correspond with the "configs" key of config.yaml."""
 import logging
 from enum import Enum
 
-from pydantic import Field, NonNegativeInt
 import yaml
+from pydantic import Field, NonNegativeInt
 
 from djtools.collection.config import CollectionConfig
 from djtools.configs.config_formatter import BaseConfigFormatter
 from djtools.spotify.config import SpotifyConfig
 from djtools.sync.config import SyncConfig
 from djtools.utils.config import UtilsConfig
-
 
 logger = logging.getLogger(__name__)
 

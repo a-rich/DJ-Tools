@@ -9,6 +9,10 @@ from unittest import mock
 import pytest
 from pydub import AudioSegment, generators
 
+# Expected values for compute_distance tests
+PERFECT_FUZZ_RATIO = 100
+EXPECTED_MATCH_COUNT = 2
+
 from djtools.utils.config import TrimInitialSilenceMode
 from djtools.utils.helpers import (
     compute_distance,
@@ -40,7 +44,7 @@ def test_compute_distance(track_a, track_b):
         assert ret[0] == "playlist"
         assert ret[1] == track_a
         assert ret[2] == track_b
-        assert ret[3] == 100
+        assert ret[3] == PERFECT_FUZZ_RATIO
     else:
         assert not ret
 
@@ -62,14 +66,14 @@ def test_find_matches(config):
         },
         beatcloud_tracks=[
             "track 5 - who's that?",
-        ]
-        + expected_matches,
+            *expected_matches,
+        ],
         config=config,
     )
     assert all(
         match[-1] == config.utils.check_tracks_fuzz_ratio for match in matches
     )
-    assert len(matches) == 2
+    assert len(matches) == EXPECTED_MATCH_COUNT
     assert {x[1] for x in matches} == set(expected_matches)
 
 
@@ -89,12 +93,12 @@ def test_get_beatcloud_tracks(mock_os_popen, proc_dump):
     bucket_url = "s3://some-bucket.com"
     proc_dump = list(map(Path, proc_dump))
     mock_os_popen.return_value = b"\n".join(
-        map(lambda x: x.as_posix().encode(), proc_dump)
+        x.as_posix().encode() for x in proc_dump
     )
     tracks = get_beatcloud_tracks(bucket_url)
     mock_os_popen.assert_called_once()
     assert len(tracks) == len(proc_dump)
-    for track, line in zip(tracks, proc_dump):
+    for track, line in zip(tracks, proc_dump, strict=True):
         assert track == line
 
 
@@ -243,7 +247,7 @@ def test_get_spotify_tracks(
 
 def test_initialize_logger():
     """Test for the intitialize_logger function."""
-    today = f'{datetime.now().strftime("%Y-%m-%d")}.log'
+    today = f"{datetime.now().strftime('%Y-%m-%d')}.log"
     logger, log_file = initialize_logger()
     assert isinstance(logger, logging.Logger)
     assert log_file.name == today
@@ -285,9 +289,7 @@ def test_make_path_decorator_raises_error(arg, kwarg, expected):
     """Test for the make_path decorator function."""
 
     @make_path
-    def foo(
-        path_arg: Path, path_kwarg: Path
-    ):  # pylint: disable=disallowed-name
+    def foo(path_arg: Path, path_kwarg: Path):  # pylint: disable=disallowed-name
         assert isinstance(path_arg, Path)
         assert isinstance(path_kwarg, Path)
 

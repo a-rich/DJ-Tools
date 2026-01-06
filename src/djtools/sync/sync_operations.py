@@ -19,7 +19,6 @@ from djtools.sync.helpers import (
 )
 from djtools.utils.check_tracks import compare_tracks
 
-
 logger = logging.getLogger(__name__)
 BaseConfig = Type["BaseConfig"]
 
@@ -73,7 +72,7 @@ def download_music(
     run_sync(parse_sync_command(cmd, config), config.sync.bucket_url)
 
     new = {str(p) for p in dest.rglob(glob_path)}
-    difference = sorted(list(new.difference(old)), key=getmtime)
+    difference = sorted(new.difference(old), key=getmtime)
     if difference:
         logger.info(f"Found {len(difference)} new files")
         for diff in difference:

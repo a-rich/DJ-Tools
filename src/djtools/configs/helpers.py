@@ -17,15 +17,14 @@ from djtools.configs.config import BaseConfig
 from djtools.utils.helpers import make_path
 from djtools.version import get_version
 
-
 logger = logging.getLogger(__name__)
 
 
-class InvalidConfigYaml(Exception):
+class InvalidConfigYamlError(Exception):
     """Exception for invalid config."""
 
 
-class ConfigLoadFailure(Exception):
+class ConfigLoadError(Exception):
     """Exception for failing to load config."""
 
 
@@ -60,7 +59,7 @@ def build_config(
     except Exception as exc:
         msg = f"Error reading config file {config_file}: {exc}"
         logger.critical(msg)
-        raise ConfigLoadFailure(msg) from exc
+        raise ConfigLoadError(msg) from exc
 
     entry_frame_filename = inspect.stack()[-1][1]
     valid_filenames = (

@@ -14,10 +14,10 @@ except ImportError:
     import tomli as tomllib
 
 from djtools.configs.config import LogLevel
-from djtools.configs.helpers import _arg_parse, build_config, ConfigLoadFailure
+from djtools.configs.helpers import ConfigLoadError, _arg_parse, build_config
 from djtools.version import get_version
 
-from ..test_utils import mock_exists, MockOpen
+from ..test_utils import MockOpen, mock_exists
 
 
 @pytest.mark.parametrize(
@@ -97,7 +97,7 @@ def test_build_config_invalid_config_yaml(caplog):
     caplog.set_level("CRITICAL")
     with (
         mock.patch.object(Path, "exists", return_value=True),
-        pytest.raises(ConfigLoadFailure),
+        pytest.raises(ConfigLoadError),
     ):
         build_config()
     assert "Error reading" in caplog.records[0].message

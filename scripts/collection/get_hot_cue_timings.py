@@ -6,7 +6,6 @@ collection.
 import json
 import logging
 import re
-
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from string import ascii_uppercase as uppercase_letters

@@ -13,7 +13,6 @@ from djtools.sync.sync_operations import (
     upload_music,
 )
 
-
 # pylint: disable=duplicate-code
 TEST_BUCKET = "s3://some-bucket.com"
 

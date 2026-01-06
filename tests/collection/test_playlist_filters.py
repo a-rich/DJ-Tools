@@ -167,11 +167,11 @@ def test_complextrackfilter_detects_playlists(
 @pytest.mark.parametrize(
     "max_tags,tags,expected",
     [
-        (1, set(["Tag"]), True),
-        (2, set(["Tag"]), False),
-        (2, set(["Tag", "Another Tag"]), True),
-        (3, set(["Tag", "Another Tag"]), False),
-        (3, set(["Tag", "Another Tag", "Last Tag"]), True),
+        (1, {"Tag"}, True),
+        (2, {"Tag"}, False),
+        (2, {"Tag", "Another Tag"}, True),
+        (3, {"Tag", "Another Tag"}, False),
+        (3, {"Tag", "Another Tag", "Last Tag"}, True),
     ],
 )
 def test_complextrackfilter_filters_tracks(
@@ -229,8 +229,7 @@ def test_transitiontrackfilter_handles_playlist_with_multiple_supported_types():
     with pytest.raises(
         ValueError,
         match=(
-            f'"{bad_playlist}" matches multiple playlist types: genre, '
-            "tempo"
+            f'"{bad_playlist}" matches multiple playlist types: genre, tempo'
         ),
     ):
         track_filter.is_filter_playlist(playlist)

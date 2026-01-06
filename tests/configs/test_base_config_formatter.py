@@ -1,5 +1,6 @@
 """Testing for the config_formatter module."""
 
+import pytest
 from pydantic import ValidationError
 
 from djtools.configs.config_formatter import BaseConfigFormatter
@@ -57,7 +58,7 @@ def test_base_config_formatter_invalid():
 
     try:
         InvalidConfig(field="not an int")
-        assert False, "Expected ValidationError was not raised"
+        pytest.fail("Expected ValidationError was not raised")
     except ValidationError:
         pass
 

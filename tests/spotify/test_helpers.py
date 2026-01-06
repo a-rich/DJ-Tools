@@ -29,7 +29,7 @@ from djtools.spotify.helpers import (
     write_playlist_ids,
 )
 
-from ..test_utils import mock_exists, MockOpen
+from ..test_utils import MockOpen, mock_exists
 
 
 async def _aiter(obj, num_subs):
@@ -79,7 +79,7 @@ async def test_catch(message, caplog):
     caplog.set_level("WARNING")
     _ = [x async for x in _catch(Generator(), message=message)]
     assert caplog.records[0].message == (
-        f"{message}: {str(exc)}" if message else str(exc)
+        f"{message}: {exc!s}" if message else str(exc)
     )
 
 
@@ -829,9 +829,7 @@ def test_update_existing_playlist_pagination_error(mock_client, caplog):
 class MockTqdm:
     """Mock tqdm that works both as iterator and context manager."""
 
-    def __init__(
-        self, iterable=None, **kwargs
-    ):  # pylint: disable=unused-argument
+    def __init__(self, iterable=None, **kwargs):  # pylint: disable=unused-argument
         self.iterable = iterable
 
     def __iter__(self):

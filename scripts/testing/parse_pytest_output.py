@@ -7,7 +7,6 @@ from itertools import groupby
 import numpy as np
 import pyperclip
 
-
 TIME_LOWER_BOUND = 0.1
 
 

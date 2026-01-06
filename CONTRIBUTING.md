@@ -10,11 +10,11 @@ If you wish to contribute to DJ Tools, please follow these development rules:
     1. (if relevant) include updates to the [docs](https://github.com/a-rich/DJ-Tools/tree/main/docs)
 
 ## CI
-On `push` events (with `**.py` changes) to feature branches, the [format](https://github.com/a-rich/DJ-Tools/actions/workflows/format.yaml) Action will run the [black code formatter](https://github.com/psf/black) and commit changes if there are any.
+On `push` events (with `**.py` changes) to feature branches, the [format](https://github.com/a-rich/DJ-Tools/actions/workflows/format.yaml) Action will run the [ruff formatter](https://docs.astral.sh/ruff/formatter/) and commit changes if there are any.
 
-On `pull_request` events (with `src/**.py` or `tests/**.py` changes) the [test-lint](https://github.com/a-rich/DJ-Tools/actions/workflows/test-lint.yaml) Action is triggered. For build checks to pass on the PR, this Action must have `100%` test passing and coverage and a `10.00/10` linting score:
+On `pull_request` events (with `src/**.py` or `tests/**.py` changes) the [test-lint](https://github.com/a-rich/DJ-Tools/actions/workflows/test-lint.yaml) Action is triggered. For build checks to pass on the PR, this Action must have `100%` test passing and coverage and zero lint errors:
 - if you're unable to pass tests with `100%` coverage, please open an issue
-- if you're not getting a `10.00/10` lint score, first attempt to correct the errors before resorting to [messages control](https://pylint.readthedocs.io/en/latest/user_guide/messages/message_control.html)
+- if you're not passing linting, first attempt to correct the errors before resorting to [noqa comments](https://docs.astral.sh/ruff/linter/#error-suppression)
 
 On `push` events to `release/**` the following Actions are triggered:
 - [release-dev](https://github.com/a-rich/DJ-Tools/blob/pylint-check/.github/workflows/release-dev.yaml) (with `src/**.py` changes)
@@ -36,11 +36,11 @@ You can run these same checks at any time with the following commands:
 ```
 uv run pytest --cov --cov-report term-missing
 ```
-#### Lint with pylint
+#### Lint with ruff
 ```
-uv run pylint $(git ls-files '*.py')
+uv run ruff check .
 ```
-#### Format code with black
+#### Format code with ruff
 ```
-uv run black .
+uv run ruff format .
 ```

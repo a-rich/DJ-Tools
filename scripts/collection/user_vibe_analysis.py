@@ -10,9 +10,9 @@ from typing import Optional, Set
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
-from djtools.configs import build_config
 from djtools.collection.base_collection import Collection
 from djtools.collection.platform_registry import PLATFORM_REGISTRY
+from djtools.configs import build_config
 
 
 def analyze_collection_vibes(
@@ -27,7 +27,7 @@ def analyze_collection_vibes(
         included_tags: My Tags to include in the histograms.
     """
     tracks = collection.get_tracks().values()
-    tag_counts = {tag: 0 for tag in included_tags}
+    tag_counts = dict.fromkeys(included_tags, 0)
     for track in tracks:
         tags = set(track.get_tags()).difference(track.get_genre_tags())
         for tag in tags:
