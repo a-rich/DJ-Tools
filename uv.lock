@@ -672,7 +672,7 @@ wheels = [
 
 [[package]]
 name = "djtools"
-version = "2.9.1rc6"
+version = "2.9.1rc7"
 source = { editable = "." }
 dependencies = [
     { name = "asyncpraw" },
@@ -729,7 +729,7 @@ requires-dist = [
     { name = "python-levenshtein", marker = "extra == 'accelerated'" },
     { name = "pyyaml" },
     { name = "requests" },
-    { name = "spotify-tools", specifier = ">=0.0.1" },
+    { name = "spotify-tools", specifier = ">=0.0.2" },
     { name = "tqdm" },
     { name = "youtube-dl" },
 ]
@@ -2540,7 +2540,7 @@ wheels = [
 
 [[package]]
 name = "spotify-tools"
-version = "0.0.1"
+version = "0.0.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fuzzywuzzy", extra = ["speedup"] },
@@ -2549,9 +2549,9 @@ dependencies = [
     { name = "spotipy" },
     { name = "typer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ae/53/1b5e3e73cd0a4adb4f95b9e4cdd344cac4f1edd53e5c0be7d7ba085d3691/spotify_tools-0.0.1.tar.gz", hash = "sha256:4b198b605d960a4d1fc911d8d2c940ad546fc8269e153e8000c349e45e60219a", size = 121112, upload-time = "2026-01-05T20:42:05.494Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2f/f7/ad6fd464962b701d60c4faf122a0a9a1ec80700c99e0fc7b2f6ad82d58f6/spotify_tools-0.0.2.tar.gz", hash = "sha256:821eee249fc1b4d0dc26d7fe97cbc773b547e5fe1bbc98bcedcd26e4e1e8307b", size = 87203, upload-time = "2026-01-06T15:59:51.561Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/71/02/70c24f699a05b184b250b70b612c8c8c9c2b9a0a7f8c069f8144f938a2e1/spotify_tools-0.0.1-py3-none-any.whl", hash = "sha256:241dd69f8478f53b39b0f7f386197a04926843552f0a19d0d4c9048695334712", size = 26107, upload-time = "2026-01-05T20:42:03.893Z" },
+    { url = "https://files.pythonhosted.org/packages/ed/99/d2ef3efdad1a563f95804fc048fa64b1e455fcbe46de993173b86c1208d1/spotify_tools-0.0.2-py3-none-any.whl", hash = "sha256:bed7c65f7c0b940a3ef6a1e5392d9616ecd8473e3bff01cd4c94f961ff71e7a4", size = 25490, upload-time = "2026-01-06T15:59:50.072Z" },
 ]
 
 [[package]]
