@@ -8,14 +8,13 @@ import logging
 from datetime import datetime, timedelta
 from itertools import groupby
 from pathlib import Path
-from subprocess import Popen, PIPE, CalledProcessError
+from subprocess import PIPE, CalledProcessError, Popen
 from typing import Optional, Type
 
 import requests
 
 from djtools.collection.platform_registry import PLATFORM_REGISTRY
 from djtools.utils.helpers import make_path
-
 
 logger = logging.getLogger(__name__)
 BaseConfig = Type["BaseConfig"]
@@ -49,7 +48,7 @@ def parse_sync_command(
         directories = map(
             Path,
             getattr(
-                config.sync, f'{"up" if upload else "down"}load_include_dirs'
+                config.sync, f"{'up' if upload else 'down'}load_include_dirs"
             ),
         )
         for _dir in directories:
@@ -67,7 +66,7 @@ def parse_sync_command(
         directories = map(
             Path,
             getattr(
-                config.sync, f'{"up" if upload else "down"}load_exclude_dirs'
+                config.sync, f"{'up' if upload else 'down'}load_exclude_dirs"
             ),
         )
         for _dir in directories:

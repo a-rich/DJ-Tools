@@ -11,7 +11,6 @@ from typing import List, Optional
 
 from djtools.configs.config_formatter import BaseConfigFormatter
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -78,9 +77,7 @@ class SyncConfig(BaseConfigFormatter):
                 logger.critical(msg)
                 raise RuntimeError(msg)
 
-        os.environ["AWS_PROFILE"] = (
-            self.aws_profile
-        )  # pylint: disable=no-member
+        os.environ["AWS_PROFILE"] = self.aws_profile  # pylint: disable=no-member
 
         if any([self.download_music, self.upload_music]) and not self.usb_path:
             msg = (

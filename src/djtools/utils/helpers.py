@@ -8,7 +8,7 @@ import logging.config
 import os
 import pathlib
 import typing
-from concurrent.futures import as_completed, ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from functools import wraps
 from itertools import product
@@ -32,7 +32,6 @@ from tqdm import tqdm
 
 from djtools.spotify.helpers import get_playlist_ids, get_spotify_client
 from djtools.utils.config import TrimInitialSilenceMode
-
 
 logger = logging.getLogger(__name__)
 BaseConfig = Type["BaseConfig"]
@@ -217,7 +216,7 @@ def get_spotify_tracks(
         playlist_tracks[playlist] = get_playlist_tracks(spotify, playlist_id)
         length = len(playlist_tracks[playlist])
         logger.info(
-            f'Got {length} track{"" if length == 1 else "s"} from Spotify '
+            f"Got {length} track{'' if length == 1 else 's'} from Spotify "
             f'playlist "{playlist}"'
         )
         _sum += length
@@ -226,7 +225,7 @@ def get_spotify_tracks(
             for track in playlist_tracks[playlist]:
                 logger.info(f"\t{track}")
     logger.info(
-        f'Got {_sum} track{"" if _sum == 1 else "s"} from Spotify in total'
+        f"Got {_sum} track{'' if _sum == 1 else 's'} from Spotify in total"
     )
 
     return playlist_tracks
@@ -241,7 +240,7 @@ def initialize_logger() -> Tuple[logging.Logger, str]:
     log_file = (
         Path(__file__).parent.parent
         / "logs"
-        / f'{datetime.now().strftime("%Y-%m-%d")}.log'
+        / f"{datetime.now().strftime('%Y-%m-%d')}.log"
     )
     logging_config = {
         "version": 1,
@@ -386,9 +385,9 @@ def process_parallel(
 
     # Build the filename using the title, artist(s) and configured format.
     filename = (
-        f'{track["artist"]} - {track["title"]}'
+        f"{track['artist']} - {track['title']}"
         if config.sync.artist_first
-        else f'{track["title"]} - {track["artist"]}'
+        else f"{track['title']} - {track['artist']}"
     )
     filename = write_path / f"{filename}.{config.utils.audio_format.value}"
 

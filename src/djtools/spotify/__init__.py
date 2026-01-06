@@ -10,7 +10,6 @@ from djtools.spotify.playlist_builder import (
     spotify_playlists,
 )
 
-
 SPOTIFY_OPERATIONS = {
     "spotify_playlist_from_upload": spotify_playlist_from_upload,
     "spotify_playlists": spotify_playlists,

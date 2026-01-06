@@ -7,7 +7,6 @@ from pydub import AudioSegment, effects, utils
 
 from djtools.utils.helpers import get_local_tracks
 
-
 logger = logging.getLogger(__name__)
 pydub_logger = logging.getLogger("pydub.converter")
 pydub_logger.setLevel(logging.CRITICAL)

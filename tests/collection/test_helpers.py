@@ -17,15 +17,15 @@ from djtools.collection.config import (
     RegisteredPlatforms,
 )
 from djtools.collection.helpers import (
+    DATE_SELECTOR_REGEX,
+    INEQUALITY_MAP,
+    BooleanNode,
     add_selectors_to_tags,
     aggregate_playlists,
-    BooleanNode,
     build_combiner_playlists,
     build_tag_playlists,
     copy_file,
-    DATE_SELECTOR_REGEX,
     filter_tag_playlists,
-    INEQUALITY_MAP,
     parse_expression,
     parse_numerical_selectors,
     parse_string_selectors,
@@ -37,7 +37,6 @@ from djtools.collection.helpers import (
 from djtools.collection.platform_registry import PLATFORM_REGISTRY
 from djtools.collection.rekordbox_collection import RekordboxCollection
 from djtools.collection.rekordbox_playlist import RekordboxPlaylist
-
 
 # pylint: disable=duplicate-code
 
@@ -66,14 +65,11 @@ def test_platform_registry_structure():
         assert isinstance(registered_software, RegisteredPlatforms)
         assert isinstance(impls, dict)
         assert set(impls.keys()) == required_class_impl_keys
-        assert (
-            set(
-                base
-                for class_impl in impls.values()
-                for base in class_impl.__bases__
-            )
-            == required_base_class_impls
-        )
+        assert {
+            base
+            for class_impl in impls.values()
+            for base in class_impl.__bases__
+        } == required_base_class_impls
 
 
 def test_build_tag_playlists_minimum_tracks_config():
@@ -100,7 +96,7 @@ def test_build_tag_playlists_pure_playlist_minimum_tracks_config(
 ):
     """Test the build_tag_playlists function."""
     tracks = rekordbox_collection.get_tracks()
-    example_track = tracks[list(tracks)[0]]
+    example_track = tracks[next(iter(tracks))]
     playlist_content = PlaylistConfigContent(
         name="playlists",
         playlists=["Pure Tag"],
@@ -659,15 +655,13 @@ def test_parse_string_selectors():
                 inequality, date = filter(
                     None, re.split(DATE_SELECTOR_REGEX, key[1])
                 )
-                key[1] = tuple(
-                    [
-                        INEQUALITY_MAP[inequality],
-                        datetime.strptime(date, "%Y"),
-                        "%Y",
-                    ]
+                key[1] = (
+                    INEQUALITY_MAP[inequality],
+                    datetime.strptime(date, "%Y"),
+                    "%Y",
                 )
             else:
-                key[1] = tuple([None, datetime.strptime(key[1], "%Y"), "%Y"])
+                key[1] = (None, datetime.strptime(key[1], "%Y"), "%Y")
             key = tuple(key)
         assert key in string_lookup
         assert string_lookup[key] == f"{{{match}}}"
@@ -739,7 +733,7 @@ def test_booleannode_evaluate(operators, tags, expected):
         "Tech House": [3, 5, 6],
         "Techno": [11, 12],
     }
-    tracks = {k: {x: None for x in v} for k, v in tracks.items()}
+    tracks = {k: dict.fromkeys(v) for k, v in tracks.items()}
     node = BooleanNode(tracks)
     for operator in operators:
         node.add_operator(operator)

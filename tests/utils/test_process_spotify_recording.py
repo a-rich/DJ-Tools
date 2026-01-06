@@ -227,9 +227,7 @@ def test_process(
     mock_audio.return_value = AudioSegment.silent(duration=30000)
     mock_normalize.return_value = mock_audio.return_value
 
-    def mock_export_function(
-        filename, **kwargs
-    ):  # pylint: disable=unused-argument
+    def mock_export_function(filename, **kwargs):  # pylint: disable=unused-argument
         with open(filename, mode="wb") as _file:
             _file.write(b"")
 

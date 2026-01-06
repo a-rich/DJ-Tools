@@ -6,9 +6,8 @@ from itertools import groupby
 from pathlib import Path
 from subprocess import Popen
 
-from djtools.configs import build_config
 from djtools.collection.platform_registry import PLATFORM_REGISTRY
-
+from djtools.configs import build_config
 
 if __name__ == "__main__":
     # Parse command-line arguments.

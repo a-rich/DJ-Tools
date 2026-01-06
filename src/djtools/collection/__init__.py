@@ -29,7 +29,6 @@ from djtools.collection.rekordbox_playlist import RekordboxPlaylist
 from djtools.collection.rekordbox_track import RekordboxTrack
 from djtools.collection.shuffle_playlists import shuffle_playlists
 
-
 COLLECTION_OPERATIONS = {
     "collection_playlists": collection_playlists,
     "copy_playlists": copy_playlists,
@@ -38,10 +37,10 @@ COLLECTION_OPERATIONS = {
 
 
 __all__ = (
-    "collection_playlists",
-    "copy_playlists",
     "RekordboxCollection",
     "RekordboxPlaylist",
     "RekordboxTrack",
+    "collection_playlists",
+    "copy_playlists",
     "shuffle_playlists",
 )

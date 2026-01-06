@@ -35,7 +35,8 @@ jobs:
       - name: Format code
         id: format_code
         run: |
-          uv run black .
+          uv run ruff format .
+          uv run ruff check --fix .
           echo "DIFF=$(git diff --name-only)" >> $GITHUB_OUTPUT
 
       - name: Commit changes

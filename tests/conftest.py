@@ -10,10 +10,10 @@ import yaml
 from bs4 import BeautifulSoup
 from pydub import AudioSegment, generators
 
-from djtools.configs.config import BaseConfig
 from djtools.collection.config import PlaylistConfig
 from djtools.collection.rekordbox_collection import RekordboxCollection
 from djtools.collection.rekordbox_track import RekordboxTrack
+from djtools.configs.config import BaseConfig
 
 
 @pytest.fixture
@@ -157,9 +157,7 @@ def rekordbox_collection_tag(
 ):  # pylint: disable=redefined-outer-name
     """Fixture for Rekordbox collection tag."""
     with open(rekordbox_xml, mode="r", encoding="utf-8") as _file:
-        xml = BeautifulSoup(
-            _file.read(), "xml"
-        )  # pylint: disable=redefined-outer-name
+        xml = BeautifulSoup(_file.read(), "xml")  # pylint: disable=redefined-outer-name
 
     return xml
 

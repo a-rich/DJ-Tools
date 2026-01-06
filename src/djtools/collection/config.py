@@ -14,7 +14,6 @@ from pydantic import BaseModel, PositiveInt, ValidationError
 
 from djtools.configs.config_formatter import BaseConfigFormatter
 
-
 logger = logging.getLogger(__name__)
 
 

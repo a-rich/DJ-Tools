@@ -18,7 +18,6 @@ from djtools.utils.normalize_audio import normalize
 from djtools.utils.process_recording import process
 from djtools.utils.url_download import url_download
 
-
 UTILS_OPERATIONS = {
     "check_tracks": compare_tracks,
     "normalize_audio": normalize,

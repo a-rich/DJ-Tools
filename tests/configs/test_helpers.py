@@ -14,10 +14,10 @@ except ImportError:
     import tomli as tomllib
 
 from djtools.configs.config import LogLevel
-from djtools.configs.helpers import _arg_parse, build_config, ConfigLoadFailure
+from djtools.configs.helpers import ConfigLoadFailure, _arg_parse, build_config
 from djtools.version import get_version
 
-from ..test_utils import mock_exists, MockOpen
+from ..test_utils import MockOpen, mock_exists
 
 
 @pytest.mark.parametrize(

@@ -79,8 +79,10 @@ class Collection(ABC):
             ):
                 playlists.append(playlist)
             if playlist.is_folder():
-                for playlist in playlist:
-                    playlists.extend(playlist.get_playlists(name, glob=glob))
+                for sub_playlist in playlist:
+                    playlists.extend(
+                        sub_playlist.get_playlists(name, glob=glob)
+                    )
 
         return [playlist for playlist in playlists if playlist is not None]
 

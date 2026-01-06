@@ -12,7 +12,6 @@ from pydantic import BaseModel, NonNegativeInt
 from djtools.configs.config_formatter import BaseConfigFormatter
 from djtools.spotify.enums import SubredditPeriod, SubredditType
 
-
 logger = logging.getLogger(__name__)
 
 

@@ -27,21 +27,14 @@ repos:
         language: system
         pass_filenames: false
 
-      - id: pylint
-        name: Run pylint
-        entry:  |
-          bash -c '
-          uv run pylint $(git ls-files "*.py") | tee pylint_output.txt
-          if ! grep -q "Your code has been rated at 10.00/10" pylint_output.txt; then
-            echo "Lint score is below 10/10." >&2
-            exit 1
-          fi
-          '
+      - id: ruff-check
+        name: Run ruff linter
+        entry: bash -c "uv run ruff check ."
         language: system
         pass_filenames: false
 
-      - id: black
-        name: Check black formatting
-        entry: bash -c "uv run black --check ."
+      - id: ruff-format
+        name: Check ruff formatting
+        entry: bash -c "uv run ruff format --check ."
         language: system
         pass_filenames: false

@@ -19,7 +19,6 @@ from typing import (
 
 import asyncpraw as praw
 import yaml
-
 from spotify_tools import (
     Client,
     SpotifyConfig,
@@ -27,7 +26,6 @@ from spotify_tools import (
     is_duplicate_track,
     search_track_fuzzy,
 )
-
 
 logger = logging.getLogger(__name__)
 BaseConfig = Type["BaseConfig"]
@@ -85,7 +83,7 @@ def get_spotify_client(
         Spotify API client.
     """
     try:
-        spotify_config = getattr(config, "spotify")
+        spotify_config = config.spotify
     except AttributeError:
         spotify_config = config
 
@@ -179,7 +177,8 @@ async def get_subreddit_posts(
     Returns:
         List of Spotify track ("id", "name") tuples and SubredditConfig.
     """
-    from concurrent.futures import as_completed, ThreadPoolExecutor
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
     from tqdm import tqdm
 
     sub = await reddit.subreddit(subreddit.name)
@@ -287,8 +286,7 @@ def populate_playlist(
 
     if playlist:
         logger.info(
-            f'"{playlist["name"]}": '
-            f'{playlist["external_urls"].get("spotify")}'
+            f'"{playlist["name"]}": {playlist["external_urls"].get("spotify")}'
         )
 
     return playlist_ids
@@ -545,7 +543,7 @@ def _update_existing_playlist(
         track_data = track["track"]
         ids.add(track_data["id"])
         artists = ", ".join([x["name"] for x in track_data["artists"]])
-        playlist_track_names.add(f'{track_data["name"]} - {artists}')
+        playlist_track_names.add(f"{track_data['name']} - {artists}")
 
     # Process new tracks
     for id_, track_name in new_tracks:
@@ -554,7 +552,7 @@ def _update_existing_playlist(
             resp = spotify.track(id_)
             id_ = resp["id"]
             artists = ", ".join([x["name"] for x in resp["artists"]])
-            track_name = f'{resp["name"]} - {artists}'
+            track_name = f"{resp['name']} - {artists}"
 
         if id_ in ids:
             logger.warning(
@@ -572,7 +570,7 @@ def _update_existing_playlist(
         if track_count + len(tracks_added) > limit:
             _track = tracks.pop(0)["track"]
             artists = ", ".join([x["name"] for x in _track["artists"]])
-            tracks_removed.append(f'{_track["name"]} - {artists}')
+            tracks_removed.append(f"{_track['name']} - {artists}")
             remove_payload.append(
                 {"uri": _track["uri"], "positions": [track_index]}
             )

@@ -10,8 +10,8 @@ from djtools.collection.config import (
     PlaylistRemainder,
 )
 from djtools.collection.playlist_builder import (
-    collection_playlists,
     PLAYLIST_NAME,
+    collection_playlists,
 )
 from djtools.collection.rekordbox_collection import RekordboxCollection
 from djtools.collection.rekordbox_playlist import RekordboxPlaylist

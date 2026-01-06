@@ -14,15 +14,15 @@ import warnings
 warnings.filterwarnings("ignore", message="Couldn't find ffmpeg or avconv")
 warnings.filterwarnings("ignore", message="Couldn't find ffprobe or avprobe")
 
-# pylint: disable=wrong-import-position
+# ruff: noqa: I001
 from .configs import build_config
 from .collection import (
     COLLECTION_OPERATIONS,
-    collection_playlists,
-    copy_playlists,
     RekordboxCollection,
     RekordboxPlaylist,
     RekordboxTrack,
+    collection_playlists,
+    copy_playlists,
     shuffle_playlists,
 )
 from .spotify import (
@@ -48,10 +48,12 @@ from .utils import (
 from .utils.helpers import initialize_logger
 from .version import get_version
 
-
 __version__ = get_version()
 
 __all__ = (
+    "RekordboxCollection",
+    "RekordboxPlaylist",
+    "RekordboxTrack",
     "build_config",
     "collection_playlists",
     "compare_tracks",
@@ -60,9 +62,6 @@ __all__ = (
     "download_music",
     "normalize",
     "process",
-    "RekordboxCollection",
-    "RekordboxPlaylist",
-    "RekordboxTrack",
     "shuffle_playlists",
     "spotify_playlist_from_upload",
     "spotify_playlists",

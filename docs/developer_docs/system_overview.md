@@ -51,9 +51,10 @@ Note that, while `build_config` accepts an optional path to a `config.yaml`, fea
 ## CI
 There are several GitHub Actions bound to the lifecycle of `djtools`.
 
-The [pytest-coverage](https://github.com/a-rich/DJ-Tools/blob/main/.github/workflows/pytest-coverage.yaml) and [pylint](https://github.com/a-rich/DJ-Tools/blob/main/.github/workflows/pylint.yaml) workflows are triggered on pull request events.
-Passing both of these workflows is a check for merges into release branches or `main`.
-A pass rate of 100% is required.
+The [test-lint](https://github.com/a-rich/DJ-Tools/blob/main/.github/workflows/test-lint.yaml) workflow is triggered on pull request events.
+It runs pytest for testing and ruff for linting and formatting checks.
+Passing this workflow is a check for merges into release branches or `main`.
+A test pass rate of 100% and zero lint errors are required.
 
 On pushes to `release/**` branches, changes to `pyproject.toml` or `.py` files trigger the [release-dev](https://github.com/a-rich/DJ-Tools/blob/main/.github/workflows/release-dev.yaml) workflow which performs a pre-release version bump and wheel release.
 Changes to `.md` files trigger the [deploy-dev-docs](https://github.com/a-rich/DJ-Tools/blob/main/.github/workflows/deploy-dev-docs.yaml) workflow which copies files to a shadow repository and deploys docs on that repo's GitHub Pages.

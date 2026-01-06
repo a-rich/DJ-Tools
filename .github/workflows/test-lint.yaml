@@ -16,7 +16,6 @@ jobs:
 
     env:
       COVERAGE_TOTAL: 100
-      PYLINT_PASS_SCORE: "10.00"
 
     steps:
       - name: Checkout repo
@@ -33,28 +32,11 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
-      - name: Run pylint on Ubuntu
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          PYLINT=$(uv run pylint --verbose $(git ls-files '*.py') 2>&1) || true
-          echo "$PYLINT"
-          PASS=$(echo "$PYLINT" | grep "Your code has been rated at ${{ env.PYLINT_PASS_SCORE}}/10") || true
+      - name: Run ruff linter
+        run: uv run ruff check .
 
-          if [ -z "$PASS" ]; then
-            exit 1
-          fi
-
-      - name: Run pylint on Windows
-        # TODO(a-rich): Pylint on Windows with Python 3.12 raises "'zipimporter' object has no attribute 'find_module'"
-        #   AttributeError: 'zipimporter' object has no attribute 'find_module'. Did you mean: 'load_module'?
-        #   File "C:\hostedtoolcache\windows\Python\3.12.1\x64\Lib\site-packages\pylint\lint\pylinter.py", line 888, in get_ast
-        if: matrix.os == 'windows-latest' && matrix.python-version != '3.12'
-        run: |
-          $PYLINT = & uv run pylint --verbose --recursive=y src tests scripts 2>&1 | Out-String
-          Write-Output $PYLINT
-          if ($PYLINT -notmatch "Your code has been rated at $env:PYLINT_PASS_SCORE/10") {
-            exit 1
-          }
+      - name: Run ruff formatter check
+        run: uv run ruff format --check .
 
       - name: Run pytest with coverage on Ubuntu
         if: matrix.os == 'ubuntu-latest'

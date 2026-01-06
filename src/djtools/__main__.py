@@ -37,7 +37,7 @@ import logging
 from djtools import main
 
 try:
-    import Levenshtein  # pylint: disable=unused-import
+    import Levenshtein  # noqa: F401
 except ImportError:
     logger = logging.getLogger(__name__)
     logger.warning(

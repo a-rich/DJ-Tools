@@ -9,16 +9,15 @@ from enum import Enum
 from pathlib import Path
 from typing import List, Optional, Union
 
+import yaml
 from pydantic import (
-    field_validator,
-    model_validator,
     NonNegativeFloat,
     NonNegativeInt,
+    field_validator,
+    model_validator,
 )
-import yaml
 
 from djtools.configs.config_formatter import BaseConfigFormatter
-
 
 logger = logging.getLogger(__name__)
 

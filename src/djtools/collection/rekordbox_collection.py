@@ -223,9 +223,9 @@ class RekordboxCollection(Collection):
         input_xml_string = re.sub(whitespace, input_xml_string, " ")
         output_xml_string = re.sub(whitespace, output_xml_string, " ")
 
-        assert (
-            input_xml_string == output_xml_string
-        ), "Failed RekordboxCollection validation!"
+        assert input_xml_string == output_xml_string, (
+            "Failed RekordboxCollection validation!"
+        )
 
 
 class CustomSubstitution(EntitySubstitution):

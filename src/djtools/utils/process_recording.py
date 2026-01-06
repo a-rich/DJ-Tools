@@ -24,7 +24,6 @@ from djtools.utils.helpers import (
     trim_initial_silence,
 )
 
-
 logger = logging.getLogger(__name__)
 pydub_logger = logging.getLogger("pydub.converter")
 pydub_logger.setLevel(logging.CRITICAL)

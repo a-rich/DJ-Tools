@@ -7,17 +7,17 @@ I'm now re-purposing the "Rating" field to convey the energy level of tracks.
 """
 
 # pylint: disable=redefined-outer-name,duplicate-code
-from argparse import ArgumentParser
-from concurrent.futures import as_completed, ThreadPoolExecutor
 import os
-from pathlib import Path
 import re
 import sys
+from argparse import ArgumentParser
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 
 from tqdm import tqdm
 
-from djtools.configs.helpers import build_config
 from djtools.collection.platform_registry import PLATFORM_REGISTRY
+from djtools.configs.helpers import build_config
 
 
 def remove_tags_thread(track, tag_regex, remove_tags):
@@ -31,7 +31,7 @@ def remove_tags_thread(track, tag_regex, remove_tags):
         tag_regex: Regular expression to match tags in the comments.
         remove_tags: List of tags to exclude from the comments.
     """
-    field = getattr(track, "_Comments")
+    field = track._Comments
     tags = re.search(tag_regex, field)
     if not tags:
         return
@@ -44,13 +44,9 @@ def remove_tags_thread(track, tag_regex, remove_tags):
     ]
     new_tags = " / ".join(new_tags)
     if new_tags:
-        setattr(
-            track,
-            "_Comments",
-            f"{comment_prefix} /* {new_tags} */ {comment_suffix}",
-        )
+        track._Comments = f"{comment_prefix} /* {new_tags} */ {comment_suffix}"
     else:
-        setattr(track, "_Comments", f"{comment_prefix} {comment_suffix}")
+        track._Comments = f"{comment_prefix} {comment_suffix}"
 
 
 if __name__ == "__main__":

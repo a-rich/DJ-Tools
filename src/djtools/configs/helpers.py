@@ -17,7 +17,6 @@ from djtools.configs.config import BaseConfig
 from djtools.utils.helpers import make_path
 from djtools.version import get_version
 
-
 logger = logging.getLogger(__name__)
 
 

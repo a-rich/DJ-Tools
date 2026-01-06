@@ -7,11 +7,11 @@ import pytest
 from pydantic import BaseModel
 
 from djtools.configs.cli_args import (
+    NonEmptyListElementAction,
     _convert_to_paths,
     _parse_json,
     _parse_trim_initial_silence,
     get_arg_parser,
-    NonEmptyListElementAction,
 )
 from djtools.utils.config import TrimInitialSilenceMode
 
@@ -56,9 +56,9 @@ def test_get_arg_parser_arg_for_every_field(config):
     # the version.
     cli_only = args_set.difference(config_set)
     expected_cli_only = {"link_configs", "version"}
-    assert (
-        cli_only == expected_cli_only
-    ), f"Expected CLI args to be {expected_cli_only} but got {cli_only}"
+    assert cli_only == expected_cli_only, (
+        f"Expected CLI args to be {expected_cli_only} but got {cli_only}"
+    )
 
     # Test that every config option has a corresponding CLI arg.
     config_only = config_set.difference(args_set)

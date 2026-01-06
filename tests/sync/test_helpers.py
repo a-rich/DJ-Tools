@@ -219,11 +219,11 @@ def test_upload_log(mock_popen, tmpdir, config):
     # Windows st_mtime includes fractional seconds which can cause a test
     # failure due to a rounding error.
     one_day_ago = now - timedelta(days=1) - timedelta(seconds=1)
-    test_log = f'{now.strftime("%Y-%m-%d")}.log'
+    test_log = f"{now.strftime('%Y-%m-%d')}.log"
     filenames = [
         "__init__.py",
         test_log,
-        f'{one_day_ago.strftime("%Y-%m-%d")}.log',
+        f"{one_day_ago.strftime('%Y-%m-%d')}.log",
     ]
     ctime = one_day_ago.timestamp()
     for filename in filenames:

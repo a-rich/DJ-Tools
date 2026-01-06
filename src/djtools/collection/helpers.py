@@ -22,7 +22,6 @@ from djtools.collection.config import (
 from djtools.collection.playlist_filters import PlaylistFilter
 from djtools.utils.helpers import make_path
 
-
 logger = logging.getLogger(__name__)
 NUMERICAL_SELECTOR_REGEX = re.compile(r"(?<=\[)[^\[\]]*(?=\])")
 STRING_SELECTOR_REGEX = re.compile(r"(?<={)[^{}]+:[^{}]+(?=})")

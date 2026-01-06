@@ -12,7 +12,7 @@ from djtools.collection.config import (
     PlaylistConfigContent,
 )
 
-from ..test_utils import mock_exists, MockOpen
+from ..test_utils import MockOpen, mock_exists
 
 
 def test_collectionconfig_collection_is_unset_or_missing():
