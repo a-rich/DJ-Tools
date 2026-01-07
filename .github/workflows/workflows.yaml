@@ -1,0 +1,354 @@
+name: DJ-Tools Workflows
+
+on:
+  push:
+    paths:
+      - '**.py'
+      - 'docs/**'
+      - 'conftest.py'
+  pull_request:
+    paths:
+      - 'src/**.py'
+      - 'tests/**.py'
+      - 'conftest.py'
+
+jobs:
+  # Determine which files changed for conditional job execution
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      src: ${{ steps.filter.outputs.src }}
+      docs: ${{ steps.filter.outputs.docs }}
+      py: ${{ steps.filter.outputs.py }}
+      is_single_level_release: ${{ steps.branch_check.outputs.is_single_level_release }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            src:
+              - 'src/**.py'
+            docs:
+              - 'docs/**'
+            py:
+              - '**.py'
+      - name: Check if single-level release branch
+        id: branch_check
+        run: |
+          # Extract branch name after refs/heads/
+          BRANCH="${GITHUB_REF#refs/heads/}"
+          # Check if it's a single-level release branch (matches release/* but not release/**/*)
+          if [[ "$BRANCH" =~ ^release/[^/]+$ ]]; then
+            echo "is_single_level_release=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_single_level_release=false" >> $GITHUB_OUTPUT
+          fi
+
+  # ============================================================================
+  # Deploy Development Docs
+  # Original trigger: push to release/** with src/**.py or docs/** changes
+  # ============================================================================
+  deploy-dev-docs:
+    needs: changes
+    if: |
+      github.event_name == 'push' &&
+      startsWith(github.ref, 'refs/heads/release/') &&
+      (needs.changes.outputs.src == 'true' || needs.changes.outputs.docs == 'true')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set GitHub Actions as Commit Author
+        run: |
+          git config --global user.name github-actions
+          git config --global user.email github-actions@github.com
+
+      - name: Checkout main repo 
+        uses: actions/checkout@v4
+        with:
+          path: 'main-repo'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: |
+          cd main-repo
+          uv sync
+
+      - name: Checkout dev docs repo 
+        uses: actions/checkout@v4
+        with:
+          repository: a-rich/DJ-Tools-dev-docs
+          path: 'dev-docs-repo'
+          token: ${{ secrets.DJTOOLS_WORKFLOWS }}
+
+      - name: Update and deploy docs
+        run: |
+          cd dev-docs-repo/
+          rm -rf docs && rm -rf src
+          cp -r ../main-repo/docs . && cp -r ../main-repo/src .
+          cd ../main-repo
+          uv run mkdocs gh-deploy --force --config-file ../dev-docs-repo/docs/mkdocs.yml
+
+      - name: Commit changes
+        run: |
+          cd dev-docs-repo/
+          git add .
+          git commit -m "Deploy docs: $GITHUB_SHA"
+          git push --force
+
+  # ============================================================================
+  # Deploy Production Docs
+  # Original trigger: push to main with src/**.py or docs/** changes
+  # ============================================================================
+  deploy-prod-docs:
+    needs: changes
+    if: |
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      (needs.changes.outputs.src == 'true' || needs.changes.outputs.docs == 'true')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo 
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Deploy docs
+        run: uv run mkdocs gh-deploy --force --config-file docs/mkdocs.yml
+
+  # ============================================================================
+  # Format Code
+  # Original trigger: push to any branch except main and release/* with **.py changes
+  # Note: release/* is single-level only, so release/v1/beta WILL trigger this
+  # ============================================================================
+  format:
+    needs: changes
+    if: |
+      github.event_name == 'push' &&
+      github.ref != 'refs/heads/main' &&
+      needs.changes.outputs.is_single_level_release != 'true' &&
+      needs.changes.outputs.py == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set GitHub Actions as Commit Author
+        run: |
+          git config --global user.name github-actions
+          git config --global user.email github-actions@github.com
+
+      - name: Checkout repo 
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.DJTOOLS_WORKFLOWS }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Format code
+        id: format_code
+        run: |
+          uv run ruff format .
+          uv run ruff check --fix .
+          echo "DIFF=$(git diff --name-only)" >> $GITHUB_OUTPUT
+
+      - name: Commit changes
+        if: steps.format_code.outputs.DIFF
+        run: |
+          git add .
+          git commit -m "Format: $GITHUB_SHA"
+          git push --force
+
+  # ============================================================================
+  # Development Release
+  # Original trigger: push to release/* (single-level only) with src/**.py changes
+  # ============================================================================
+  release-dev:
+    needs: changes
+    if: |
+      github.event_name == 'push' &&
+      needs.changes.outputs.is_single_level_release == 'true' &&
+      needs.changes.outputs.src == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set GitHub Actions as Commit Author
+        run: |
+          git config --global user.name github-actions
+          git config --global user.email github-actions@github.com
+
+      - name: Checkout repo 
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.DJTOOLS_WORKFLOWS }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Bump version
+        run: |
+          CURRENT_VERSION=$(grep -oP 'version = "\K[^"]+' pyproject.toml | head -1)
+          echo "Version from pyproject.toml: $CURRENT_VERSION"
+          CURRENT_VERSION=$(echo "$CURRENT_VERSION" | sed 's/\([0-9]\)rc/\1-rc/')
+          echo "Semver-formatted version: $CURRENT_VERSION"
+          NEXT_VERSION=$(uv run python -c "import semver; ver = semver.Version.parse('$CURRENT_VERSION').bump_prerelease(); print(ver)")
+          echo "Next version: $NEXT_VERSION"
+          SEMVER_REGEX="version = \"([0-9]+)\.([0-9]+)\.([0-9]+)([-]{0,1})(((b{0,1})|(rc{0,1}))[\.]{0,1}[0-9]+){0,1}\""
+          sed -i -E "s/$SEMVER_REGEX/version = \"$NEXT_VERSION\"/g" pyproject.toml
+
+      - name: Commit version bump
+        run: |
+          git add pyproject.toml
+          git commit -m "Release: $GITHUB_SHA"
+          git push --force
+
+      - name: Build and publish wheel
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.DJTOOLS_PYPI_TOKEN }}
+        run: |
+          uv build
+          uv run twine upload --skip-existing dist/*
+
+  # ============================================================================
+  # Production Release
+  # Original trigger: push to main with src/**.py changes
+  # ============================================================================
+  release-prod:
+    needs: changes
+    if: |
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      needs.changes.outputs.src == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set GitHub Actions as Commit Author
+        run: |
+          git config --global user.name github-actions
+          git config --global user.email github-actions@github.com
+
+      - name: Checkout repo 
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.DJTOOLS_WORKFLOWS }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Bump version
+        run: |
+          CURRENT_VERSION=$(grep -oP 'version = "\K[^"]+' pyproject.toml | head -1)
+          echo "Version from pyproject.toml: $CURRENT_VERSION"
+          CURRENT_VERSION=$(echo "$CURRENT_VERSION" | sed 's/\([0-9]\)rc/\1-rc/')
+          echo "Semver-formatted version: $CURRENT_VERSION"
+          NEXT_VERSION=$(uv run python -c "import semver; ver = semver.Version.parse('$CURRENT_VERSION').finalize_version(); print(ver)")
+          echo "Next version: $NEXT_VERSION"
+          SEMVER_REGEX="version = \"([0-9]+)\.([0-9]+)\.([0-9]+)([-]{0,1})(((b{0,1})|(rc{0,1}))[\.]{0,1}[0-9]+){0,1}\""
+          sed -i -E "s/$SEMVER_REGEX/version = \"$NEXT_VERSION\"/g" pyproject.toml
+
+      - name: Commit version bump
+        run: |
+          git add pyproject.toml
+          git commit -m "Release: $GITHUB_SHA"
+          git push --force
+
+      - name: Build and publish wheel
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.DJTOOLS_PYPI_TOKEN }}
+        run: |
+          uv build
+          uv run twine upload --skip-existing dist/*
+
+  # ============================================================================
+  # Test and Lint
+  # Original trigger: pull_request with src/**.py, tests/**.py, or conftest.py changes
+  # ============================================================================
+  test-lint:
+    if: github.event_name == 'pull_request'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+
+    env:
+      COVERAGE_TOTAL: 100
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run ruff linter
+        run: uv run ruff check .
+
+      - name: Run ruff formatter check
+        run: uv run ruff format --check .
+
+      - name: Run pytest with coverage on Ubuntu
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          PYTEST=$(uv run pytest --cov --cov-report term-missing --show-capture=no 2>&1) || true
+          echo "$PYTEST"
+          PASS=$(echo "$PYTEST" | grep -E "TOTAL\s+[0-9]+\s+0+\s+${{ env.COVERAGE_TOTAL }}%") || true
+
+          if [ -z "$PASS" ]; then
+            exit 1
+          fi
+
+      - name: Run pytest with coverage on Windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          $PYTEST = & uv run pytest --cov --cov-report term-missing --show-capture=no 2>&1 | Out-String
+          Write-Output $PYTEST
+          if ($PYTEST -notmatch "TOTAL\s+\d+\s+0+\s+$env:COVERAGE_TOTAL%") {
+            exit 1
+          }
+
