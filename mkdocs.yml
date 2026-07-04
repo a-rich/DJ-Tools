@@ -1,0 +1,57 @@
+site_name: DJ Tools
+repo_url: https://github.com/a-rich/DJ-Tools/
+edit_uri: tree/main/docs
+docs_dir: .
+site_dir: ../site
+nav:
+  - Home: index.md
+  - Tutorials:
+    - Getting Started:
+      - Home: tutorials/getting_started/index.md
+      - Overview: tutorials/getting_started/overview.md
+      - Setup: tutorials/getting_started/setup.md
+      - Usage: tutorials/getting_started/usage.md
+      - Configuration: tutorials/getting_started/configuration.md
+  - How-to Guides:
+    - Home: how_to_guides/index.md
+    - Collection:
+      - Build Playlists From Tags: how_to_guides/collection_playlists.md
+      - Combine Playlists With Boolean Algebra: how_to_guides/combiner_playlists.md
+      - Copy Tracks From Playlists: how_to_guides/copy_playlists.md
+      - Shuffle Tracks in Playlists: how_to_guides/shuffle_playlists.md
+    - Spotify:
+      - Setup Reddit & Spotify API Access: how_to_guides/reddit_spotify_api_access.md
+      - Create Spotify Playlists From Other Users' Uploads: how_to_guides/spotify_playlist_from_upload.md
+      - Create Spotify Playlists From Reddit Posts: how_to_guides/spotify_playlist_from_reddit.md
+    - Sync:
+      - Setup Object Storage For Syncing Files: how_to_guides/setup_object_storage.md
+      - Sync Files with the Beatcloud: how_to_guides/sync_beatcloud.md
+      - Sync Tracks From Spotify Playlists: how_to_guides/sync_spotify.md
+    - Utils:
+      - Check the Beatcloud for Tracks in Spotify Playlists or Local Directories: how_to_guides/check_beatcloud.md
+      - Extract Audio Files From URLs: how_to_guides/extract_from_url.md
+      - Process Recorded Files Using Spotify Playlists: how_to_guides/process_recordings.md
+      - Standardize Audio Files: how_to_guides/standardize_audio.md
+  - Conceptual Guides:
+    - Home: conceptual_guides/index.md
+    - Get to Know Your Rekordbox Collection: conceptual_guides/rekordbox_collection.md
+    - Tagging Guide: conceptual_guides/tagging_guide.md
+    - The Importance of Standardization and Quality Control: conceptual_guides/file_standardization.md
+  - Reference:
+    - Config: reference/configs/index.md
+    - Collection: reference/collection/index.md
+    - Spotify: reference/spotify/index.md
+    - Sync: reference/sync/index.md
+    - Utils: reference/utils/index.md
+  - Developer Docs:
+    - Home: developer_docs/index.md
+    - System Overview: developer_docs/system_overview.md
+    - Adding DJ Software Support to the Collections Package: developer_docs/new_collections.md
+    - Using the Collections API: developer_docs/collections_api.md
+    - Adding Custom PlaylistFilters: developer_docs/playlist_filters.md
+theme: material
+plugins:
+  - search
+  - mkdocstrings
+extra_css:
+- css/mkdocstrings.css
