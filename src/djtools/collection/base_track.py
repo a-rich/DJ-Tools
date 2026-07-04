@@ -10,7 +10,6 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, List
 
-
 # pylint: disable=no-member,duplicate-code
 
 

@@ -77,12 +77,12 @@ the common path of tracks in your collection:
 """
 
 # pylint: disable=import-error,redefined-outer-name,no-member
-from argparse import ArgumentParser
-from concurrent.futures import as_completed, ThreadPoolExecutor
 import json
 import os
-from pathlib import Path
 import shutil
+from argparse import ArgumentParser
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 from typing import Dict, Optional
 
 import eyed3
@@ -92,7 +92,6 @@ from tqdm import tqdm
 from djtools.collection.rekordbox_collection import RekordboxCollection
 from djtools.collection.rekordbox_track import RekordboxTrack
 from djtools.configs.cli_args import convert_to_paths
-
 
 eyed3.log.setLevel("ERROR")
 
@@ -264,8 +263,8 @@ def move_files(
         # tags for 'title' and 'artist'.
         if infer_file_names:
             track_id3 = eyed3.load(loc)
-            title = getattr(track_id3.tag, "title")
-            artist = getattr(track_id3.tag, "artist")
+            title = track_id3.tag.title
+            artist = track_id3.tag.artist
             if title and artist:
                 filename = f"{title} - {artist}{loc.suffix}"
             else:

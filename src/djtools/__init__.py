@@ -9,14 +9,20 @@ appropriate configuration object. Finally, the log file generated from this run
 is uploaded to the Beatcloud.
 """
 
+import warnings
+
+warnings.filterwarnings("ignore", message="Couldn't find ffmpeg or avconv")
+warnings.filterwarnings("ignore", message="Couldn't find ffprobe or avprobe")
+
+# ruff: noqa: I001
 from .configs import build_config
 from .collection import (
     COLLECTION_OPERATIONS,
-    collection_playlists,
-    copy_playlists,
     RekordboxCollection,
     RekordboxPlaylist,
     RekordboxTrack,
+    collection_playlists,
+    copy_playlists,
     shuffle_playlists,
 )
 from .spotify import (
@@ -42,10 +48,12 @@ from .utils import (
 from .utils.helpers import initialize_logger
 from .version import get_version
 
-
 __version__ = get_version()
 
 __all__ = (
+    "RekordboxCollection",
+    "RekordboxPlaylist",
+    "RekordboxTrack",
     "build_config",
     "collection_playlists",
     "compare_tracks",
@@ -54,9 +62,6 @@ __all__ = (
     "download_music",
     "normalize",
     "process",
-    "RekordboxCollection",
-    "RekordboxPlaylist",
-    "RekordboxTrack",
     "shuffle_playlists",
     "spotify_playlist_from_upload",
     "spotify_playlists",
@@ -73,6 +78,7 @@ def main():
     logger, log_file = initialize_logger()
     config = build_config()
     logger.setLevel(config.log_level.value)
+    logger.info(repr(config))
 
     # Run "collection", "spotify", "sync", and "utils" package operations if
     # any of the flags to do so are present in the config.

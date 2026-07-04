@@ -16,42 +16,42 @@ jobs:
           git config --global user.email github-actions@github.com
 
       - name: Checkout repo 
-        uses: actions/checkout@main
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.DJTOOLS_WORKFLOWS }}
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
       - name: Set up Python 3.9
-        uses: actions/setup-python@main
+        uses: actions/setup-python@v5
         with:
           python-version: 3.9
-          cache: 'pip'
-
-      - uses: actions/cache@v4
-        with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install --editable ".[dev]"
+        run: uv sync
 
       - name: Bump version
         run: |
-          NEXT_VERSION=`python -c "import semver; from djtools.version import get_version; ver = semver.Version.parse(get_version()).finalize_version(); print(ver)"`
+          CURRENT_VERSION=$(grep -oP 'version = "\K[^"]+' pyproject.toml | head -1)
+          echo "Version from pyproject.toml: $CURRENT_VERSION"
+          CURRENT_VERSION=$(echo "$CURRENT_VERSION" | sed 's/\([0-9]\)rc/\1-rc/')
+          echo "Semver-formatted version: $CURRENT_VERSION"
+          NEXT_VERSION=$(uv run python -c "import semver; ver = semver.Version.parse('$CURRENT_VERSION').finalize_version(); print(ver)")
+          echo "Next version: $NEXT_VERSION"
           SEMVER_REGEX="version = \"([0-9]+)\.([0-9]+)\.([0-9]+)([-]{0,1})(((b{0,1})|(rc{0,1}))[\.]{0,1}[0-9]+){0,1}\""
           sed -i -E "s/$SEMVER_REGEX/version = \"$NEXT_VERSION\"/g" pyproject.toml
+
+      - name: Commit version bump
+        run: |
+          git add pyproject.toml
+          git commit -m "Release: $GITHUB_SHA"
+          git push --force
 
       - name: Build and publish wheel
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.DJTOOLS_PYPI_TOKEN }}
         run: |
-          python -m build
-          twine upload dist/*
-
-      - name: Commit changes
-        run: |
-          git add pyproject.toml
-          git commit -m "Release: $GITHUB_SHA"
-          git push --force
+          uv build
+          uv run twine upload --skip-existing dist/*

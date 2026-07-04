@@ -27,11 +27,11 @@ def test_baseconfig_limits_repr_in_cli_execution():
 def test_baseconfig_repr_differentiates_baseconfig_and_subclasses():
     """Test for the BaseConfig class."""
     base_config = BaseConfig()
-    assert f"log_level={repr(LogLevel.INFO)}" in repr(base_config)
+    assert f"log_level={LogLevel.INFO!r}" in repr(base_config)
     assert "verbosity=0" in repr(base_config)
 
     spotify_config = SpotifyConfig()
-    assert f"log_level={repr(LogLevel.INFO)}" not in repr(spotify_config)
+    assert f"log_level={LogLevel.INFO!r}" not in repr(spotify_config)
     assert "verbosity=0" not in repr(spotify_config)
 
 

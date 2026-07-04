@@ -21,7 +21,6 @@ from djtools.collection.helpers import (
 from djtools.collection.platform_registry import PLATFORM_REGISTRY
 from djtools.utils.helpers import make_path
 
-
 logger = logging.getLogger(__name__)
 PLAYLIST_NAME = "PLAYLIST_BUILDER"
 BaseConfig = Type["BaseConfig"]

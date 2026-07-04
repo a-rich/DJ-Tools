@@ -2,24 +2,13 @@
 BaseModel that defines a __repr__ method to be used by all the config objects
 used in this library."""
 
-import logging
 from typing import Any
 
 from pydantic import BaseModel
 
 
-logger = logging.getLogger(__name__)
-
-
 class BaseConfigFormatter(BaseModel, extra="forbid"):
     """Pydantic BaseModel with a __repr__ method for pretty printing."""
-
-    def __init__(self, *args, **kwargs):
-        """Constructor."""
-        super().__init__(*args, **kwargs)
-
-        if self.__class__.__name__ == "BaseConfig":
-            logger.info(repr(self))
 
     def _format_value(self, value: Any, indent_level: int) -> str:
         spaces = "\t" * indent_level

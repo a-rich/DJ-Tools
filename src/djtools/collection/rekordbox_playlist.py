@@ -13,7 +13,6 @@ import bs4
 from djtools.collection.base_playlist import Playlist
 from djtools.collection.rekordbox_track import RekordboxTrack
 
-
 # pylint: disable=duplicate-code
 
 
@@ -24,7 +23,7 @@ class RekordboxPlaylist(Playlist):
         self,
         playlist: bs4.element.Tag,
         *args,
-        tracks: Dict[str, RekordboxTrack] = None,
+        tracks: Optional[Dict[str, RekordboxTrack]] = None,
         playlist_tracks: Optional[Dict[str, RekordboxTrack]] = None,
         parent: Optional["RekordboxPlaylist"] = None,
         **kwargs,
@@ -105,8 +104,7 @@ class RekordboxPlaylist(Playlist):
             if not (
                 key.startswith(f"_{type(self).__name__}")
                 or not key.startswith("_")
-                or key == "_parent"
-                or key == "_aggregate"
+                or key in {"_parent", "_aggregate"}
             )
         }
 
@@ -118,11 +116,10 @@ class RekordboxPlaylist(Playlist):
                 continue
 
             # Represent string values with surrounding double quotes.
-            if isinstance(value, str):
-                value = f'"{value}"'
+            display_value = f'"{value}"' if isinstance(value, str) else value
 
             # Append the attribute's name and value to the representation.
-            body += f"{key}={value}, "
+            body += f"{key}={display_value}, "
 
         # Truncate the final attributes trailing ", ".
         if not repr_attrs["playlists"]:
@@ -137,7 +134,7 @@ class RekordboxPlaylist(Playlist):
                 continue
             body += f"\n{padding + ' ' * 4 * (depth or 1)}{key}=["
             for val in value:
-                body += f"\n{' ' * 4 * depth}{repr(val)},"
+                body += f"\n{' ' * 4 * depth}{val!r},"
             # Truncate final comma.
             body = body[:-1]
             body += f"\n{padding + ' ' * 4 * (depth or 1)}],"
@@ -253,8 +250,7 @@ class RekordboxPlaylist(Playlist):
             if not (
                 key.startswith(f"_{type(self).__name__}")
                 or not key.startswith("_")
-                or key == "_parent"
-                or key == "_aggregate"
+                or key in {"_parent", "_aggregate"}
             )
         }
 

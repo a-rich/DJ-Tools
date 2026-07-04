@@ -12,18 +12,17 @@ from typing import Union
 from spotipy import Spotify
 from tqdm import tqdm
 
-from djtools.configs.config import BaseConfig
 from djtools.collection import RekordboxCollection
 from djtools.collection.base_track import Track
 from djtools.configs import build_config
+from djtools.configs.config import BaseConfig
 from djtools.spotify.helpers import (
-    get_spotify_client,
-    get_playlist_ids,
     filter_results,
+    get_playlist_ids,
+    get_spotify_client,
     populate_playlist,
     write_playlist_ids,
 )
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.CRITICAL)
@@ -121,7 +120,7 @@ def find_track(track: Track, config: BaseConfig, spotify: Spotify):
         logger.warning(f"Could not find a match for {title} - {artist}")
         return
 
-    return (match["id"], f'{match["name"]} - {artists}')
+    return (match["id"], f"{match['name']} - {artists}")
 
 
 def main(config_path: Path, date_filter: datetime, playlist_name: str):

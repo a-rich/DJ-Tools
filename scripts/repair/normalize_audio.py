@@ -3,10 +3,10 @@ of 0.0 decibels.
 """
 
 # pylint: disable=import-error
+import json
 from argparse import ArgumentParser
 from collections import defaultdict
-from concurrent.futures import as_completed, ThreadPoolExecutor
-import json
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Dict
 

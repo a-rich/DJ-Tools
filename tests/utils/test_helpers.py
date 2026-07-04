@@ -9,6 +9,10 @@ from unittest import mock
 import pytest
 from pydub import AudioSegment, generators
 
+# Expected values for compute_distance tests
+PERFECT_FUZZ_RATIO = 100
+EXPECTED_MATCH_COUNT = 2
+
 from djtools.utils.config import TrimInitialSilenceMode
 from djtools.utils.helpers import (
     compute_distance,
@@ -40,7 +44,7 @@ def test_compute_distance(track_a, track_b):
         assert ret[0] == "playlist"
         assert ret[1] == track_a
         assert ret[2] == track_b
-        assert ret[3] == 100
+        assert ret[3] == PERFECT_FUZZ_RATIO
     else:
         assert not ret
 
@@ -62,14 +66,14 @@ def test_find_matches(config):
         },
         beatcloud_tracks=[
             "track 5 - who's that?",
-        ]
-        + expected_matches,
+            *expected_matches,
+        ],
         config=config,
     )
     assert all(
         match[-1] == config.utils.check_tracks_fuzz_ratio for match in matches
     )
-    assert len(matches) == 2
+    assert len(matches) == EXPECTED_MATCH_COUNT
     assert {x[1] for x in matches} == set(expected_matches)
 
 
@@ -89,12 +93,12 @@ def test_get_beatcloud_tracks(mock_os_popen, proc_dump):
     bucket_url = "s3://some-bucket.com"
     proc_dump = list(map(Path, proc_dump))
     mock_os_popen.return_value = b"\n".join(
-        map(lambda x: x.as_posix().encode(), proc_dump)
+        x.as_posix().encode() for x in proc_dump
     )
     tracks = get_beatcloud_tracks(bucket_url)
     mock_os_popen.assert_called_once()
     assert len(tracks) == len(proc_dump)
-    for track, line in zip(tracks, proc_dump):
+    for track, line in zip(tracks, proc_dump, strict=True):
         assert track == line
 
 
@@ -138,34 +142,16 @@ def test_get_local_tracks_dir_does_exist(tmpdir, config, caplog):
     )
 
 
-@mock.patch("djtools.spotify.helpers.spotipy.Spotify")
-@mock.patch(
-    "djtools.spotify.helpers.spotipy.Spotify.next",
-    return_value={
-        "items": [
-            {
-                "track": {
-                    "name": "last track title",
-                    "artists": [
-                        {"name": "final artist name"},
-                    ],
-                },
-            },
-        ],
-        "next": False,
-    },
-)
-@mock.patch(
-    "djtools.spotify.helpers.spotipy.Spotify.playlist",
-    return_value={
+def test_get_playlist_tracks():
+    """Test for the get_playlist_tracks function."""
+    mock_client = mock.MagicMock()
+    mock_client.playlist.return_value = {
         "tracks": {
             "items": [
                 {
                     "track": {
                         "name": "track title",
-                        "artists": [
-                            {"name": "artist name"},
-                        ],
+                        "artists": [{"name": "artist name"}],
                     },
                 },
                 {
@@ -180,34 +166,37 @@ def test_get_local_tracks_dir_does_exist(tmpdir, config, caplog):
             ],
             "next": True,
         },
-    },
-)
-def test_get_playlist_tracks(
-    mock_spotipy_playlist, mock_spotipy_next, mock_spotipy
-):
-    """Test for the get_playlist_tracks function."""
-    mock_spotipy.playlist.return_value = mock_spotipy_playlist.return_value
-    mock_spotipy.next.return_value = mock_spotipy_next.return_value
-    expected = list(mock_spotipy_playlist.return_value["tracks"]["items"])
-    expected.extend(list(mock_spotipy_next.return_value["items"]))
-    tracks = get_playlist_tracks(mock_spotipy, "some ID")
+    }
+    mock_client.next.return_value = {
+        "items": [
+            {
+                "track": {
+                    "name": "last track title",
+                    "artists": [{"name": "final artist name"}],
+                },
+            },
+        ],
+        "next": False,
+    }
+
+    tracks = get_playlist_tracks(mock_client, "some ID")
+
+    expected = list(mock_client.playlist.return_value["tracks"]["items"])
+    expected.extend(list(mock_client.next.return_value["items"]))
     assert tracks == expected
 
 
-@mock.patch("djtools.spotify.helpers.spotipy.Spotify")
-@mock.patch(
-    "djtools.spotify.helpers.spotipy.Spotify.playlist", side_effect=Exception()
-)
-def test_get_playlist_tracks_handles_spotipy_exception(
-    mock_spotipy_playlist, mock_spotipy
-):
+def test_get_playlist_tracks_handles_exception():
     """Test for the get_playlist_tracks function."""
+    mock_client = mock.MagicMock()
+    mock_client.playlist.side_effect = Exception("API Error")
     test_playlist_id = "some ID"
-    mock_spotipy.playlist.side_effect = mock_spotipy_playlist.side_effect
+
     with pytest.raises(
-        Exception, match=f"Failed to get playlist with ID {test_playlist_id}"
+        RuntimeError,
+        match=f"Failed to get playlist with ID {test_playlist_id}",
     ):
-        get_playlist_tracks(mock_spotipy, test_playlist_id)
+        get_playlist_tracks(mock_client, test_playlist_id)
 
 
 @mock.patch("djtools.utils.helpers.get_spotify_client", new=mock.Mock())
@@ -258,7 +247,7 @@ def test_get_spotify_tracks(
 
 def test_initialize_logger():
     """Test for the intitialize_logger function."""
-    today = f'{datetime.now().strftime("%Y-%m-%d")}.log'
+    today = f"{datetime.now().strftime('%Y-%m-%d')}.log"
     logger, log_file = initialize_logger()
     assert isinstance(logger, logging.Logger)
     assert log_file.name == today
@@ -300,9 +289,7 @@ def test_make_path_decorator_raises_error(arg, kwarg, expected):
     """Test for the make_path decorator function."""
 
     @make_path
-    def foo(
-        path_arg: Path, path_kwarg: Path
-    ):  # pylint: disable=disallowed-name
+    def foo(path_arg: Path, path_kwarg: Path):  # pylint: disable=disallowed-name
         assert isinstance(path_arg, Path)
         assert isinstance(path_kwarg, Path)
 

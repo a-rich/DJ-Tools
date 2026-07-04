@@ -24,7 +24,6 @@ from djtools.utils.helpers import (
     trim_initial_silence,
 )
 
-
 logger = logging.getLogger(__name__)
 pydub_logger = logging.getLogger("pydub.converter")
 pydub_logger.setLevel(logging.CRITICAL)
@@ -118,6 +117,7 @@ def process(config: BaseConfig):
         audio_chunks,
         track_data,
         [write_path] * len(audio_chunks),
+        strict=True,
     )
     exported_files = []
 

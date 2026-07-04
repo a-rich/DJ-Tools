@@ -3,7 +3,7 @@
 # pylint: disable=import-error,redefined-outer-name,duplicate-code
 from argparse import ArgumentParser
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -15,7 +15,6 @@ from djtools.collection.base_playlist import Playlist
 from djtools.collection.base_track import Track
 from djtools.collection.platform_registry import PLATFORM_REGISTRY
 from djtools.configs import build_config
-
 
 EXCLUDE_TAGS = (
     "DELETE",
@@ -97,7 +96,7 @@ def dataprep(collection: Collection, tracks: Dict[str, Track]) -> pd.DataFrame:
                 continue
             one_hot[index] = 1
         dataset.append((track_id, *one_hot))
-    data = pd.DataFrame(dataset, columns=["id"] + other_tags, index=None)
+    data = pd.DataFrame(dataset, columns=["id", *other_tags], index=None)
     data.set_index("id", inplace=True)
 
     return data

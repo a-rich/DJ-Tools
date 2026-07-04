@@ -3,13 +3,12 @@ not appear in a given playlist (or, if using '--folder', any playlists in a
 folder).
 """
 
-from argparse import ArgumentParser
 import logging
+from argparse import ArgumentParser
 from traceback import format_exc
 
 from bs4 import BeautifulSoup
 from bs4.element import Tag
-
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +59,7 @@ def get_tracks(_soup, name, folder):
             "NODE", {"Name": name, "Type": "0" if folder else "1"}
         )[0]
     except IndexError:
-        msg = f'Failed to find {"folder" if folder else "playlist"} {name}'
+        msg = f"Failed to find {'folder' if folder else 'playlist'} {name}"
         logger.critical(msg)
         raise ValueError(msg) from IndexError
 

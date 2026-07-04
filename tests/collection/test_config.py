@@ -12,7 +12,7 @@ from djtools.collection.config import (
     PlaylistConfigContent,
 )
 
-from ..test_utils import mock_exists, MockOpen
+from ..test_utils import MockOpen, mock_exists
 
 
 def test_collectionconfig_collection_is_unset_or_missing():
@@ -41,8 +41,8 @@ def test_collectionconfig_no_collection_playlists_config(rekordbox_xml):
     with pytest.raises(
         RuntimeError,
         match=(
-            "collection_playlists.yaml must exist to use the "
-            "collection_playlists feature"
+            r"collection_playlists\.yaml must exist to use the "
+            r"collection_playlists feature"
         ),
     ):
         CollectionConfig(**cfg)
@@ -69,8 +69,8 @@ def test_collectionconfig_invalid_collection_playlists_config(rekordbox_xml):
     cfg = {"collection_playlists": True, "collection_path": rekordbox_xml}
     with pytest.raises(
         RuntimeError,
-        match="collection_playlists.yaml must be a valid YAML to use the "
-        "collection_playlists feature",
+        match=r"collection_playlists\.yaml must be a valid YAML to use the "
+        r"collection_playlists feature",
     ):
         CollectionConfig(**cfg)
 

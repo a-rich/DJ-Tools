@@ -5,17 +5,17 @@ the year, album, and label.
 """
 
 # pylint: disable=redefined-outer-name,duplicate-code,protected-access,invalid-name
-from argparse import ArgumentParser
-from concurrent.futures import as_completed, ThreadPoolExecutor
-from datetime import datetime
 import os
+from argparse import ArgumentParser
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
 from typing import Dict, Union
 
 from tqdm import tqdm
 
-from djtools.configs.helpers import build_config
 from djtools.collection.base_track import Track
 from djtools.collection.platform_registry import PLATFORM_REGISTRY
+from djtools.configs.helpers import build_config
 from djtools.spotify.helpers import filter_results, get_spotify_client
 
 
@@ -31,7 +31,7 @@ def get_spotify_tags_thread(track, spotify, threshold, query_limit):
         threshold: Minimum Spotify result similarity for a match.
         query_limit: Number of Spotify query results.
     """
-    title = getattr(track, "_Name")
+    title = track._Name
     artist = track.get_artists()
     results = spotify.search(
         q=f"track:{title} artist:{artist}", type="track", limit=query_limit
@@ -209,7 +209,7 @@ if __name__ == "__main__":
                 f"C: {title} - {artist}: "
                 f"{track._Album}, {track._Label}, {track._Year}\n"
                 f"S: {result['name']} - {artists}: "
-                f"{album['name']}, {album['label']}, {str(date.year)}"
+                f"{album['name']}, {album['label']}, {date.year!s}"
             )
 
             # Check input for signal to skip or accept new tags.

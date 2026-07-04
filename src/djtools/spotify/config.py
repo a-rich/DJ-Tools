@@ -1,66 +1,18 @@
-"""This module contains the configuration object for the spotify package.
+"""Configuration object for the spotify package.
+
 The attributes of this configuration object correspond with the "spotify" key
-of config.yaml
+of config.yaml.
 """
 
 import logging
-from enum import Enum
 from typing import List
 
-from pydantic import BaseModel, NonNegativeInt
-import yaml
+from pydantic import BaseModel, Field, NonNegativeInt
 
 from djtools.configs.config_formatter import BaseConfigFormatter
-
+from djtools.spotify.enums import SubredditPeriod, SubredditType
 
 logger = logging.getLogger(__name__)
-
-
-class SubredditPeriod(Enum):
-    # pylint: disable=missing-class-docstring
-    ALL = "all"
-    DAY = "day"
-    HOUR = "hour"
-    MONTH = "month"
-    WEEK = "week"
-    YEAR = "year"
-
-
-def subreddit_period_representer(dumper, data):
-    # pylint: disable=missing-function-docstring
-    return dumper.represent_scalar("!SubredditPeriod", data.value)
-
-
-def subreddit_period_constructor(loader, node):
-    # pylint: disable=missing-function-docstring
-    return SubredditPeriod(loader.construct_scalar(node))
-
-
-yaml.add_representer(SubredditPeriod, subreddit_period_representer)
-yaml.add_constructor("!SubredditPeriod", subreddit_period_constructor)
-
-
-class SubredditType(Enum):
-    # pylint: disable=missing-class-docstring
-    CONTROVERSIAL = "controversial"
-    HOT = "hot"
-    NEW = "new"
-    RISING = "rising"
-    TOP = "top"
-
-
-def subreddit_type_representer(dumper, data):
-    # pylint: disable=missing-function-docstring
-    return dumper.represent_scalar("!SubredditType", data.value)
-
-
-def subreddit_type_constructor(loader, node):
-    # pylint: disable=missing-function-docstring
-    return SubredditType(loader.construct_scalar(node))
-
-
-yaml.add_representer(SubredditType, subreddit_type_representer)
-yaml.add_constructor("!SubredditType", subreddit_type_constructor)
 
 
 class SubredditConfig(BaseModel):
@@ -81,7 +33,9 @@ class SpotifyConfig(BaseConfigFormatter):
     spotify_playlist_from_upload: bool = False
     spotify_playlist_fuzz_ratio: NonNegativeInt = 70
     spotify_playlist_post_limit: NonNegativeInt = 100
-    spotify_playlist_subreddits: List[SubredditConfig] = []
+    spotify_playlist_subreddits: List[SubredditConfig] = Field(
+        default_factory=list
+    )
     spotify_playlists: bool = False
     reddit_client_id: str = ""
     reddit_client_secret: str = ""
@@ -95,8 +49,7 @@ class SpotifyConfig(BaseConfigFormatter):
         """Constructor.
 
         Raises:
-            RuntimeError: Spotify API credentials must exit.
-            RuntimeError: Spotify API credentials must be valid.
+            RuntimeError: Spotify API credentials must exist and be valid.
             RuntimeError: Reddit API credentials must exist.
         """
         super().__init__(*args, **kwargs)
@@ -117,8 +70,8 @@ class SpotifyConfig(BaseConfigFormatter):
                 "spotify_username set to valid values, you cannot use "
                 "spotify_playlists or spotify_playlist_from_upload"
             )
+
         if self.spotify_playlists or self.spotify_playlist_from_upload:
-            # pylint: disable=cyclic-import
             from djtools.spotify.helpers import get_spotify_client
 
             spotify = get_spotify_client(self)

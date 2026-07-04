@@ -1,13 +1,12 @@
 """Testing for the config module."""
 
+import getpass
 import os
 import re
 from pathlib import Path
 from unittest import mock
 
-import getpass
 import pytest
-
 
 from djtools.sync.config import SyncConfig
 

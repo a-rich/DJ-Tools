@@ -12,7 +12,6 @@ from djtools.sync.sync_operations import (
     upload_music,
 )
 
-
 SYNC_OPERATIONS = {
     "download_collection": download_collection,
     "download_music": download_music,

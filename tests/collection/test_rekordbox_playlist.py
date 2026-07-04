@@ -10,7 +10,7 @@ def test_rekordboxplaylist_getitem(rekordbox_playlist):
     try:
         _ = rekordbox_playlist[0]
     except KeyError:
-        assert False, "RekordboxPlaylist.__getitem__ failed!"
+        pytest.fail("RekordboxPlaylist.__getitem__ failed!")
 
 
 @pytest.mark.parametrize("playlist,expected", [(None, 3), ("Hip Hop", 1)])
@@ -166,7 +166,7 @@ def test_rekordboxplaylist_remove_playlists_raises_runtimeerror_when_removing_fo
     playlist = rekordbox_playlist.get_playlists("Hip Hop")[0]
     with pytest.raises(
         RuntimeError,
-        match="Can't remove playlist from a non-folder playlist.",
+        match=r"Can't remove playlist from a non-folder playlist\.",
     ):
         playlist.remove_playlist("")
 

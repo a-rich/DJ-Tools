@@ -12,7 +12,6 @@ from typing import Any, Dict, List, Optional
 
 from djtools.collection.base_track import Track
 
-
 # pylint: disable=duplicate-code
 
 

@@ -6,9 +6,9 @@ Supported functions include:
 * moving particular tags from in the `Comments` field to the front of that field
 """
 
+import re
 from argparse import ArgumentParser
 from pathlib import Path
-import re
 from typing import Any, Dict, Set
 
 import bs4
@@ -99,7 +99,7 @@ def move_genres_from_comments(
     new_comments_tags = []
     for tag in my_tags.group().split("/"):
         tag = tag.strip()
-        if not tag in tags:
+        if tag not in tags:
             new_comments_tags.append(tag)
             continue
         new_genre_tags.append(tag)

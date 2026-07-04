@@ -16,7 +16,6 @@ import bs4
 from djtools.collection.base_track import Track
 from djtools.utils.helpers import make_path
 
-
 # pylint: disable=no-member,duplicate-code
 
 
@@ -37,6 +36,7 @@ class RekordboxTrack(Track):
 
         # Set class attributes from TRACK Tag attributes.
         for key, value in track.attrs.items():
+            parsed_value = value
             if key in [
                 "BitRate",
                 "DiscNumber",
@@ -46,22 +46,24 @@ class RekordboxTrack(Track):
                 "TotalTime",
                 "TrackNumber",
             ]:
-                value = int(value)
+                parsed_value = int(value)
             if key == "AverageBpm":
-                value = float(value)
+                parsed_value = float(value)
             if key == "DateAdded":
                 # We need to keep the original date added string because
                 # Rekordbox doesn't format date strings consistently i.e.
                 # ensuring perfect serialization symmetry is not possible
                 # without this.
                 self.__original_date_added = value
-                value = datetime.strptime(value, "%Y-%m-%d")
+                parsed_value = datetime.strptime(value, "%Y-%m-%d")
             if key == "Genre":
-                value = [x.strip() for x in value.split("/")]
+                parsed_value = [x.strip() for x in value.split("/")]
             if key == "Location":
-                value = Path(unquote(value).split(self.__location_prefix)[-1])
+                parsed_value = Path(
+                    unquote(value).split(self.__location_prefix)[-1]
+                )
             if key == "Rating":
-                value = {
+                parsed_value = {
                     "0": 0,
                     "51": 1,
                     "102": 2,
@@ -69,7 +71,7 @@ class RekordboxTrack(Track):
                     "204": 4,
                     "255": 5,
                 }.get(value)
-            setattr(self, f"_{key}", value)
+            setattr(self, f"_{key}", parsed_value)
 
         # Parse MyTag data from Comments attribute.
         my_tags = re.search(r"(?<=\/\*).*(?=\*\/)", self._Comments)
@@ -122,19 +124,18 @@ class RekordboxTrack(Track):
 
             # Rather than display each beat grid or hot cue attribute, simply
             # represent as the number of those attributes.
+            display_value = value
             if key in ["beat_grid", "hot_cues"]:
-                value = len(value)
-
+                display_value = len(value)
             # Represent string values with surrounding double quotes.
-            if isinstance(value, str):
-                value = f'"{value}"'
-
+            elif isinstance(value, str):
+                display_value = f'"{value}"'
             # Truncate the HH:MM:SS part of the datetime.
-            if isinstance(value, datetime):
-                value = f'"{value.strftime("%Y-%m-%d")}"'
+            elif isinstance(value, datetime):
+                display_value = f'"{value.strftime("%Y-%m-%d")}"'
 
             # Append the attribute's name and value to the representation.
-            body += f"{key}={value}, "
+            body += f"{key}={display_value}, "
 
         # Truncate final comma and space.
         body = body[:-2]
@@ -298,6 +299,7 @@ class RekordboxTrack(Track):
                 continue
 
             # Cast integers back into a string.
+            serialized_value = value
             if key in [
                 "BitRate",
                 "DiscNumber",
@@ -307,11 +309,11 @@ class RekordboxTrack(Track):
                 "TotalTime",
                 "TrackNumber",
             ]:
-                value = str(value)
+                serialized_value = str(value)
 
             # Increase BPM precision to make serialization 100% symmetrical.
             if key == "AverageBpm":
-                value = f"{value:0,.2f}"
+                serialized_value = f"{value:0,.2f}"
 
             # Truncate the HH:MM:SS part of the datetime.
             if isinstance(value, datetime):
@@ -328,29 +330,31 @@ class RekordboxTrack(Track):
                     attempt = value.strftime(date_format)
                     if attempt == self.__original_date_added:
                         break
-                value = attempt
+                serialized_value = attempt
 
-                if value != self.__original_date_added:
+                if serialized_value != self.__original_date_added:
                     raise ValueError(  # pragma: no cover
-                        f"Failed to serialize the datetime {value} into its "
-                        f"original format {self.__original_date_added}"
+                        f"Failed to serialize the datetime {serialized_value} "
+                        f"into its original format {self.__original_date_added}"
                     )
 
             # Re-join genre tags with forward slashes.
             if key == "Genre":
-                value = " / ".join(value)
+                serialized_value = " / ".join(value)
 
             # Re-insert the location prefix and quote the path.
             if key == "Location":
                 track_path = quote(value.as_posix(), safe="/,()!+=#;$:")
-                value = f"{self.__location_prefix}{track_path}"
-                value = re.sub(
-                    r"%[0-9A-Z]{2}", lambda x: x.group(0).lower(), value
+                serialized_value = f"{self.__location_prefix}{track_path}"
+                serialized_value = re.sub(
+                    r"%[0-9A-Z]{2}",
+                    lambda x: x.group(0).lower(),
+                    serialized_value,
                 )
 
             # Reverse the rating value to the range recognized by Rekordbox.
             if key == "Rating":
-                value = {
+                serialized_value = {
                     0: "0",
                     1: "51",
                     2: "102",
@@ -360,7 +364,7 @@ class RekordboxTrack(Track):
                 }.get(value)
 
             # Otherwise the data is serialized as TRACK Tag attributes.
-            track_tag[key] = value
+            track_tag[key] = serialized_value
 
         # If this TRACK Tag has children, append a final newline character.
         if len(track_tag) > 1:

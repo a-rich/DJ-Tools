@@ -9,18 +9,22 @@ from enum import Enum
 from pathlib import Path
 from typing import List, Optional, Union
 
+import yaml
 from pydantic import (
-    field_validator,
-    model_validator,
+    Field,
     NonNegativeFloat,
     NonNegativeInt,
+    field_validator,
+    model_validator,
 )
-import yaml
 
 from djtools.configs.config_formatter import BaseConfigFormatter
 
-
 logger = logging.getLogger(__name__)
+
+# Audio bitrate bounds (kbps) for MP3 encoding
+MIN_AUDIO_BITRATE = 36
+MAX_AUDIO_BITRATE = 320
 
 
 class AudioFormats(Enum):
@@ -87,8 +91,8 @@ class UtilsConfig(BaseConfigFormatter):
     audio_headroom: NonNegativeFloat = 0.0
     check_tracks: bool = False
     check_tracks_fuzz_ratio: NonNegativeInt = 80
-    check_tracks_spotify_playlists: List[str] = []
-    local_dirs: List[Path] = []
+    check_tracks_spotify_playlists: List[str] = Field(default_factory=list)
+    local_dirs: List[Path] = Field(default_factory=list)
     normalize_audio: bool = False
     process_recording: bool = False
     recording_file: Optional[Path] = None
@@ -142,8 +146,11 @@ class UtilsConfig(BaseConfigFormatter):
             String representing the bit rate.
         """
         value = int(value)
-        if value < 36 or value > 320:
-            raise ValueError("audio_bitrate must be in the range [36, 320]")
+        if value < MIN_AUDIO_BITRATE or value > MAX_AUDIO_BITRATE:
+            raise ValueError(
+                f"audio_bitrate must be in the range "
+                f"[{MIN_AUDIO_BITRATE}, {MAX_AUDIO_BITRATE}]"
+            )
 
         return str(value)
 

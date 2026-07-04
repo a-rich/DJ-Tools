@@ -136,9 +136,9 @@ def test_run_sync(mock_popen, tmpdir):
         tmp_file.write(bytes(sync_output.encode("utf-8")))
         tmp_file.seek(0)
         tmp_file.close()
-        with open(tmp_file.name, mode="rb") as tmp_file:
+        with open(tmp_file.name, mode="rb") as tmp_file_reader:
             process = mock_popen.return_value.__enter__.return_value
-            process.stdout = tmp_file
+            process.stdout = tmp_file_reader
             process.wait.return_value = 0
             ret = run_sync(cmd, TEST_BUCKET)
     expected = (
@@ -173,9 +173,9 @@ def test_run_sync_handles_decode_error(
         tmp_file.write(byte_sequence)
         tmp_file.seek(0)
         tmp_file.close()
-        with open(tmp_file.name, mode="rb") as tmp_file:
+        with open(tmp_file.name, mode="rb") as tmp_file_reader:
             process = mock_popen.return_value.__enter__.return_value
-            process.stdout = tmp_file
+            process.stdout = tmp_file_reader
             process.wait.return_value = 0
             ret = run_sync(cmd, TEST_BUCKET)
     assert ret == expected
@@ -198,9 +198,9 @@ def test_run_sync_handles_return_code(mock_popen, tmpdir, caplog):
         tmp_file.write(bytes("".encode("utf-8")))
         tmp_file.seek(0)
         tmp_file.close()
-        with open(tmp_file.name, mode="rb") as tmp_file:
+        with open(tmp_file.name, mode="rb") as tmp_file_reader:
             process = mock_popen.return_value.__enter__.return_value
-            process.stdout = tmp_file
+            process.stdout = tmp_file_reader
             process.wait.return_value = 1
             msg = (
                 f"Failure while syncing: Command '{' '.join(cmd)}' returned "
@@ -219,11 +219,11 @@ def test_upload_log(mock_popen, tmpdir, config):
     # Windows st_mtime includes fractional seconds which can cause a test
     # failure due to a rounding error.
     one_day_ago = now - timedelta(days=1) - timedelta(seconds=1)
-    test_log = f'{now.strftime("%Y-%m-%d")}.log'
+    test_log = f"{now.strftime('%Y-%m-%d')}.log"
     filenames = [
         "__init__.py",
         test_log,
-        f'{one_day_ago.strftime("%Y-%m-%d")}.log',
+        f"{one_day_ago.strftime('%Y-%m-%d')}.log",
     ]
     ctime = one_day_ago.timestamp()
     for filename in filenames:

@@ -7,13 +7,17 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
-from pip._vendor import tomli
+
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
 
 from djtools.configs.config import LogLevel
-from djtools.configs.helpers import _arg_parse, build_config, ConfigLoadFailure
+from djtools.configs.helpers import ConfigLoadError, _arg_parse, build_config
 from djtools.version import get_version
 
-from ..test_utils import mock_exists, MockOpen
+from ..test_utils import MockOpen, mock_exists
 
 
 @pytest.mark.parametrize(
@@ -41,7 +45,7 @@ def test_arg_parse_gets_version(mock_parse_args, namespace, capsys):
     with open(
         Path(__file__).parent.parent.parent / "pyproject.toml", mode="rb"
     ) as _file:
-        toml_dict = tomli.load(_file)
+        toml_dict = tomllib.load(_file)
     assert (
         capsys.readouterr().out.replace(".", "").strip()
         == toml_dict["project"]["version"].replace(".", "").strip()
@@ -93,7 +97,7 @@ def test_build_config_invalid_config_yaml(caplog):
     caplog.set_level("CRITICAL")
     with (
         mock.patch.object(Path, "exists", return_value=True),
-        pytest.raises(ConfigLoadFailure),
+        pytest.raises(ConfigLoadError),
     ):
         build_config()
     assert "Error reading" in caplog.records[0].message
